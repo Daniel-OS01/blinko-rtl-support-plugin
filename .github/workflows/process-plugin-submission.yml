@@ -5,12 +5,21 @@ on:
     types: [opened, labeled]
   workflow_dispatch:
     inputs:
+      mode:
+        description: 'Mode to run validation: run on this repo (self), validate a repo from an issue (from-issue), or validate a provided repository URL (repository-url)'
+        required: true
+        type: choice
+        options:
+          - 'self'
+          - 'from-issue'
+          - 'repository-url'
+        default: 'self'
       issue_number:
-        description: 'Issue number to validate (leave empty to validate repository URL directly)'
+        description: 'Issue number to validate (used when mode is from-issue)'
         required: false
         type: string
       repository_url:
-        description: 'Repository URL to validate directly'
+        description: 'Repository URL to validate directly (used when mode is repository-url)'
         required: false
         type: string
       validation_type:
@@ -68,15 +77,28 @@ jobs:
           ISSUE_NUMBER=""
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            if [ -n "${{ inputs.issue_number }}" ]; then
-              ISSUE_BODY=$(gh issue view "${{ inputs.issue_number }}" --json body -q .body)
-              REPO_URL=$(echo "$ISSUE_BODY" | grep -o 'https://github.com/[a-zA-Z0-9_.-]*/[a-zA-Z0-9_.-]*' | head -1 || true)
-              ISSUE_NUMBER="${{ inputs.issue_number }}"
-            elif [ -n "${{ inputs.repository_url }}" ]; then
-              REPO_URL="${{ inputs.repository_url }}"
+            if [ "${{ inputs.mode }}" = "self" ]; then
+              REPO_URL="https://github.com/${{ github.repository }}"
               ISSUE_NUMBER=""
+            elif [ "${{ inputs.mode }}" = "from-issue" ]; then
+              if [ -n "${{ inputs.issue_number }}" ]; then
+                ISSUE_BODY=$(gh issue view "${{ inputs.issue_number }}" --json body -q .body)
+                REPO_URL=$(echo "$ISSUE_BODY" | grep -o 'https://github.com/[a-zA-Z0-9_.-]*/[a-zA-Z0-9_.-]*' | head -1 || true)
+                ISSUE_NUMBER="${{ inputs.issue_number }}"
+              else
+                echo "Error: inputs.mode is 'from-issue' but no issue_number provided"
+                exit 1
+              fi
+            elif [ "${{ inputs.mode }}" = "repository-url" ]; then
+              if [ -n "${{ inputs.repository_url }}" ]; then
+                REPO_URL="${{ inputs.repository_url }}"
+                ISSUE_NUMBER=""
+              else
+                echo "Error: inputs.mode is 'repository-url' but no repository_url provided"
+                exit 1
+              fi
             else
-              echo "Error: Either issue_number or repository_url must be provided"
+              echo "Error: unknown mode '${{ inputs.mode }}'"
               exit 1
             fi
           else
@@ -111,7 +133,6 @@ jobs:
           REPO_NAME="${{ steps.extract-repo.outputs.repo_name }}"
 
           echo "Cloning repository: $REPO_URL"
-          # Use an auth header so private repos can be cloned without leaking token in logs
           git -c http.extraHeader="AUTHORIZATION: bearer $GH_TOKEN" clone "https://github.com/$REPO_OWNER/$REPO_NAME.git" plugin-repo
           cd plugin-repo
           echo "Repository cloned successfully"
@@ -494,7 +515,6 @@ EOF
         run: |
           ISSUE_NUMBER="${{ steps.extract-repo.outputs.issue_number }}"
           VALIDATION_BODY="${{ steps.report.outputs.validation_report }}"
-          # Post comment (preserve newlines)
           gh issue comment "$ISSUE_NUMBER" --body "$VALIDATION_BODY"
 
       - name: Set Validation Labels
@@ -503,7 +523,6 @@ EOF
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ISSUE_NUMBER="${{ steps.extract-repo.outputs.issue_number }}"
-          # Remove existing validation labels safely
           LABELS_TO_REMOVE=("validation-passed" "validation-failed" "validation-warnings")
           for lbl in "${LABELS_TO_REMOVE[@]}"; do
             gh issue edit "$ISSUE_NUMBER" --remove-label "$lbl" || true
