@@ -1,4 +1,4 @@
-name: Process Plugin Submission
+name: Internal Plugin Validation
 
 on:
   issues:
@@ -6,140 +6,365 @@ on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'Issue number to process (leave empty to process repository URL directly)'
+        description: 'Issue number to validate (leave empty to validate repository URL directly)'
         required: false
         type: string
       repository_url:
-        description: 'Repository URL to process directly (only used if issue_number is empty)'
+        description: 'Repository URL to validate directly'
         required: false
         type: string
-      action_type:
-        description: 'Action to perform'
+      validation_type:
+        description: 'Type of validation to perform'
         required: true
         type: choice
         options:
-          - 'check-format'
-          - 'approve-submission'
-        default: 'approve-submission'
+          - 'basic-check'
+          - 'full-validation'
+        default: 'full-validation'
 
 jobs:
-  process-submission:
-    name: Process Plugin Submission
+  validate-plugin:
+    name: Validate Plugin Submission
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'issues' && github.event.action == 'opened' && contains(github.event.issue.title, '[Plugin Submission]')) ||
-      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'approved') ||
+      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'validate') ||
       (github.event_name == 'workflow_dispatch')
     permissions:
-      contents: write
+      contents: read
       issues: write
-      actions: write
+      actions: read
     
     steps:
       - uses: actions/checkout@v4
       
-      - name: Check Issue Format
-        if: |
-          (github.event.action == 'opened') ||
-          (github.event_name == 'workflow_dispatch' && inputs.action_type == 'check-format' && inputs.issue_number != '')
-        id: check-format
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Install jq for JSON validation
+        run: sudo apt-get update && sudo apt-get install -y jq
+      
+      - name: Extract Repository Information
+        id: extract-repo
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            ISSUE_NUMBER="${{ inputs.issue_number }}"
-            BODY=$(gh issue view $ISSUE_NUMBER --json body -q .body)
+            if [ -n "${{ inputs.issue_number }}" ]; then
+              ISSUE_BODY=$(gh issue view ${{ inputs.issue_number }} --json body -q .body)
+              REPO_URL=$(echo "$ISSUE_BODY" | grep -o 'https://github.com/[a-zA-Z0-9_-]*/[a-zA-Z0-9_.-]*' | head -1)
+              ISSUE_NUMBER="${{ inputs.issue_number }}"
+            elif [ -n "${{ inputs.repository_url }}" ]; then
+              REPO_URL="${{ inputs.repository_url }}"
+              ISSUE_NUMBER=""
+            else
+              echo "Error: Either issue_number or repository_url must be provided"
+              exit 1
+            fi
           else
+            if [ "${{ github.event.action }}" == "opened" ]; then
+              ISSUE_BODY="${{ github.event.issue.body }}"
+            else
+              ISSUE_BODY=$(gh issue view ${{ github.event.issue.number }} --json body -q .body)
+            fi
+            REPO_URL=$(echo "$ISSUE_BODY" | grep -o 'https://github.com/[a-zA-Z0-9_-]*/[a-zA-Z0-9_.-]*' | head -1)
             ISSUE_NUMBER="${{ github.event.issue.number }}"
-            BODY="${{ github.event.issue.body }}"
           fi
           
-          # Check if body contains repository URL
-          if [[ $BODY =~ https://github.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+ ]]; then
-            REPO_URL=${BASH_REMATCH[0]}
-            REPO_NAME=$(echo $REPO_URL | awk -F'/' '{print $NF}')
-            echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
-            echo "repo_name=$REPO_NAME" >> $GITHUB_OUTPUT
-            
-            # Add comment with instructions
-            gh issue comment "$ISSUE_NUMBER" --body "Thank you for your submission! 
-            
-            I've detected the repository URL: $REPO_URL
-            
-            A maintainer will review your submission and approve it by adding the 'approved' label.
-            
-            Please ensure your repository:
-            - [ ] Has a valid plugin.json file in the main branch
-            - [ ] Follows the plugin development guidelines
-            - [ ] Has proper documentation"
-          else
-            gh issue comment "$ISSUE_NUMBER" --body "Error: Could not find a valid GitHub repository URL in your submission.
-            
-            Please format your issue with:
-            - Title: [Plugin Submission] Your Plugin Name
-            - Body: Include your GitHub repository URL (e.g., https://github.com/username/repo)"
+          if [ -z "$REPO_URL" ]; then
+            echo "Error: No valid GitHub repository URL found"
             exit 1
+          fi
+          
+          REPO_OWNER=$(echo $REPO_URL | awk -F'/' '{print $(NF-1)}')
+          REPO_NAME=$(echo $REPO_URL | awk -F'/' '{print $NF}')
+          
+          echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
+          echo "repo_owner=$REPO_OWNER" >> $GITHUB_OUTPUT
+          echo "repo_name=$REPO_NAME" >> $GITHUB_OUTPUT
+          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clone Plugin Repository
+        id: clone-repo
+        run: |
+          echo "Cloning repository: ${{ steps.extract-repo.outputs.repo_url }}"
+          git clone ${{ steps.extract-repo.outputs.repo_url }} plugin-repo
+          cd plugin-repo
+          echo "Repository cloned successfully"
+          echo "commit_hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo 'No tags found')" >> $GITHUB_OUTPUT
+
+      - name: Basic Repository Validation
+        id: basic-validation
+        run: |
+          cd plugin-repo
+          VALIDATION_RESULTS=""
+          ERROR_COUNT=0
+          WARNING_COUNT=0
+          
+          echo "=== BASIC REPOSITORY VALIDATION ==="
+          
+          # Check if repository is accessible
+          if [ $? -eq 0 ]; then
+            echo "✅ Repository is accessible"
+            VALIDATION_RESULTS+="\n✅ Repository is accessible"
+          else
+            echo "❌ Repository is not accessible"
+            VALIDATION_RESULTS+="\n❌ Repository is not accessible"
+            ERROR_COUNT=$((ERROR_COUNT + 1))
+          fi
+          
+          # Check for plugin.json
+          if [ -f "plugin.json" ]; then
+            echo "✅ plugin.json found"
+            VALIDATION_RESULTS+="\n✅ plugin.json found"
+            
+            # Validate JSON syntax
+            if jq empty plugin.json 2>/dev/null; then
+              echo "✅ plugin.json is valid JSON"
+              VALIDATION_RESULTS+="\n✅ plugin.json is valid JSON"
+            else
+              echo "❌ plugin.json is not valid JSON"
+              VALIDATION_RESULTS+="\n❌ plugin.json is not valid JSON"
+              ERROR_COUNT=$((ERROR_COUNT + 1))
+            fi
+          else
+            echo "❌ plugin.json not found"
+            VALIDATION_RESULTS+="\n❌ plugin.json not found"
+            ERROR_COUNT=$((ERROR_COUNT + 1))
+          fi
+          
+          # Check for README
+          if [ -f "README.md" ] || [ -f "README.txt" ] || [ -f "readme.md" ]; then
+            echo "✅ README file found"
+            VALIDATION_RESULTS+="\n✅ README file found"
+          else
+            echo "⚠️ No README file found"
+            VALIDATION_RESULTS+="\n⚠️ No README file found"
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          # Check for LICENSE
+          if [ -f "LICENSE" ] || [ -f "LICENSE.md" ] || [ -f "LICENSE.txt" ] || [ -f "license" ]; then
+            echo "✅ LICENSE file found"
+            VALIDATION_RESULTS+="\n✅ LICENSE file found"
+          else
+            echo "⚠️ No LICENSE file found"
+            VALIDATION_RESULTS+="\n⚠️ No LICENSE file found"
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          echo "error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
+          echo "warning_count=$WARNING_COUNT" >> $GITHUB_OUTPUT
+          echo "validation_results<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$VALIDATION_RESULTS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Detailed Plugin Validation
+        if: inputs.validation_type == 'full-validation' || github.event_name != 'workflow_dispatch'
+        id: detailed-validation
+        run: |
+          cd plugin-repo
+          DETAILED_RESULTS=""
+          ERROR_COUNT=${{ steps.basic-validation.outputs.error_count }}
+          WARNING_COUNT=${{ steps.basic-validation.outputs.warning_count }}
+          
+          echo "=== DETAILED PLUGIN VALIDATION ==="
+          
+          if [ -f "plugin.json" ] && jq empty plugin.json 2>/dev/null; then
+            # Validate required fields in plugin.json
+            REQUIRED_FIELDS=("name" "version" "description" "author")
+            for field in "${REQUIRED_FIELDS[@]}"; do
+              if jq -e ".$field" plugin.json > /dev/null 2>&1; then
+                VALUE=$(jq -r ".$field" plugin.json)
+                if [ "$VALUE" != "null" ] && [ -n "$VALUE" ]; then
+                  echo "✅ Required field '$field' is present and not empty"
+                  DETAILED_RESULTS+="\n✅ Required field '$field': $VALUE"
+                else
+                  echo "❌ Required field '$field' is empty"
+                  DETAILED_RESULTS+="\n❌ Required field '$field' is empty"
+                  ERROR_COUNT=$((ERROR_COUNT + 1))
+                fi
+              else
+                echo "❌ Required field '$field' is missing"
+                DETAILED_RESULTS+="\n❌ Required field '$field' is missing"
+                ERROR_COUNT=$((ERROR_COUNT + 1))
+              fi
+            done
+            
+            # Check version format
+            VERSION=$(jq -r '.version // empty' plugin.json)
+            if [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "✅ Version follows semantic versioning"
+              DETAILED_RESULTS+="\n✅ Version follows semantic versioning: $VERSION"
+            else
+              echo "⚠️ Version doesn't follow semantic versioning (x.y.z)"
+              DETAILED_RESULTS+="\n⚠️ Version doesn't follow semantic versioning: $VERSION"
+              WARNING_COUNT=$((WARNING_COUNT + 1))
+            fi
+            
+            # Check for optional but recommended fields
+            OPTIONAL_FIELDS=("repository" "homepage" "keywords" "license")
+            for field in "${OPTIONAL_FIELDS[@]}"; do
+              if jq -e ".$field" plugin.json > /dev/null 2>&1; then
+                VALUE=$(jq -r ".$field" plugin.json)
+                echo "✅ Optional field '$field' is present"
+                DETAILED_RESULTS+="\n✅ Optional field '$field': $VALUE"
+              else
+                echo "⚠️ Optional field '$field' is missing"
+                DETAILED_RESULTS+="\n⚠️ Optional field '$field' is missing"
+                WARNING_COUNT=$((WARNING_COUNT + 1))
+              fi
+            done
+          fi
+          
+          # Check for common plugin files
+          PLUGIN_FILES=("main.js" "index.js" "plugin.js" "src/" "lib/")
+          FOUND_MAIN=false
+          for file in "${PLUGIN_FILES[@]}"; do
+            if [ -f "$file" ] || [ -d "$file" ]; then
+              echo "✅ Main plugin file/directory found: $file"
+              DETAILED_RESULTS+="\n✅ Main plugin file/directory found: $file"
+              FOUND_MAIN=true
+              break
+            fi
+          done
+          
+          if [ "$FOUND_MAIN" = false ]; then
+            echo "⚠️ No main plugin file found (main.js, index.js, plugin.js, src/, lib/)"
+            DETAILED_RESULTS+="\n⚠️ No main plugin file found"
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          # Check for test files
+          if [ -d "test" ] || [ -d "tests" ] || [ -f "test.js" ] || find . -name "*test*" -type f | grep -q .; then
+            echo "✅ Test files found"
+            DETAILED_RESULTS+="\n✅ Test files found"
+          else
+            echo "⚠️ No test files found"
+            DETAILED_RESULTS+="\n⚠️ No test files found"
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          # Check for package.json if it's a Node.js plugin
+          if [ -f "package.json" ]; then
+            echo "✅ package.json found"
+            DETAILED_RESULTS+="\n✅ package.json found"
+            
+            if jq empty package.json 2>/dev/null; then
+              echo "✅ package.json is valid JSON"
+              DETAILED_RESULTS+="\n✅ package.json is valid JSON"
+              
+              # Check for security vulnerabilities in dependencies
+              if command -v npm >/dev/null 2>&1; then
+                npm install --package-lock-only
+                if npm audit --audit-level=moderate 2>/dev/null; then
+                  echo "✅ No moderate+ security vulnerabilities found"
+                  DETAILED_RESULTS+="\n✅ No moderate+ security vulnerabilities found"
+                else
+                  echo "⚠️ Security vulnerabilities detected in dependencies"
+                  DETAILED_RESULTS+="\n⚠️ Security vulnerabilities detected in dependencies"
+                  WARNING_COUNT=$((WARNING_COUNT + 1))
+                fi
+              fi
+            else
+              echo "❌ package.json is not valid JSON"
+              DETAILED_RESULTS+="\n❌ package.json is not valid JSON"
+              ERROR_COUNT=$((ERROR_COUNT + 1))
+            fi
+          fi
+          
+          # Check repository size
+          REPO_SIZE=$(du -sh . | cut -f1)
+          echo "ℹ️ Repository size: $REPO_SIZE"
+          DETAILED_RESULTS+="\nℹ️ Repository size: $REPO_SIZE"
+          
+          # Check for .gitignore
+          if [ -f ".gitignore" ]; then
+            echo "✅ .gitignore file found"
+            DETAILED_RESULTS+="\n✅ .gitignore file found"
+          else
+            echo "⚠️ .gitignore file not found"
+            DETAILED_RESULTS+="\n⚠️ .gitignore file not found"
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          echo "detailed_error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
+          echo "detailed_warning_count=$WARNING_COUNT" >> $GITHUB_OUTPUT
+          echo "detailed_results<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$DETAILED_RESULTS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate Validation Report
+        id: report
+        run: |
+          ERROR_COUNT=${{ steps.detailed-validation.outputs.detailed_error_count || steps.basic-validation.outputs.error_count }}
+          WARNING_COUNT=${{ steps.detailed-validation.outputs.detailed_warning_count || steps.basic-validation.outputs.warning_count }}
+          
+          REPORT="# Plugin Validation Report
+          
+          **Repository:** ${{ steps.extract-repo.outputs.repo_url }}
+          **Validation Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Commit Hash:** ${{ steps.clone-repo.outputs.commit_hash }}
+          **Latest Tag:** ${{ steps.clone-repo.outputs.latest_tag }}
+          
+          ## Summary
+          - ❌ **Errors:** $ERROR_COUNT
+          - ⚠️ **Warnings:** $WARNING_COUNT
+          - **Overall Status:** $([ $ERROR_COUNT -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")
+          
+          ## Validation Results
+          
+          ### Basic Validation
+          ${{ steps.basic-validation.outputs.validation_results }}
+          
+          $([ "${{ inputs.validation_type }}" == "full-validation" ] || [ "${{ github.event_name }}" != "workflow_dispatch" ] && echo "### Detailed Validation" && echo "${{ steps.detailed-validation.outputs.detailed_results }}")
+          
+          ## Recommendations
+          $([ $ERROR_COUNT -gt 0 ] && echo "- Fix all errors before plugin can be considered ready")
+          $([ $WARNING_COUNT -gt 0 ] && echo "- Address warnings to improve plugin quality")
+          $([ $ERROR_COUNT -eq 0 ] && [ $WARNING_COUNT -eq 0 ] && echo "- Plugin passes all validation checks! 🎉")
+          "
+          
+          echo "validation_report<<EOF" >> $GITHUB_OUTPUT
+          echo "$REPORT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "total_errors=$ERROR_COUNT" >> $GITHUB_OUTPUT
+          echo "total_warnings=$WARNING_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Comment Validation Results
+        if: steps.extract-repo.outputs.issue_number != ''
+        run: |
+          gh issue comment ${{ steps.extract-repo.outputs.issue_number }} --body "${{ steps.report.outputs.validation_report }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Validation Labels
+        if: steps.extract-repo.outputs.issue_number != '' && github.event_name != 'workflow_dispatch'
+        run: |
+          # Remove existing validation labels
+          gh issue edit ${{ steps.extract-repo.outputs.issue_number }} --remove-label "validation-passed,validation-failed,validation-warnings"
+          
+          if [ ${{ steps.report.outputs.total_errors }} -eq 0 ]; then
+            if [ ${{ steps.report.outputs.total_warnings }} -eq 0 ]; then
+              gh issue edit ${{ steps.extract-repo.outputs.issue_number }} --add-label "validation-passed"
+            else
+              gh issue edit ${{ steps.extract-repo.outputs.issue_number }} --add-label "validation-warnings"
+            fi
+          else
+            gh issue edit ${{ steps.extract-repo.outputs.issue_number }} --add-label "validation-failed"
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Process Approved Submission
-        if: |
-          (github.event.action == 'labeled' && github.event.label.name == 'approved') ||
-          (github.event_name == 'workflow_dispatch' && inputs.action_type == 'approve-submission')
+      - name: Print Summary
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            if [ -n "${{ inputs.issue_number }}" ]; then
-              # Get issue body from specified issue number
-              ISSUE_BODY=$(gh issue view ${{ inputs.issue_number }} --json body -q .body)
-              REPO_URL=$(echo "$ISSUE_BODY" | grep -o 'https://github.com/[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*' | head -1)
-              ISSUE_NUMBER="${{ inputs.issue_number }}"
-            elif [ -n "${{ inputs.repository_url }}" ]; then
-              # Use directly provided repository URL
-              REPO_URL="${{ inputs.repository_url }}"
-              ISSUE_NUMBER=""
-            else
-              echo "Error: Either issue_number or repository_url must be provided for manual execution"
-              exit 1
-            fi
-          else
-            # Get issue body from the event
-            ISSUE_BODY=$(gh issue view ${{ github.event.issue.number }} --json body -q .body)
-            REPO_URL=$(echo "$ISSUE_BODY" | grep -o 'https://github.com/[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*' | head -1)
-            ISSUE_NUMBER="${{ github.event.issue.number }}"
-          fi
-          
-          REPO_NAME=$(echo $REPO_URL | awk -F'/' '{print $NF}')
-          
-          # Check if the plugin file already exists
-          if [ -f "plugins/${REPO_NAME}.yml" ]; then
-            if [ -n "$ISSUE_NUMBER" ]; then
-              gh issue close $ISSUE_NUMBER --comment "The plugin already exists, no need to add it again."
-            else
-              echo "The plugin already exists, no need to add it again."
-            fi
-            exit 0
-          fi
-          
-          # Create plugins directory
-          mkdir -p plugins
-          
-          # Create or update plugin YAML file
-          echo "url: $REPO_URL" > "plugins/${REPO_NAME}.yml"
-          
-          # Configure git and commit changes
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add "plugins/${REPO_NAME}.yml"
-          git commit -m "Add plugin: ${REPO_NAME}"
-          git push
-          
-          # Close issue if applicable
-          if [ -n "$ISSUE_NUMBER" ]; then
-            gh issue close $ISSUE_NUMBER --comment "Plugin has been successfully added! Thank you for your contribution."
-          else
-            echo "Plugin has been successfully added!"
-          fi
-          
-          # Trigger update-plugins workflow
-          gh workflow run update-plugins.yml
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "=== VALIDATION SUMMARY ==="
+          echo "Repository: ${{ steps.extract-repo.outputs.repo_url }}"
+          echo "Errors: ${{ steps.report.outputs.total_errors }}"
+          echo "Warnings: ${{ steps.report.outputs.total_warnings }}"
+          echo "Status: $([ ${{ steps.report.outputs.total_errors }} -eq 0 ] && echo "PASSED" || echo "FAILED")"
+          echo "========================="
