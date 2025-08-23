@@ -1,39 +1,31 @@
 {
-  "name": "blinko-plugin-rtl-support",
+  "name": "my-plugin",
   "version": "1.0.0",
   "type": "module",
-  "description": "RTL language support plugin for Blinko",
-  "main": "release/index.js",
+  "devDependencies": {
+    "@types/bun": "^1.2.2",
+    "@types/node": "^22.13.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "blinko": "^0.0.14",
+    "blinko-cli": "^0.0.4",
+    "typescript": "^5.0.0",
+    "vite": "^4.0.0",
+    "browser-image-compression": "^2.0.2"
+  },
+  "description": "a blinko plugin",
   "scripts": {
     "dev": "blinko-cli dev server",
-    "build:cooligy": "vite build --mode production",
-    "build": "ngrok http 8080",
+    "ngrok": "ngrok http 8080",
     "release:publish": "vite build --mode production && blinko-cli release plugin"
   },
-  "keywords": ["blinko", "plugin", "rtl", "hebrew", "arabic", "i18n"],
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "dependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.0.0",
-    "@types/react-dom": "^18.0.0",
-    "typescript": "^5.0.0",
-    "vite": "^5.0.0",
-    "@vitejs/plugin-react": "^4.0.0",
-    "vite-plugin-blinko": "^1.0.1",
     "@preact/preset-vite": "^2.10.1",
     "@types/systemjs": "^6.15.3",
     "@types/ws": "^8.18.0",
-    "html-to-image": "^1.11.13",
     "preact": "^10.26.4",
     "preact-iso": "^2.9.1",
-    "preact-markdown": "^2.1.0",
     "systemjs": "^6.15.1",
-    "ws": "^8.18.1",
-    "blinko-cli": "^0.0.4"
+    "vite-plugin-blinko": "^1.0.1",
+    "ws": "^8.18.1"
   }
 }
