@@ -1,5 +1,16 @@
 {
-  "title": "My Plugin",
-  "countLabel": "Count is {{count}}",
-  "successMessage": "Success!"
-} 
+  "rtl_support": "RTL Support",
+  "auto_detect": "Auto Detect",
+  "manual_toggle": "Manual Toggle",
+  "rtl_enabled": "RTL Enabled",
+  "rtl_disabled": "RTL Disabled",
+  "settings": "Settings",
+  "detection_sensitivity": "Detection Sensitivity",
+  "high": "High",
+  "medium": "Medium",
+  "low": "Low",
+  "force_rtl": "Force RTL",
+  "force_ltr": "Force LTR",
+  "auto": "Auto",
+  "plugin_description": "This plugin automatically detects Hebrew and Arabic text and applies appropriate RTL styling."
+}

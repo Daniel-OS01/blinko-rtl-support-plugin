@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import preact from "@preact/preset-vite";
+import react from "@vitejs/plugin-react";
 import blinkoPlugin from "vite-plugin-blinko";
 
 /**
@@ -7,7 +7,7 @@ import blinkoPlugin from "vite-plugin-blinko";
  */
 export default defineConfig(({ mode }) => ({
   plugins: [
-    preact(),
+    react(),
     ...blinkoPlugin()
   ]
 }));

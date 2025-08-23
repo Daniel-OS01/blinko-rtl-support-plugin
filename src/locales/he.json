@@ -1,0 +1,16 @@
+{
+  "rtl_support": "תמיכה ב-RTL",
+  "auto_detect": "זיהוי אוטומטי",
+  "manual_toggle": "החלפה ידנית",
+  "rtl_enabled": "RTL מופעל",
+  "rtl_disabled": "RTL מכובה",
+  "settings": "הגדרות",
+  "detection_sensitivity": "רגישות זיהוי",
+  "high": "גבוהה",
+  "medium": "בינונית",
+  "low": "נמוכה",
+  "force_rtl": "אלץ RTL",
+  "force_ltr": "אלץ LTR",
+  "auto": "אוטומטי",
+  "plugin_description": "תוסף זה מזהה אוטומטית טקסט עברי וערבי ומחיל עליו עיצוב RTL מתאים."
+}

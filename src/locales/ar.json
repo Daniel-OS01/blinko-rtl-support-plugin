@@ -1,0 +1,16 @@
+{
+  "rtl_support": "دعم RTL",
+  "auto_detect": "الكشف التلقائي",
+  "manual_toggle": "التبديل اليدوي",
+  "rtl_enabled": "RTL مفعل",
+  "rtl_disabled": "RTL معطل",
+  "settings": "الإعدادات",
+  "detection_sensitivity": "حساسية الكشف",
+  "high": "عالية",
+  "medium": "متوسطة",
+  "low": "منخفضة",
+  "force_rtl": "إجبار RTL",
+  "force_ltr": "إجبار LTR",
+  "auto": "تلقائي",
+  "plugin_description": "يكتشف هذا المكون الإضافي تلقائياً النص العربي والعبري ويطبق عليه تصميم RTL المناسب."
+}
