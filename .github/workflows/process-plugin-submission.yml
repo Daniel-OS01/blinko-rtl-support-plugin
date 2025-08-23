@@ -106,15 +106,9 @@ jobs:
           
           echo "=== BASIC REPOSITORY VALIDATION ==="
           
-          # Check if repository is accessible
-          if [ $? -eq 0 ]; then
-            echo "✅ Repository is accessible"
-            VALIDATION_RESULTS+="\n✅ Repository is accessible"
-          else
-            echo "❌ Repository is not accessible"
-            VALIDATION_RESULTS+="\n❌ Repository is not accessible"
-            ERROR_COUNT=$((ERROR_COUNT + 1))
-          fi
+          # Check if repository is accessible (we're already in it, so it's accessible)
+          echo "✅ Repository is accessible"
+          VALIDATION_RESULTS+="\n✅ Repository is accessible"
           
           # Check for plugin.json
           if [ -f "plugin.json" ]; then
@@ -137,7 +131,7 @@ jobs:
           fi
           
           # Check for README
-          if [ -f "README.md" ] || [ -f "README.txt" ] || [ -f "readme.md" ]; then
+          if [ -f "README.md" ] || [ -f "README.txt" ] || [ -f "readme.md" ] || [ -f "Readme.md" ]; then
             echo "✅ README file found"
             VALIDATION_RESULTS+="\n✅ README file found"
           else
@@ -153,6 +147,16 @@ jobs:
           else
             echo "⚠️ No LICENSE file found"
             VALIDATION_RESULTS+="\n⚠️ No LICENSE file found"
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
+          
+          # Check for .gitignore
+          if [ -f ".gitignore" ]; then
+            echo "✅ .gitignore file found"
+            VALIDATION_RESULTS+="\n✅ .gitignore file found"
+          else
+            echo "⚠️ .gitignore file not found"
+            VALIDATION_RESULTS+="\n⚠️ .gitignore file not found"
             WARNING_COUNT=$((WARNING_COUNT + 1))
           fi
           
@@ -181,7 +185,13 @@ jobs:
                 VALUE=$(jq -r ".$field" plugin.json)
                 if [ "$VALUE" != "null" ] && [ -n "$VALUE" ]; then
                   echo "✅ Required field '$field' is present and not empty"
-                  DETAILED_RESULTS+="\n✅ Required field '$field': $VALUE"
+                  # Truncate long values for display
+                  if [ ${#VALUE} -gt 100 ]; then
+                    DISPLAY_VALUE="${VALUE:0:100}..."
+                  else
+                    DISPLAY_VALUE="$VALUE"
+                  fi
+                  DETAILED_RESULTS+="\n✅ Required field '$field': $DISPLAY_VALUE"
                 else
                   echo "❌ Required field '$field' is empty"
                   DETAILED_RESULTS+="\n❌ Required field '$field' is empty"
@@ -218,6 +228,19 @@ jobs:
                 WARNING_COUNT=$((WARNING_COUNT + 1))
               fi
             done
+            
+            # Check for entry point field
+            if jq -e '.main' plugin.json > /dev/null 2>&1; then
+              MAIN_FILE=$(jq -r '.main' plugin.json)
+              if [ -f "$MAIN_FILE" ]; then
+                echo "✅ Entry point file exists: $MAIN_FILE"
+                DETAILED_RESULTS+="\n✅ Entry point file exists: $MAIN_FILE"
+              else
+                echo "❌ Entry point file not found: $MAIN_FILE"
+                DETAILED_RESULTS+="\n❌ Entry point file not found: $MAIN_FILE"
+                ERROR_COUNT=$((ERROR_COUNT + 1))
+              fi
+            fi
           fi
           
           # Check for common plugin files
@@ -239,7 +262,7 @@ jobs:
           fi
           
           # Check for test files
-          if [ -d "test" ] || [ -d "tests" ] || [ -f "test.js" ] || find . -name "*test*" -type f | grep -q .; then
+          if [ -d "test" ] || [ -d "tests" ] || [ -d "__tests__" ] || [ -f "test.js" ] || find . -name "*test*" -type f 2>/dev/null | grep -q .; then
             echo "✅ Test files found"
             DETAILED_RESULTS+="\n✅ Test files found"
           else
@@ -259,8 +282,9 @@ jobs:
               
               # Check for security vulnerabilities in dependencies
               if command -v npm >/dev/null 2>&1; then
-                npm install --package-lock-only
-                if npm audit --audit-level=moderate 2>/dev/null; then
+                echo "Checking for security vulnerabilities..."
+                npm install --package-lock-only --silent
+                if npm audit --audit-level=moderate --silent; then
                   echo "✅ No moderate+ security vulnerabilities found"
                   DETAILED_RESULTS+="\n✅ No moderate+ security vulnerabilities found"
                 else
@@ -281,15 +305,14 @@ jobs:
           echo "ℹ️ Repository size: $REPO_SIZE"
           DETAILED_RESULTS+="\nℹ️ Repository size: $REPO_SIZE"
           
-          # Check for .gitignore
-          if [ -f ".gitignore" ]; then
-            echo "✅ .gitignore file found"
-            DETAILED_RESULTS+="\n✅ .gitignore file found"
-          else
-            echo "⚠️ .gitignore file not found"
-            DETAILED_RESULTS+="\n⚠️ .gitignore file not found"
-            WARNING_COUNT=$((WARNING_COUNT + 1))
-          fi
+          # Check for documentation files
+          DOC_FILES=("CHANGELOG.md" "CONTRIBUTING.md" "docs/")
+          for file in "${DOC_FILES[@]}"; do
+            if [ -f "$file" ] || [ -d "$file" ]; then
+              echo "✅ Documentation found: $file"
+              DETAILED_RESULTS+="\n✅ Documentation found: $file"
+            fi
+          done
           
           echo "detailed_error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
           echo "detailed_warning_count=$WARNING_COUNT" >> $GITHUB_OUTPUT
@@ -297,43 +320,147 @@ jobs:
           echo -e "$DETAILED_RESULTS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Generate Validation Report
-        id: report
+      - name: Security and Code Quality Checks
+        if: inputs.validation_type == 'full-validation' || github.event_name != 'workflow_dispatch'
+        id: security-checks
         run: |
+          cd plugin-repo
+          SECURITY_RESULTS=""
           ERROR_COUNT=${{ steps.detailed-validation.outputs.detailed_error_count || steps.basic-validation.outputs.error_count }}
           WARNING_COUNT=${{ steps.detailed-validation.outputs.detailed_warning_count || steps.basic-validation.outputs.warning_count }}
           
-          REPORT="# Plugin Validation Report
+          echo "=== SECURITY AND CODE QUALITY CHECKS ==="
           
-          **Repository:** ${{ steps.extract-repo.outputs.repo_url }}
-          **Validation Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          **Commit Hash:** ${{ steps.clone-repo.outputs.commit_hash }}
-          **Latest Tag:** ${{ steps.clone-repo.outputs.latest_tag }}
+          # Check for sensitive files that shouldn't be committed
+          SENSITIVE_FILES=(".env" ".env.local" "config.json" "secrets.json" "private.key")
+          for file in "${SENSITIVE_FILES[@]}"; do
+            if [ -f "$file" ]; then
+              echo "⚠️ Sensitive file detected: $file"
+              SECURITY_RESULTS+="\n⚠️ Sensitive file detected: $file"
+              WARNING_COUNT=$((WARNING_COUNT + 1))
+            fi
+          done
           
-          ## Summary
-          - ❌ **Errors:** $ERROR_COUNT
-          - ⚠️ **Warnings:** $WARNING_COUNT
-          - **Overall Status:** $([ $ERROR_COUNT -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")
+          # Check for hardcoded secrets (basic patterns)
+          if grep -r -i "password\|secret\|key\|token" --include="*.js" --include="*.ts" --include="*.json" . 2>/dev/null | grep -v node_modules | head -5; then
+            echo "⚠️ Potential hardcoded secrets found"
+            SECURITY_RESULTS+="\n⚠️ Potential hardcoded secrets found"
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          else
+            echo "✅ No obvious hardcoded secrets detected"
+            SECURITY_RESULTS+="\n✅ No obvious hardcoded secrets detected"
+          fi
           
-          ## Validation Results
+          # Check for proper error handling patterns
+          if find . -name "*.js" -o -name "*.ts" 2>/dev/null | xargs grep -l "try\|catch" | head -1; then
+            echo "✅ Error handling patterns detected"
+            SECURITY_RESULTS+="\n✅ Error handling patterns detected"
+          else
+            echo "⚠️ No error handling patterns found"
+            SECURITY_RESULTS+="\n⚠️ No error handling patterns found"
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          fi
           
-          ### Basic Validation
-          ${{ steps.basic-validation.outputs.validation_results }}
+          # Check for minified files (potential security concern)
+          if find . -name "*.min.js" 2>/dev/null | head -1; then
+            echo "⚠️ Minified JavaScript files detected"
+            SECURITY_RESULTS+="\n⚠️ Minified JavaScript files detected"
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+          else
+            echo "✅ No minified files detected"
+            SECURITY_RESULTS+="\n✅ No minified files detected"
+          fi
           
-          $([ "${{ inputs.validation_type }}" == "full-validation" ] || [ "${{ github.event_name }}" != "workflow_dispatch" ] && echo "### Detailed Validation" && echo "${{ steps.detailed-validation.outputs.detailed_results }}")
+          echo "security_error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
+          echo "security_warning_count=$WARNING_COUNT" >> $GITHUB_OUTPUT
+          echo "security_results<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$SECURITY_RESULTS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate Validation Report
+        id: report
+        run: |
+          # Get final counts
+          if [ "${{ steps.security-checks.outcome }}" == "success" ]; then
+            FINAL_ERROR_COUNT=${{ steps.security-checks.outputs.security_error_count }}
+            FINAL_WARNING_COUNT=${{ steps.security-checks.outputs.security_warning_count }}
+          elif [ "${{ steps.detailed-validation.outcome }}" == "success" ]; then
+            FINAL_ERROR_COUNT=${{ steps.detailed-validation.outputs.detailed_error_count }}
+            FINAL_WARNING_COUNT=${{ steps.detailed-validation.outputs.detailed_warning_count }}
+          else
+            FINAL_ERROR_COUNT=${{ steps.basic-validation.outputs.error_count }}
+            FINAL_WARNING_COUNT=${{ steps.basic-validation.outputs.warning_count }}
+          fi
           
-          ## Recommendations
-          $([ $ERROR_COUNT -gt 0 ] && echo "- Fix all errors before plugin can be considered ready")
-          $([ $WARNING_COUNT -gt 0 ] && echo "- Address warnings to improve plugin quality")
-          $([ $ERROR_COUNT -eq 0 ] && [ $WARNING_COUNT -eq 0 ] && echo "- Plugin passes all validation checks! 🎉")
-          "
+          # Determine overall status
+          if [ $FINAL_ERROR_COUNT -eq 0 ]; then
+            OVERALL_STATUS="✅ PASSED"
+          else
+            OVERALL_STATUS="❌ FAILED"
+          fi
           
+          # Generate timestamp
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          # Create the report
+          cat > validation_report.md << 'EOF'
+# Plugin Validation Report
+
+**Repository:** ${{ steps.extract-repo.outputs.repo_url }}
+**Validation Date:** TIMESTAMP_PLACEHOLDER
+**Commit Hash:** ${{ steps.clone-repo.outputs.commit_hash }}
+**Latest Tag:** ${{ steps.clone-repo.outputs.latest_tag }}
+
+## Summary
+- ❌ **Errors:** ERROR_COUNT_PLACEHOLDER
+- ⚠️ **Warnings:** WARNING_COUNT_PLACEHOLDER  
+- **Overall Status:** OVERALL_STATUS_PLACEHOLDER
+
+## Validation Results
+
+### Basic Validation
+${{ steps.basic-validation.outputs.validation_results }}
+
+### Detailed Validation
+${{ steps.detailed-validation.outputs.detailed_results }}
+
+### Security and Code Quality
+${{ steps.security-checks.outputs.security_results }}
+
+## Recommendations
+RECOMMENDATIONS_PLACEHOLDER
+EOF
+
+          # Replace placeholders
+          sed -i "s/TIMESTAMP_PLACEHOLDER/$TIMESTAMP/g" validation_report.md
+          sed -i "s/ERROR_COUNT_PLACEHOLDER/$FINAL_ERROR_COUNT/g" validation_report.md
+          sed -i "s/WARNING_COUNT_PLACEHOLDER/$FINAL_WARNING_COUNT/g" validation_report.md
+          sed -i "s/OVERALL_STATUS_PLACEHOLDER/$OVERALL_STATUS/g" validation_report.md
+          
+          # Generate recommendations
+          RECOMMENDATIONS=""
+          if [ $FINAL_ERROR_COUNT -gt 0 ]; then
+            RECOMMENDATIONS+="- Fix all errors before plugin can be considered ready\n"
+          fi
+          if [ $FINAL_WARNING_COUNT -gt 0 ]; then
+            RECOMMENDATIONS+="- Address warnings to improve plugin quality\n"
+          fi
+          if [ $FINAL_ERROR_COUNT -eq 0 ] && [ $FINAL_WARNING_COUNT -eq 0 ]; then
+            RECOMMENDATIONS+="- Plugin passes all validation checks! 🎉\n"
+          fi
+          
+          # Replace recommendations placeholder
+          echo -e "$RECOMMENDATIONS" > recommendations.txt
+          sed -i '/RECOMMENDATIONS_PLACEHOLDER/r recommendations.txt' validation_report.md
+          sed -i '/RECOMMENDATIONS_PLACEHOLDER/d' validation_report.md
+          
+          # Output the report
           echo "validation_report<<EOF" >> $GITHUB_OUTPUT
-          echo "$REPORT" >> $GITHUB_OUTPUT
+          cat validation_report.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           
-          echo "total_errors=$ERROR_COUNT" >> $GITHUB_OUTPUT
-          echo "total_warnings=$WARNING_COUNT" >> $GITHUB_OUTPUT
+          echo "total_errors=$FINAL_ERROR_COUNT" >> $GITHUB_OUTPUT
+          echo "total_warnings=$FINAL_WARNING_COUNT" >> $GITHUB_OUTPUT
 
       - name: Comment Validation Results
         if: steps.extract-repo.outputs.issue_number != ''
@@ -346,7 +473,7 @@ jobs:
         if: steps.extract-repo.outputs.issue_number != '' && github.event_name != 'workflow_dispatch'
         run: |
           # Remove existing validation labels
-          gh issue edit ${{ steps.extract-repo.outputs.issue_number }} --remove-label "validation-passed,validation-failed,validation-warnings"
+          gh issue edit ${{ steps.extract-repo.outputs.issue_number }} --remove-label "validation-passed,validation-failed,validation-warnings" || true
           
           if [ ${{ steps.report.outputs.total_errors }} -eq 0 ]; then
             if [ ${{ steps.report.outputs.total_warnings }} -eq 0 ]; then
@@ -366,5 +493,9 @@ jobs:
           echo "Repository: ${{ steps.extract-repo.outputs.repo_url }}"
           echo "Errors: ${{ steps.report.outputs.total_errors }}"
           echo "Warnings: ${{ steps.report.outputs.total_warnings }}"
-          echo "Status: $([ ${{ steps.report.outputs.total_errors }} -eq 0 ] && echo "PASSED" || echo "FAILED")"
+          if [ ${{ steps.report.outputs.total_errors }} -eq 0 ]; then
+            echo "Status: PASSED ✅"
+          else
+            echo "Status: FAILED ❌"
+          fi
           echo "========================="
