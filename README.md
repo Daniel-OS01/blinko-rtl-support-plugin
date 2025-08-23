@@ -78,12 +78,21 @@ window.blinkoRTL.styler.applyRTL(element, true);
 git clone https://github.com/Daniel-OS01/blinko-rtl-language-support-plugin.git
 cd blinko-rtl-language-support-plugin
 bun install
+```
+
+### Building
+```
 bun run build
 ```
 
 ### Development Mode
 ```
 bun run dev
+```
+
+### Publish
+```
+bun run release:publish
 ```
 
 ### Testing
