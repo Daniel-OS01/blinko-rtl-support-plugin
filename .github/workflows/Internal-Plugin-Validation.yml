@@ -153,6 +153,7 @@ jobs:
           echo "✅ Repository is accessible"
           VALIDATION_RESULTS+="\n✅ Repository is accessible"
 
+          # plugin.json check
           if [ -f "plugin.json" ]; then
             echo "✅ plugin.json found"
             VALIDATION_RESULTS+="\n✅ plugin.json found"
@@ -171,7 +172,8 @@ jobs:
             ERROR_COUNT=$((ERROR_COUNT + 1))
           fi
 
-          if [ -f "README.md" ] || [ -f "README.txt" ] || [ -f "readme.md" ] || [ -f "Readme.md" ]; then
+          # Case-insensitive README
+          if ls | grep -i -q '^readme\(\.md\|\.txt\)\?$'; then
             echo "✅ README file found"
             VALIDATION_RESULTS+="\n✅ README file found"
           else
@@ -180,7 +182,8 @@ jobs:
             WARNING_COUNT=$((WARNING_COUNT + 1))
           fi
 
-          if [ -f "LICENSE" ] || [ -f "LICENSE.md" ] || [ -f "LICENSE.txt" ] || [ -f "license" ]; then
+          # Case-insensitive LICENSE
+          if ls | grep -i -q '^license\(\.md\|\.txt\)\?$'; then
             echo "✅ LICENSE file found"
             VALIDATION_RESULTS+="\n✅ LICENSE file found"
           else
@@ -189,6 +192,7 @@ jobs:
             WARNING_COUNT=$((WARNING_COUNT + 1))
           fi
 
+          # .gitignore check
           if [ -f ".gitignore" ]; then
             echo "✅ .gitignore file found"
             VALIDATION_RESULTS+="\n✅ .gitignore file found"
@@ -201,7 +205,7 @@ jobs:
           echo "error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
           echo "warning_count=$WARNING_COUNT" >> $GITHUB_OUTPUT
           echo "validation_results<<EOF" >> $GITHUB_OUTPUT
-          printf "%s\n" "$VALIDATION_RESULTS" >> $GITHUB_OUTPUT
+          printf "%b\n" "$VALIDATION_RESULTS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Detailed Plugin Validation
@@ -348,7 +352,7 @@ jobs:
           echo "detailed_error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
           echo "detailed_warning_count=$WARNING_COUNT" >> $GITHUB_OUTPUT
           echo "detailed_results<<EOF" >> $GITHUB_OUTPUT
-          printf "%s\n" "$DETAILED_RESULTS" >> $GITHUB_OUTPUT
+          printf "%b\n" "$DETAILED_RESULTS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Security and Code Quality Checks
@@ -373,7 +377,8 @@ jobs:
 
           echo "=== SECURITY AND CODE QUALITY CHECKS ==="
 
-          SENSITIVE_FILES=(".env" ".env.local" "config.json" "secrets.json" "private.key")
+          # Sensitive files check (expanded)
+          SENSITIVE_FILES=(".env" ".env.local" ".env.production" ".env.development" "config.json" "secrets.json" "private.key" "id_rsa" ".npmrc")
           for file in "${SENSITIVE_FILES[@]}"; do
             if [ -f "$file" ]; then
               echo "⚠️ Sensitive file detected: $file"
@@ -382,7 +387,8 @@ jobs:
             fi
           done
 
-          if grep -r -i "password\|secret\|key\|token" --include="*.js" --include="*.ts" --include="*.json" . 2>/dev/null | grep -v node_modules | head -5; then
+          # Hardcoded secrets check, skip node_modules and .git
+          if grep -r --exclude-dir={node_modules,.git} -E 'password|secret|key|token' ./*.js ./*.ts ./*.json 2>/dev/null | head -5 | grep .; then
             echo "⚠️ Potential hardcoded secrets found"
             SECURITY_RESULTS+="\n⚠️ Potential hardcoded secrets found"
             WARNING_COUNT=$((WARNING_COUNT + 1))
@@ -391,7 +397,8 @@ jobs:
             SECURITY_RESULTS+="\n✅ No obvious hardcoded secrets detected"
           fi
 
-          if find . -name "*.js" -o -name "*.ts" 2>/dev/null | xargs grep -l "try\|catch" | head -1; then
+          # Error handling patterns
+          if find . -name "*.js" -o -name "*.ts" 2>/dev/null | xargs grep -l "try\|catch" | head -1 | grep .; then
             echo "✅ Error handling patterns detected"
             SECURITY_RESULTS+="\n✅ Error handling patterns detected"
           else
@@ -400,7 +407,8 @@ jobs:
             WARNING_COUNT=$((WARNING_COUNT + 1))
           fi
 
-          if find . -name "*.min.js" 2>/dev/null | head -1; then
+          # Minified files detection
+          if find . -type f -name "*.min.js" | grep .; then
             echo "⚠️ Minified JavaScript files detected"
             SECURITY_RESULTS+="\n⚠️ Minified JavaScript files detected"
             WARNING_COUNT=$((WARNING_COUNT + 1))
@@ -412,7 +420,7 @@ jobs:
           echo "security_error_count=$ERROR_COUNT" >> $GITHUB_OUTPUT
           echo "security_warning_count=$WARNING_COUNT" >> $GITHUB_OUTPUT
           echo "security_results<<EOF" >> $GITHUB_OUTPUT
-          printf "%s\n" "$SECURITY_RESULTS" >> $GITHUB_OUTPUT
+          printf "%b\n" "$SECURITY_RESULTS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Generate Validation Report
@@ -428,7 +436,7 @@ jobs:
           DETAILED_WARNINGS="${{ steps.detailed-validation.outputs.detailed_warning_count }}"
           BASIC_WARNINGS="${{ steps.basic-validation.outputs.warning_count }}"
 
-          # Choose the most-complete available values
+          # Choose the most-complete available values, default to 0 if empty
           if [ -n "$SECURITY_ERRORS" ]; then
             FINAL_ERROR_COUNT=$SECURITY_ERRORS
           elif [ -n "$DETAILED_ERRORS" ]; then
@@ -552,4 +560,6 @@ EOF
           else
             echo "Status: FAILED ❌"
           fi
-          echo "=========================" 
+          echo "========================="
+          echo ""
+          cat validation_report.md
