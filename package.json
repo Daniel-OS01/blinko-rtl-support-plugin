@@ -6,6 +6,7 @@
   "main": "release/index.js",
   "scripts": {
     "dev": "blinko-cli dev server",
+    "build:cooligy": "vite build --mode production",
     "build": "ngrok http 8080",
     "release:publish": "vite build --mode production && blinko-cli release plugin"
   },
