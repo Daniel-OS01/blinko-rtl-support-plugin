@@ -1,0 +1,90 @@
+name: Process Plugin Submission
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  process-submission:
+    name: Process Plugin Submission
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'issues' && github.event.action == 'opened' && contains(github.event.issue.title, '[Plugin Submission]')) ||
+      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'approved')
+    permissions:
+      contents: write
+      issues: write
+      actions: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check Issue Format
+        if: github.event.action == 'opened'
+        id: check-format
+        run: |
+          BODY="${{ github.event.issue.body }}"
+          # Check if body contains repository URL
+          if [[ $BODY =~ https://github.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+ ]]; then
+            REPO_URL=${BASH_REMATCH[0]}
+            REPO_NAME=$(echo $REPO_URL | awk -F'/' '{print $NF}')
+            echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
+            echo "repo_name=$REPO_NAME" >> $GITHUB_OUTPUT
+            
+            # Add comment with instructions
+            gh issue comment "${{ github.event.issue.number }}" --body "Thank you for your submission! 
+            
+            I've detected the repository URL: $REPO_URL
+            
+            A maintainer will review your submission and approve it by adding the 'approved' label.
+            
+            Please ensure your repository:
+            - [ ] Has a valid plugin.json file in the main branch
+            - [ ] Follows the plugin development guidelines
+            - [ ] Has proper documentation"
+          else
+            gh issue comment "${{ github.event.issue.number }}" --body "Error: Could not find a valid GitHub repository URL in your submission.
+            
+            Please format your issue with:
+            - Title: [Plugin Submission] Your Plugin Name
+            - Body: Include your GitHub repository URL (e.g., https://github.com/username/repo)"
+            exit 1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Process Approved Submission
+        if: github.event.action == 'labeled' && github.event.label.name == 'approved'
+        run: |
+          # Get issue body
+          ISSUE_BODY=$(gh issue view ${{ github.event.issue.number }} --json body -q .body)
+          
+          # Extract repository URL
+          REPO_URL=$(echo "$ISSUE_BODY" | grep -o 'https://github.com/[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*' | head -1)
+          REPO_NAME=$(echo $REPO_URL | awk -F'/' '{print $NF}')
+          
+          # Check if the plugin file already exists
+          if [ -f "plugins/${REPO_NAME}.yml" ]; then
+            gh issue close ${{ github.event.issue.number }} --comment "The plugin already exists, no need to add it again."
+            exit 0
+          fi
+          
+          # Create plugins directory
+          mkdir -p plugins
+          
+          # Create or update plugin YAML file
+          echo "url: $REPO_URL" > "plugins/${REPO_NAME}.yml"
+          
+          # Configure git and commit changes
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "plugins/${REPO_NAME}.yml"
+          git commit -m "Add plugin: ${REPO_NAME}"
+          git push
+          
+          # Close issue
+          gh issue close ${{ github.event.issue.number }} --comment "Plugin has been successfully added! Thank you for your contribution."
+          
+          # Trigger update-plugins workflow
+          gh workflow run update-plugins.yml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
