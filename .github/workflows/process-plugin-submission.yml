@@ -3,6 +3,24 @@ name: Process Plugin Submission
 on:
   issues:
     types: [opened, labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to process (leave empty to process repository URL directly)'
+        required: false
+        type: string
+      repository_url:
+        description: 'Repository URL to process directly (only used if issue_number is empty)'
+        required: false
+        type: string
+      action_type:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - 'check-format'
+          - 'approve-submission'
+        default: 'approve-submission'
 
 jobs:
   process-submission:
@@ -10,7 +28,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'issues' && github.event.action == 'opened' && contains(github.event.issue.title, '[Plugin Submission]')) ||
-      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'approved')
+      (github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'approved') ||
+      (github.event_name == 'workflow_dispatch')
     permissions:
       contents: write
       issues: write
@@ -20,10 +39,19 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Check Issue Format
-        if: github.event.action == 'opened'
+        if: |
+          (github.event.action == 'opened') ||
+          (github.event_name == 'workflow_dispatch' && inputs.action_type == 'check-format' && inputs.issue_number != '')
         id: check-format
         run: |
-          BODY="${{ github.event.issue.body }}"
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ISSUE_NUMBER="${{ inputs.issue_number }}"
+            BODY=$(gh issue view $ISSUE_NUMBER --json body -q .body)
+          else
+            ISSUE_NUMBER="${{ github.event.issue.number }}"
+            BODY="${{ github.event.issue.body }}"
+          fi
+          
           # Check if body contains repository URL
           if [[ $BODY =~ https://github.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+ ]]; then
             REPO_URL=${BASH_REMATCH[0]}
@@ -32,7 +60,7 @@ jobs:
             echo "repo_name=$REPO_NAME" >> $GITHUB_OUTPUT
             
             # Add comment with instructions
-            gh issue comment "${{ github.event.issue.number }}" --body "Thank you for your submission! 
+            gh issue comment "$ISSUE_NUMBER" --body "Thank you for your submission! 
             
             I've detected the repository URL: $REPO_URL
             
@@ -43,28 +71,51 @@ jobs:
             - [ ] Follows the plugin development guidelines
             - [ ] Has proper documentation"
           else
-            gh issue comment "${{ github.event.issue.number }}" --body "Error: Could not find a valid GitHub repository URL in your submission.
+            gh issue comment "$ISSUE_NUMBER" --body "Error: Could not find a valid GitHub repository URL in your submission.
             
             Please format your issue with:
             - Title: [Plugin Submission] Your Plugin Name
             - Body: Include your GitHub repository URL (e.g., https://github.com/username/repo)"
             exit 1
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Process Approved Submission
-        if: github.event.action == 'labeled' && github.event.label.name == 'approved'
+        if: |
+          (github.event.action == 'labeled' && github.event.label.name == 'approved') ||
+          (github.event_name == 'workflow_dispatch' && inputs.action_type == 'approve-submission')
         run: |
-          # Get issue body
-          ISSUE_BODY=$(gh issue view ${{ github.event.issue.number }} --json body -q .body)
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if [ -n "${{ inputs.issue_number }}" ]; then
+              # Get issue body from specified issue number
+              ISSUE_BODY=$(gh issue view ${{ inputs.issue_number }} --json body -q .body)
+              REPO_URL=$(echo "$ISSUE_BODY" | grep -o 'https://github.com/[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*' | head -1)
+              ISSUE_NUMBER="${{ inputs.issue_number }}"
+            elif [ -n "${{ inputs.repository_url }}" ]; then
+              # Use directly provided repository URL
+              REPO_URL="${{ inputs.repository_url }}"
+              ISSUE_NUMBER=""
+            else
+              echo "Error: Either issue_number or repository_url must be provided for manual execution"
+              exit 1
+            fi
+          else
+            # Get issue body from the event
+            ISSUE_BODY=$(gh issue view ${{ github.event.issue.number }} --json body -q .body)
+            REPO_URL=$(echo "$ISSUE_BODY" | grep -o 'https://github.com/[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*' | head -1)
+            ISSUE_NUMBER="${{ github.event.issue.number }}"
+          fi
           
-          # Extract repository URL
-          REPO_URL=$(echo "$ISSUE_BODY" | grep -o 'https://github.com/[a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*' | head -1)
           REPO_NAME=$(echo $REPO_URL | awk -F'/' '{print $NF}')
           
           # Check if the plugin file already exists
           if [ -f "plugins/${REPO_NAME}.yml" ]; then
-            gh issue close ${{ github.event.issue.number }} --comment "The plugin already exists, no need to add it again."
+            if [ -n "$ISSUE_NUMBER" ]; then
+              gh issue close $ISSUE_NUMBER --comment "The plugin already exists, no need to add it again."
+            else
+              echo "The plugin already exists, no need to add it again."
+            fi
             exit 0
           fi
           
@@ -81,10 +132,14 @@ jobs:
           git commit -m "Add plugin: ${REPO_NAME}"
           git push
           
-          # Close issue
-          gh issue close ${{ github.event.issue.number }} --comment "Plugin has been successfully added! Thank you for your contribution."
+          # Close issue if applicable
+          if [ -n "$ISSUE_NUMBER" ]; then
+            gh issue close $ISSUE_NUMBER --comment "Plugin has been successfully added! Thank you for your contribution."
+          else
+            echo "Plugin has been successfully added!"
+          fi
           
           # Trigger update-plugins workflow
           gh workflow run update-plugins.yml
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
