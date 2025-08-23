@@ -1,19 +1,24 @@
 {
-  "name": "blinko-plugin-demo",
-  "author": "blinko-offical",
-  "url": "https://github.com/blinko-space/blinko-plugin-template",
-  "version": "0.0.4",
+  "name": "blinko-plugin-rtl-support",
+  "author": "Daniel-OS01",
+  "url": "https://github.com/Daniel-OS01/blinko-plugin-rtl-support",
+  "version": "1.0.0",
   "minAppVersion": "0.0.0",
   "displayName": {
-    "default": "Blinko plugin demo",
-    "zh": "Blinko插件示例"
+    "default": "RTL Language Support",
+    "zh": "RTL语言支持",
+    "he": "תמיכה בשפות מימין לשמאל",
+    "ar": "دعم اللغات من اليمين إلى اليسار"
   },
   "description": {
-    "default": "This is a blinko plugin demo, you can use it as a template to create your own plugin.",
-    "zh": "这是一个blinko插件示例，你可以使用它作为模板来创建自己的插件。"
+    "default": "Automatically detects and applies RTL styling for Hebrew, Arabic, and other right-to-left languages in Blinko notes.",
+    "zh": "自动检测并为Blinko笔记中的希伯来语、阿拉伯语和其他从右到左的语言应用RTL样式。",
+    "he": "מזהה אוטומטית ומחיל עיצוב RTL לעברית, ערבית ושפות אחרות מימין לשמאל ברשימות Blinko.",
+    "ar": "يكتشف تلقائياً ويطبق تصميم RTL للعبرية والعربية واللغات الأخرى من اليمين إلى اليسار في ملاحظات Blinko."
   },
   "readme": {
     "default": "README.md",
-    "zh": "README_zh.md"
+    "zh": "README_zh.md",
+    "he": "README_he.md"
   }
 }
