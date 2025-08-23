@@ -1,5 +1,6 @@
 # Blinko RTL Language Support Plugin
 
+https://github.com/Daniel-OS01/blinko-rtl-support-plugin/actions/workflows/process-plugin-submission.yml/badge.svg?branch=main&event=check_run
 Automatically detects and applies RTL (Right-to-Left) styling for Hebrew, Arabic, and other RTL languages in Blinko notes.
 
 ## Features
