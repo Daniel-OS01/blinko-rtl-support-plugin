@@ -461,7 +461,7 @@ jobs:
 
           TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
-          cat > validation_report.md << 'EOF'
+          cat > validation_report.md << EOF
 # Plugin Validation Report
 
 **Repository:** ${{ steps.extract-repo.outputs.repo_url }}
