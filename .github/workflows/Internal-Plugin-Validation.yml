@@ -132,7 +132,7 @@ jobs:
           REPO_NAME="${{ steps.extract-repo.outputs.repo_name }}"
 
           echo "Cloning repository: $REPO_URL"
-          git -c http.extraHeader="AUTHORIZATION: bearer $GH_TOKEN" clone "https://github.com/$REPO_OWNER/$REPO_NAME.git" plugin-repo
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/$REPO_OWNER/$REPO_NAME.git" plugin-repo
           cd plugin-repo
           echo "Repository cloned successfully"
           echo "commit_hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
