@@ -380,7 +380,6 @@ jobs:
           SENSITIVE_FILES=(".env" ".env.local" ".env.production" ".env.development" "config.json" "secrets.json" "private.key" "id_rsa" ".npmrc")
           for file in "${SENSITIVE_FILES[@]}"; do
             if [ -f "$file" ]; then
-              echo "⚠️ Sensitive file detected: $file"
               SECURITY_RESULTS+="\n⚠️ Sensitive file detected: $file"
               WARNING_COUNT=$((WARNING_COUNT + 1))
             fi
@@ -388,31 +387,25 @@ jobs:
 
           # Hardcoded secrets check, skip node_modules and .git
           if grep -r --exclude-dir={node_modules,.git} -E 'password|secret|key|token' ./*.js ./*.ts ./*.json 2>/dev/null | head -5 | grep .; then
-            echo "⚠️ Potential hardcoded secrets found"
             SECURITY_RESULTS+="\n⚠️ Potential hardcoded secrets found"
             WARNING_COUNT=$((WARNING_COUNT + 1))
           else
-            echo "✅ No obvious hardcoded secrets detected"
             SECURITY_RESULTS+="\n✅ No obvious hardcoded secrets detected"
           fi
 
           # Error handling patterns
           if find . -name "*.js" -o -name "*.ts" 2>/dev/null | xargs grep -l "try\|catch" | head -1 | grep .; then
-            echo "✅ Error handling patterns detected"
             SECURITY_RESULTS+="\n✅ Error handling patterns detected"
           else
-            echo "⚠️ No error handling patterns found"
             SECURITY_RESULTS+="\n⚠️ No error handling patterns found"
             WARNING_COUNT=$((WARNING_COUNT + 1))
           fi
 
           # Minified files detection
           if find . -type f -name "*.min.js" | grep .; then
-            echo "⚠️ Minified JavaScript files detected"
             SECURITY_RESULTS+="\n⚠️ Minified JavaScript files detected"
             WARNING_COUNT=$((WARNING_COUNT + 1))
           else
-            echo "✅ No minified files detected"
             SECURITY_RESULTS+="\n✅ No minified files detected"
           fi
 
