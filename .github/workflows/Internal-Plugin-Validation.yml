@@ -453,20 +453,34 @@ jobs:
 
           TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
-          # Write validation_report.md using echo statements to avoid YAML heredoc issues
-          {
-            echo -e "# Plugin Validation Report\n" > validation_report.md
-            echo -e "**Repository:** ${{ steps.extract-repo.outputs.repo_url }}\n" >> validation_report.md
-            echo -e "**Validation Date:** TIMESTAMP_PLACEHOLDER\n" >> validation_report.md
-            echo -e "**Commit Hash:** ${{ steps.clone-repo.outputs.commit_hash }}\n" >> validation_report.md
-            echo -e "**Latest Tag:** ${{ steps.clone-repo.outputs.latest_tag }}\n" >> validation_report.md
-            echo -e "\n## Summary\n- ❌ **Errors:** ERROR_COUNT_PLACEHOLDER\n- ⚠️ **Warnings:** WARNING_COUNT_PLACEHOLDER  \n- **Overall Status:** OVERALL_STATUS_PLACEHOLDER\n" >> validation_report.md
-            echo -e "\n## Validation Results\n" >> validation_report.md
-            echo -e "### Basic Validation\n${{ steps.basic-validation.outputs.validation_results }}\n" >> validation_report.md
-            echo -e "### Detailed Validation\n${{ steps.detailed-validation.outputs.detailed_results }}\n" >> validation_report.md
-            echo -e "### Security and Code Quality\n${{ steps.security-checks.outputs.security_results }}\n" >> validation_report.md
-            echo -e "\n## Recommendations\nRECOMMENDATIONS_PLACEHOLDER\n" >> validation_report.md
-          }
+          # Write validation_report.md using heredoc inside run block
+          cat <<EOF > validation_report.md
+            # Plugin Validation Report
+
+            **Repository:** ${{ steps.extract-repo.outputs.repo_url }}
+            **Validation Date:** TIMESTAMP_PLACEHOLDER
+            **Commit Hash:** ${{ steps.clone-repo.outputs.commit_hash }}
+            **Latest Tag:** ${{ steps.clone-repo.outputs.latest_tag }}
+
+            ## Summary
+            - ❌ **Errors:** ERROR_COUNT_PLACEHOLDER
+            - ⚠️ **Warnings:** WARNING_COUNT_PLACEHOLDER  
+            - **Overall Status:** OVERALL_STATUS_PLACEHOLDER
+
+            ## Validation Results
+
+            ### Basic Validation
+            ${{ steps.basic-validation.outputs.validation_results }}
+
+            ### Detailed Validation
+            ${{ steps.detailed-validation.outputs.detailed_results }}
+
+            ### Security and Code Quality
+            ${{ steps.security-checks.outputs.security_results }}
+
+            ## Recommendations
+            RECOMMENDATIONS_PLACEHOLDER
+          EOF
 
           sed -i "s/TIMESTAMP_PLACEHOLDER/$TIMESTAMP/g" validation_report.md
           sed -i "s/ERROR_COUNT_PLACEHOLDER/$FINAL_ERROR_COUNT/g" validation_report.md
