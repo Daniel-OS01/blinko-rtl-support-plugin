@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
-    
+
     steps:
       - name: Process Plugin Submission
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BODY="${{ github.event.issue.body }}"
-          
+
           # Check if body contains repository URL
           if [[ $BODY =~ https://github.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+ ]]; then
             REPO_URL=${BASH_REMATCH[0]}
