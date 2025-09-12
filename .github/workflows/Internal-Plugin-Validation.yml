@@ -209,7 +209,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Detailed Plugin Validation
-        if: "(github.event_name == 'workflow_dispatch' && inputs.validation_type == 'full-validation') || (github.event_name != 'workflow_dispatch')"
+        if: (github.event_name == 'workflow_dispatch' && inputs.validation_type == 'full-validation') || (github.event_name != 'workflow_dispatch')
         id: detailed-validation
         run: |
           set -euo pipefail
@@ -461,33 +461,34 @@ jobs:
 
           TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
-          cat > validation_report.md << EOF
-# Plugin Validation Report
-
-**Repository:** ${{ steps.extract-repo.outputs.repo_url }}
-**Validation Date:** TIMESTAMP_PLACEHOLDER
-**Commit Hash:** ${{ steps.clone-repo.outputs.commit_hash }}
-**Latest Tag:** ${{ steps.clone-repo.outputs.latest_tag }}
-
-## Summary
-- ❌ **Errors:** ERROR_COUNT_PLACEHOLDER
-- ⚠️ **Warnings:** WARNING_COUNT_PLACEHOLDER  
-- **Overall Status:** OVERALL_STATUS_PLACEHOLDER
-
-## Validation Results
-
-### Basic Validation
-${{ steps.basic-validation.outputs.validation_results }}
-
-### Detailed Validation
-${{ steps.detailed-validation.outputs.detailed_results }}
-
-### Security and Code Quality
-${{ steps.security-checks.outputs.security_results }}
-
-## Recommendations
-RECOMMENDATIONS_PLACEHOLDER
-EOF
+          # Write validation_report.md using echo statements to avoid YAML heredoc issues
+          {
+            echo "# Plugin Validation Report" > validation_report.md
+            echo "" >> validation_report.md
+            echo "**Repository:** ${{ steps.extract-repo.outputs.repo_url }}" >> validation_report.md
+            echo "**Validation Date:** TIMESTAMP_PLACEHOLDER" >> validation_report.md
+            echo "**Commit Hash:** ${{ steps.clone-repo.outputs.commit_hash }}" >> validation_report.md
+            echo "**Latest Tag:** ${{ steps.clone-repo.outputs.latest_tag }}" >> validation_report.md
+            echo "" >> validation_report.md
+            echo "## Summary" >> validation_report.md
+            echo "- ❌ **Errors:** ERROR_COUNT_PLACEHOLDER" >> validation_report.md
+            echo "- ⚠️ **Warnings:** WARNING_COUNT_PLACEHOLDER  " >> validation_report.md
+            echo "- **Overall Status:** OVERALL_STATUS_PLACEHOLDER" >> validation_report.md
+            echo "" >> validation_report.md
+            echo "## Validation Results" >> validation_report.md
+            echo "" >> validation_report.md
+            echo "### Basic Validation" >> validation_report.md
+            echo "${{ steps.basic-validation.outputs.validation_results }}" >> validation_report.md
+            echo "" >> validation_report.md
+            echo "### Detailed Validation" >> validation_report.md
+            echo "${{ steps.detailed-validation.outputs.detailed_results }}" >> validation_report.md
+            echo "" >> validation_report.md
+            echo "### Security and Code Quality" >> validation_report.md
+            echo "${{ steps.security-checks.outputs.security_results }}" >> validation_report.md
+            echo "" >> validation_report.md
+            echo "## Recommendations" >> validation_report.md
+            echo "RECOMMENDATIONS_PLACEHOLDER" >> validation_report.md
+          }
 
           sed -i "s/TIMESTAMP_PLACEHOLDER/$TIMESTAMP/g" validation_report.md
           sed -i "s/ERROR_COUNT_PLACEHOLDER/$FINAL_ERROR_COUNT/g" validation_report.md
