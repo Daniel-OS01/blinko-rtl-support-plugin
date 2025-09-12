@@ -462,31 +462,17 @@ jobs:
 
           # Write validation_report.md using echo statements to avoid YAML heredoc issues
           {
-            echo "# Plugin Validation Report" > validation_report.md
-            echo "" >> validation_report.md
-            echo "**Repository:** ${{ steps.extract-repo.outputs.repo_url }}" >> validation_report.md
-            echo "**Validation Date:** TIMESTAMP_PLACEHOLDER" >> validation_report.md
-            echo "**Commit Hash:** ${{ steps.clone-repo.outputs.commit_hash }}" >> validation_report.md
-            echo "**Latest Tag:** ${{ steps.clone-repo.outputs.latest_tag }}" >> validation_report.md
-            echo "" >> validation_report.md
-            echo "## Summary" >> validation_report.md
-            echo "- ❌ **Errors:** ERROR_COUNT_PLACEHOLDER" >> validation_report.md
-            echo "- ⚠️ **Warnings:** WARNING_COUNT_PLACEHOLDER  " >> validation_report.md
-            echo "- **Overall Status:** OVERALL_STATUS_PLACEHOLDER" >> validation_report.md
-            echo "" >> validation_report.md
-            echo "## Validation Results" >> validation_report.md
-            echo "" >> validation_report.md
-            echo "### Basic Validation" >> validation_report.md
-            echo "${{ steps.basic-validation.outputs.validation_results }}" >> validation_report.md
-            echo "" >> validation_report.md
-            echo "### Detailed Validation" >> validation_report.md
-            echo "${{ steps.detailed-validation.outputs.detailed_results }}" >> validation_report.md
-            echo "" >> validation_report.md
-            echo "### Security and Code Quality" >> validation_report.md
-            echo "${{ steps.security-checks.outputs.security_results }}" >> validation_report.md
-            echo "" >> validation_report.md
-            echo "## Recommendations" >> validation_report.md
-            echo "RECOMMENDATIONS_PLACEHOLDER" >> validation_report.md
+            echo -e "# Plugin Validation Report\n" > validation_report.md
+            echo -e "**Repository:** ${{ steps.extract-repo.outputs.repo_url }}\n" >> validation_report.md
+            echo -e "**Validation Date:** TIMESTAMP_PLACEHOLDER\n" >> validation_report.md
+            echo -e "**Commit Hash:** ${{ steps.clone-repo.outputs.commit_hash }}\n" >> validation_report.md
+            echo -e "**Latest Tag:** ${{ steps.clone-repo.outputs.latest_tag }}\n" >> validation_report.md
+            echo -e "\n## Summary\n- ❌ **Errors:** ERROR_COUNT_PLACEHOLDER\n- ⚠️ **Warnings:** WARNING_COUNT_PLACEHOLDER  \n- **Overall Status:** OVERALL_STATUS_PLACEHOLDER\n" >> validation_report.md
+            echo -e "\n## Validation Results\n" >> validation_report.md
+            echo -e "### Basic Validation\n${{ steps.basic-validation.outputs.validation_results }}\n" >> validation_report.md
+            echo -e "### Detailed Validation\n${{ steps.detailed-validation.outputs.detailed_results }}\n" >> validation_report.md
+            echo -e "### Security and Code Quality\n${{ steps.security-checks.outputs.security_results }}\n" >> validation_report.md
+            echo -e "\n## Recommendations\nRECOMMENDATIONS_PLACEHOLDER\n" >> validation_report.md
           }
 
           sed -i "s/TIMESTAMP_PLACEHOLDER/$TIMESTAMP/g" validation_report.md
