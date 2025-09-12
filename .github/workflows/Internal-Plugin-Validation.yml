@@ -355,7 +355,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Security and Code Quality Checks
-        if: "(github.event_name == 'workflow_dispatch' && inputs.validation_type == 'full-validation') || (github.event_name != 'workflow_dispatch')"
+        if: (github.event_name == 'workflow_dispatch' && inputs.validation_type == 'full-validation') || (github.event_name != 'workflow_dispatch')
         id: security-checks
         run: |
           set -euo pipefail
