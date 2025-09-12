@@ -2,7 +2,7 @@
   "name": "blinko-plugin-rtl-support",
   "author": "Daniel-OS01",
   "url": "https://github.com/Daniel-OS01/blinko-plugin-rtl-support",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "minAppVersion": "0.0.0",
   "displayName": {
     "default": "RTL Language Support",
