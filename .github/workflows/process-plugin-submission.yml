@@ -17,16 +17,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BODY="${{ github.event.issue.body }}"
-
-          # Check if body contains repository URL
+          
           if [[ $BODY =~ https://github.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+ ]]; then
             REPO_URL=${BASH_REMATCH[0]}
             REPO_NAME=$(echo $REPO_URL | awk -F'/' '{print $NF}')
             echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
             echo "repo_name=$REPO_NAME" >> $GITHUB_OUTPUT
             
-            # Add comment with instructions
-            gh issue comment "${{ github.event.issue.number }}" --body "Thank you for your submission! 
+            gh issue comment "${{ github.event.issue.number }}" --body "Thank you for your submission!
             
             I've detected the repository URL: $REPO_URL
             
