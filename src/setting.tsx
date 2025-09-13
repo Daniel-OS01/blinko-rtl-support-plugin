@@ -7,10 +7,17 @@ interface RTLSettings {
   forceDirection: 'auto' | 'rtl' | 'ltr';
   autoDetect: boolean;
   manualMode: boolean;
+  manualToggle: boolean;
+  darkMode: boolean;
+  method: 'direct' | 'attributes' | 'css' | 'unicode' | 'all';
   customCSS: string;
   permanentCSS: boolean;
   targetSelectors: string[];
   minRTLChars: number;
+  processInterval: number;
+  hebrewRegex: boolean;
+  arabicRegex: boolean;
+  mixedContent: boolean;
 }
 
 export function RTLSetting(): JSXInternal.Element {
@@ -20,6 +27,9 @@ export function RTLSetting(): JSXInternal.Element {
     forceDirection: 'auto',
     autoDetect: false,
     manualMode: true,
+    manualToggle: false,
+    darkMode: false,
+    method: 'all',
     customCSS: '',
     permanentCSS: false,
     targetSelectors: [
@@ -28,7 +38,11 @@ export function RTLSetting(): JSXInternal.Element {
       'textarea',
       '[contenteditable]'
     ],
-    minRTLChars: 3
+    minRTLChars: 3,
+    processInterval: 2000,
+    hebrewRegex: true,
+    arabicRegex: true,
+    mixedContent: true
   });
   
   const [customSelector, setCustomSelector] = useState('');
@@ -141,6 +155,9 @@ export function RTLSetting(): JSXInternal.Element {
       forceDirection: 'auto',
       autoDetect: false,
       manualMode: true,
+      manualToggle: false,
+      darkMode: false,
+      method: 'all',
       customCSS: '',
       permanentCSS: false,
       targetSelectors: [
@@ -149,23 +166,31 @@ export function RTLSetting(): JSXInternal.Element {
         'textarea',
         '[contenteditable]'
       ],
-      minRTLChars: 3
+      minRTLChars: 3,
+      processInterval: 2000,
+      hebrewRegex: true,
+      arabicRegex: true,
+      mixedContent: true
     };
     saveSettings(defaultSettings);
   };
 
   return (
-    <div style={{ 
-      maxWidth: '700px', 
-      margin: '0 auto', 
-      padding: '20px', 
-      fontFamily: 'system-ui, sans-serif' 
-    }}>
+    <div 
+      className={settings.darkMode ? 'rtl-settings-dark' : ''}
+      style={{ 
+        maxWidth: '700px', 
+        margin: '0 auto', 
+        padding: '20px', 
+        fontFamily: 'system-ui, sans-serif',
+        background: settings.darkMode ? '#1a1a1a' : 'white',
+        color: '#000'
+      }}>
       <div style={{ marginBottom: '30px', paddingBottom: '20px', borderBottom: '2px solid #eee' }}>
         <h2 style={{ margin: '0 0 10px 0', color: '#333' }}>
           🔧 Fixed RTL Language Support Settings
         </h2>
-        <p style={{ margin: '0', color: '#666', fontSize: '14px' }}>
+        <p style={{ margin: '0', color: settings.darkMode ? '#333' : '#666', fontSize: '14px' }}>
           Precise RTL support with manual control and optional permanent CSS injection.
         </p>
       </div>
@@ -214,6 +239,62 @@ export function RTLSetting(): JSXInternal.Element {
           >
             🔄 Toggle RTL (ع/א)
           </button>
+
+          <button
+            onClick={() => {
+              const result = (window as any).blinkoRTL?.toggleManual();
+              setSettings(prev => ({ ...prev, manualToggle: result }));
+              window.Blinko.toast.success(`Manual RTL ${result ? 'ON' : 'OFF'}`);
+            }}
+            style={{ 
+              background: settings.manualToggle ? '#28a745' : '#dc3545', 
+              color: 'white', 
+              border: 'none', 
+              padding: '10px 20px', 
+              borderRadius: '4px', 
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            🔄 Manual Toggle {settings.manualToggle ? 'ON' : 'OFF'}
+          </button>
+        </div>
+      </div>
+
+      {/* RTL Method Selection */}
+      <div style={{ 
+        marginBottom: '30px', 
+        padding: '20px', 
+        border: '2px solid #28a745', 
+        borderRadius: '8px', 
+        background: '#f8fff8' 
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#28a745' }}>🔧 RTL Application Method</h3>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
+            RTL Method:
+            <select
+              value={settings.method}
+              onChange={(e) => saveSettings({ 
+                method: (e.target as HTMLSelectElement).value as 'direct' | 'attributes' | 'css' | 'unicode' | 'all'
+              })}
+              disabled={!settings.enabled}
+              style={{ 
+                marginLeft: 'auto', 
+                padding: '5px 10px', 
+                border: '1px solid #ccc', 
+                borderRadius: '4px', 
+                minWidth: '200px' 
+              }}
+            >
+              <option value="direct">🎯 Direct Styling</option>
+              <option value="attributes">🏷️ HTML Attributes</option>
+              <option value="css">🎨 CSS Classes</option>
+              <option value="unicode">🔤 Unicode Bidi</option>
+              <option value="all">🚀 All Methods (Recommended)</option>
+            </select>
+          </label>
         </div>
       </div>
 
@@ -257,10 +338,76 @@ export function RTLSetting(): JSXInternal.Element {
               onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked })}
               disabled={!settings.enabled}
             />
-            <span>🤖 Auto-detect New Content</span>
+            <span>🤖 Auto-detect All Content</span>
           </label>
           <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: '#666' }}>
-            ⚠️ May cause unwanted changes. Use with caution.
+            Continuously processes all content on the page every 2 seconds
+          </p>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={settings.manualToggle}
+              onChange={(e) => {
+                const manualToggle = (e.target as HTMLInputElement).checked;
+                saveSettings({ manualToggle });
+                const api = (window as any).blinkoRTL;
+                if (api && api.isEnabled()) {
+                  api.processAll();
+                }
+              }}
+              disabled={!settings.enabled}
+            />
+            <span>🔄 Manual RTL Toggle</span>
+          </label>
+          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: '#666' }}>
+            Forces RTL on all content when enabled, ignores detection
+          </p>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={settings.darkMode}
+              onChange={(e) => {
+                const darkMode = (e.target as HTMLInputElement).checked;
+                saveSettings({ darkMode });
+                if (darkMode) {
+                  document.body.classList.add('dark');
+                } else {
+                  document.body.classList.remove('dark');
+                }
+              }}
+            />
+            <span>🌙 Dark Mode Plugin UI</span>
+          </label>
+          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#333' : '#666' }}>
+            Applies dark styling to RTL plugin components only
+          </p>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={settings.hebrewRegex}
+              onChange={(e) => saveSettings({ hebrewRegex: (e.target as HTMLInputElement).checked })}
+              disabled={!settings.enabled}
+            />
+            <span>📜 Hebrew Regex Detection</span>
+          </label>
+          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#333' : '#666' }}>
+            Uses Unicode Script property for Hebrew detection
+          </p>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={settings.arabicRegex}
+              onChange={(e) => saveSettings({ arabicRegex: (e.target as HTMLInputElement).checked })}
+              disabled={!settings.enabled}
+            />
+            <span>📜 Arabic Regex Detection</span>
+          </label>
+          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: '#666' }}>
+            Applies dark styling to RTL plugin components only
           </p>
         </div>
       </div>
@@ -316,6 +463,28 @@ export function RTLSetting(): JSXInternal.Element {
                   border: '1px solid #ccc', 
                   borderRadius: '4px', 
                   width: '80px' 
+                }}
+              />
+            </label>
+          </div>
+
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
+              Process Interval (ms):
+              <input
+                type="number"
+                min="500"
+                max="10000"
+                step="500"
+                value={settings.processInterval}
+                onChange={(e) => saveSettings({ processInterval: parseInt((e.target as HTMLInputElement).value) })}
+                disabled={!settings.enabled}
+                style={{ 
+                  marginLeft: 'auto', 
+                  padding: '5px 10px', 
+                  border: '1px solid #ccc', 
+                  borderRadius: '4px', 
+                  width: '100px' 
                 }}
               />
             </label>
@@ -436,7 +605,7 @@ export function RTLSetting(): JSXInternal.Element {
         background: '#fafafa' 
       }}>
         <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🎯 Target Selectors</h3>
-        <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: '#666' }}>
+        <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: settings.darkMode ? '#333' : '#666' }}>
           Specific elements to process for RTL detection (focused approach)
         </p>
 
@@ -571,7 +740,7 @@ export function RTLSetting(): JSXInternal.Element {
           </div>
         )}
 
-        <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
+        <div style={{ fontSize: '14px', color: settings.darkMode ? '#333' : '#666', lineHeight: '1.6' }}>
           <strong>🧪 Test Examples:</strong><br/>
           <strong>Hebrew:</strong> שלום עולם - זהו טקסט בעברית<br/>
           <strong>Arabic:</strong> مرحبا بالعالم - هذا نص باللغة العربية<br/>

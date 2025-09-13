@@ -1,151 +1,215 @@
 # Blinko RTL Language Support Plugin
-Automatically detects and applies RTL (Right-to-Left) styling for Hebrew, Arabic, and other RTL languages in Blinko notes.
 
-## Features
+Enhanced RTL (Right-to-Left) language support for Blinko with automatic detection, manual controls, and dark mode.
 
-- **Automatic Detection**: Intelligently identifies RTL content based on character analysis
-- **Configurable Sensitivity**: Adjust detection thresholds for different use cases
-- **Real-time Styling**: Applies RTL styling immediately as content is typed
-- **Multiple Language Support**: Hebrew, Arabic, Syriac, and Thaana scripts
-- **Customizable Selectors**: Define which elements should be processed
-- **Performance Optimized**: Minimal impact on application performance
-- **Settings Persistence**: Remembers your preferences across sessions
+## ✨ Features
 
-## Supported Languages
+- **🔍 Smart Detection**: Advanced Hebrew/Arabic character detection with configurable sensitivity
+- **🎛️ Manual Controls**: Toggle RTL on/off with floating button and settings panel
+- **🌙 Dark Mode**: Plugin-specific dark theme with color inversion
+- **⚡ Auto-Processing**: Continuous content scanning every 2 seconds
+- **🎯 Precise Targeting**: Focused on Blinko content areas without breaking layout
+- **💾 Settings Persistence**: Remembers all preferences across sessions
+- **🔧 Advanced Configuration**: Custom CSS injection and permanent styling options
 
-- **Hebrew** (עברית) - Primary focus
-- **Arabic** (العربية)
-- **Syriac** (ܠܫܢܐ ܣܘܪܝܝܐ)
-- **Thaana** (ތާނަ)
+## 🌍 Supported Languages
 
-## Installation
+- **Hebrew** (עברית) - `\u0590-\u05FF`
+- **Arabic** (العربية) - `\u0600-\u06FF`
+- **Persian/Farsi** (فارسی) - `\u0750-\u077F`
+- **Extended Arabic** - `\u08A0-\u08FF`
 
-1. Download the plugin from releases or build from source
-2. Install the plugin in your Blinko instance
-3. Configure settings as needed
+## 🚀 Quick Start
 
-## Configuration
+1. **Install Plugin**: Add to your Blinko instance
+2. **Toggle RTL**: Click the floating ع/א button (top-right)
+3. **Configure**: Access settings via plugin panel or right-click menu
 
-### Detection Sensitivity
-- **High (10%)**: Triggers RTL styling with minimal RTL characters
-- **Medium (20%)**: Balanced detection for mixed content
-- **Low (40%)**: Only triggers with predominantly RTL text
+## 🎛️ Controls
 
-### Direction Modes
-- **Auto-detect**: Automatically determines text direction
-- **Force RTL**: Always applies RTL styling
-- **Force LTR**: Always applies LTR styling
+### Floating Toggle Button
+- **Location**: Fixed top-right corner
+- **Function**: Quick RTL on/off toggle
+- **Visual**: Shows active state with color change
+- **Dark Mode**: Inverted colors when enabled
 
-### Custom Selectors
-Add CSS selectors to target specific elements:
-- `.note-content` - Note display areas
-- `.note-editor` - Note editing interfaces
-- `textarea` - Text input areas
-- `.markdown-content` - Markdown rendered content
+### Settings Panel
+- **Access**: Plugin settings or toolbar icon
+- **Features**: Complete configuration interface
+- **Dark Mode**: Full UI color inversion
+- **Test Tools**: Built-in RTL detection testing
 
-## Usage Examples
+## ⚙️ Configuration Options
+
+### Detection Settings
+- **Sensitivity**: High (10%), Medium (15%), Low (25%)
+- **Min Characters**: 1-20 character threshold
+- **Direction Override**: Auto/Force RTL/Force LTR
+
+### Mode Options
+- **Manual Mode**: Conservative detection (recommended)
+- **Auto-Detect**: Continuous content processing
+- **Manual Toggle**: Force RTL on all content
+- **Dark Mode**: Plugin UI color inversion
+
+### Advanced Features
+- **Custom CSS**: Inject permanent styling rules
+- **Target Selectors**: Specify elements to process
+- **Permanent CSS**: Keep styles active when RTL disabled
+
+## 🎯 Target Elements
+
+Default selectors (Blinko-optimized):
+```css
+.markdown-body p
+.markdown-body div
+.vditor-reset p
+.vditor-reset div
+.card-masonry-grid .markdown-body p
+.card-masonry-grid .markdown-body div
+textarea
+[contenteditable="true"]
+```
+
+## 🧪 Testing Examples
 
 ### Hebrew Text
 ```
 שלום עולם - זהו טקסט בעברית
-Hello world - this is English mixed with Hebrew טקסט מעורב
+עברית Hebrew טקסט
 ```
 
 ### Arabic Text
 ```
 مرحبا بالعالم - هذا نص باللغة العربية
-Hello world - this is English mixed with Arabic نص مختلط
+العربية Arabic نص
 ```
 
-## API
-
-The plugin exposes a global `blinkoRTL` object for programmatic access:
-
+### Mixed Content
 ```
+Mixed שלום world טקסט
+Hello مرحبا world
+```
+
+## 🔧 API Reference
+
+Global `window.blinkoRTL` object:
+
+```javascript
 // Test RTL detection
-window.blinkoRTL.test("שלום עולם"); // Returns true
+window.blinkoRTL.test("שלום עולם"); // Returns true/false
 
-// Access detector and styler instances
-window.blinkoRTL.detector.detectRTL("text");
-window.blinkoRTL.styler.applyRTL(element, true);
+// Toggle functions
+window.blinkoRTL.toggle(); // Toggle RTL on/off
+window.blinkoRTL.toggleManual(); // Toggle manual mode
+
+// Processing
+window.blinkoRTL.processAll(); // Process all content
+window.blinkoRTL.processElement(element); // Process single element
+
+// State
+window.blinkoRTL.isEnabled(); // Check if RTL is active
+window.blinkoRTL.settings(); // Get current settings
 ```
 
-## Development
+## 🛠️ Development
 
-### Building from Source
-```
+### Build from Source
+```bash
 git clone https://github.com/Daniel-OS01/blinko-rtl-language-support-plugin.git
 cd blinko-rtl-language-support-plugin
-bun install
-```
-
-### Building
-```
-bun run build
+npm install
+npm run build
 ```
 
 ### Development Mode
-```
-bun run dev
-```
-
-### Publish
-```
-bun run release:publish
+```bash
+npm run dev
 ```
 
-### Publish
+### Release
+```bash
+npm run release:publish
 ```
-bun run release:publish
-```
-docker update --restart=no $(docker ps -a -q)
 
-### Testing
-The plugin includes comprehensive test examples for different scenarios:
-- Pure RTL text
-- Pure LTR text
-- Mixed RTL/LTR content
-- Edge cases (punctuation, numbers, etc.)
+## 🎨 CSS Integration
 
-## Troubleshooting
+The plugin includes comprehensive CSS from `Blinko-RTL.css`:
+
+- **Layout Preservation**: Maintains Blinko's flex/grid structure
+- **Content Detection**: Uses `unicode-bidi: plaintext` for automatic detection
+- **RTL Styling**: Proper text alignment and list positioning
+- **Component Protection**: Preserves buttons, navigation, and toolbars
+
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **RTL not detected**: Check sensitivity settings and minimum character thresholds
-2. **Wrong direction applied**: Verify CSS selectors target correct elements
-3. **Performance issues**: Reduce monitored selectors or disable auto-detection
+1. **RTL Not Working**: 
+   - Check if plugin is enabled
+   - Verify sensitivity settings
+   - Test with detection tool
+
+2. **Layout Breaking**:
+   - Plugin preserves layout containers
+   - Only affects text content areas
+   - Check target selectors
+
+3. **Auto-Detection Issues**:
+   - Disable auto-detect if causing problems
+   - Use manual mode for better control
+   - Adjust minimum character threshold
 
 ### Debug Mode
-Enable debug logging by setting:
-```
+```javascript
+// Enable debug logging
 localStorage.setItem('blinko-rtl-debug', 'true');
+
+// Test detection
+window.blinkoRTL.test("your text here");
 ```
 
-## Contributing
+## 📋 Changelog
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
+### v1.0.5 (Latest)
+- ✅ Enhanced dark mode with complete color inversion
+- ✅ Fixed auto-detection to continuously process all content
+- ✅ Improved manual RTL toggle synchronization
+- ✅ Plugin-specific dark mode (doesn't affect application)
+- ✅ Better settings panel integration
 
-## License
+### v1.0.4
+- ✅ Fixed auto-detection to process all content continuously
+- ✅ Added manual RTL toggle with settings sync
+- ✅ Enhanced dark mode with full color inversion
+- ✅ Improved settings panel with better controls
+- ✅ Added comprehensive CSS from Blinko-RTL.css
+- ✅ Fixed layout preservation for Blinko components
+
+### v1.0.0
+- 🎉 Initial release
+- 🔍 Basic RTL detection
+- ⚙️ Settings panel
+- 🎯 Target selector configuration
+
+## 📄 License
 
 MIT License - see LICENSE file for details
 
-## Changelog
+## 🤝 Contributing
 
-### v1.0.0
-- Initial release
-- Hebrew and Arabic support
-- Configurable detection sensitivity
-- Real-time content monitoring
-- Settings persistence
-- Performance optimization
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
-## Support
+## 💬 Support
 
-For issues, feature requests, or questions:
-- Create an issue on GitHub
-- Check existing documentation
-- Test with debug mode enabled
+- **Issues**: [GitHub Issues](https://github.com/Daniel-OS01/blinko-rtl-language-support-plugin/issues)
+- **Documentation**: [Blinko Plugin Docs](https://blinko.mintlify.app/plugins/get-started)
+- **Testing**: Use built-in test tools in settings panel
+
+---
+
+**Made with ❤️ for the Blinko community**
