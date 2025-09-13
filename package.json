@@ -1,7 +1,21 @@
 {
-  "name": "my-plugin",
-  "version": "1.0.0",
+  "name": "blinko-plugin-rtl-support",
+  "version": "1.0.2",
   "type": "module",
+  "description": "Automatically detects and applies RTL styling for Hebrew, Arabic, and other right-to-left languages in Blinko notes.",
+  "author": "Daniel-OS01",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Daniel-OS01/blinko-rtl-support-plugin.git"
+  },
+  "keywords": ["blinko", "plugin", "rtl", "hebrew", "arabic", "i18n"],
+  "scripts": {
+    "dev": "blinko-cli dev server",
+    "build": "vite build --mode production",
+    "ngrok": "ngrok http 8080",
+    "release:publish": "vite build --mode production && blinko-cli release plugin"
+  },
   "devDependencies": {
     "@types/bun": "^1.2.2",
     "@types/node": "^22.13.4",
@@ -11,12 +25,6 @@
     "typescript": "^5.0.0",
     "vite": "^4.0.0",
     "browser-image-compression": "^2.0.2"
-  },
-  "description": "a blinko plugin",
-  "scripts": {
-    "dev": "blinko-cli dev server",
-    "ngrok": "ngrok http 8080",
-    "release:publish": "vite build --mode production && blinko-cli release plugin"
   },
   "dependencies": {
     "@preact/preset-vite": "^2.10.1",
