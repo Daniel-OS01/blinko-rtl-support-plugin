@@ -8,25 +8,23 @@ import { RTLSetting } from './setting';
 import plugin from '../plugin.json';
 import { RTLDetector } from './utils/rtlDetector';
 import { RTLStyler } from './utils/rtlStyler';
+import { RTLProcessor } from './utils/rtlProcessor';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
 import he from './locales/he.json';
 import ar from './locales/ar.json';
 
-// Enhanced RTL CSS from Blinko-RTL.css
-const enhancedRTLCSS = `
-/* === ENHANCED RTL SUPPORT FOR BLINKO === */
+// Comprehensive RTL CSS from Blinko-RTL.css with enhancements
+const comprehensiveRTLCSS = `
+/* === COMPREHENSIVE RTL SUPPORT FOR BLINKO === */
 
-/* Critical Layout Preservation */
+/* Critical Layout Preservation - Prevent layout shifting */
 #page-wrap, #page-wrap > div, #page-wrap > header, #page-wrap .app-content, #page-wrap .scroll-area,
 #outer-container, #outer-container > div, .flex.max-w-full.items-center, .flex.items-center.justify-center,
 .flex.items-center.select-none, .flex.items-start.gap-2, .flex.h-full.flex-1.flex-col, .overflow-y-auto,
 .card-masonry-grid, .card-masonry-grid > div, .expand-container, .w-full.expand-container, header,
 button, .btn, [role="button"], input[type="button"], input[type="submit"], input[type="reset"],
-.group\\/sidebar, .h-\\[calc\\(100\\%_-_70px\\)\\], .\\!overflow-y-auto, .overflow-x-hidden,
-.mt-\\[-4px\\], .overflow-y-scroll, .scroll-smooth, .px-2, .mt-0, .md\\:mt-4, .md\\:px-6,
-.w-full, .h-full, .\\!transition-all, .hidden, .md\\:flex, ul:not(.rtl-content),
-li:not(.rtl-content), nav, .sidebar, .navigation {
+.group\\/sidebar, nav, .sidebar, .navigation, .toolbar, .menu {
     direction: ltr !important;
     unicode-bidi: isolate !important;
 }
@@ -37,14 +35,26 @@ li:not(.rtl-content), nav, .sidebar, .navigation {
     direction: rtl !important;
 }
 
-/* Vditor Editor RTL Support */
-.vditor-reset, .vditor-reset > div, .vditor-reset > p, .vditor-content {
+/* Vditor Editor Comprehensive Support */
+.vditor-reset, .vditor-content, .vditor-ir, .vditor-wysiwyg, .vditor-sv {
     unicode-bidi: plaintext !important;
 }
 
-.vditor-reset:lang(he), .vditor-reset:lang(ar), .vditor-reset[dir="rtl"] {
+.vditor-reset:lang(he), .vditor-reset:lang(ar), .vditor-reset[dir="rtl"],
+.vditor-content:lang(he), .vditor-content:lang(ar), .vditor-content[dir="rtl"] {
     direction: rtl !important;
     text-align: right !important;
+}
+
+.vditor-reset > div, .vditor-reset > p, .vditor-reset > span,
+.vditor-reset h1, .vditor-reset h2, .vditor-reset h3, .vditor-reset h4, .vditor-reset h5, .vditor-reset h6,
+.vditor-reset li, .vditor-reset blockquote {
+    unicode-bidi: plaintext !important;
+}
+
+.vditor-reset:lang(he) *, .vditor-reset:lang(ar) *, .vditor-reset[dir="rtl"] * {
+    direction: inherit !important;
+    text-align: inherit !important;
 }
 
 /* Markdown Body Enhanced Support */
@@ -61,7 +71,14 @@ li:not(.rtl-content), nav, .sidebar, .navigation {
     unicode-bidi: plaintext !important;
 }
 
-/* Card Masonry Grid RTL */
+/* Special attention to paragraph elements */
+p:lang(he), p:lang(ar), p[dir="rtl"] {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: plaintext !important;
+}
+
+/* Card Masonry Grid RTL with improved spacing */
 .card-masonry-grid .markdown-body {
     line-height: 1.35 !important;
 }
@@ -73,6 +90,13 @@ li:not(.rtl-content), nav, .sidebar, .navigation {
 .card-masonry-grid .markdown-body div p {
     margin-bottom: 0.35em !important;
     margin-top: 0.15em !important;
+}
+
+.card-masonry-grid .markdown-body div:lang(he),
+.card-masonry-grid .markdown-body div:lang(ar),
+.card-masonry-grid .markdown-body div[dir="rtl"] {
+    direction: rtl !important;
+    text-align: right !important;
 }
 
 /* Text Elements Special Attention */
@@ -125,6 +149,23 @@ li:not(.rtl-content), nav, .sidebar, .navigation {
     unicode-bidi: plaintext !important;
 }
 
+/* Blockquotes RTL */
+*:dir(rtl) blockquote, [lang="he"] blockquote, [lang="ar"] blockquote {
+    border-left: none !important;
+    border-right: 3px solid currentcolor !important;
+    padding-left: 0 !important;
+    padding-right: 0.9em !important;
+}
+
+/* Tables RTL */
+*:dir(rtl) table, [lang="he"] table, [lang="ar"] table {
+    direction: rtl !important;
+}
+
+*:dir(rtl) td, *:dir(rtl) th, [lang="he"] td, [lang="he"] th, [lang="ar"] td, [lang="ar"] th {
+    text-align: right !important;
+}
+
 /* RTL Toggle Button */
 .rtl-toggle-btn {
     position: fixed;
@@ -141,6 +182,7 @@ li:not(.rtl-content), nav, .sidebar, .navigation {
     font-size: 18px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     transition: all 0.3s ease;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .rtl-toggle-btn:hover {
@@ -193,18 +235,51 @@ li:not(.rtl-content), nav, .sidebar, .navigation {
     vertical-align: baseline !important;
     unicode-bidi: plaintext !important;
 }
+
+/* Enhanced RTL Processing Classes */
+.rtl-processing {
+    transition: all 0.2s ease-in-out;
+}
+
+.rtl-force-rtl {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: bidi-override !important;
+}
+
+.rtl-force-ltr {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: normal !important;
+}
+
+/* Comprehensive automatic language detection for all nested content */
+.card-masonry-grid .markdown-body div,
+.card-masonry-grid .markdown-body p,
+.card-masonry-grid .markdown-body a,
+.card-masonry-grid .markdown-body span,
+.app-content a,
+.scroll-area a,
+.markdown-body div,
+.markdown-body p,
+.markdown-body span {
+    unicode-bidi: plaintext !important;
+}
 `;
 
 /**
- * Enhanced RTL plugin with comprehensive Blinko support
+ * Robust RTL plugin with comprehensive Blinko support
  */
 System.register([], (exports) => ({
   execute: () => {
     const detector = new RTLDetector();
     const styler = new RTLStyler(detector);
+    let processor: RTLProcessor;
     let isRTLEnabled = false;
     let styleElement: HTMLStyleElement | null = null;
     let toggleButton: HTMLButtonElement | null = null;
+    let observer: MutationObserver | null = null;
+    
     let settings = {
       enabled: true,
       sensitivity: 'medium' as 'high' | 'medium' | 'low',
@@ -213,6 +288,10 @@ System.register([], (exports) => ({
       enhancedMode: true,
       vditorSupport: true,
       markdownSupport: true,
+      enhancedTextProcessing: true,
+      processMixedContent: true,
+      layoutPreservation: true,
+      unicodeBidiMode: 'plaintext' as 'plaintext' | 'embed' | 'bidi-override',
       customSelectors: [
         '.note-content',
         '.note-editor',
@@ -221,15 +300,21 @@ System.register([], (exports) => ({
         '.note-text',
         '.vditor-reset',
         '.content',
-        '[contenteditable]'
-      ]
+        '[contenteditable]',
+        'p',
+        'div.text',
+        'span.text'
+      ],
+      minRTLChars: 3,
+      aggressiveProcessing: false,
+      realTimeProcessing: true
     };
 
     function injectCSS() {
       if (!styleElement) {
         styleElement = document.createElement('style');
         styleElement.id = 'blinko-rtl-styles';
-        styleElement.textContent = enhancedRTLCSS;
+        styleElement.textContent = comprehensiveRTLCSS;
         document.head.appendChild(styleElement);
       }
     }
@@ -247,7 +332,7 @@ System.register([], (exports) => ({
       toggleButton = document.createElement('button');
       toggleButton.className = 'rtl-toggle-btn';
       toggleButton.innerHTML = 'ع/א';
-      toggleButton.title = 'Toggle RTL Support (ع/א)';
+      toggleButton.title = 'Toggle RTL Support (ع/א)\nClick to enable/disable RTL text direction';
       
       toggleButton.addEventListener('click', toggleRTL);
       document.body.appendChild(toggleButton);
@@ -265,70 +350,79 @@ System.register([], (exports) => ({
       }
     }
 
-    function processElement(element: Element) {
-      const text = (element as HTMLElement).textContent || (element as HTMLInputElement).value || '';
-      if (!text.trim()) return;
-
-      const isRTL = detector.detectRTL(text);
+    function setupMutationObserver() {
+      if (observer) observer.disconnect();
       
-      if (settings.forceDirection === 'rtl' || (settings.forceDirection === 'auto' && isRTL)) {
-        element.setAttribute('dir', 'rtl');
-        element.setAttribute('lang', 'he');
-        element.classList.add('rtl-detected');
-        element.classList.remove('ltr-detected');
-      } else if (settings.forceDirection === 'ltr' || (settings.forceDirection === 'auto' && !isRTL)) {
-        element.setAttribute('dir', 'ltr');
-        element.removeAttribute('lang');
-        element.classList.add('ltr-detected');
-        element.classList.remove('rtl-detected');
-      }
-    }
+      observer = new MutationObserver((mutations) => {
+        if (!isRTLEnabled || !settings.realTimeProcessing) return;
+        
+        let shouldProcess = false;
+        
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList') {
+            mutation.addedNodes.forEach((node) => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                shouldProcess = true;
+              }
+            });
+          } else if (mutation.type === 'characterData') {
+            shouldProcess = true;
+          }
+        });
 
-    function processAllElements() {
-      if (!isRTLEnabled) return;
+        if (shouldProcess) {
+          // Debounce processing
+          setTimeout(() => {
+            processor.processAllElements();
+          }, 100);
+        }
+      });
 
-      const selectors = settings.customSelectors.join(', ');
-      const elements = document.querySelectorAll(selectors);
-      
-      elements.forEach(processElement);
-
-      // Special handling for vditor and markdown
-      if (settings.vditorSupport) {
-        document.querySelectorAll('.vditor-reset, .vditor-content').forEach(processElement);
-      }
-      
-      if (settings.markdownSupport) {
-        document.querySelectorAll('.markdown-body, .markdown-body p, .markdown-body div').forEach(processElement);
-      }
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
     }
 
     function enableRTL() {
       isRTLEnabled = true;
       injectCSS();
       styler.startObserving();
+      setupMutationObserver();
+      
       if (toggleButton) {
         toggleButton.classList.add('active');
+        toggleButton.title = 'RTL Support Active (ع/א)\nClick to disable RTL text direction';
       }
+      
       localStorage.setItem('blinko-rtl-enabled', 'true');
       
-      processAllElements();
+      // Process all elements
+      setTimeout(() => {
+        processor.processAllElements();
+      }, 100);
     }
 
     function disableRTL() {
       isRTLEnabled = false;
       removeCSS();
       styler.stopObserving();
+      
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      
       if (toggleButton) {
         toggleButton.classList.remove('active');
+        toggleButton.title = 'RTL Support Inactive (ع/א)\nClick to enable RTL text direction';
       }
+      
       localStorage.setItem('blinko-rtl-enabled', 'false');
       
-      // Remove RTL attributes
-      document.querySelectorAll('[dir="rtl"], .rtl-detected').forEach(el => {
-        el.removeAttribute('dir');
-        el.removeAttribute('lang');
-        el.classList.remove('rtl-detected', 'ltr-detected');
-      });
+      // Remove all RTL attributes
+      processor.removeAllRTL();
     }
 
     function toggleRTL() {
@@ -348,7 +442,7 @@ System.register([], (exports) => ({
           
           detector.updateConfig({
             sensitivity: settings.sensitivity,
-            minRTLChars: settings.sensitivity === 'high' ? 1 : settings.sensitivity === 'medium' ? 3 : 5
+            minRTLChars: settings.minRTLChars
           });
           
           styler.updateConfig({
@@ -356,6 +450,8 @@ System.register([], (exports) => ({
             forceDirection: settings.forceDirection,
             applyToSelectors: settings.customSelectors
           });
+
+          processor.updateSettings(settings);
         } catch (error) {
           console.error('Failed to load RTL plugin settings:', error);
         }
@@ -363,18 +459,22 @@ System.register([], (exports) => ({
     }
 
     function initializeRTLPlugin() {
-      console.log('Initializing Enhanced Blinko RTL Plugin...');
+      console.log('Initializing Robust Blinko RTL Plugin...');
+      
+      // Initialize processor
+      processor = new RTLProcessor(detector, settings);
       
       loadSettings();
       createToggleButton();
       
       // Listen for settings changes
       window.addEventListener('rtl-settings-changed', (event: any) => {
-        settings = { ...settings, ...event.detail };
+        const newSettings = event.detail;
+        settings = { ...settings, ...newSettings };
         
         detector.updateConfig({
           sensitivity: settings.sensitivity,
-          minRTLChars: settings.sensitivity === 'high' ? 1 : settings.sensitivity === 'medium' ? 3 : 5
+          minRTLChars: settings.minRTLChars
         });
 
         styler.updateConfig({
@@ -383,51 +483,37 @@ System.register([], (exports) => ({
           applyToSelectors: settings.customSelectors
         });
 
+        processor.updateSettings(settings);
+
         if (isRTLEnabled) {
-          processAllElements();
+          // Re-process all elements with new settings
+          processor.removeAllRTL();
+          setTimeout(() => {
+            processor.processAllElements();
+          }, 100);
         }
       });
 
-      // Enhanced mutation observer for dynamic content
-      const observer = new MutationObserver((mutations) => {
-        if (!isRTLEnabled) return;
-        
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'childList') {
-            mutation.addedNodes.forEach((node) => {
-              if (node.nodeType === Node.ELEMENT_NODE) {
-                const element = node as Element;
-                processElement(element);
-                
-                // Process child elements
-                const children = element.querySelectorAll(settings.customSelectors.join(', '));
-                children.forEach(processElement);
-              }
-            });
-          } else if (mutation.type === 'characterData') {
-            const parent = mutation.target.parentElement;
-            if (parent) processElement(parent);
-          }
-        });
-      });
-
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        characterData: true
-      });
-
-      // Expose enhanced global API
+      // Enhanced global API
       (window as any).blinkoRTL = {
         detector,
         styler,
+        processor,
         toggle: toggleRTL,
         enable: enableRTL,
         disable: disableRTL,
         isEnabled: () => isRTLEnabled,
-        settings: () => settings,
-        processElement,
-        processAllElements,
+        settings: () => ({ ...settings }),
+        updateSettings: (newSettings: any) => {
+          settings = { ...settings, ...newSettings };
+          processor.updateSettings(settings);
+          localStorage.setItem('blinko-rtl-settings', JSON.stringify(settings));
+        },
+        processElement: (element: HTMLElement) => processor.processTextElement(element),
+        processAllElements: () => processor.processAllElements(),
+        processVditor: () => processor.processVditorElements(),
+        processMarkdown: () => processor.processMarkdownElements(),
+        removeAllRTL: () => processor.removeAllRTL(),
         test: (text: string) => {
           const isRTL = detector.detectRTL(text);
           console.log(`Text "${text}" is ${isRTL ? 'RTL' : 'LTR'}`);
@@ -435,7 +521,7 @@ System.register([], (exports) => ({
         }
       };
 
-      console.log('Enhanced Blinko RTL Plugin initialized successfully');
+      console.log('Robust Blinko RTL Plugin initialized successfully');
     }
 
     exports('default', class Plugin implements BasePlugin {
@@ -488,10 +574,25 @@ System.register([], (exports) => ({
           }
         });
 
+        // Add process all content menu
+        window.Blinko.addRightClickMenu({
+          name: 'rtl-process-all',
+          label: 'Process All RTL Content',
+          icon: 'material-symbols:refresh',
+          onClick: () => {
+            if (isRTLEnabled) {
+              processor.processAllElements();
+              window.Blinko.toast.success('All content processed for RTL!');
+            } else {
+              window.Blinko.toast.info('Enable RTL support first');
+            }
+          }
+        });
+
         // Add AI write prompt for RTL content
         window.Blinko.addAiWritePrompt(
-          'Convert to RTL',
-          'Please convert the following text to proper RTL format with Hebrew/Arabic support:',
+          'Convert to RTL Format',
+          'Please convert the following text to proper RTL format with Hebrew/Arabic support and appropriate text direction:',
           'material-symbols:format-textdirection-r-to-l'
         );
       }
@@ -506,8 +607,11 @@ System.register([], (exports) => ({
       destroy() {
         disableRTL();
         removeToggleButton();
+        if (observer) {
+          observer.disconnect();
+        }
         styler.destroy();
-        console.log('Enhanced RTL Plugin destroyed');
+        console.log('Robust RTL Plugin destroyed');
       }
     });
   }

@@ -9,10 +9,14 @@ interface RTLSettings {
   enhancedMode: boolean;
   vditorSupport: boolean;
   markdownSupport: boolean;
-  customSelectors: string[];
-  minRTLChars: number;
+  enhancedTextProcessing: boolean;
+  processMixedContent: boolean;
   layoutPreservation: boolean;
   unicodeBidiMode: 'plaintext' | 'embed' | 'bidi-override';
+  customSelectors: string[];
+  minRTLChars: number;
+  aggressiveProcessing: boolean;
+  realTimeProcessing: boolean;
 }
 
 export function RTLSetting(): JSXInternal.Element {
@@ -24,6 +28,10 @@ export function RTLSetting(): JSXInternal.Element {
     enhancedMode: true,
     vditorSupport: true,
     markdownSupport: true,
+    enhancedTextProcessing: true,
+    processMixedContent: true,
+    layoutPreservation: true,
+    unicodeBidiMode: 'plaintext',
     customSelectors: [
       '.note-content',
       '.note-editor',
@@ -32,16 +40,20 @@ export function RTLSetting(): JSXInternal.Element {
       '.note-text',
       '.vditor-reset',
       '.content',
-      '[contenteditable]'
+      '[contenteditable]',
+      'p',
+      'div.text',
+      'span.text'
     ],
     minRTLChars: 3,
-    layoutPreservation: true,
-    unicodeBidiMode: 'plaintext'
+    aggressiveProcessing: false,
+    realTimeProcessing: true
   });
   
   const [customSelector, setCustomSelector] = useState('');
   const [testText, setTestText] = useState('');
   const [testResult, setTestResult] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const i18n = window.Blinko.i18n;
 
   useEffect(() => {
@@ -67,7 +79,7 @@ export function RTLSetting(): JSXInternal.Element {
       })
     );
     
-    window.Blinko.toast.success('Settings saved!');
+    window.Blinko.toast.success('Settings saved and applied!');
   };
 
   const testRTL = () => {
@@ -76,9 +88,32 @@ export function RTLSetting(): JSXInternal.Element {
     setTestResult(result ? 'RTL' : 'LTR');
   };
 
-  const processAllContent = () => {
-    (window as any).blinkoRTL?.processAllElements();
-    window.Blinko.toast.success('All content processed!');
+  const processAllContent = async () => {
+    setIsProcessing(true);
+    try {
+      (window as any).blinkoRTL?.processAllElements();
+      window.Blinko.toast.success('All content processed successfully!');
+    } catch (error) {
+      window.Blinko.toast.error('Error processing content');
+      console.error('Processing error:', error);
+    } finally {
+      setTimeout(() => setIsProcessing(false), 1000);
+    }
+  };
+
+  const processVditorOnly = () => {
+    (window as any).blinkoRTL?.processVditor();
+    window.Blinko.toast.success('Vditor elements processed!');
+  };
+
+  const processMarkdownOnly = () => {
+    (window as any).blinkoRTL?.processMarkdown();
+    window.Blinko.toast.success('Markdown elements processed!');
+  };
+
+  const removeAllRTL = () => {
+    (window as any).blinkoRTL?.removeAllRTL();
+    window.Blinko.toast.success('All RTL attributes removed!');
   };
 
   const addCustomSelector = () => {
@@ -105,6 +140,10 @@ export function RTLSetting(): JSXInternal.Element {
       enhancedMode: true,
       vditorSupport: true,
       markdownSupport: true,
+      enhancedTextProcessing: true,
+      processMixedContent: true,
+      layoutPreservation: true,
+      unicodeBidiMode: 'plaintext',
       customSelectors: [
         '.note-content',
         '.note-editor',
@@ -113,29 +152,109 @@ export function RTLSetting(): JSXInternal.Element {
         '.note-text',
         '.vditor-reset',
         '.content',
-        '[contenteditable]'
+        '[contenteditable]',
+        'p',
+        'div.text',
+        'span.text'
       ],
       minRTLChars: 3,
-      layoutPreservation: true,
-      unicodeBidiMode: 'plaintext'
+      aggressiveProcessing: false,
+      realTimeProcessing: true
     };
     saveSettings(defaultSettings);
   };
 
   return (
     <div style={{ 
-      maxWidth: '700px', 
+      maxWidth: '800px', 
       margin: '0 auto', 
       padding: '20px', 
       fontFamily: 'system-ui, sans-serif' 
     }}>
       <div style={{ marginBottom: '30px', paddingBottom: '20px', borderBottom: '2px solid #eee' }}>
         <h2 style={{ margin: '0 0 10px 0', color: '#333' }}>
-          Enhanced RTL Language Support Settings
+          🔄 Robust RTL Language Support Settings
         </h2>
         <p style={{ margin: '0', color: '#666', fontSize: '14px' }}>
-          Comprehensive RTL support for Hebrew, Arabic, and other right-to-left languages with special attention to vditor, markdown-body, and text elements.
+          Comprehensive RTL support with special attention to vditor, markdown-body, and text elements. 
+          Enhanced processing for Hebrew, Arabic, and other right-to-left languages.
         </p>
+      </div>
+
+      {/* Quick Actions */}
+      <div style={{ 
+        marginBottom: '30px', 
+        padding: '20px', 
+        border: '2px solid #007bff', 
+        borderRadius: '8px', 
+        background: '#f8f9ff' 
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#007bff' }}>⚡ Quick Actions</h3>
+        
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            onClick={processAllContent}
+            disabled={!settings.enabled || isProcessing}
+            style={{ 
+              background: isProcessing ? '#6c757d' : '#28a745', 
+              color: 'white', 
+              border: 'none', 
+              padding: '10px 20px', 
+              borderRadius: '4px', 
+              cursor: isProcessing ? 'not-allowed' : 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            {isProcessing ? '🔄 Processing...' : '🔄 Process All Content'}
+          </button>
+          
+          <button
+            onClick={processVditorOnly}
+            disabled={!settings.enabled || !settings.vditorSupport}
+            style={{ 
+              background: '#17a2b8', 
+              color: 'white', 
+              border: 'none', 
+              padding: '10px 20px', 
+              borderRadius: '4px', 
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            📝 Process Vditor
+          </button>
+          
+          <button
+            onClick={processMarkdownOnly}
+            disabled={!settings.enabled || !settings.markdownSupport}
+            style={{ 
+              background: '#6f42c1', 
+              color: 'white', 
+              border: 'none', 
+              padding: '10px 20px', 
+              borderRadius: '4px', 
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            📄 Process Markdown
+          </button>
+          
+          <button
+            onClick={removeAllRTL}
+            style={{ 
+              background: '#dc3545', 
+              color: 'white', 
+              border: 'none', 
+              padding: '10px 20px', 
+              borderRadius: '4px', 
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            🧹 Remove All RTL
+          </button>
+        </div>
       </div>
 
       {/* General Settings */}
@@ -146,20 +265,18 @@ export function RTLSetting(): JSXInternal.Element {
         borderRadius: '8px', 
         background: '#fafafa' 
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>General Settings</h3>
+        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>⚙️ General Settings</h3>
         
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ display: 'grid', gap: '15px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={settings.enabled}
               onChange={(e) => saveSettings({ enabled: (e.target as HTMLInputElement).checked })}
             />
-            <span>Enable RTL Support</span>
+            <span>🔧 Enable RTL Support</span>
           </label>
-        </div>
 
-        <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
               type="checkbox"
@@ -167,11 +284,9 @@ export function RTLSetting(): JSXInternal.Element {
               onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked })}
               disabled={!settings.enabled}
             />
-            <span>Auto-detect New Content</span>
+            <span>🤖 Auto-detect New Content</span>
           </label>
-        </div>
 
-        <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
               type="checkbox"
@@ -179,7 +294,17 @@ export function RTLSetting(): JSXInternal.Element {
               onChange={(e) => saveSettings({ enhancedMode: (e.target as HTMLInputElement).checked })}
               disabled={!settings.enabled}
             />
-            <span>Enhanced Mode (Comprehensive CSS)</span>
+            <span>⚡ Enhanced Mode (Comprehensive CSS)</span>
+          </label>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={settings.realTimeProcessing}
+              onChange={(e) => saveSettings({ realTimeProcessing: (e.target as HTMLInputElement).checked })}
+              disabled={!settings.enabled}
+            />
+            <span>⏱️ Real-time Processing</span>
           </label>
         </div>
       </div>
@@ -192,99 +317,101 @@ export function RTLSetting(): JSXInternal.Element {
         borderRadius: '8px', 
         background: '#fafafa' 
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>Detection Settings</h3>
+        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🎯 Detection Settings</h3>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
-            Detection Sensitivity:
-            <select
-              value={settings.sensitivity}
-              onChange={(e) => saveSettings({ 
-                sensitivity: (e.target as HTMLSelectElement).value as 'high' | 'medium' | 'low' 
-              })}
-              disabled={!settings.enabled}
-              style={{ 
-                marginLeft: 'auto', 
-                padding: '5px 10px', 
-                border: '1px solid #ccc', 
-                borderRadius: '4px', 
-                minWidth: '200px' 
-              }}
-            >
-              <option value="high">High - 10% RTL characters</option>
-              <option value="medium">Medium - 20% RTL characters</option>
-              <option value="low">Low - 40% RTL characters</option>
-            </select>
-          </label>
-        </div>
+        <div style={{ display: 'grid', gap: '15px' }}>
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
+              Detection Sensitivity:
+              <select
+                value={settings.sensitivity}
+                onChange={(e) => saveSettings({ 
+                  sensitivity: (e.target as HTMLSelectElement).value as 'high' | 'medium' | 'low' 
+                })}
+                disabled={!settings.enabled}
+                style={{ 
+                  marginLeft: 'auto', 
+                  padding: '5px 10px', 
+                  border: '1px solid #ccc', 
+                  borderRadius: '4px', 
+                  minWidth: '200px' 
+                }}
+              >
+                <option value="high">🔥 High - 10% RTL characters</option>
+                <option value="medium">⚖️ Medium - 20% RTL characters</option>
+                <option value="low">🎯 Low - 40% RTL characters</option>
+              </select>
+            </label>
+          </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
-            Min RTL Characters:
-            <input
-              type="number"
-              min="1"
-              max="20"
-              value={settings.minRTLChars}
-              onChange={(e) => saveSettings({ minRTLChars: parseInt((e.target as HTMLInputElement).value) })}
-              disabled={!settings.enabled}
-              style={{ 
-                marginLeft: 'auto', 
-                padding: '5px 10px', 
-                border: '1px solid #ccc', 
-                borderRadius: '4px', 
-                width: '80px' 
-              }}
-            />
-          </label>
-        </div>
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
+              Min RTL Characters:
+              <input
+                type="number"
+                min="1"
+                max="20"
+                value={settings.minRTLChars}
+                onChange={(e) => saveSettings({ minRTLChars: parseInt((e.target as HTMLInputElement).value) })}
+                disabled={!settings.enabled}
+                style={{ 
+                  marginLeft: 'auto', 
+                  padding: '5px 10px', 
+                  border: '1px solid #ccc', 
+                  borderRadius: '4px', 
+                  width: '80px' 
+                }}
+              />
+            </label>
+          </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
-            Direction Override:
-            <select
-              value={settings.forceDirection}
-              onChange={(e) => saveSettings({ 
-                forceDirection: (e.target as HTMLSelectElement).value as 'auto' | 'rtl' | 'ltr' 
-              })}
-              disabled={!settings.enabled}
-              style={{ 
-                marginLeft: 'auto', 
-                padding: '5px 10px', 
-                border: '1px solid #ccc', 
-                borderRadius: '4px', 
-                minWidth: '200px' 
-              }}
-            >
-              <option value="auto">Auto-detect</option>
-              <option value="rtl">Force RTL</option>
-              <option value="ltr">Force LTR</option>
-            </select>
-          </label>
-        </div>
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
+              Direction Override:
+              <select
+                value={settings.forceDirection}
+                onChange={(e) => saveSettings({ 
+                  forceDirection: (e.target as HTMLSelectElement).value as 'auto' | 'rtl' | 'ltr' 
+                })}
+                disabled={!settings.enabled}
+                style={{ 
+                  marginLeft: 'auto', 
+                  padding: '5px 10px', 
+                  border: '1px solid #ccc', 
+                  borderRadius: '4px', 
+                  minWidth: '200px' 
+                }}
+              >
+                <option value="auto">🤖 Auto-detect</option>
+                <option value="rtl">➡️ Force RTL</option>
+                <option value="ltr">⬅️ Force LTR</option>
+              </select>
+            </label>
+          </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
-            Unicode Bidi Mode:
-            <select
-              value={settings.unicodeBidiMode}
-              onChange={(e) => saveSettings({ 
-                unicodeBidiMode: (e.target as HTMLSelectElement).value as 'plaintext' | 'embed' | 'bidi-override' 
-              })}
-              disabled={!settings.enabled}
-              style={{ 
-                marginLeft: 'auto', 
-                padding: '5px 10px', 
-                border: '1px solid #ccc', 
-                borderRadius: '4px', 
-                minWidth: '200px' 
-              }}
-            >
-              <option value="plaintext">Plaintext (Recommended)</option>
-              <option value="embed">Embed</option>
-              <option value="bidi-override">Bidi Override</option>
-            </select>
-          </label>
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
+              Unicode Bidi Mode:
+              <select
+                value={settings.unicodeBidiMode}
+                onChange={(e) => saveSettings({ 
+                  unicodeBidiMode: (e.target as HTMLSelectElement).value as 'plaintext' | 'embed' | 'bidi-override' 
+                })}
+                disabled={!settings.enabled}
+                style={{ 
+                  marginLeft: 'auto', 
+                  padding: '5px 10px', 
+                  border: '1px solid #ccc', 
+                  borderRadius: '4px', 
+                  minWidth: '200px' 
+                }}
+              >
+                <option value="plaintext">📝 Plaintext (Recommended)</option>
+                <option value="embed">🔗 Embed</option>
+                <option value="bidi-override">🔄 Bidi Override</option>
+              </select>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -296,51 +423,98 @@ export function RTLSetting(): JSXInternal.Element {
         borderRadius: '8px', 
         background: '#fafafa' 
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>Component Support</h3>
+        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🧩 Component Support</h3>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.vditorSupport}
-              onChange={(e) => saveSettings({ vditorSupport: (e.target as HTMLInputElement).checked })}
-              disabled={!settings.enabled}
-            />
-            <span>Vditor Editor Support</span>
-          </label>
-          <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
-            Enhanced RTL support for Vditor markdown editor
-          </p>
-        </div>
+        <div style={{ display: 'grid', gap: '15px' }}>
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={settings.vditorSupport}
+                onChange={(e) => saveSettings({ vditorSupport: (e.target as HTMLInputElement).checked })}
+                disabled={!settings.enabled}
+              />
+              <span>📝 Vditor Editor Support</span>
+            </label>
+            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
+              Enhanced RTL support for Vditor markdown editor (.vditor-reset, .vditor-content)
+            </p>
+          </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.markdownSupport}
-              onChange={(e) => saveSettings({ markdownSupport: (e.target as HTMLInputElement).checked })}
-              disabled={!settings.enabled}
-            />
-            <span>Markdown Body Support</span>
-          </label>
-          <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
-            Special attention to markdown-body elements and paragraphs
-          </p>
-        </div>
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={settings.markdownSupport}
+                onChange={(e) => saveSettings({ markdownSupport: (e.target as HTMLInputElement).checked })}
+                disabled={!settings.enabled}
+              />
+              <span>📄 Markdown Body Support</span>
+            </label>
+            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
+              Special attention to .markdown-body elements, paragraphs, and nested content
+            </p>
+          </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.layoutPreservation}
-              onChange={(e) => saveSettings({ layoutPreservation: (e.target as HTMLInputElement).checked })}
-              disabled={!settings.enabled}
-            />
-            <span>Layout Preservation</span>
-          </label>
-          <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
-            Prevent layout shifting by preserving container structure
-          </p>
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={settings.enhancedTextProcessing}
+                onChange={(e) => saveSettings({ enhancedTextProcessing: (e.target as HTMLInputElement).checked })}
+                disabled={!settings.enabled}
+              />
+              <span>🔤 Enhanced Text Processing</span>
+            </label>
+            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
+              Process all text elements (p, div, span, h1-h6, li, etc.)
+            </p>
+          </div>
+
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={settings.processMixedContent}
+                onChange={(e) => saveSettings({ processMixedContent: (e.target as HTMLInputElement).checked })}
+                disabled={!settings.enabled}
+              />
+              <span>🌐 Process Mixed Content</span>
+            </label>
+            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
+              Handle mixed RTL/LTR content within the same element
+            </p>
+          </div>
+
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={settings.layoutPreservation}
+                onChange={(e) => saveSettings({ layoutPreservation: (e.target as HTMLInputElement).checked })}
+                disabled={!settings.enabled}
+              />
+              <span>🏗️ Layout Preservation</span>
+            </label>
+            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
+              Prevent layout shifting by preserving container structure
+            </p>
+          </div>
+
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={settings.aggressiveProcessing}
+                onChange={(e) => saveSettings({ aggressiveProcessing: (e.target as HTMLInputElement).checked })}
+                disabled={!settings.enabled}
+              />
+              <span>⚡ Aggressive Processing</span>
+            </label>
+            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
+              More thorough processing that may affect performance
+            </p>
+          </div>
         </div>
       </div>
 
@@ -352,12 +526,12 @@ export function RTLSetting(): JSXInternal.Element {
         borderRadius: '8px', 
         background: '#fafafa' 
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>CSS Selectors</h3>
+        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🎯 CSS Selectors</h3>
         <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: '#666' }}>
-          Define which elements should be processed for RTL detection
+          Define which elements should be processed for RTL detection. Includes enhanced selectors for better coverage.
         </p>
 
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: '15px', maxHeight: '200px', overflowY: 'auto' }}>
           {settings.customSelectors.map((selector, index) => (
             <div key={index} style={{ 
               display: 'flex', 
@@ -372,7 +546,8 @@ export function RTLSetting(): JSXInternal.Element {
               <code style={{ 
                 fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace', 
                 fontSize: '13px', 
-                color: '#333' 
+                color: '#333',
+                flex: 1
               }}>
                 {selector}
               </code>
@@ -389,7 +564,8 @@ export function RTLSetting(): JSXInternal.Element {
                   height: '24px', 
                   cursor: 'pointer', 
                   fontSize: '16px', 
-                  lineHeight: '1' 
+                  lineHeight: '1',
+                  marginLeft: '10px'
                 }}
               >
                 ×
@@ -403,7 +579,7 @@ export function RTLSetting(): JSXInternal.Element {
             type="text"
             value={customSelector}
             onChange={(e) => setCustomSelector((e.target as HTMLInputElement).value)}
-            placeholder="Enter CSS selector (e.g., .my-content)"
+            placeholder="Enter CSS selector (e.g., .my-content, div.text)"
             disabled={!settings.enabled}
             onKeyPress={(e) => e.key === 'Enter' && addCustomSelector()}
             style={{ 
@@ -439,7 +615,7 @@ export function RTLSetting(): JSXInternal.Element {
         borderRadius: '8px', 
         background: '#fafafa' 
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>Test RTL Detection</h3>
+        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🧪 Test RTL Detection</h3>
         
         <div style={{ marginBottom: '15px' }}>
           <textarea
@@ -448,7 +624,7 @@ export function RTLSetting(): JSXInternal.Element {
             placeholder="Enter text to test RTL detection..."
             style={{ 
               width: '100%', 
-              height: '80px', 
+              height: '100px', 
               padding: '10px', 
               border: '1px solid #ccc', 
               borderRadius: '4px',
@@ -470,47 +646,33 @@ export function RTLSetting(): JSXInternal.Element {
               cursor: 'pointer' 
             }}
           >
-            Test Detection
-          </button>
-          
-          <button 
-            onClick={processAllContent}
-            disabled={!settings.enabled}
-            style={{ 
-              background: '#17a2b8', 
-              color: 'white', 
-              border: 'none', 
-              padding: '8px 16px', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
-            }}
-          >
-            Process All Content
+            🧪 Test Detection
           </button>
         </div>
 
         {testResult && (
           <div style={{ 
             padding: '10px', 
-            background: '#f8f9fa', 
+            background: testResult === 'RTL' ? '#d4edda' : '#f8d7da', 
             borderRadius: '4px',
-            borderLeft: '4px solid #007bff',
+            borderLeft: `4px solid ${testResult === 'RTL' ? '#28a745' : '#dc3545'}`,
             marginBottom: '15px'
           }}>
-            Detection Result: <strong>{testResult}</strong>
+            Detection Result: <strong>{testResult === 'RTL' ? '➡️ RTL' : '⬅️ LTR'}</strong>
           </div>
         )}
 
-        <div style={{ fontSize: '14px', color: '#666' }}>
-          <strong>Test Examples:</strong><br/>
-          Hebrew: שלום עולם - זהו טקסט בעברית<br/>
-          Arabic: مرحبا بالعالم - هذا نص باللغة العربية<br/>
-          Mixed: Hello שלום world עולם<br/>
-          English: Hello world - this is English text
+        <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
+          <strong>🧪 Test Examples:</strong><br/>
+          <strong>Hebrew:</strong> שלום עולם - זהו טקסט בעברית<br/>
+          <strong>Arabic:</strong> مرحبا بالعالم - هذا نص باللغة العربية<br/>
+          <strong>Mixed:</strong> Hello שלום world עולם مرحبا<br/>
+          <strong>English:</strong> Hello world - this is English text<br/>
+          <strong>Persian:</strong> سلام دنیا - این متن فارسی است
         </div>
       </div>
 
-      {/* Advanced */}
+      {/* Advanced Actions */}
       <div style={{ 
         marginBottom: '30px', 
         padding: '20px', 
@@ -518,7 +680,7 @@ export function RTLSetting(): JSXInternal.Element {
         borderRadius: '8px', 
         background: '#fafafa' 
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>Advanced Actions</h3>
+        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🔧 Advanced Actions</h3>
         
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button
@@ -534,7 +696,7 @@ export function RTLSetting(): JSXInternal.Element {
               fontWeight: '500' 
             }}
           >
-            Reset to Defaults
+            🔄 Reset to Defaults
           </button>
 
           <button
@@ -554,7 +716,7 @@ export function RTLSetting(): JSXInternal.Element {
               fontWeight: '500' 
             }}
           >
-            Export Settings
+            📋 Export Settings
           </button>
 
           <button
@@ -573,7 +735,7 @@ export function RTLSetting(): JSXInternal.Element {
               fontWeight: '500' 
             }}
           >
-            Toggle RTL (ع/א)
+            🔄 Toggle RTL (ع/א)
           </button>
         </div>
       </div>
