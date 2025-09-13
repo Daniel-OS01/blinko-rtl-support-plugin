@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'preact/hooks';
 import { RTLDetector, RTLDetectionConfig } from './utils/rtlDetector';
 import { RTLStyler, RTLStyleConfig } from './utils/rtlStyler';
 
