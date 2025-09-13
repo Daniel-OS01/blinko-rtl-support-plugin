@@ -6,17 +6,11 @@ interface RTLSettings {
   sensitivity: 'high' | 'medium' | 'low';
   forceDirection: 'auto' | 'rtl' | 'ltr';
   autoDetect: boolean;
-  enhancedMode: boolean;
-  vditorSupport: boolean;
-  markdownSupport: boolean;
-  enhancedTextProcessing: boolean;
-  processMixedContent: boolean;
-  layoutPreservation: boolean;
-  unicodeBidiMode: 'plaintext' | 'embed' | 'bidi-override';
-  customSelectors: string[];
+  manualMode: boolean;
+  customCSS: string;
+  permanentCSS: boolean;
+  targetSelectors: string[];
   minRTLChars: number;
-  aggressiveProcessing: boolean;
-  realTimeProcessing: boolean;
 }
 
 export function RTLSetting(): JSXInternal.Element {
@@ -24,37 +18,64 @@ export function RTLSetting(): JSXInternal.Element {
     enabled: true,
     sensitivity: 'medium',
     forceDirection: 'auto',
-    autoDetect: true,
-    enhancedMode: true,
-    vditorSupport: true,
-    markdownSupport: true,
-    enhancedTextProcessing: true,
-    processMixedContent: true,
-    layoutPreservation: true,
-    unicodeBidiMode: 'plaintext',
-    customSelectors: [
-      '.note-content',
-      '.note-editor',
+    autoDetect: false,
+    manualMode: true,
+    customCSS: '',
+    permanentCSS: false,
+    targetSelectors: [
+      '.markdown-body p',
+      '.vditor-reset p',
       'textarea',
-      '.markdown-content',
-      '.note-text',
-      '.vditor-reset',
-      '.content',
-      '[contenteditable]',
-      'p',
-      'div.text',
-      'span.text'
+      '[contenteditable]'
     ],
-    minRTLChars: 3,
-    aggressiveProcessing: false,
-    realTimeProcessing: true
+    minRTLChars: 3
   });
   
   const [customSelector, setCustomSelector] = useState('');
   const [testText, setTestText] = useState('');
   const [testResult, setTestResult] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
   const i18n = window.Blinko.i18n;
+
+  // Default CSS from Blinko-RTL.css
+  const defaultCSS = `/* Enhanced RTL Support from Blinko-RTL.css */
+*:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"] {
+    text-align: right !important;
+    direction: rtl !important;
+}
+
+.markdown-body div, .markdown-body p, .markdown-body span {
+    unicode-bidi: plaintext !important;
+}
+
+.vditor-reset, .vditor-reset > div, .vditor-reset > p {
+    unicode-bidi: plaintext !important;
+}
+
+.card-masonry-grid .markdown-body {
+    line-height: 1.35 !important;
+}
+
+.card-masonry-grid .markdown-body > div {
+    margin-bottom: 0.3em !important;
+}
+
+*:dir(rtl) input[type="text"], *:dir(rtl) textarea {
+    text-align: right !important;
+    direction: rtl !important;
+}
+
+*:dir(rtl) ol, *:dir(rtl) ul {
+    list-style-position: outside !important;
+    padding-left: 0 !important;
+    padding-right: 2em !important;
+}
+
+*:dir(rtl) blockquote {
+    border-left: none !important;
+    border-right: 3px solid currentcolor !important;
+    padding-left: 0 !important;
+    padding-right: 0.9em !important;
+}`;
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('blinko-rtl-settings');
@@ -79,7 +100,7 @@ export function RTLSetting(): JSXInternal.Element {
       })
     );
     
-    window.Blinko.toast.success('Settings saved and applied!');
+    window.Blinko.toast.success('Settings saved!');
   };
 
   const testRTL = () => {
@@ -88,38 +109,15 @@ export function RTLSetting(): JSXInternal.Element {
     setTestResult(result ? 'RTL' : 'LTR');
   };
 
-  const processAllContent = async () => {
-    setIsProcessing(true);
-    try {
-      (window as any).blinkoRTL?.processAllElements();
-      window.Blinko.toast.success('All content processed successfully!');
-    } catch (error) {
-      window.Blinko.toast.error('Error processing content');
-      console.error('Processing error:', error);
-    } finally {
-      setTimeout(() => setIsProcessing(false), 1000);
-    }
-  };
-
-  const processVditorOnly = () => {
-    (window as any).blinkoRTL?.processVditor();
-    window.Blinko.toast.success('Vditor elements processed!');
-  };
-
-  const processMarkdownOnly = () => {
-    (window as any).blinkoRTL?.processMarkdown();
-    window.Blinko.toast.success('Markdown elements processed!');
-  };
-
-  const removeAllRTL = () => {
-    (window as any).blinkoRTL?.removeAllRTL();
-    window.Blinko.toast.success('All RTL attributes removed!');
+  const processAllContent = () => {
+    (window as any).blinkoRTL?.processAll();
+    window.Blinko.toast.success('Content processed!');
   };
 
   const addCustomSelector = () => {
-    if (customSelector.trim() && !settings.customSelectors.includes(customSelector.trim())) {
+    if (customSelector.trim() && !settings.targetSelectors.includes(customSelector.trim())) {
       saveSettings({
-        customSelectors: [...settings.customSelectors, customSelector.trim()]
+        targetSelectors: [...settings.targetSelectors, customSelector.trim()]
       });
       setCustomSelector('');
     }
@@ -127,8 +125,13 @@ export function RTLSetting(): JSXInternal.Element {
 
   const removeCustomSelector = (selector: string) => {
     saveSettings({
-      customSelectors: settings.customSelectors.filter(s => s !== selector)
+      targetSelectors: settings.targetSelectors.filter(s => s !== selector)
     });
+  };
+
+  const loadDefaultCSS = () => {
+    saveSettings({ customCSS: defaultCSS });
+    window.Blinko.toast.success('Default CSS loaded!');
   };
 
   const resetToDefaults = () => {
@@ -136,48 +139,34 @@ export function RTLSetting(): JSXInternal.Element {
       enabled: true,
       sensitivity: 'medium',
       forceDirection: 'auto',
-      autoDetect: true,
-      enhancedMode: true,
-      vditorSupport: true,
-      markdownSupport: true,
-      enhancedTextProcessing: true,
-      processMixedContent: true,
-      layoutPreservation: true,
-      unicodeBidiMode: 'plaintext',
-      customSelectors: [
-        '.note-content',
-        '.note-editor',
+      autoDetect: false,
+      manualMode: true,
+      customCSS: '',
+      permanentCSS: false,
+      targetSelectors: [
+        '.markdown-body p',
+        '.vditor-reset p',
         'textarea',
-        '.markdown-content',
-        '.note-text',
-        '.vditor-reset',
-        '.content',
-        '[contenteditable]',
-        'p',
-        'div.text',
-        'span.text'
+        '[contenteditable]'
       ],
-      minRTLChars: 3,
-      aggressiveProcessing: false,
-      realTimeProcessing: true
+      minRTLChars: 3
     };
     saveSettings(defaultSettings);
   };
 
   return (
     <div style={{ 
-      maxWidth: '800px', 
+      maxWidth: '700px', 
       margin: '0 auto', 
       padding: '20px', 
       fontFamily: 'system-ui, sans-serif' 
     }}>
       <div style={{ marginBottom: '30px', paddingBottom: '20px', borderBottom: '2px solid #eee' }}>
         <h2 style={{ margin: '0 0 10px 0', color: '#333' }}>
-          🔄 Robust RTL Language Support Settings
+          🔧 Fixed RTL Language Support Settings
         </h2>
         <p style={{ margin: '0', color: '#666', fontSize: '14px' }}>
-          Comprehensive RTL support with special attention to vditor, markdown-body, and text elements. 
-          Enhanced processing for Hebrew, Arabic, and other right-to-left languages.
+          Precise RTL support with manual control and optional permanent CSS injection.
         </p>
       </div>
 
@@ -194,25 +183,9 @@ export function RTLSetting(): JSXInternal.Element {
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button
             onClick={processAllContent}
-            disabled={!settings.enabled || isProcessing}
+            disabled={!settings.enabled}
             style={{ 
-              background: isProcessing ? '#6c757d' : '#28a745', 
-              color: 'white', 
-              border: 'none', 
-              padding: '10px 20px', 
-              borderRadius: '4px', 
-              cursor: isProcessing ? 'not-allowed' : 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            {isProcessing ? '🔄 Processing...' : '🔄 Process All Content'}
-          </button>
-          
-          <button
-            onClick={processVditorOnly}
-            disabled={!settings.enabled || !settings.vditorSupport}
-            style={{ 
-              background: '#17a2b8', 
+              background: '#28a745', 
               color: 'white', 
               border: 'none', 
               padding: '10px 20px', 
@@ -221,14 +194,16 @@ export function RTLSetting(): JSXInternal.Element {
               fontWeight: '500'
             }}
           >
-            📝 Process Vditor
+            🔄 Process All Content
           </button>
           
           <button
-            onClick={processMarkdownOnly}
-            disabled={!settings.enabled || !settings.markdownSupport}
+            onClick={() => {
+              (window as any).blinkoRTL?.toggle();
+              window.Blinko.toast.success('RTL toggled!');
+            }}
             style={{ 
-              background: '#6f42c1', 
+              background: '#007bff', 
               color: 'white', 
               border: 'none', 
               padding: '10px 20px', 
@@ -237,27 +212,12 @@ export function RTLSetting(): JSXInternal.Element {
               fontWeight: '500'
             }}
           >
-            📄 Process Markdown
-          </button>
-          
-          <button
-            onClick={removeAllRTL}
-            style={{ 
-              background: '#dc3545', 
-              color: 'white', 
-              border: 'none', 
-              padding: '10px 20px', 
-              borderRadius: '4px', 
-              cursor: 'pointer',
-              fontWeight: '500'
-            }}
-          >
-            🧹 Remove All RTL
+            🔄 Toggle RTL (ع/א)
           </button>
         </div>
       </div>
 
-      {/* General Settings */}
+      {/* Mode Settings */}
       <div style={{ 
         marginBottom: '30px', 
         padding: '20px', 
@@ -265,7 +225,7 @@ export function RTLSetting(): JSXInternal.Element {
         borderRadius: '8px', 
         background: '#fafafa' 
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>⚙️ General Settings</h3>
+        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🎛️ Mode Settings</h3>
         
         <div style={{ display: 'grid', gap: '15px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
@@ -280,32 +240,28 @@ export function RTLSetting(): JSXInternal.Element {
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
               type="checkbox"
+              checked={settings.manualMode}
+              onChange={(e) => saveSettings({ manualMode: (e.target as HTMLInputElement).checked })}
+              disabled={!settings.enabled}
+            />
+            <span>✋ Manual Mode (Recommended)</span>
+          </label>
+          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: '#666' }}>
+            Manual mode only applies RTL when clearly detected, preventing unwanted changes
+          </p>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
               checked={settings.autoDetect}
               onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked })}
               disabled={!settings.enabled}
             />
             <span>🤖 Auto-detect New Content</span>
           </label>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.enhancedMode}
-              onChange={(e) => saveSettings({ enhancedMode: (e.target as HTMLInputElement).checked })}
-              disabled={!settings.enabled}
-            />
-            <span>⚡ Enhanced Mode (Comprehensive CSS)</span>
-          </label>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.realTimeProcessing}
-              onChange={(e) => saveSettings({ realTimeProcessing: (e.target as HTMLInputElement).checked })}
-              disabled={!settings.enabled}
-            />
-            <span>⏱️ Real-time Processing</span>
-          </label>
+          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: '#666' }}>
+            ⚠️ May cause unwanted changes. Use with caution.
+          </p>
         </div>
       </div>
 
@@ -388,34 +344,90 @@ export function RTLSetting(): JSXInternal.Element {
               </select>
             </label>
           </div>
-
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
-              Unicode Bidi Mode:
-              <select
-                value={settings.unicodeBidiMode}
-                onChange={(e) => saveSettings({ 
-                  unicodeBidiMode: (e.target as HTMLSelectElement).value as 'plaintext' | 'embed' | 'bidi-override' 
-                })}
-                disabled={!settings.enabled}
-                style={{ 
-                  marginLeft: 'auto', 
-                  padding: '5px 10px', 
-                  border: '1px solid #ccc', 
-                  borderRadius: '4px', 
-                  minWidth: '200px' 
-                }}
-              >
-                <option value="plaintext">📝 Plaintext (Recommended)</option>
-                <option value="embed">🔗 Embed</option>
-                <option value="bidi-override">🔄 Bidi Override</option>
-              </select>
-            </label>
-          </div>
         </div>
       </div>
 
-      {/* Component Support */}
+      {/* Permanent CSS Settings */}
+      <div style={{ 
+        marginBottom: '30px', 
+        padding: '20px', 
+        border: '1px solid #28a745', 
+        borderRadius: '8px', 
+        background: '#f8fff8' 
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#28a745' }}>🎨 Permanent CSS Settings</h3>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={settings.permanentCSS}
+              onChange={(e) => saveSettings({ permanentCSS: (e.target as HTMLInputElement).checked })}
+              disabled={!settings.enabled}
+            />
+            <span>📌 Enable Permanent CSS Injection</span>
+          </label>
+          <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
+            CSS will remain active even when RTL is disabled
+          </p>
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', fontWeight: '500', marginBottom: '5px' }}>
+            Custom CSS Code:
+          </label>
+          <textarea
+            value={settings.customCSS}
+            onChange={(e) => saveSettings({ customCSS: (e.target as HTMLTextAreaElement).value })}
+            placeholder="Enter your custom CSS code here..."
+            disabled={!settings.enabled}
+            style={{ 
+              width: '100%', 
+              height: '200px', 
+              padding: '10px', 
+              border: '1px solid #ccc', 
+              borderRadius: '4px',
+              fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
+              fontSize: '13px',
+              resize: 'vertical'
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            onClick={loadDefaultCSS}
+            disabled={!settings.enabled}
+            style={{ 
+              background: '#17a2b8', 
+              color: 'white', 
+              border: 'none', 
+              padding: '8px 16px', 
+              borderRadius: '4px', 
+              cursor: 'pointer' 
+            }}
+          >
+            📋 Load Default CSS
+          </button>
+          
+          <button
+            onClick={() => saveSettings({ customCSS: '' })}
+            disabled={!settings.enabled}
+            style={{ 
+              background: '#dc3545', 
+              color: 'white', 
+              border: 'none', 
+              padding: '8px 16px', 
+              borderRadius: '4px', 
+              cursor: 'pointer' 
+            }}
+          >
+            🗑️ Clear CSS
+          </button>
+        </div>
+      </div>
+
+      {/* Target Selectors */}
       <div style={{ 
         marginBottom: '30px', 
         padding: '20px', 
@@ -423,116 +435,13 @@ export function RTLSetting(): JSXInternal.Element {
         borderRadius: '8px', 
         background: '#fafafa' 
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🧩 Component Support</h3>
-
-        <div style={{ display: 'grid', gap: '15px' }}>
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={settings.vditorSupport}
-                onChange={(e) => saveSettings({ vditorSupport: (e.target as HTMLInputElement).checked })}
-                disabled={!settings.enabled}
-              />
-              <span>📝 Vditor Editor Support</span>
-            </label>
-            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
-              Enhanced RTL support for Vditor markdown editor (.vditor-reset, .vditor-content)
-            </p>
-          </div>
-
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={settings.markdownSupport}
-                onChange={(e) => saveSettings({ markdownSupport: (e.target as HTMLInputElement).checked })}
-                disabled={!settings.enabled}
-              />
-              <span>📄 Markdown Body Support</span>
-            </label>
-            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
-              Special attention to .markdown-body elements, paragraphs, and nested content
-            </p>
-          </div>
-
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={settings.enhancedTextProcessing}
-                onChange={(e) => saveSettings({ enhancedTextProcessing: (e.target as HTMLInputElement).checked })}
-                disabled={!settings.enabled}
-              />
-              <span>🔤 Enhanced Text Processing</span>
-            </label>
-            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
-              Process all text elements (p, div, span, h1-h6, li, etc.)
-            </p>
-          </div>
-
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={settings.processMixedContent}
-                onChange={(e) => saveSettings({ processMixedContent: (e.target as HTMLInputElement).checked })}
-                disabled={!settings.enabled}
-              />
-              <span>🌐 Process Mixed Content</span>
-            </label>
-            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
-              Handle mixed RTL/LTR content within the same element
-            </p>
-          </div>
-
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={settings.layoutPreservation}
-                onChange={(e) => saveSettings({ layoutPreservation: (e.target as HTMLInputElement).checked })}
-                disabled={!settings.enabled}
-              />
-              <span>🏗️ Layout Preservation</span>
-            </label>
-            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
-              Prevent layout shifting by preserving container structure
-            </p>
-          </div>
-
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={settings.aggressiveProcessing}
-                onChange={(e) => saveSettings({ aggressiveProcessing: (e.target as HTMLInputElement).checked })}
-                disabled={!settings.enabled}
-              />
-              <span>⚡ Aggressive Processing</span>
-            </label>
-            <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: '#666' }}>
-              More thorough processing that may affect performance
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* CSS Selectors */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #ddd', 
-        borderRadius: '8px', 
-        background: '#fafafa' 
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🎯 CSS Selectors</h3>
+        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🎯 Target Selectors</h3>
         <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: '#666' }}>
-          Define which elements should be processed for RTL detection. Includes enhanced selectors for better coverage.
+          Specific elements to process for RTL detection (focused approach)
         </p>
 
-        <div style={{ marginBottom: '15px', maxHeight: '200px', overflowY: 'auto' }}>
-          {settings.customSelectors.map((selector, index) => (
+        <div style={{ marginBottom: '15px', maxHeight: '150px', overflowY: 'auto' }}>
+          {settings.targetSelectors.map((selector, index) => (
             <div key={index} style={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -579,7 +488,7 @@ export function RTLSetting(): JSXInternal.Element {
             type="text"
             value={customSelector}
             onChange={(e) => setCustomSelector((e.target as HTMLInputElement).value)}
-            placeholder="Enter CSS selector (e.g., .my-content, div.text)"
+            placeholder="e.g., .markdown-body p, .vditor-reset div"
             disabled={!settings.enabled}
             onKeyPress={(e) => e.key === 'Enter' && addCustomSelector()}
             style={{ 
@@ -624,7 +533,7 @@ export function RTLSetting(): JSXInternal.Element {
             placeholder="Enter text to test RTL detection..."
             style={{ 
               width: '100%', 
-              height: '100px', 
+              height: '80px', 
               padding: '10px', 
               border: '1px solid #ccc', 
               borderRadius: '4px',
@@ -666,9 +575,7 @@ export function RTLSetting(): JSXInternal.Element {
           <strong>🧪 Test Examples:</strong><br/>
           <strong>Hebrew:</strong> שלום עולם - זהו טקסט בעברית<br/>
           <strong>Arabic:</strong> مرحبا بالعالم - هذا نص باللغة العربية<br/>
-          <strong>Mixed:</strong> Hello שלום world עולם مرحبا<br/>
-          <strong>English:</strong> Hello world - this is English text<br/>
-          <strong>Persian:</strong> سلام دنیا - این متن فارسی است
+          <strong>English:</strong> Hello world - this is English text
         </div>
       </div>
 
@@ -717,25 +624,6 @@ export function RTLSetting(): JSXInternal.Element {
             }}
           >
             📋 Export Settings
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              (window as any).blinkoRTL?.toggle();
-              window.Blinko.toast.success('RTL toggled!');
-            }}
-            style={{ 
-              padding: '10px 20px', 
-              background: '#007bff', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: 'pointer', 
-              fontWeight: '500' 
-            }}
-          >
-            🔄 Toggle RTL (ع/א)
           </button>
         </div>
       </div>
