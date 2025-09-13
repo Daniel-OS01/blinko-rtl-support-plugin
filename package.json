@@ -11,8 +11,9 @@
   },
   "keywords": ["blinko", "plugin", "rtl", "hebrew", "arabic", "i18n"],
   "scripts": {
-    "dev": "blinko-cli dev server",
-    "build": "vite build --mode production",
+    "dev": "vite build --mode development && blinko-cli dev server",
+    "build": "vite build --mode development",
+    "build:prod": "vite build --mode production",
     "ngrok": "ngrok http 8080",
     "release:publish": "vite build --mode production && blinko-cli release plugin"
   },
