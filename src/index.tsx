@@ -1,5 +1,5 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
+import { render } from 'preact';
+import { createElement } from 'preact';
 import type { BasePlugin } from 'blinko';
 import plugin from '../plugin.json';
 
@@ -15,9 +15,9 @@ import ar from './locales/ar.json';
 
 declare var System: any;
 
-System.register(['react', 'react-dom/client'], (exports: any, context: any) => {
-  const react = context.import('react');
-  const client = context.import('react-dom/client');
+System.register(['preact', 'preact/compat'], (exports: any, context: any) => {
+  const preact = context.import('preact');
+  const compat = context.import('preact/compat');
 
   return {
     execute: () => {
@@ -110,8 +110,7 @@ System.register(['react', 'react-dom/client'], (exports: any, context: any) => {
 
         renderSettingPanel = () => {
           const container = document.createElement('div');
-          const root = client.createRoot(container);
-          root.render(React.createElement(SettingPanel));
+          render(createElement(SettingPanel), container);
           return container;
         }
 
@@ -131,8 +130,7 @@ System.register(['react', 'react-dom/client'], (exports: any, context: any) => {
             tooltip: 'RTL Support Settings',
             content: () => {
               const container = document.createElement('div');
-              const root = client.createRoot(container);
-              root.render(React.createElement(App, { detector, styler }));
+              render(createElement(App, { detector, styler }), container);
               return container;
             }
           });
