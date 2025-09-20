@@ -1,6 +1,9 @@
 # Blinko RTL Language Support Plugin
 
 Enhanced RTL (Right-to-Left) language support for Blinko with automatic detection, manual controls, and dark mode.
+<img width="466" height="292" alt="image" src="https://github.com/user-attachments/assets/3ea8530d-060c-48d1-844f-14c50f2612f7" />
+<img width="637" height="877" alt="image" src="https://github.com/user-attachments/assets/aa83fc9b-d0dc-4eeb-9dff-848677d89ce6" />
+<img width="765" height="440" alt="image" src="https://github.com/user-attachments/assets/6e7da3b0-37e8-44a4-9028-6055b583e15d" />
 
 ## ✨ Features
 
