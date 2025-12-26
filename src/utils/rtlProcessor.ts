@@ -1,6 +1,7 @@
 import { RTLConfig } from '../config';
 import { RTLRenderer } from '../renderer';
 import { RTLDetector } from './rtlDetector';
+import { debounce } from './debounce';
 
 /**
  * Advanced RTL processor for comprehensive text element handling
@@ -14,6 +15,10 @@ export class RTLProcessor {
   private autoProcessInterval: any = null;
   private isEnabled: boolean = false;
 
+  // Queue for debounced processing
+  private pendingElements: Set<HTMLElement> = new Set();
+  private debouncedProcessQueue: () => void;
+
   constructor(
     config: RTLConfig,
     renderer: RTLRenderer,
@@ -24,6 +29,11 @@ export class RTLProcessor {
     this.renderer = renderer;
     this.detector = detector;
     this.settings = settings;
+
+    // Create debounced processor for the queue
+    this.debouncedProcessQueue = debounce(() => {
+       this.processPendingElements();
+    }, 50); // Fast debounce for UI responsiveness
   }
 
   updateSettings(newSettings: any) {
@@ -34,7 +44,16 @@ export class RTLProcessor {
    * Process a single element
    */
   processElement(element: HTMLElement) {
-    if (!element || !this.shouldProcessElement(element)) return;
+    if (!element) return;
+
+    // Explicitly enforce LTR for code blocks
+    const tagName = element.tagName.toLowerCase();
+    if (tagName === 'pre' || tagName === 'code' || element.classList.contains('code-block')) {
+        this.renderer.applyLTR(element);
+        return;
+    }
+
+    if (!this.shouldProcessElement(element)) return;
 
     const text = this.getElementText(element);
     if (!text.trim() || text.length < (this.settings.minRTLChars || 2)) return;
@@ -95,14 +114,6 @@ export class RTLProcessor {
           return false;
       }
 
-      // Hebrew/Arabic Regex Check (mimicking original index.tsx logic)
-      if (this.settings.hebrewRegex && /\p{Script=Hebrew}/u.test(text)) {
-          return true;
-      }
-      if (this.settings.arabicRegex && /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text)) {
-          return true;
-      }
-
       return this.detector.detectRTL(text);
   }
 
@@ -157,6 +168,11 @@ export class RTLProcessor {
       this.processElement(element as HTMLElement);
     });
 
+    // Ensure code blocks are reset to LTR
+    document.querySelectorAll('pre, code, .code-block').forEach(el => {
+        this.renderer.applyLTR(el as HTMLElement);
+    });
+
     // Also handle custom selectors if any
     this.settings.customSelectors?.forEach((selector: string) => {
         try {
@@ -167,6 +183,21 @@ export class RTLProcessor {
             console.warn(`Invalid custom selector: ${selector}`);
         }
     });
+  }
+
+  private processPendingElements() {
+      if (!this.isEnabled) {
+          this.pendingElements.clear();
+          return;
+      }
+
+      this.pendingElements.forEach(element => {
+          // Double check if element is still connected
+          if (document.contains(element)) {
+              this.processElement(element);
+          }
+      });
+      this.pendingElements.clear();
   }
 
   enable() {
@@ -185,6 +216,7 @@ export class RTLProcessor {
           this.observer.disconnect();
           this.observer = null;
       }
+      this.pendingElements.clear();
 
       // Cleanup DOM
       const allSelectors = this.config.selectors.target.join(', ');
@@ -200,7 +232,8 @@ export class RTLProcessor {
       this.observer = new MutationObserver((mutations) => {
           if (!this.isEnabled) return;
 
-          let shouldProcess = false;
+          let hasRelevantMutation = false;
+
           mutations.forEach((mutation) => {
              if (mutation.type === 'childList') {
                  mutation.addedNodes.forEach(node => {
@@ -208,14 +241,17 @@ export class RTLProcessor {
                          const element = node as HTMLElement;
                          // Check if the element itself needs processing
                          if (this.config.selectors.target.some(s => element.matches(s))) {
-                             this.processElement(element);
+                             this.pendingElements.add(element);
+                             hasRelevantMutation = true;
                          }
                          // Check children
                          const allSelectors = this.config.selectors.target.join(', ');
                          element.querySelectorAll(allSelectors).forEach(child => {
-                             this.processElement(child as HTMLElement);
+                             this.pendingElements.add(child as HTMLElement);
                          });
-                         shouldProcess = true;
+                         if (element.querySelectorAll(allSelectors).length > 0) {
+                             hasRelevantMutation = true;
+                         }
                      }
                  });
              } else if (mutation.type === 'characterData' || mutation.type === 'attributes') {
@@ -226,15 +262,15 @@ export class RTLProcessor {
                   if (target) {
                       // Check if it matches any target selector
                       if (this.config.selectors.target.some(s => target.matches(s))) {
-                          this.processElement(target);
-                          shouldProcess = true;
+                          this.pendingElements.add(target);
+                          hasRelevantMutation = true;
                       }
                   }
              }
           });
 
-          if (shouldProcess) {
-               // Debounce re-processing all if needed, but we try to process locally above
+          if (hasRelevantMutation) {
+               this.debouncedProcessQueue();
           }
       });
       
@@ -243,18 +279,19 @@ export class RTLProcessor {
           subtree: true,
           characterData: true,
           attributes: true,
-          attributeFilter: ['value', 'placeholder'] // monitor input value changes if needed (but value isn't an attribute usually)
+          attributeFilter: ['value', 'placeholder']
       });
   }
 
   private startAutoProcessing() {
       if (this.autoProcessInterval) clearInterval(this.autoProcessInterval);
       if (this.settings.autoDetect && this.isEnabled) {
+          // Less aggressive polling since we have a better observer now
           this.autoProcessInterval = setInterval(() => {
               if (this.isEnabled && this.settings.autoDetect) {
                   this.processAllElements();
               }
-          }, this.settings.processInterval || 2000);
+          }, this.settings.processInterval || 5000);
       }
   }
 
