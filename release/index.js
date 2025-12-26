@@ -3,7 +3,7 @@ var Dt = (B, m, F) => m in B ? It(B, m, { enumerable: !0, configurable: !0, writ
 var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
 (function() {
   var B, m, F, H, ge, _e, fe, me, te, ne, ie, j = {}, be = [], Ye = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, q = Array.isArray;
-  function M(t, e) {
+  function A(t, e) {
     for (var n in e)
       t[n] = e[n];
     return t;
@@ -27,7 +27,7 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
   function N(t) {
     return t.children;
   }
-  function A(t, e) {
+  function M(t, e) {
     this.props = t, this.context = e;
   }
   function O(t, e) {
@@ -54,7 +54,7 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
   }
   function G() {
     for (var t, e, n, i, o, s, a, c = 1; H.length; )
-      H.length > c && H.sort(fe), t = H.shift(), c = H.length, t.__d && (n = void 0, o = (i = (e = t).__v).__e, s = [], a = [], e.__P && ((n = M({}, i)).__v = i.__v + 1, m.vnode && m.vnode(n), se(e.__P, n, i, e.__n, e.__P.namespaceURI, 32 & i.__u ? [o] : null, s, o ?? O(i), !!(32 & i.__u), a), n.__v = i.__v, n.__.__k[n.__i] = n, Te(s, n, a), n.__e != o && ve(n)));
+      H.length > c && H.sort(fe), t = H.shift(), c = H.length, t.__d && (n = void 0, o = (i = (e = t).__v).__e, s = [], a = [], e.__P && ((n = A({}, i)).__v = i.__v + 1, m.vnode && m.vnode(n), se(e.__P, n, i, e.__n, e.__P.namespaceURI, 32 & i.__u ? [o] : null, s, o ?? O(i), !!(32 & i.__u), a), n.__v = i.__v, n.__.__k[n.__i] = n, Te(s, n, a), n.__e != o && ve(n)));
     G.__r = 0;
   }
   function xe(t, e, n, i, o, s, a, c, p, u, h) {
@@ -152,7 +152,7 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
     e:
       if (typeof d == "function")
         try {
-          if (v = e.props, x = "prototype" in d && d.prototype.render, P = (h = d.contextType) && i[h.__c], y = h ? P ? P.props.value : h.__ : i, n.__c ? S = (l = e.__c = n.__c).__ = l.__E : (x ? e.__c = l = new d(v, y) : (e.__c = l = new A(v, y), l.constructor = d, l.render = it), P && P.sub(l), l.props = v, l.state || (l.state = {}), l.context = y, l.__n = i, _ = l.__d = !0, l.__h = [], l._sb = []), x && l.__s == null && (l.__s = l.state), x && d.getDerivedStateFromProps != null && (l.__s == l.state && (l.__s = M({}, l.__s)), M(l.__s, d.getDerivedStateFromProps(v, l.__s))), g = l.props, w = l.state, l.__v = e, _)
+          if (v = e.props, x = "prototype" in d && d.prototype.render, P = (h = d.contextType) && i[h.__c], y = h ? P ? P.props.value : h.__ : i, n.__c ? S = (l = e.__c = n.__c).__ = l.__E : (x ? e.__c = l = new d(v, y) : (e.__c = l = new M(v, y), l.constructor = d, l.render = it), P && P.sub(l), l.props = v, l.state || (l.state = {}), l.context = y, l.__n = i, _ = l.__d = !0, l.__h = [], l._sb = []), x && l.__s == null && (l.__s = l.state), x && d.getDerivedStateFromProps != null && (l.__s == l.state && (l.__s = A({}, l.__s)), A(l.__s, d.getDerivedStateFromProps(v, l.__s))), g = l.props, w = l.state, l.__v = e, _)
             x && d.getDerivedStateFromProps == null && l.componentWillMount != null && l.componentWillMount(), x && l.componentDidMount != null && l.__h.push(l.componentDidMount);
           else {
             if (x && d.getDerivedStateFromProps == null && v !== g && l.componentWillReceiveProps != null && l.componentWillReceiveProps(v, y), !l.__e && l.shouldComponentUpdate != null && l.shouldComponentUpdate(v, l.__s, y) === !1 || e.__v == n.__v) {
@@ -175,7 +175,7 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
             do
               l.__d = !1, T && T(e), h = l.render(l.props, l.state, l.context), l.state = l.__s;
             while (l.__d && ++$ < 25);
-          l.state = l.__s, l.getChildContext != null && (i = M(M({}, i), l.getChildContext())), x && !_ && l.getSnapshotBeforeUpdate != null && (L = l.getSnapshotBeforeUpdate(g, w)), D = h, h != null && h.type === N && h.key == null && (D = Re(h.props.children)), c = xe(t, q(D) ? D : [D], e, n, i, o, s, a, c, p, u), l.base = e.__e, e.__u &= -161, l.__h.length && a.push(l), S && (l.__E = l.__ = null);
+          l.state = l.__s, l.getChildContext != null && (i = A(A({}, i), l.getChildContext())), x && !_ && l.getSnapshotBeforeUpdate != null && (L = l.getSnapshotBeforeUpdate(g, w)), D = h, h != null && h.type === N && h.key == null && (D = Re(h.props.children)), c = xe(t, q(D) ? D : [D], e, n, i, o, s, a, c, p, u), l.base = e.__e, e.__u &= -161, l.__h.length && a.push(l), S && (l.__E = l.__ = null);
         } catch (f) {
           if (e.__v = null, p || s != null)
             if (f.then) {
@@ -212,7 +212,7 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
     });
   }
   function Re(t) {
-    return typeof t != "object" || t == null || t.__b && t.__b > 0 ? t : q(t) ? t.map(Re) : M({}, t);
+    return typeof t != "object" || t == null || t.__b && t.__b > 0 ? t : q(t) ? t.map(Re) : A({}, t);
   }
   function nt(t, e, n, i, o, s, a, c, p) {
     var u, h, l, _, g, w, L, S = n.props, v = e.props, x = e.type;
@@ -299,12 +299,12 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
           t = c;
         }
     throw t;
-  } }, F = 0, A.prototype.setState = function(t, e) {
+  } }, F = 0, M.prototype.setState = function(t, e) {
     var n;
-    n = this.__s != null && this.__s != this.state ? this.__s : this.__s = M({}, this.state), typeof t == "function" && (t = t(M({}, n), this.props)), t && M(n, t), t != null && this.__v && (e && this._sb.push(e), ye(this));
-  }, A.prototype.forceUpdate = function(t) {
+    n = this.__s != null && this.__s != this.state ? this.__s : this.__s = A({}, this.state), typeof t == "function" && (t = t(A({}, n), this.props)), t && A(n, t), t != null && this.__v && (e && this._sb.push(e), ye(this));
+  }, M.prototype.forceUpdate = function(t) {
     this.__v && (this.__e = !0, t && this.__h.push(t), ye(this));
-  }, A.prototype.render = N, H = [], _e = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, fe = function(t, e) {
+  }, M.prototype.render = N, H = [], _e = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, fe = function(t, e) {
     return t.__v.__b - e.__v.__b;
   }, G.__r = 0, me = /(PointerCapture)$|Capture$/i, te = 0, ne = Se(!1), ie = Se(!0);
   var rt = 0;
@@ -320,7 +320,7 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
         p[c] === void 0 && (p[c] = a[c]);
     return m.vnode && m.vnode(u), u;
   }
-  var Z, R, de, Le, ce = 0, Ee = [], C = m, Pe = C.__b, $e = C.__r, Be = C.diffed, Me = C.__c, Ae = C.unmount, Fe = C.__;
+  var Z, R, de, Le, ce = 0, Ee = [], C = m, Pe = C.__b, $e = C.__r, Be = C.diffed, Ae = C.__c, Me = C.unmount, Fe = C.__;
   function Ie(t, e) {
     C.__h && C.__h(R, t, ce || e), ce = 0;
     var n = R.__H || (R.__H = { __: [], __h: [] });
@@ -405,9 +405,9 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
           o.__h && (o.__h = []);
         }), e = [], C.__e(i, n.__v);
       }
-    }), Me && Me(t, e);
+    }), Ae && Ae(t, e);
   }, C.unmount = function(t) {
-    Ae && Ae(t);
+    Me && Me(t);
     var e, n = t.__c;
     n && n.__H && (n.__H.__.forEach(function(i) {
       try {
@@ -457,7 +457,7 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
   function We(t, e) {
     this.props = t, this.context = e;
   }
-  (We.prototype = new A()).isPureReactComponent = !0, We.prototype.shouldComponentUpdate = function(t, e) {
+  (We.prototype = new M()).isPureReactComponent = !0, We.prototype.shouldComponentUpdate = function(t, e) {
     return Ne(this.props, t) || Ne(this.state, e);
   };
   var Oe = m.__b;
@@ -499,7 +499,7 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
   m.unmount = function(t) {
     var e = t.__c;
     e && e.__R && e.__R(), e && 32 & t.__u && (t.type = null), ze && ze(t);
-  }, (he.prototype = new A()).__c = function(t, e) {
+  }, (he.prototype = new M()).__c = function(t, e) {
     var n = e.__c, i = this;
     i.o == null && (i.o = []), i.o.push(n);
     var o = qe(i.__v), s = !1, a = function() {
@@ -541,7 +541,7 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
         t.i = n = n[2];
       }
   };
-  (Q.prototype = new A()).__a = function(t) {
+  (Q.prototype = new M()).__a = function(t) {
     var e = this, n = qe(e.__v), i = e.l.get(t);
     return i[0]++, function(o) {
       var s = function() {
@@ -568,8 +568,8 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
   function Ge(t, e, n) {
     return e.__k == null && (e.textContent = ""), ot(t, e), typeof n == "function" && n(), t ? t.__c : null;
   }
-  A.prototype.isReactComponent = {}, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t) {
-    Object.defineProperty(A.prototype, t, { configurable: !0, get: function() {
+  M.prototype.isReactComponent = {}, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t) {
+    Object.defineProperty(M.prototype, t, { configurable: !0, get: function() {
       return this["UNSAFE_" + t];
     }, set: function(e) {
       Object.defineProperty(this, t, { configurable: !0, writable: !0, value: e });
@@ -756,7 +756,11 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
           /* @__PURE__ */ r("span", { children: "Less Sensitive (50%)" })
         ] })
       ] }),
-      /* @__PURE__ */ r("div", { style: { marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #eee", fontSize: "11px", color: "#888", textAlign: "center" }, children: "Click 'Fix Selected' to force detection on specific text." })
+      /* @__PURE__ */ r("div", { style: { marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #eee", fontSize: "11px", color: "#888", textAlign: "center" }, children: "Click 'Fix Selected' to force detection on specific text." }),
+      /* @__PURE__ */ r("div", { style: { marginTop: "5px", fontSize: "10px", color: "#aaa", textAlign: "center" }, children: [
+        "v",
+        "1.0.8"
+      ] })
     ] });
   }
   const z = [
@@ -2608,11 +2612,11 @@ ${o}
     force_ltr: "Force LTR",
     auto: "Auto",
     plugin_description: "This plugin automatically detects Hebrew and Arabic text and applies appropriate RTL styling."
-  }, Mt = {
+  }, At = {
     title: "我的插件",
     countLabel: "计数为 {{count}}",
     successMessage: "成功！"
-  }, At = {
+  }, Mt = {
     rtl_support: "תמיכה ב-RTL",
     auto_detect: "זיהוי אוטומטי",
     manual_toggle: "החלפה ידנית",
@@ -2815,7 +2819,7 @@ ${o}
           });
         }
         initI18n() {
-          window.Blinko.i18n.addResourceBundle("en", "translation", Bt), window.Blinko.i18n.addResourceBundle("zh", "translation", Mt), window.Blinko.i18n.addResourceBundle("he", "translation", At), window.Blinko.i18n.addResourceBundle("ar", "translation", Ft);
+          window.Blinko.i18n.addResourceBundle("en", "translation", Bt), window.Blinko.i18n.addResourceBundle("zh", "translation", At), window.Blinko.i18n.addResourceBundle("he", "translation", Mt), window.Blinko.i18n.addResourceBundle("ar", "translation", Ft);
         }
         destroy() {
           S(), w(), console.log("Blinko RTL Plugin destroyed");
