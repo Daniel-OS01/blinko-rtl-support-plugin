@@ -1,19 +1,27 @@
-export function debounce<T extends (...args: any[]) => void>(
+/**
+ * Debounce function to limit the rate at which a function can fire.
+ * @param func The function to debounce
+ * @param wait The delay in milliseconds
+ * @param immediate Whether to trigger the function on the leading edge
+ */
+export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number
+  wait: number,
+  immediate: boolean = false
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null;
 
-  return function executedFunction(...args: Parameters<T>) {
-    const later = () => {
+  return function(this: any, ...args: Parameters<T>) {
+    const context = this;
+    const later = function() {
       timeout = null;
-      func(...args);
+      if (!immediate) func.apply(context, args);
     };
 
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-
+    const callNow = immediate && !timeout;
+    if (timeout) clearTimeout(timeout);
     timeout = setTimeout(later, wait);
+
+    if (callNow) func.apply(context, args);
   };
 }

@@ -83,18 +83,18 @@ nav,
 }
 
 .card-masonry-grid .markdown-body > div {
-    margin-bottom: 0.3em !important;
+    margin-block-end: 0.3em !important;
 }
 
 .card-masonry-grid .markdown-body div p {
-    margin-bottom: 0.35em !important;
-    margin-top: 0.15em !important;
+    margin-block-end: 0.35em !important;
+    margin-block-start: 0.15em !important;
 }
 
 /* Compact spacing for nested content */
 .expand-container .markdown-body p {
-    margin-bottom: 0.4em !important;
-    margin-top: 0.2em !important;
+    margin-block-end: 0.4em !important;
+    margin-block-start: 0.2em !important;
 }
 
 
@@ -113,13 +113,13 @@ button *, .btn *, [role="button"] * {
 }
 /* Smart RTL for content only when explicitly Hebrew/RTL - preserve layout structure */
 *:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"][lang="he"], *[dir="rtl"][lang="ar"] {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 
 /* Additional spacing improvements for better readability */
 .markdown-body div {
-    margin-bottom: 0.3em !important;
+    margin-block-end: 0.3em !important;
     unicode-bidi: plaintext !important;
 }
 
@@ -158,59 +158,59 @@ pre > div > div:nth-child(2) {
     unicode-bidi: plaintext !important;
 }
 *:dir(rtl) .input-with-select .el-input__wrapper, [lang="he"] .input-with-select .el-input__wrapper {
-    padding-left: auto !important;
-    padding-right: 0 !important;
+    padding-inline-end: unset !important;
+    padding-inline-start: 0 !important;
 }
 *:dir(rtl) .markdown-body p, [lang="he"] .markdown-body p {
-    text-align: right !important;
+    text-align: start !important;
 }
 *:dir(rtl) .user-chat .content-class, [lang="he"] .user-chat .content-class {
-    text-align: right !important;
+    text-align: start !important;
 }
 *:dir(rtl) h1, *:dir(rtl) h2, *:dir(rtl) h3, *:dir(rtl) h4, *:dir(rtl) h5, *:dir(rtl) h6, [lang="he"] h1, [lang="he"] h2, [lang="he"] h3, [lang="he"] h4, [lang="he"] h5, [lang="he"] h6 {
-    text-align: right !important;
+    text-align: start !important;
 }
 *:dir(rtl) input[type="email"], *:dir(rtl) input[type="password"], *:dir(rtl) input[type="search"], *:dir(rtl) input[type="tel"], *:dir(rtl) input[type="text"], *:dir(rtl) input[type="url"], *:dir(rtl) textarea, [lang="he"] input[type="email"], [lang="he"] input[type="password"], [lang="he"] input[type="search"], [lang="he"] input[type="tel"], [lang="he"] input[type="text"], [lang="he"] input[type="url"], [lang="he"] textarea {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 *:dir(rtl) li, [lang="he"] li {
-    text-align: right !important;
+    text-align: start !important;
 }
 *:dir(rtl) ol, *:dir(rtl) ul, [lang="he"] ol, [lang="he"] ul {
     list-style-position: outside !important;
-    padding-left: 0 !important;
-    padding-right: 2em !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: 2em !important;
 }
 *:dir(rtl) p, [lang="he"] p {
-    text-align: right !important;
+    text-align: start !important;
 }
 *:lang(he) *, *:lang(iw) *, *[lang="he"] *, *[lang="iw"] * {
     unicode-bidi: inherit !important;
 }
 /* Remove duplicate layout preservation rules - already defined above */
 *:lang(he) .float-right, *:lang(iw) .float-right, *[dir="rtl"] .float-right, .rtl .float-right {
-    float: left !important;
+    float: inline-end !important;
 }
 /* Remove grid direction that breaks layout */
 *:lang(he) .margin-left, *:lang(iw) .margin-left, *[dir="rtl"] .margin-left, .rtl .margin-left {
-    margin-right: inherit !important;
-    margin-left: 0 !important;
+    margin-inline-start: inherit !important;
+    margin-inline-end: 0 !important;
 }
 *:lang(he) .margin-right, *:lang(iw) .margin-right, *[dir="rtl"] .margin-right, .rtl .margin-right {
-    margin-left: inherit !important;
-    margin-right: 0 !important;
+    margin-inline-end: inherit !important;
+    margin-inline-start: 0 !important;
 }
 *:lang(he) .padding-left, *:lang(iw) .padding-left, *[dir="rtl"] .padding-left, .rtl .padding-left {
-    padding-left: 0 !important;
-    padding-right: inherit !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: inherit !important;
 }
 *:lang(he) .padding-right, *:lang(iw) .padding-right, *[dir="rtl"] .padding-right, .rtl .padding-right {
-    padding-right: 0 !important;
-    padding-left: inherit !important;
+    padding-inline-start: 0 !important;
+    padding-inline-end: inherit !important;
 }
 *:lang(he), *:lang(iw), *[dir="rtl"], *[lang="he"], *[lang="iw"], .hebrew, .rtl {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
     unicode-bidi: bidi-override !important;
 }
@@ -219,7 +219,7 @@ pre > div > div:nth-child(2) {
     unicode-bidi: embed !important;
 }
 *[title*="א"], *[title*="ב"], *[title*="ג"], *[title*="ד"], *[title*="ה"], *[title*="ו"], *[title*="ז"], *[title*="ח"], *[title*="ט"], *[title*="י"], *[title*="כ"], *[title*="ל"], *[title*="מ"], *[title*="ן"], *[title*="נ"], *[title*="ס"], *[title*="ע"], *[title*="פ"], *[title*="צ"], *[title*="ק"], *[title*="ר"], *[title*="ש"], *[title*="ת"] {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 /* Vditor content containers use automatic language detection */
@@ -237,40 +237,40 @@ pre > div > div:nth-child(2) {
 }
 /* Removed broad body selector - moved to Blinko-RTL-Broad.css */
 .notion-app, .notion-frame, .notion-overlay-container, .notion-peek-renderer, .notion-sidebar {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 .notion-close-sidebar, .notion-frame > .notion-topbar > div > div[role="button"] > svg[class*="chevron"], .notion-open-sidebar, .notion-sidebar-switcher, .notion-topbar div[role="button"][style*="width: 36px"] {
     transform: rotate(180deg) !important;
 }
 .notion-code-block div[style*="display: flex"] > div:last-child {
-    text-align: left !important;
+    text-align: end !important;
     direction: ltr !important;
 }
 .notion-dropdown__option-list *, .notion-filter-menu *, .notion-select-menu *, .notion-sort-menu *, .notion-view-settings-sidebar * {
-    text-align: left !important;
+    text-align: end !important;
 }
 .notion-header-block [placeholder]:empty, .notion-page-title[placeholder]:empty, .notion-sub_header-block [placeholder]:empty, .notion-sub_sub_header-block [placeholder]:empty, .notion-toggle-block [placeholder="Toggle"]:empty, div[placeholder*="Type '/' for commands"], div[placeholder*="Untitled"] {
-    text-align: right !important;
+    text-align: start !important;
     unicode-bidi: plaintext !important;
 }
-.notion-table_of_contents-block div[style*="margin-left: 24px;"], .notion-table_of_contents-block div[style*="padding-left: 24px;"] {
+.notion-table_of_contents-block div[style*="margin-inline-end: 24px;"], .notion-table_of_contents-block div[style*="padding-inline-end: 24px;"] {
     padding-inline-start: 24px !important;
     margin-inline-start: 24px !important;
 }
-.notion-table_of_contents-block div[style*="margin-left: 48px;"], .notion-table_of_contents-block div[style*="padding-left: 48px;"] {
+.notion-table_of_contents-block div[style*="margin-inline-end: 48px;"], .notion-table_of_contents-block div[style*="padding-inline-end: 48px;"] {
     margin-inline-start: 48px !important;
     padding-inline-start: 48px !important;
 }
-.notion-table_of_contents-block div[style*="margin-left: 72px;"], .notion-table_of_contents-block div[style*="padding-left: 72px;"] {
+.notion-table_of_contents-block div[style*="margin-inline-end: 72px;"], .notion-table_of_contents-block div[style*="padding-inline-end: 72px;"] {
     margin-inline-start: 72px !important;
     padding-inline-start: 72px !important;
 }
-.notion-table_of_contents-block div[style*="margin-left:"] {
-    margin-left: 0 !important;
+.notion-table_of_contents-block div[style*="margin-inline-end:"] {
+    margin-inline-end: 0 !important;
 }
-.notion-table_of_contents-block div[style*="padding-left:"] {
-    padding-left: 0 !important;
+.notion-table_of_contents-block div[style*="padding-inline-end:"] {
+    padding-inline-end: 0 !important;
 }
 .notion-text-equation-token .katex-html {
     direction: rtl !important;
@@ -282,18 +282,18 @@ pre > div > div:nth-child(2) {
     direction: ltr !important;
 }
 .notion-to_do-block > div > div[style*="width: 24px;"] {
-    margin-left: 4px !important;
-    margin-right: 0 !important;
+    margin-inline-end: 4px !important;
+    margin-inline-start: 0 !important;
 }
 .notion-topbar > div:first-child > * {
-    margin-left: 0px !important;
-    margin-right: 8px !important;
+    margin-inline-end: 0px !important;
+    margin-inline-start: 8px !important;
 }
 /* Text content elements with Hebrew support - not layout containers */
 .text-justify:lang(he), .text-content:lang(he) {
     direction: rtl !important;
     unicode-bidi: embed !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 [class*="Menu"] li, [class*="dropdown"] li, [class*="menu"] li {
     max-height: 28px !important;
@@ -308,14 +308,14 @@ pre > div > div:nth-child(2) {
     margin: 0 !important;
     padding: 0 !important;
 }
-/* Removed overly broad body styles that could break layout */
+/* Removed broad body styles that could break layout */
 body > div.flex > main > div.flex.w-full.max-w-\[59\.75rem\].flex-1.gap-0.sm\:gap-6.xl\:gap-\[4\.5rem\], body > div.flex > main > div.flex.w-full.max-w-\[59\.75rem\].flex-1.gap-0.sm\:gap-6.xl\:gap-\[4\.5rem\] > div.flex.w-full.flex-col.justify-between.gap-8.pb-8 > div > div > div > ul, body > div.flex > main > div.sticky.top-0.z-top-panel.self-stretch.bg-ash-100.dark\:bg-ash-900, body > div.flex > main > div.sticky.top-0.z-top-panel.self-stretch.bg-ash-100.dark\:bg-ash-900 > div > div.flex.w-full.flex-col.items-center.gap-1\.5, body > div.flex > main > div.sticky.top-0.z-top-panel.self-stretch.bg-ash-100.dark\:bg-ash-900 > div > div.flex.w-full.flex-col.items-center.gap-1\.5 > ul {
     direction: ltr;
 }
 /* Remove body direction to prevent layout shifting */
 body > main > div.mt-12.flex.flex-1.flex-col.gap-12 {
     /* Only text alignment for content areas */
-    text-align: right;
+    text-align: start;
     unicode-bidi: embed !important;
 }
 /* Removed overly broad body styles that could break layout */
@@ -323,15 +323,15 @@ body > main > div.mt-12.flex.flex-1.flex-col.gap-12 {
 /* Layout containers should maintain LTR structure */
 body.hebrew, body.rtl, body:lang(he), body:lang(iw), body[dir="rtl"], body[lang="he"], body[lang="iw"] {
     /* Only text alignment changes for body */
-    text-align: right !important;
+    text-align: start !important;
     /* Remove direction: rtl to prevent layout shifting */
 }
 
 /* Fixed orphaned CSS properties - wrapped in proper selector */
 .legacy-float-left {
-    float: left;
+    float: inline-end;
     direction: ltr;
-    text-align: left;
+    text-align: end;
     position: absolute !important;
     unicode-bidi: embed;
 }
@@ -342,7 +342,7 @@ body.hebrew, body.rtl, body:lang(he), body:lang(iw), body[dir="rtl"], body[lang=
     unicode-bidi: plaintext !important;
 }
 html[dir="rtl"] body, html[lang="he"] body {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 
@@ -350,12 +350,12 @@ html[dir="rtl"] body, html[lang="he"] body {
 #__next > div > div > div > main > div.jss13.MuiBox-root.css-0 > div > div > div.jss132 > div > div.MuiGrid-root.MuiGrid-item.jss140.css-1wxaqej > div.MuiGrid-root.MuiGrid-container.MuiGrid-direction-xs-column.jss141.css-1wkwmmc > div:nth-child(5) > div.jss179 {
     direction: rtl;
     display: inherit;
-    text-align: right;
+    text-align: start;
 }
 #__next > div > div > div.jss28.MuiBox-root.css-0 > main > div > div > div > div.jss135.jss15 {
     transform: scaleX(-1);
     direction: rtl;
-    text-align: right;
+    text-align: start;
 }
 #hj99tb0, #xDetDlg, #xDetDlgDesc, div.Mz3isd {
     unicode-bidi: plaintext !important;
@@ -363,7 +363,7 @@ html[dir="rtl"] body, html[lang="he"] body {
 #task-list-content > ul {
     direction: rtl;
     unicode-bidi: plaintext !important;
-    left: unset;
+    inset-inline-end: unset;
     position: relative;
 }
 #task-menu-tag-view .select-list.antiscroll-inner.flex-auto > ul > li .icon, #task-menu-tag-view .select-list.antiscroll-inner.flex-auto > ul > li svg, #task-menu-view ul li.rc-menu-item .icon, #task-menu-view ul li.rc-menu-item i, #task-menu-view ul li.rc-menu-item svg, #task-menu-view ul li.rc-menu-item.set-duedate.menu-section .icon, #task-menu-view ul li.rc-menu-item.set-duedate.menu-section i, #task-menu-view ul li.rc-menu-item.set-duedate.menu-section svg, #task-menu-view ul li.rc-menu-item.set-priority.menu-section .icon, #task-menu-view ul li.rc-menu-item.set-priority.menu-section i, #task-menu-view ul li.rc-menu-item.set-priority.menu-section svg {
@@ -391,13 +391,13 @@ html[dir="rtl"] body, html[lang="he"] body {
     border-radius: 4px !important;
     box-sizing: border-box !important;
     margin: 0 !important;
-    background: rgba(80, 80, 80, 0.10) !important;
+    background: var(--blinko-hover-bg, rgba(80, 80, 80, 0.10)) !important;
     width: auto !important;
     outline: none !important;
 }
 #task-menu-tag-view .select-list.antiscroll-inner.flex-auto > ul > li:not(:last-child), #task-menu-view ul li.rc-menu-item.menu-section:not(:last-child), #task-menu-view ul li.rc-menu-item.set-duedate.menu-section ul li:not(:last-child), #task-menu-view ul li.rc-menu-item.set-duedate.menu-section:not(:last-child), #task-menu-view ul li.rc-menu-item.set-priority.menu-section ul li:not(:last-child), #task-menu-view ul li.rc-menu-item.set-priority.menu-section:not(:last-child), #task-menu-view ul li.rc-menu-item:not(:last-child) {
-    margin-bottom: 0 !important;
-    margin-top: 0 !important;
+    margin-block-end: 0 !important;
+    margin-block-start: 0 !important;
 }
 #task-menu-tag-view .select-list.antiscroll-inner.flex-auto > ul, #task-menu-tag-view .select-list.antiscroll-inner.flex-auto > ul > li, #task-menu-tag-view .select-list.antiscroll-inner.flex-auto > ul > li > div {
     font-size: 13px !important;
@@ -456,12 +456,12 @@ html[dir="rtl"] body, html[lang="he"] body {
     pointer-events: none !important;
     padding: 1px !important;
     top: 0 !important;
-    right: 0 !important;
+    inset-inline-start: 0 !important;
     border-radius: 4px !important;
     max-height: 28px !important;
     bottom: 0 !important;
     min-height: 24px !important;
-    left: 1px !important;
+    inset-inline-end: 1px !important;
     margin: 1px !important;
 }
 #task-menu-view, #task-menu-view > ul {
@@ -497,24 +497,24 @@ html[dir="rtl"] body, html[lang="he"] body {
     unicode-bidi: plaintext !important;
 }
 .CodeMirror-scrollbar-filler {
-    right: auto;
-    left: 1px;
+    inset-inline-start: auto;
+    inset-inline-end: 1px;
     bottom: 0;
 }
 .MuiFormControl-root {
     direction: rtl;
-    text-align: right;
+    text-align: start;
 }
 .MuiGrid-root.MuiGrid-container.MuiGrid-item {
     direction: rtl;
-    text-align: right;
+    text-align: start;
 }
 .ak-editor-content-area {
     direction: rtl;
-    text-align: right;
+    text-align: start;
 }
 .antiscroll-scrollbar-vertical {
-    right: unset;
+    inset-inline-start: unset;
 }
 /* Removed broad element selectors - moved to Blinko-RTL-Broad.css */
 /* Article and content elements use automatic language detection */
@@ -523,8 +523,8 @@ html[dir="rtl"] body, html[lang="he"] body {
 }
 .calendarArchiveMenuContainer_2MUWU .calendarArchiveMenuItem_33Yl9 .text_23cmy, .calendarArchiveMenuContainer_z8Z4B .calendarArchiveMenuItem_226-E .text_3g2CK, .container_6FQug .focusActionBlock_Ab_Wd .text_2eBr3, .container_6FQug .skipActionBlock_22PV7 .text_2eBr3 {
     unicode-bidi: plaintext !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+    margin-inline-end: 0 !important;
+    margin-inline-start: 0 !important;
     font-size: 0 !important;
     order: 1 !important;
     line-height: 0 !important;
@@ -539,11 +539,11 @@ html[dir="rtl"] body, html[lang="he"] body {
     direction: initial;
 }
 .cm-s-markdown-default .CodeMirror-widget .mark-header {
-    margin-right: -16px;
+    margin-inline-start: -16px;
     unicode-bidi: plaintext !important;
     text-align: initial;
     direction: initial;
-    float: right;
+    float: inline-start;
 }
 .cm-s-markdown-default, .cm-s-markdown-default, span.cm-formatting-header, span.cm-formatting-list-ul {
     text-align: initial;
@@ -563,14 +563,14 @@ html[dir="rtl"] body, html[lang="he"] body {
     position: relative;
 }
 .comment:lang(he), .comment:lang(iw), .message:lang(he), .message:lang(iw), .post:lang(he), .post:lang(iw), .tweet:lang(he), .tweet:lang(iw) {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 .contains-task-list {
     direction: rtl;
     display: inherit;
     unicode-bidi: plaintext !important;
-    text-align: right;
+    text-align: start;
 }
 .content {
     display:-webkit-box;
@@ -584,23 +584,23 @@ html[dir="rtl"] body, html[lang="he"] body {
     unicode-bidi: plaintext !important;
 }
 .dark .dark\:border-solid {
-    border-right-style: none;
+    border-inline-start-style: none;
     border-bottom-style: none;
     border-top-style: solid;
-    border-left-style: none;
+    border-inline-end-style: none;
 }
 .dark\:text-textMainDark {
     unicode-bidi: plaintext !important;
 }
 .drag {
-    margin-right: 0px;
-    margin-left: 10px;
-    right: 0px;
-    left: auto;
+    margin-inline-start: 0px;
+    margin-inline-end: 10px;
+    inset-inline-start: 0px;
+    inset-inline-end: auto;
 }
 .highlighted-time-box {
     font-size: 14px;
-    background-color: #f0f0f0;
+    background-color: var(--blinko-bg-secondary, #f0f0f0);
     line-height: 1.6;
 }
 .icon-thin-triangle-down, .l-task, .li.task, .section-header.open, .task-list-view, .task-ul-list, pin {
@@ -614,18 +614,18 @@ html[dir="rtl"] body, html[lang="he"] body {
 }
 
 .items-start:lang(he), .items-start[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
 }
 .l-task, .t-inner, .t-line, .task-inner, .task-item {
     direction: rtl;
 }
 .l-task-bg {
-    left: 1px;
-    right: 10px;
+    inset-inline-end: 1px;
+    inset-inline-start: 10px;
 }
 .l-task.group.relative.flex.flex-col {
-    margin-left: -40px;
-    margin-right: -5px;
+    margin-inline-end: -40px;
+    margin-inline-start: -5px;
 }
 .layout-content, .layout-full, .notion-page-content, .notion-selectable, .notion-text-block {
     text-align: initial;
@@ -633,19 +633,19 @@ html[dir="rtl"] body, html[lang="he"] body {
     direction: initial;
 }
 .leading-\[16px\], .leading-\[36px\] {
-    padding-right: 5px;
+    padding-inline-start: 5px;
 }
 .leading-\[40px\], .mr-\[12px\] {
     direction: rtl;
-    margin-left: 1px;
-    margin-right: 1px;
+    margin-inline-end: 1px;
+    margin-inline-start: 1px;
 }
 .line-clamp-1, .line-clamp-2 {
     unicode-bidi: plaintext !important;
 }
 .list-decimal, .list-disc {
-    padding-right: 2rem;
-    padding-left: 0.1rem;
+    padding-inline-start: 2rem;
+    padding-inline-end: 0.1rem;
 }
 /* Menu containers maintain original structure */
 .menu:lang(he), .menu:lang(iw), .menu[dir="rtl"], .rtl .menu,
@@ -659,17 +659,17 @@ nav:lang(he), nav:lang(iw), nav[dir="rtl"] {
 }
 .ml-\[8px\] {
     direction: rtl;
-    margin-left: 5px;
-    margin-right: 5px;
-    text-align: right;
+    margin-inline-end: 5px;
+    margin-inline-start: 5px;
+    text-align: start;
 }
 .notion-board-view .notion-collection-item, .notion-gallery-view .notion-collection-card, .notion-table-view-cell, .notion-table-view-header-cell {
-    text-align: right !important;
+    text-align: start !important;
     unicode-bidi: plaintext !important;
 }
 .notion-bulleted_list-block, .notion-numbered_list-block, .notion-to_do-block {
-    padding-left: 0 !important;
-    padding-right: 1em !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: 1em !important;
 }
 .notion-callout-block, .notion-page-content, .notion-selectable, .notion-text-block, div[placeholder] {
     unicode-bidi: plaintext !important;
@@ -682,37 +682,37 @@ nav:lang(he), nav:lang(iw), nav[dir="rtl"] {
     flex-direction: row-reverse !important;
 }
 .notion-collection-view-item-add span {
-    text-align: right !important;
+    text-align: start !important;
 }
 .notion-cursor-listener {
     display: flex !important;
     flex-direction: row-reverse !important;
 }
 .notion-dropdown__option-list, .notion-filter-menu, .notion-select-menu, .notion-sort-menu, .notion-view-settings-sidebar {
-    text-align: left !important;
+    text-align: end !important;
     direction: ltr !important;
 }
 .notion-equation-block {
     direction: rtl;
 }
 .notion-help-button {
-    left: 12px !important;
-    right: auto !important;
+    inset-inline-end: 12px !important;
+    inset-inline-start: auto !important;
 }
 .notion-overlay-container svg.check, .notion-page-controls svg, .notion-selectable-controls svg, .notion-topbar svg.check {
-    margin-left: 6px !important;
-    margin-right: 0 !important;
+    margin-inline-end: 6px !important;
+    margin-inline-start: 0 !important;
 }
 .notion-page-block > a > div > div:first-child {
-    margin-left: 4px !important;
-    margin-right: 0 !important;
+    margin-inline-end: 4px !important;
+    margin-inline-start: 0 !important;
 }
 .notion-topbar > div:first-child {
     display: flex !important;
     flex-direction: row-reverse !important;
 }
 .notion-topbar > div:first-child > :last-child {
-    margin-right: 0 !important;
+    margin-inline-start: 0 !important;
 }
 .notion-topbar div:first-child {
     flex-direction: row-reverse;
@@ -722,16 +722,16 @@ nav:lang(he), nav:lang(iw), nav[dir="rtl"] {
     unicode-bidi: embed !important;
 }
 .pr-\[20px\] {
-    padding-right: 15px;
+    padding-inline-start: 15px;
     direction: rtl;
-    padding-left: 1px;
+    padding-inline-end: 1px;
 }
 .quickAddView_1nOS7 .task-title {
     direction: rtl;
 }
 .remove.line-right {
     top: 11px;
-    left: 15px;
+    inset-inline-end: 15px;
     direction: ltr;
     z-index: 0;
     position: absolute;
@@ -744,11 +744,11 @@ nav:lang(he), nav:lang(iw), nav[dir="rtl"] {
     direction: rtl !important;
 }
 .rtl ol, .rtl ul, ol:lang(he), ol:lang(iw), ol[dir="rtl"], ul:lang(he), ul:lang(iw), ul[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 .rtl table td, .rtl table th, table:lang(he) td, table:lang(he) th, table:lang(iw) td, table:lang(iw) th, table[dir="rtl"] td, table[dir="rtl"] th {
-    text-align: right !important;
+    text-align: start !important;
 }
 .rtl table, table:lang(he), table:lang(iw), table[dir="rtl"] {
     direction: rtl !important;
@@ -758,7 +758,7 @@ nav:lang(he), nav:lang(iw), nav[dir="rtl"] {
     unicode-bidi: plaintext !important;
 }
 .scratchpad-item__content {
-    text-align: left;
+    text-align: end;
 }
 .section-header {
     unicode-bidi: plaintext !important;
@@ -775,15 +775,15 @@ nav:lang(he), nav:lang(iw), nav[dir="rtl"] {
     pointer-events: none;
 }
 .task-item .t-line .cursor-pointer {
-    right: 20px;
+    inset-inline-start: 20px;
     height: 1px;
-    margin-left: 48px;
+    margin-inline-end: 48px;
     background-color: rgba(0, 0, 0, 0.1);
 }
 .task-item .title-wrap .title {
     direction: rtl;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-block-start: 10px;
+    padding-block-end: 10px;
 }
 .task-item.active .l-task-bg, .task-item.selected .l-task-bg {
     background-color: rgba(0, 0, 0, 0.1);
@@ -792,8 +792,8 @@ nav:lang(he), nav:lang(iw), nav[dir="rtl"] {
     background-color: rgba(0, 0, 0, 0.05);
 }
 .task-ul-list {
-    padding-right: 15px;
-    padding-left: 0;
+    padding-inline-start: 15px;
+    padding-inline-end: 0;
 }
 .td-caption {
     text-align: initial;
@@ -804,18 +804,18 @@ nav:lang(he), nav:lang(iw), nav[dir="rtl"] {
     direction: rtl;
 }
 .tip.date-hint, .tips.line-right.reminder-setting {
-    float: left;
-    padding-right: 1px;
-    margin-right: 1px;
+    float: inline-end;
+    padding-inline-start: 1px;
+    margin-inline-start: 1px;
 }
 .tips.overflow-hidden.flex-none.flex.items-center {
     overflow: hidden;
     z-index: -1000;
-    margin-left: -1000px;
+    margin-inline-end: -1000px;
 }
 /* Fixed invalid selectors - removed forward slashes */
 .toUqff, .AzuXid, .HRaT6d {
-    text-align: right;
+    text-align: start;
 }
 /* Fixed invalid selector - removed forward slashes */
 #__next > div > div > div.jss28.MuiBox-root.css-0 > main > div > div > div > div.jss547.jss15 > div.jss548.MuiBox-root.css-0 {
@@ -823,9 +823,9 @@ nav:lang(he), nav:lang(iw), nav[dir="rtl"] {
 }
 /* Fixed invalid selector - removed forward slash */
 .EaVNbc {
-    padding-left: 0;
-    padding-right: 16px;
-    float: right;
+    padding-inline-end: 0;
+    padding-inline-start: 16px;
+    float: inline-start;
 }
 /* Fixed invalid selector - removed forward slash */
 div.col-span-4 {
@@ -846,25 +846,25 @@ div[dir="ltr"] {
     direction: rtl;
     display: inherit;
     unicode-bidi: plaintext !important;
-    text-align: right;
+    text-align: start;
 }
 .MuiGrid-direction-xs-column {
     direction: rtl;
     display: inherit;
     unicode-bidi: plaintext !important;
-    text-align: right;
+    text-align: start;
 }
 .MuiGrid-item {
     direction: rtl;
     display: inherit;
     unicode-bidi: plaintext !important;
-    text-align: right;
+    text-align: start;
 }
 [contenteditable] {
     caret-color: auto;
 }
 [lang="he"] {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 /* Removed overly broad element direction changes */
@@ -880,10 +880,10 @@ code, pre {
 /* Removed overly broad div direction that could break layouts */
 /* Removed overly broad div direction changes with context */
 div.MuiListItemSecondaryAction-root {
-    right: 700px;
+    inset-inline-start: 700px;
 }
 div.editor-container.mr-\[48px\].ml-\[24px\].overflow-hidden.relative.z-0 {
-    margin-right: 25px;
+    margin-inline-start: 25px;
 }
 div.notranslate {
     unicode-bidi: plaintext !important;
@@ -915,7 +915,7 @@ input {
 input[type="search"]:lang(he), input[type="search"]:lang(iw), input[type="search"][dir="rtl"], 
 input[type="text"]:lang(he), input[type="text"]:lang(iw), input[type="text"][dir="rtl"], 
 textarea:lang(he), textarea:lang(iw), textarea[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
     unicode-bidi: plaintext !important;
 }
@@ -929,15 +929,15 @@ input[type="search"], input[type="text"], textarea {
 /* Removed overly broad li/p/ul direction changes */
 li.MuiListItem-container {
     direction: rtl;
-    text-align: right;
+    text-align: start;
     position: relative;
 }
 li.dropdown-menu-item {
     direction: ltr;
-    text-align: left;
+    text-align: end;
 }
 li.sub-task {
-    margin-right: 5px;
+    margin-inline-start: 5px;
 }
 li.task {
     direction: rtl;
@@ -945,12 +945,12 @@ li.task {
     position: relative;
 }
 li[data-ui-type="2"], li[data-ui-type="3"] {
-    right: 30px;
+    inset-inline-start: 30px;
 }
 /* Removed overly broad p direction changes */
 p.MuiTypography-root {
     display: inherit;
-    text-align: right;
+    text-align: start;
 }
 /* Removed overly broad span direction changes */
 span.presentation {
@@ -961,10 +961,10 @@ span.ql-ui {
 }
 span.t-check {
     position: relative;
-    right: 0px;
-    border-right: 10px;
-    border-left: 10px;
-    left: 0px;
+    inset-inline-start: 0px;
+    border-inline-start: 10px;
+    border-inline-end: 10px;
+    inset-inline-end: 0px;
 }
 /* Removed overly broad td direction changes */
 /* Removed overly broad textarea direction changes */
@@ -986,10 +986,10 @@ ul.MuiList-root, ul.flex {
 
 /* --- Application-Specific: Notion --- */
 .notion-quote-block {
-    padding-left: 0 !important;
-    border-right: 3px solid currentcolor !important;
-    border-left: none !important;
-    padding-right: 0.9em !important;
+    padding-inline-end: 0 !important;
+    border-inline-start: 3px solid currentcolor !important;
+    border-inline-end: none !important;
+    padding-inline-start: 0.9em !important;
 }
 
 /* --- Application-Specific: TickTick & CodeMirror --- */
@@ -1000,7 +1000,7 @@ ul.MuiList-root, ul.flex {
 /* --- Application-Specific: Google, Microsoft, etc. --- */
 .jss247, .jss248, .jss663 {
     direction: rtl;
-    text-align: right;
+    text-align: start;
 }
 .jss925, .jss97 {
     direction: rtl;
@@ -1008,7 +1008,7 @@ ul.MuiList-root, ul.flex {
 /* Fixed class selectors - added missing dots */
 .jss129 {
     direction: rtl;
-    text-align: right;
+    text-align: start;
 }
 
 /* --- Media Queries --- */
@@ -1044,14 +1044,14 @@ ul.MuiList-root, ul.flex {
     position: unset;
 }
 .t-menu-toggle {
-    right: auto;
-    padding-right: 0px;
-    left: 45px;
+    inset-inline-start: auto;
+    padding-inline-start: 0px;
+    inset-inline-end: 45px;
 }
 /* Fixed invalid selectors - removed forward slashes */
 .A6wOnd {
     opacity: 0.2;
-    padding-right: 5px;
+    padding-inline-start: 5px;
 }
 /* Fixed invalid selector - removed forward slash */
 .EfQccc {
@@ -1060,7 +1060,7 @@ ul.MuiList-root, ul.flex {
 }
 /* Fixed invalid selector - removed forward slash */
 .lFe10c {
-    text-align: right;
+    text-align: start;
 }
 /* Fixed invalid selector - removed forward slash */
 .m6vl0d {
@@ -1070,7 +1070,7 @@ ul.MuiList-root, ul.flex {
 .rtl {
     direction: rtl;
     unicode-bidi: plaintext !important;
-    text-align: right;
+    text-align: start;
 }
 /* Fixed invalid selector - removed forward slash */
 .toUqff {
@@ -1078,8 +1078,8 @@ ul.MuiList-root, ul.flex {
 }
 /* Fixed invalid selector - removed forward slash */
 .toUqff.ECCms {
-    padding-left: 0;
-    padding-right: 16px;
+    padding-inline-end: 0;
+    padding-inline-start: 16px;
 }
 /* Fixed invalid selector - removed forward slash */
 .uXJUmd {
@@ -1092,17 +1092,17 @@ ul.MuiList-root, ul.flex {
 .MuiBox-root {
     direction: rtl;
     display: inherit;
-    text-align: right;
+    text-align: start;
 }
 .MuiGrid-root {
     direction: rtl;
     display: inherit;
     unicode-bidi: plaintext !important;
-    text-align: right;
+    text-align: start;
 }
 .css-1wkwmmc {
     direction: rtl;
-    text-align: right;
+    text-align: start;
 }
 svg.icon-chevron-right {
     transform: scaleX(-1);
@@ -1127,31 +1127,31 @@ svg.icon-chevron-right, use {
 }
 
 .PhotoView-Slider__Counter {
-    text-align: right !important;
+    text-align: start !important;
     padding: 0 10px 0 0 !important;
 }
 
 .PhotoView-Slider__BannerRight {
     order: -1 !important;
-    margin-left: auto !important;
-    margin-right: 0 !important;
+    margin-inline-end: auto !important;
+    margin-inline-start: 0 !important;
 }
 
 .PhotoView-Slider__ArrowLeft {
-    left: auto !important;
-    right: 0 !important;
+    inset-inline-end: auto !important;
+    inset-inline-start: 0 !important;
 }
 
 .PhotoView-Slider__ArrowRight {
-    right: auto !important;
-    left: 0 !important;
+    inset-inline-start: auto !important;
+    inset-inline-end: 0 !important;
 }
 
 /* --- Smart Vditor Editor RTL Enhancements --- */
 /* Container maintains neutral layout, only content gets RTL when Hebrew */
 .vditor-reset:lang(he), .vditor-reset[dir="rtl"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Default vditor container maintains LTR layout structure */
@@ -1164,7 +1164,7 @@ svg.icon-chevron-right, use {
 /* Smart RTL for vditor paragraphs and divs - Hebrew only */
 .vditor-reset p:lang(he), .vditor-reset div:lang(he),
 .vditor-reset p[dir="rtl"], .vditor-reset div[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 
@@ -1176,8 +1176,8 @@ svg.icon-chevron-right, use {
 /* Smart RTL for vditor lists - Hebrew only */
 .vditor-reset ul:lang(he), .vditor-reset ol:lang(he),
 .vditor-reset ul[dir="rtl"], .vditor-reset ol[dir="rtl"] {
-    padding-left: 0 !important;
-    padding-right: 2em !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: 2em !important;
     direction: rtl !important;
 }
 
@@ -1188,7 +1188,7 @@ svg.icon-chevron-right, use {
 
 /* Smart RTL for vditor list items - Hebrew only */
 .vditor-reset li:lang(he), .vditor-reset li[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Default vditor list items use automatic language detection */
@@ -1197,11 +1197,11 @@ svg.icon-chevron-right, use {
 }
 
 .vditor-reset blockquote {
-    border-left: none !important;
-    border-right: 4px solid var(--primary, #0066cc) !important;
-    padding-left: 0 !important;
-    padding-right: 1em !important;
-    text-align: right !important;
+    border-inline-end: none !important;
+    border-inline-start: 4px solid var(--primary, #0066cc) !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: 1em !important;
+    text-align: start !important;
 }
 
 .vditor-reset table {
@@ -1209,22 +1209,22 @@ svg.icon-chevron-right, use {
 }
 
 .vditor-reset th, .vditor-reset td {
-    text-align: right !important;
+    text-align: start !important;
 }
 
 .vditor-preview {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 .vditor-input {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 .vditor-sv {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 .vditor-outline {
@@ -1236,22 +1236,22 @@ svg.icon-chevron-right, use {
 }
 
 .vditor-tip {
-    left: auto !important;
-    right: 50% !important;
+    inset-inline-end: auto !important;
+    inset-inline-start: 50% !important;
     direction: rtl !important;
 }
 
 .vditor-tip__content {
-    margin-left: 0 !important;
-    margin-right: -50% !important;
-    text-align: right !important;
+    margin-inline-end: 0 !important;
+    margin-inline-start: -50% !important;
+    text-align: start !important;
 }
 
 /* --- Smart Markdown Body RTL Support --- */
 /* Container maintains neutral layout, only content gets RTL when Hebrew */
 .markdown-body:lang(he), .markdown-body[dir="rtl"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Default markdown container maintains LTR layout structure */
@@ -1266,7 +1266,7 @@ svg.icon-chevron-right, use {
 .markdown-body h4:lang(he), .markdown-body h5:lang(he), .markdown-body h6:lang(he),
 .markdown-body h1[dir="rtl"], .markdown-body h2[dir="rtl"], .markdown-body h3[dir="rtl"],
 .markdown-body h4[dir="rtl"], .markdown-body h5[dir="rtl"], .markdown-body h6[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Default markdown headers use automatic language detection */
@@ -1277,22 +1277,22 @@ svg.icon-chevron-right, use {
 
 /* Smart RTL for paragraphs - only when explicitly Hebrew */
 .markdown-body p:lang(he), .markdown-body p[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Markdown content spacing and typography improvements */
 .markdown-body p {
     unicode-bidi: plaintext !important;
     line-height: 1.4 !important;
-    margin-bottom: 0.5em !important;
-    margin-top: 0.25em !important;
+    margin-block-end: 0.5em !important;
+    margin-block-start: 0.25em !important;
 }
 
 /* Reduce spacing between markdown paragraphs in cards */
 .card-masonry-grid .markdown-body p {
     line-height: 1.3 !important;
-    margin-bottom: 0.4em !important;
-    margin-top: 0.2em !important;
+    margin-block-end: 0.4em !important;
+    margin-block-start: 0.2em !important;
 }
 
 /* Tags styling - smaller than regular text */
@@ -1313,8 +1313,8 @@ svg.icon-chevron-right, use {
 /* Smart RTL for lists - only when explicitly Hebrew */
 .markdown-body ul:lang(he), .markdown-body ol:lang(he),
 .markdown-body ul[dir="rtl"], .markdown-body ol[dir="rtl"] {
-    padding-left: 0 !important;
-    padding-right: 2em !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: 2em !important;
     direction: rtl !important;
 }
 
@@ -1325,7 +1325,7 @@ svg.icon-chevron-right, use {
 
 /* Smart RTL for list items - only when explicitly Hebrew */
 .markdown-body li:lang(he), .markdown-body li[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Default markdown list items use automatic language detection */
@@ -1335,11 +1335,11 @@ svg.icon-chevron-right, use {
 
 /* Smart RTL for blockquotes - only when explicitly Hebrew */
 .markdown-body blockquote:lang(he), .markdown-body blockquote[dir="rtl"] {
-    border-left: none !important;
-    border-right: 0.25em solid #d1d5da !important;
-    padding-left: 0 !important;
-    padding-right: 1em !important;
-    text-align: right !important;
+    border-inline-end: none !important;
+    border-inline-start: 0.25em solid #d1d5da !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: 1em !important;
+    text-align: start !important;
 }
 
 /* Default markdown blockquotes use automatic language detection */
@@ -1360,7 +1360,7 @@ svg.icon-chevron-right, use {
 /* Smart RTL for table cells - only when explicitly Hebrew */
 .markdown-body th:lang(he), .markdown-body td:lang(he),
 .markdown-body th[dir="rtl"], .markdown-body td[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Default markdown table cells use automatic language detection */
@@ -1421,66 +1421,66 @@ pre > div, pre > div > div {
 /* --- Padding and Margin RTL Adjustments --- */
 .pl-1, .pl-2, .pl-3, .pl-4, .pl-5, .pl-6, .pl-7, .pl-8,
 .pl-9, .pl-10, .pl-11, .pl-12 {
-    padding-left: 0 !important;
-    padding-right: var(--original-padding-left, 0) !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: var(--original-padding-left, 0) !important;
 }
 
 .pr-1, .pr-2, .pr-3, .pr-4, .pr-5, .pr-6, .pr-7, .pr-8,
 .pr-9, .pr-10, .pr-11, .pr-12 {
-    padding-right: 0 !important;
-    padding-left: var(--original-padding-right, 0) !important;
+    padding-inline-start: 0 !important;
+    padding-inline-end: var(--original-padding-right, 0) !important;
 }
 
 .ml-1, .ml-2, .ml-3, .ml-4, .ml-5, .ml-6, .ml-7, .ml-8,
 .ml-9, .ml-10, .ml-11, .ml-12 {
-    margin-left: 0 !important;
-    margin-right: var(--original-margin-left, 0) !important;
+    margin-inline-end: 0 !important;
+    margin-inline-start: var(--original-margin-left, 0) !important;
 }
 
 .mr-1, .mr-2, .mr-3, .mr-4, .mr-5, .mr-6, .mr-7, .mr-8,
 .mr-9, .mr-10, .mr-11, .mr-12 {
-    margin-right: 0 !important;
-    margin-left: var(--original-margin-right, 0) !important;
+    margin-inline-start: 0 !important;
+    margin-inline-end: var(--original-margin-right, 0) !important;
 }
 
 /* --- Float RTL Adjustments --- */
 .float-left {
-    float: right !important;
+    float: inline-start !important;
 }
 
 .float-right {
-    float: left !important;
+    float: inline-end !important;
 }
 
 /* --- Position RTL Adjustments --- */
 .left-0, .left-1, .left-2, .left-3, .left-4, .left-5 {
-    left: auto !important;
-    right: var(--original-left, 0) !important;
+    inset-inline-end: auto !important;
+    inset-inline-start: var(--original-left, 0) !important;
 }
 
 .right-0, .right-1, .right-2, .right-3, .right-4, .right-5 {
-    right: auto !important;
-    left: var(--original-right, 0) !important;
+    inset-inline-start: auto !important;
+    inset-inline-end: var(--original-right, 0) !important;
 }
 
 /* --- Border RTL Adjustments --- */
 .border-l, .border-l-2, .border-l-4, .border-l-8 {
-    border-left: none !important;
-    border-right: var(--original-border-left, 1px solid) !important;
+    border-inline-end: none !important;
+    border-inline-start: var(--original-border-left, 1px solid) !important;
 }
 
 .border-r, .border-r-2, .border-r-4, .border-r-8 {
-    border-right: none !important;
-    border-left: var(--original-border-right, 1px solid) !important;
+    border-inline-start: none !important;
+    border-inline-end: var(--original-border-right, 1px solid) !important;
 }
 
 /* --- Text Alignment RTL Support --- */
 .text-left {
-    text-align: right !important;
+    text-align: start !important;
 }
 
 .text-right {
-    text-align: left !important;
+    text-align: end !important;
 }
 
 .text-center {
@@ -1511,11 +1511,11 @@ pre > div, pre > div > div {
 /* --- Context Menu RTL Support --- */
 .contextmenu {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 .contextmenu .contextmenu__item {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 
@@ -1531,7 +1531,7 @@ pre > div, pre > div > div {
 
 .markmap-foreign {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 .echarts-wrapper {
@@ -1541,7 +1541,7 @@ pre > div, pre > div > div {
 /* --- Blinko Reference RTL Support --- */
 .blinko-reference {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* --- Swiper RTL Support --- */
@@ -1570,7 +1570,7 @@ pre > div, pre > div > div {
 
 input[type="email"], input[type="url"] {
     direction: ltr !important;
-    text-align: left !important;
+    text-align: end !important;
     unicode-bidi: embed !important;
 }
 
@@ -1582,11 +1582,11 @@ input[type="email"], input[type="url"] {
 /* --- Responsive RTL Support --- */
 @media (min-width: 640px) {
     .sm\:text-left {
-        text-align: right !important;
+        text-align: start !important;
     }
     
     .sm\:text-right {
-        text-align: left !important;
+        text-align: end !important;
     }
     
     .sm\:flex-row {
@@ -1596,11 +1596,11 @@ input[type="email"], input[type="url"] {
 
 @media (min-width: 768px) {
     .md\:text-left {
-        text-align: right !important;
+        text-align: start !important;
     }
     
     .md\:text-right {
-        text-align: left !important;
+        text-align: end !important;
     }
     
     /* Removed overly broad responsive flex direction change */
@@ -1612,11 +1612,11 @@ input[type="email"], input[type="url"] {
 
 @media (min-width: 1024px) {
     .lg\:text-left {
-        text-align: right !important;
+        text-align: start !important;
     }
     
     .lg\:text-right {
-        text-align: left !important;
+        text-align: end !important;
     }
     
     /* Removed overly broad responsive flex direction change */
@@ -1624,11 +1624,11 @@ input[type="email"], input[type="url"] {
 
 @media (min-width: 1280px) {
     .xl\:text-left {
-        text-align: right !important;
+        text-align: start !important;
     }
     
     .xl\:text-right {
-        text-align: left !important;
+        text-align: end !important;
     }
     
     /* Removed overly broad responsive flex direction change */
@@ -1658,7 +1658,7 @@ input[type="email"], input[type="url"] {
 /* --- Specific Blinko Component Overrides --- */
 [class*="blinko"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
     unicode-bidi: plaintext !important;
 }
 
@@ -1670,22 +1670,22 @@ input[type="email"], input[type="url"] {
 /* --- NPProgress RTL Support --- */
 #nprogress .bar {
     /* RTL progress bar starts from right */
-    left: auto !important;
-    right: 0 !important;
+    inset-inline-end: auto !important;
+    inset-inline-start: 0 !important;
     transform-origin: right !important;
 }
 
 #nprogress .peg {
     /* Progress bar peg positioned on left for RTL */
-    right: auto !important;
-    left: 0px !important;
+    inset-inline-start: auto !important;
+    inset-inline-end: 0px !important;
     transform: rotate(-3deg) translate(0px, -4px) !important;
 }
 
 #nprogress .spinner {
     /* Spinner positioned on left for RTL */
-    right: auto !important;
-    left: 2px !important;
+    inset-inline-start: auto !important;
+    inset-inline-end: 2px !important;
 }
 
 /* --- GitHub Markdown Enhanced RTL Support --- */
@@ -1694,19 +1694,19 @@ input[type="email"], input[type="url"] {
 
 .markdown-body .anchor {
     /* Anchor links positioned on right for RTL */
-    float: right !important;
-    padding-left: var(--base-size-4) !important;
-    padding-right: 0 !important;
-    margin-right: -20px !important;
-    margin-left: 0 !important;
+    float: inline-start !important;
+    padding-inline-end: var(--base-size-4) !important;
+    padding-inline-start: 0 !important;
+    margin-inline-start: -20px !important;
+    margin-inline-end: 0 !important;
 }
 
 .markdown-body blockquote {
     /* Blockquote border on right for RTL */
-    border-left: none !important;
-    border-right: .25em solid #EAB308 !important;
-    padding-left: 0 !important;
-    padding-right: 1em !important;
+    border-inline-end: none !important;
+    border-inline-start: .25em solid #EAB308 !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: 1em !important;
 }
 
 .markdown-body .task-list-item-checkbox {
@@ -1722,67 +1722,67 @@ input[type="email"], input[type="url"] {
 
 .markdown-body .markdown-alert {
     /* Alert borders on right for RTL */
-    border-left: none !important;
-    border-right: .25em solid var(--borderColor-default) !important;
+    border-inline-end: none !important;
+    border-inline-start: .25em solid var(--borderColor-default) !important;
 }
 
 .markdown-body .markdown-alert.markdown-alert-note {
-    border-right-color: var(--borderColor-accent-emphasis) !important;
+    border-inline-start-color: var(--borderColor-accent-emphasis) !important;
 }
 
 .markdown-body .markdown-alert.markdown-alert-important {
-    border-right-color: var(--borderColor-done-emphasis) !important;
+    border-inline-start-color: var(--borderColor-done-emphasis) !important;
 }
 
 .markdown-body .markdown-alert.markdown-alert-warning {
-    border-right-color: var(--borderColor-attention-emphasis) !important;
+    border-inline-start-color: var(--borderColor-attention-emphasis) !important;
 }
 
 .markdown-body .markdown-alert.markdown-alert-tip {
-    border-right-color: var(--borderColor-success-emphasis) !important;
+    border-inline-start-color: var(--borderColor-success-emphasis) !important;
 }
 
 .markdown-body .markdown-alert.markdown-alert-caution {
-    border-right-color: var(--borderColor-danger-emphasis) !important;
+    border-inline-start-color: var(--borderColor-danger-emphasis) !important;
 }
 
 .markdown-body img[align=right] {
     /* Image alignment for RTL */
-    padding-left: 0 !important;
-    padding-right: 20px !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: 20px !important;
 }
 
 .markdown-body img[align=left] {
     /* Image alignment for RTL */
-    padding-right: 0 !important;
-    padding-left: 20px !important;
+    padding-inline-start: 0 !important;
+    padding-inline-end: 20px !important;
 }
 
 .markdown-body span.float-left {
     /* Float adjustments for RTL */
-    float: right !important;
-    margin-right: 0 !important;
-    margin-left: 13px !important;
+    float: inline-start !important;
+    margin-inline-start: 0 !important;
+    margin-inline-end: 13px !important;
 }
 
 .markdown-body span.float-right {
     /* Float adjustments for RTL */
-    float: left !important;
-    margin-left: 0 !important;
-    margin-right: 13px !important;
+    float: inline-end !important;
+    margin-inline-end: 0 !important;
+    margin-inline-start: 13px !important;
 }
 
 .expand-container .markdown-body h1::before {
     /* Header indicator on right for RTL */
-    margin-right: 0 !important;
-    margin-left: 5px !important;
+    margin-inline-start: 0 !important;
+    margin-inline-end: 5px !important;
 }
 
 .expand-container .markdown-body ul, 
 .expand-container .markdown-body ol {
     /* List margins for RTL */
-    margin-left: 0 !important;
-    margin-right: 10px !important;
+    margin-inline-end: 0 !important;
+    margin-inline-start: 10px !important;
 }
 
 /* --- Globals CSS RTL Enhancements --- */
@@ -1790,51 +1790,51 @@ input[type="email"], input[type="url"] {
 .card-masonry-grid {
     /* Preserve layout structure */
     direction: ltr !important;
-    margin-left: -10px !important;
-    margin-right: 0 !important;
+    margin-inline-end: -10px !important;
+    margin-inline-start: 0 !important;
 }
 
 /* Only text content within cards gets RTL when Hebrew */
 .card-masonry-grid .markdown-body:lang(he),
 .card-masonry-grid .markdown-body[dir="rtl"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Remove RTL from masonry grids - they should maintain LTR layout structure */
 /* Only text content within cards should be RTL when needed */
 .card-masonry-grid_column {
     /* Keep original column structure */
-    padding-left: 10px !important;
-    padding-right: 0 !important;
+    padding-inline-end: 10px !important;
+    padding-inline-start: 0 !important;
 }
 
 /* Remove layout-affecting rules from blog masonry grids */
 .blog-masonry-grid {
     /* Preserve layout structure */
     direction: ltr !important;
-    margin-left: -20px !important;
-    margin-right: 0 !important;
+    margin-inline-end: -20px !important;
+    margin-inline-start: 0 !important;
 }
 
 /* Only text content within blog cards gets RTL when Hebrew */
 .blog-masonry-grid .markdown-body:lang(he),
 .blog-masonry-grid .markdown-body[dir="rtl"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Remove RTL from blog masonry - maintain LTR layout structure */
 .blog-masonry-grid_column {
     /* Keep original column structure */
-    padding-left: 20px !important;
-    padding-right: 0 !important;
+    padding-inline-end: 20px !important;
+    padding-inline-start: 0 !important;
 }
 
 /* Blinko tags - only RTL when content is Hebrew */
 .blinko-tag:lang(he), .blinko-tag[dir="rtl"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Default blinko tag maintains original structure */
@@ -1846,7 +1846,7 @@ input[type="email"], input[type="url"] {
 /* Blinko references - only RTL when content is Hebrew */
 .blinko-reference:lang(he), .blinko-reference[dir="rtl"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Default blinko reference maintains original structure */
@@ -1859,7 +1859,7 @@ input[type="email"], input[type="url"] {
 .tree ul:lang(he), .tree li:lang(he),
 .tree ul[dir="rtl"], .tree li[dir="rtl"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* Default tree maintains original structure */
@@ -1878,16 +1878,16 @@ input[type="email"], input[type="url"] {
 /* Vditor toolbar - maintain layout structure */
 .vditor-toolbar {
     /* Toolbar maintains LTR layout */
-    padding-left: 4px !important;
-    padding-right: 0 !important;
+    padding-inline-end: 4px !important;
+    padding-inline-start: 0 !important;
     direction: ltr !important;
 }
 
 /* Vditor editor content uses automatic language detection */
 .vditor-reset {
     /* Editor content uses automatic language detection */
-    padding-left: 10px !important;
-    padding-right: 10px !important;
+    padding-inline-end: 10px !important;
+    padding-inline-start: 10px !important;
     unicode-bidi: plaintext !important;
 }
 
@@ -1898,8 +1898,8 @@ input[type="email"], input[type="url"] {
 
 .vditor-reset ul:lang(he), .vditor-reset ol:lang(he),
 .vditor-reset ul[dir="rtl"], .vditor-reset ol[dir="rtl"] {
-    padding-left: 0 !important;
-    padding-right: 1em !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: 1em !important;
     direction: rtl !important;
 }
 
@@ -1909,7 +1909,7 @@ input[type="email"], input[type="url"] {
 }
 
 .vditor-reset li:lang(he), .vditor-reset li[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
 }
 
 .vditor-reset p {
@@ -1918,7 +1918,7 @@ input[type="email"], input[type="url"] {
 }
 
 .vditor-reset p:lang(he), .vditor-reset p[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 
@@ -1932,7 +1932,7 @@ input[type="email"], input[type="url"] {
 .vditor-reset h4:lang(he), .vditor-reset h5:lang(he), .vditor-reset h6:lang(he),
 .vditor-reset h1[dir="rtl"], .vditor-reset h2[dir="rtl"], .vditor-reset h3[dir="rtl"],
 .vditor-reset h4[dir="rtl"], .vditor-reset h5[dir="rtl"], .vditor-reset h6[dir="rtl"] {
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 
@@ -1942,11 +1942,11 @@ input[type="email"], input[type="url"] {
 }
 
 .vditor-reset blockquote:lang(he), .vditor-reset blockquote[dir="rtl"] {
-    border-left: none !important;
-    border-right: 0.25em solid #EAB308 !important;
-    padding-left: 0 !important;
-    padding-right: 1em !important;
-    text-align: right !important;
+    border-inline-end: none !important;
+    border-inline-start: 0.25em solid #EAB308 !important;
+    padding-inline-end: 0 !important;
+    padding-inline-start: 1em !important;
+    text-align: start !important;
 }
 
 /* Vditor code elements - adaptive to content language */
@@ -1960,8 +1960,8 @@ input[type="email"], input[type="url"] {
 
 .vditor-task input {
     /* Task checkbox RTL positioning */
-    margin-right: 0 !important;
-    margin-left: 8px !important;
+    margin-inline-start: 0 !important;
+    margin-inline-end: 8px !important;
 }
 
 .vditor-toolbar__item .vditor-tooltipped {
@@ -1971,8 +1971,8 @@ input[type="email"], input[type="url"] {
 
 .vditor-upload {
     /* Upload indicator RTL positioning */
-    left: auto !important;
-    right: 8px !important;
+    inset-inline-end: auto !important;
+    inset-inline-start: 8px !important;
 }
 
 .vditor-hint {
@@ -1992,10 +1992,10 @@ input[type="email"], input[type="url"] {
 
 .vditor-preview {
     /* Preview pane RTL */
-    border-left: none !important;
-    border-right: 1px solid var(--ignore) !important;
+    border-inline-end: none !important;
+    border-inline-start: 1px solid var(--ignore) !important;
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* --- Swiper Cards RTL Support --- */
@@ -2009,7 +2009,7 @@ input[type="email"], input[type="url"] {
 .swiper-slide:lang(he),
 .swiper-slide[dir="rtl"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 .swiper-3d .swiper-slide-shadow {
@@ -2029,7 +2029,7 @@ input[type="email"], input[type="url"] {
 .contextmenu .contextmenu__item:lang(he),
 .contextmenu .contextmenu__item[dir="rtl"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* --- PhotoView Enhanced RTL --- */
@@ -2063,7 +2063,7 @@ input[type="email"], input[type="url"] {
 /* --- Custom Properties RTL Overrides --- */
 :root {
     /* RTL-specific custom properties */
-    --rtl-text-align: right;
+    --rtl-text-align: start;
     --rtl-direction: rtl;
     --rtl-float-start: right;
     --rtl-float-end: left;
@@ -2121,7 +2121,7 @@ input[type="email"], input[type="url"] {
 .markmap-foreign:lang(he), .markmap-foreign[dir="rtl"],
 .echarts-wrapper:lang(he), .echarts-wrapper[dir="rtl"] {
     direction: rtl !important;
-    text-align: right !important;
+    text-align: start !important;
 }
 
 /* --- Focus Styles RTL --- */
@@ -2139,7 +2139,7 @@ input[type="email"], input[type="url"] {
     .markdown-body:lang(he),
     .markdown-body[dir="rtl"] {
         direction: rtl !important;
-        text-align: right !important;
+        text-align: start !important;
     }
     
     /* Mobile layout containers maintain structure */
@@ -2150,13 +2150,13 @@ input[type="email"], input[type="url"] {
     }
     
     .card-masonry-grid {
-        margin-left: -5px !important;
-        margin-right: 0 !important;
+        margin-inline-end: -5px !important;
+        margin-inline-start: 0 !important;
     }
     
     .blog-masonry-grid {
-        margin-left: -10px !important;
-        margin-right: 0 !important;
+        margin-inline-end: -10px !important;
+        margin-inline-start: 0 !important;
     }
 }
 
@@ -2173,14 +2173,14 @@ input[type="email"], input[type="url"] {
 
 [dir="rtl"] input, [dir="rtl"] textarea {
     /* RTL form elements */
-    text-align: right !important;
+    text-align: start !important;
     direction: rtl !important;
 }
 
 [dir="rtl"] code, [dir="rtl"] pre {
     /* RTL code elements remain LTR for readability */
     direction: ltr !important;
-    text-align: left !important;
+    text-align: end !important;
     unicode-bidi: embed !important;
 }
 

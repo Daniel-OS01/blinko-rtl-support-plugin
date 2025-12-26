@@ -13,7 +13,7 @@ export class RegexStrategy implements DetectionStrategy {
   private minRTLChars: number;
   private combinedRegex: RegExp | null = null;
 
-  constructor(checkHebrew: boolean = true, checkArabic: boolean = true, minRTLChars: number = 1) {
+  constructor(checkHebrew: boolean = true, checkArabic: boolean = true, minRTLChars: number = 3) {
     this.checkHebrew = checkHebrew;
     this.checkArabic = checkArabic;
     this.minRTLChars = minRTLChars;
@@ -21,11 +21,6 @@ export class RegexStrategy implements DetectionStrategy {
   }
 
   private updateCombinedRegex() {
-    if (this.minRTLChars <= 1) {
-      this.combinedRegex = null;
-      return;
-    }
-
     const sources: string[] = [];
     if (this.checkHebrew) {
       sources.push(this.hebrewRegex.source);
@@ -44,19 +39,7 @@ export class RegexStrategy implements DetectionStrategy {
   detect(text: string): boolean {
     if (!text) return false;
 
-    // Optimization: if minRTLChars is 1, return fast using test()
-    if (this.minRTLChars <= 1) {
-      if (this.checkHebrew && this.hebrewRegex.test(text)) {
-        return true;
-      }
-
-      if (this.checkArabic && this.arabicRegex.test(text)) {
-        return true;
-      }
-      return false;
-    }
-
-    // If minRTLChars > 1, use cached combined regex
+    // Use combined regex to count matches
     if (!this.combinedRegex) return false;
 
     // Reset lastIndex because we use 'g' flag and reuse the regex instance
@@ -74,7 +57,6 @@ export class RegexStrategy implements DetectionStrategy {
   public updateConfig(config: { minRTLChars?: number }): void {
     if (config.minRTLChars !== undefined) {
       this.minRTLChars = config.minRTLChars;
-      this.updateCombinedRegex();
     }
   }
 }
