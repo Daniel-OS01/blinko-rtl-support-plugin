@@ -1,77 +1,111 @@
-import { DetectionStrategy } from './strategies/types';
-import { CharacterCodeStrategy, RTLDetectionConfig } from './strategies/CharacterCodeStrategy';
-import { RegexStrategy } from './strategies/RegexStrategy';
 import { CombinedStrategy } from './strategies/CombinedStrategy';
+import { CharacterCodeStrategy } from './strategies/CharacterCodeStrategy';
+import { RegexStrategy } from './strategies/RegexStrategy';
+import { DetectionStrategy } from './strategies/types';
 
-export type { RTLDetectionConfig };
+/**
+ * Interface defining the configuration for RTL detection.
+ */
+export interface RTLConfig {
+  /**
+   * Sensitivity level for detection: 'high', 'medium', or 'low'.
+   */
+  sensitivity: 'high' | 'medium' | 'low';
+  /**
+   * Minimum number of RTL characters required to trigger detection.
+   */
+  minRTLChars: number;
+  /**
+   * Numeric threshold (0.0 - 1.0) for the percentage of RTL content.
+   * Used for fine-tuning detection sensitivity.
+   */
+  threshold: number;
+  /**
+   * Sample size for text analysis.
+   */
+  sampleSize?: number;
+}
 
+/**
+ * Class responsible for detecting Right-to-Left (RTL) content in text.
+ * It uses a Strategy pattern to employ different detection algorithms (Character Code, Regex).
+ */
 export class RTLDetector {
-  private strategy: DetectionStrategy;
-  private charCodeStrategy: CharacterCodeStrategy;
-  private regexStrategy: RegexStrategy;
-  private config: RTLDetectionConfig;
+  /**
+   * The current configuration for detection.
+   */
+  private config: RTLConfig;
 
-  constructor(config: Partial<RTLDetectionConfig> = {}) {
+  /**
+   * The strategy object used to perform the detection.
+   */
+  private strategy: DetectionStrategy;
+
+  /**
+   * Creates an instance of RTLDetector.
+   * Initializes with default configuration (medium sensitivity) and a CombinedStrategy
+   * consisting of CharacterCodeStrategy and RegexStrategy.
+   */
+  constructor() {
     this.config = {
       sensitivity: 'medium',
       minRTLChars: 3,
-      sampleSize: 100,
-      ...config
-    } as RTLDetectionConfig;
+      threshold: 0.15,
+      sampleSize: 100
+    };
 
-     // If sensitivity is provided but threshold isn't, map it
-    // Note: RTLDetectionConfig in CharacterCodeStrategy doesn't have 'threshold',
-    // but the one defined in the original file did.
-    // The previous implementation had a local interface extension.
-    // We should respect the config passed.
-
-    // Initialize strategies
-    this.charCodeStrategy = new CharacterCodeStrategy(this.config);
-    this.regexStrategy = new RegexStrategy(true, true);
-
-    // Default to combined strategy
+    // Initialize with default strategies
     this.strategy = new CombinedStrategy([
-        this.charCodeStrategy,
-        this.regexStrategy
+        new CharacterCodeStrategy({
+            sensitivity: this.config.sensitivity,
+            minRTLChars: this.config.minRTLChars,
+            sampleSize: this.config.sampleSize || 100
+        }),
+        new RegexStrategy()
     ]);
   }
 
-  public setStrategy(strategyName: 'CharacterCode' | 'Regex' | 'Combined') {
-      switch (strategyName) {
-          case 'CharacterCode':
-              this.strategy = this.charCodeStrategy;
-              break;
-          case 'Regex':
-              this.strategy = this.regexStrategy;
-              break;
-          case 'Combined':
-              this.strategy = new CombinedStrategy([
-                  this.charCodeStrategy,
-                  this.regexStrategy
-              ]);
-              break;
-      }
+  /**
+   * Updates the detector's configuration.
+   * Also propagates relevant configuration updates to the underlying strategies.
+   *
+   * @param config - Partial configuration object to update.
+   */
+  updateConfig(config: Partial<RTLConfig>) {
+    this.config = { ...this.config, ...config };
+
+    // Update strategy configuration if applicable
+    if (this.strategy instanceof CombinedStrategy) {
+        this.strategy.getStrategies().forEach(s => {
+            if (s instanceof CharacterCodeStrategy) {
+                s.updateConfig({
+                    sensitivity: this.config.sensitivity,
+                    minRTLChars: this.config.minRTLChars
+                });
+            }
+        });
+    }
   }
 
   /**
-   * Detect RTL content in text using current strategy
+   * Detects if the provided text contains RTL content.
+   *
+   * @param text - The text string to analyze.
+   * @returns `true` if RTL content is detected, `false` otherwise.
    */
-  public detectRTL(text: string): boolean {
+  detectRTL(text: string): boolean {
     return this.strategy.detect(text);
   }
 
   /**
-   * Detect RTL in multiple text segments
+   * Checks if an HTML element should be treated as RTL.
+   * It analyzes the element's text content using the configured detection strategy.
+   *
+   * @param element - The HTML element to check.
+   * @returns `true` if the element's content is detected as RTL, `false` otherwise.
    */
-  public detectRTLInSegments(texts: string[]): boolean[] {
-    return texts.map(text => this.detectRTL(text));
-  }
-
-  /**
-   * Update detection configuration
-   */
-  public updateConfig(config: Partial<RTLDetectionConfig>): void {
-    this.charCodeStrategy.updateConfig(config);
-    this.config = { ...this.config, ...config };
+  isRTL(element: HTMLElement): boolean {
+    const text = element.textContent || '';
+    return this.detectRTL(text);
   }
 }

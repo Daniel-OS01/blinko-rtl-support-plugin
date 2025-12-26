@@ -1,18 +1,53 @@
 import { DetectionStrategy } from './types';
 
+/**
+ * Configuration options for the RTL detection logic.
+ */
 export interface RTLDetectionConfig {
+  /**
+   * Sensitivity level for detection.
+   * - 'high': Requires a lower percentage of RTL characters to trigger (10%).
+   * - 'medium': Balanced sensitivity (15%).
+   * - 'low': Requires a higher percentage of RTL characters to trigger (40%).
+   */
   sensitivity: 'high' | 'medium' | 'low';
+
+  /**
+   * Minimum number of RTL characters required to consider the text as potentially RTL.
+   * This helps avoid false positives from stray characters.
+   */
   minRTLChars: number;
+
+  /**
+   * The number of characters to sample from the beginning of the text for analysis.
+   * Using a sample improves performance for large text blocks.
+   */
   sampleSize: number;
 }
 
+/**
+ * A detection strategy that analyzes the character codes of the text.
+ * It checks if characters fall within known RTL Unicode ranges (Hebrew, Arabic, Syriac, Thaana).
+ * It calculates the percentage of RTL characters in a sample to determine directionality based on configured sensitivity.
+ */
 export class CharacterCodeStrategy implements DetectionStrategy {
+  /**
+   * The name of the strategy.
+   */
   readonly name = 'CharacterCode';
+
+  /**
+   * Current configuration for the strategy.
+   */
   private config: RTLDetectionConfig;
 
-  // Hebrew: \u0590-\u05FF
-  // Arabic: \u0600-\u06FF
-  // Additional RTL: \u0700-\u074F, \u0780-\u07BF
+  /**
+   * Array of Unicode ranges [start, end] for RTL scripts.
+   * - Hebrew: \u0590-\u05FF
+   * - Arabic: \u0600-\u06FF
+   * - Syriac: \u0700-\u074F
+   * - Thaana: \u0780-\u07BF
+   */
   private readonly RTL_RANGES = [
     [0x0590, 0x05FF], // Hebrew
     [0x0600, 0x06FF], // Arabic
@@ -20,6 +55,11 @@ export class CharacterCodeStrategy implements DetectionStrategy {
     [0x0780, 0x07BF], // Thaana
   ];
 
+  /**
+   * Creates an instance of CharacterCodeStrategy.
+   *
+   * @param config - Initial configuration for detection. Defaults to medium sensitivity, 3 min chars, and 100 sample size.
+   */
   constructor(config: RTLDetectionConfig = {
     sensitivity: 'medium',
     minRTLChars: 3,
@@ -29,7 +69,10 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
+   * Checks if a single character is within any of the defined RTL Unicode ranges.
+   *
+   * @param char - The character to check.
+   * @returns `true` if the character code is in an RTL range, `false` otherwise.
    */
   private isRTLChar(char: string): boolean {
     const code = char.charCodeAt(0);
@@ -37,7 +80,12 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Detect RTL content in text
+   * Detects RTL content in the given text based on character code analysis.
+   * It calculates the ratio of RTL characters to significant characters (excluding whitespace and punctuation)
+   * in the sampled text and compares it against the sensitivity threshold.
+   *
+   * @param text - The text to analyze.
+   * @returns `true` if the text meets the criteria for RTL, `false` otherwise.
    */
   public detect(text: string): boolean {
     if (!text || text.length === 0) return false;
@@ -75,6 +123,11 @@ export class CharacterCodeStrategy implements DetectionStrategy {
     return rtlPercentage >= thresholds[this.config.sensitivity];
   }
 
+  /**
+   * Updates the strategy configuration.
+   *
+   * @param config - Partial configuration object to merge with the current config.
+   */
   public updateConfig(config: Partial<RTLDetectionConfig>): void {
       this.config = { ...this.config, ...config };
   }

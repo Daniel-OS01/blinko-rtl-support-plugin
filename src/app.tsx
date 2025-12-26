@@ -1,188 +1,85 @@
 import { useState, useEffect } from 'preact/hooks';
-import type { JSXInternal } from 'preact/src/jsx';
-import type { RTLDetector } from './utils/rtlDetector';
+import { RTLDetector } from './utils/rtlDetector';
 
+/**
+ * Props for the RTLApp component.
+ */
 interface RTLAppProps {
-  detector: RTLDetector;
+    /**
+     * Optional detector instance to display debug info if needed.
+     */
+    detector?: RTLDetector;
 }
 
-export function RTLApp({ detector }: RTLAppProps): JSXInternal.Element {
-  const [stats, setStats] = useState({ activeBlocks: 0 });
-  const [sensitivity, setSensitivity] = useState(15); // Default 15%
-  const [isFixing, setIsFixing] = useState(false);
-  const i18n = window.Blinko.i18n;
+/**
+ * The main UI component for the RTL plugin's toolbar popup.
+ * It displays current statistics about detected RTL elements and provides basic controls.
+ * It polls the global `blinkoRTL` object to update its state.
+ */
+export function RTLApp({ detector }: RTLAppProps) {
+    const [stats, setStats] = useState({ count: 0 });
+    const [enabled, setEnabled] = useState(false);
 
-  // Poll for stats
-  useEffect(() => {
-    const fetchStats = () => {
-      const activeBlocks = (window as any).blinkoRTL?.getStats() || 0;
-      setStats({ activeBlocks });
-    };
-
-    fetchStats();
-    const interval = setInterval(fetchStats, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Load initial sensitivity
-  useEffect(() => {
-    // Retry finding the settings API if it's not immediately available
-    const checkSettings = () => {
-        const api = (window as any).blinkoRTL;
-        // Try getSettings first, fall back to settings
-        if (api) {
-            let settings;
-            if (typeof api.getSettings === 'function') {
-                settings = api.getSettings();
-            } else if (typeof api.settings === 'function') {
-                settings = api.settings();
+    useEffect(() => {
+        const checkStatus = () => {
+            if ((window as any).blinkoRTL) {
+                setStats({ count: (window as any).blinkoRTL.getStats() });
+                setEnabled((window as any).blinkoRTL.isEnabled());
             }
+        };
 
-            if (settings && settings.threshold !== undefined) {
-                setSensitivity(Math.round(settings.threshold * 100));
-                return true;
-            }
+        const interval = setInterval(checkStatus, 1000);
+        checkStatus();
+
+        return () => clearInterval(interval);
+    }, []);
+
+    const togglePlugin = () => {
+        if ((window as any).blinkoRTL) {
+            (window as any).blinkoRTL.toggle();
+            // State will update on next poll
         }
-        return false;
     };
 
-    if (!checkSettings()) {
-        const interval = setInterval(() => {
-            if (checkSettings()) {
-                clearInterval(interval);
-            }
-        }, 100);
-        // Clear interval after 2 seconds to stop polling if failed
-        setTimeout(() => clearInterval(interval), 2000);
-    }
-  }, []);
+    return (
+        <div className="rtl-control-center" style={{ padding: '10px', minWidth: '200px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h3 style={{ margin: 0, fontSize: '16px' }}>RTL Support</h3>
+                <div
+                    className={`status-indicator ${enabled ? 'active' : ''}`}
+                    style={{
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        background: enabled ? '#28a745' : '#ccc'
+                    }}
+                />
+            </div>
 
-  const handleFixSelection = () => {
-    setIsFixing(true);
-    (window as any).blinkoRTL?.fixSelection();
-    setTimeout(() => {
-      setIsFixing(false);
-      window.Blinko.toast.success('Selection processed');
-    }, 500);
-  };
+            <div className="stats-container" style={{ background: 'var(--b3-theme-surface-lighter, #f5f5f5)', padding: '8px', borderRadius: '4px', marginBottom: '10px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--b3-theme-on-surface-light, #666)' }}>
+                    Detected RTL Elements: <strong>{stats.count}</strong>
+                </div>
+            </div>
 
-  const handleSensitivityChange = (e: any) => {
-    const value = parseInt(e.target.value);
-    setSensitivity(value);
-    (window as any).blinkoRTL?.setSensitivity(value / 100);
-  };
+            <button
+                onClick={togglePlugin}
+                style={{
+                    width: '100%',
+                    padding: '6px',
+                    background: enabled ? 'var(--b3-theme-error, #dc3545)' : 'var(--b3-theme-primary, #007bff)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                }}
+            >
+                {enabled ? 'Disable Plugin' : 'Enable Plugin'}
+            </button>
 
-  const toggleRTL = () => {
-    (window as any).blinkoRTL?.toggle();
-    const isEnabled = (window as any).blinkoRTL?.isEnabled();
-    window.Blinko.toast.success(
-      isEnabled ? i18n.t('rtl_enabled') : i18n.t('rtl_disabled')
+            <div style={{ marginTop: '8px', fontSize: '11px', textAlign: 'center', opacity: 0.7 }}>
+                Right-click for settings
+            </div>
+        </div>
     );
-  };
-
-  return (
-    <div style={{
-      padding: '15px',
-      fontFamily: 'system-ui, sans-serif',
-      width: '300px',
-      background: 'var(--bg-color, white)',
-      color: 'var(--text-color, black)'
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '15px',
-        borderBottom: '1px solid #eee',
-        paddingBottom: '10px'
-      }}>
-        <h3 style={{ margin: 0, fontSize: '16px' }}>RTL Control Center</h3>
-        <button 
-          onClick={toggleRTL}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '18px',
-            padding: '4px',
-            borderRadius: '4px'
-          }}
-          title={i18n.t('manual_toggle')}
-        >
-          🔄
-        </button>
-      </div>
-
-      {/* Stats Section */}
-      <div style={{
-        background: '#f8f9fa',
-        padding: '12px',
-        borderRadius: '8px',
-        marginBottom: '15px',
-        textAlign: 'center',
-        borderLeft: '4px solid #007bff'
-      }}>
-        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#007bff' }}>
-          {stats.activeBlocks}
-        </div>
-        <div style={{ fontSize: '12px', color: '#666' }}>Active RTL Blocks</div>
-      </div>
-
-      {/* Actions */}
-      <div style={{ marginBottom: '20px' }}>
-        <button 
-          onClick={handleFixSelection}
-          disabled={isFixing}
-          style={{ 
-            width: '100%',
-            background: isFixing ? '#6c757d' : '#28a745',
-            color: 'white', 
-            border: 'none', 
-            padding: '10px',
-            borderRadius: '6px',
-            cursor: isFixing ? 'wait' : 'pointer',
-            fontWeight: '500',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            transition: 'background 0.2s'
-          }}
-        >
-          {isFixing ? 'Processing...' : (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-              </svg>
-              Fix Selected Text
-            </>
-          )}
-        </button>
-      </div>
-
-      {/* Sensitivity Slider */}
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
-          <strong>Detection Sensitivity</strong>
-          <span style={{ color: '#007bff' }}>{sensitivity}%</span>
-        </div>
-        <input
-          type="range"
-          min="1"
-          max="50"
-          value={sensitivity}
-          onChange={handleSensitivityChange}
-          style={{ width: '100%', cursor: 'pointer' }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#999', marginTop: '4px' }}>
-          <span>More Sensitive (1%)</span>
-          <span>Less Sensitive (50%)</span>
-        </div>
-      </div>
-
-      <div style={{ marginTop: '15px', paddingTop: '10px', borderTop: '1px solid #eee', fontSize: '11px', color: '#888', textAlign: 'center' }}>
-        Click 'Fix Selected' to force detection on specific text.
-      </div>
-    </div>
-  );
 }

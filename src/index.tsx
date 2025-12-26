@@ -59,6 +59,10 @@ System.register([], (exports) => ({
     // Helper: Permanent CSS Injection (User Custom CSS)
     let permanentStyleElement: HTMLStyleElement | null = null;
 
+    /**
+     * Updates the custom CSS that should remain even when the plugin is toggled off,
+     * if the user has configured 'permanentCSS'.
+     */
     function updatePermanentCSS() {
         if (currentSettings.customCSS && currentSettings.permanentCSS) {
             if (!permanentStyleElement) {
@@ -75,6 +79,11 @@ System.register([], (exports) => ({
 
     // Helper: Visual Styles Injection (Font, Line Height)
     let visualStyleElement: HTMLStyleElement | null = null;
+
+    /**
+     * Applies dynamic visual styles based on user configuration, including font family,
+     * line height, and mobile-specific adjustments.
+     */
     function updateVisualStyles() {
         if (!currentSettings.enabled) {
             if (visualStyleElement) {
@@ -136,6 +145,9 @@ System.register([], (exports) => ({
     }
 
     // Helper: Toggle Button UI
+    /**
+     * Creates and attaches the floating RTL toggle button to the DOM.
+     */
     function createToggleButton() {
         if (toggleButton) return;
 
@@ -167,6 +179,9 @@ System.register([], (exports) => ({
         updateToggleButtonState();
     }
 
+    /**
+     * Updates the visual state of the toggle button based on whether RTL is enabled or disabled.
+     */
     function updateToggleButtonState() {
         if (!toggleButton) return;
 
@@ -183,6 +198,9 @@ System.register([], (exports) => ({
         }
     }
 
+    /**
+     * Removes the toggle button from the DOM.
+     */
     function removeToggleButton() {
         if (toggleButton) {
             toggleButton.remove();
@@ -191,6 +209,9 @@ System.register([], (exports) => ({
     }
 
     // Main Control Functions
+    /**
+     * Enables RTL support: initializes processors, interceptors, and managers.
+     */
     function enableRTL() {
         console.log('Enabling RTL Support...');
         currentSettings.enabled = true;
@@ -214,6 +235,9 @@ System.register([], (exports) => ({
         updateToggleButtonState();
     }
 
+    /**
+     * Disables RTL support and cleans up most effects, optionally leaving permanent CSS.
+     */
     function disableRTL() {
         console.log('Disabling RTL Support...');
         currentSettings.enabled = false;
@@ -235,6 +259,9 @@ System.register([], (exports) => ({
         updateToggleButtonState();
     }
 
+    /**
+     * Toggles the RTL enabled state.
+     */
     function toggleRTL() {
         if (currentSettings.enabled) {
             disableRTL();
@@ -243,6 +270,9 @@ System.register([], (exports) => ({
         }
     }
 
+    /**
+     * Loads settings from local storage and applies them.
+     */
     function loadSettings() {
         const savedSettings = localStorage.getItem('blinko-rtl-settings');
         if (savedSettings) {
@@ -274,6 +304,9 @@ System.register([], (exports) => ({
         }
     }
 
+    /**
+     * Initializes the plugin logic, settings, and UI components.
+     */
     function initializeRTLPlugin() {
         console.log('Initializing Blinko RTL Plugin (Refactored)...');
         loadSettings();
@@ -344,6 +377,10 @@ System.register([], (exports) => ({
         };
     }
 
+    /**
+     * The main plugin class exported to Blinko.
+     * Handles lifecycle events (init, destroy) and UI registration (toolbar, context menu).
+     */
     exports('default', class Plugin implements BasePlugin {
       constructor() {
         Object.assign(this, plugin);

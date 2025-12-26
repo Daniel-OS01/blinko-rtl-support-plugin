@@ -1,112 +1,118 @@
-
-interface HoverManagerOptions {
+export interface HoverManagerOptions {
   selectors: string[];
-  processElement: (element: HTMLElement) => void;
+  processElement: (el: HTMLElement) => void;
   isEnabled: () => boolean;
 }
 
+/**
+ * Manages a floating "toggle direction" button that appears when hovering over
+ * compatible block elements. This allows users to quickly correct the direction
+ * of specific paragraphs without going into settings.
+ */
 export class HoverContextManager {
+  private options: HoverManagerOptions;
   private button: HTMLElement | null = null;
   private currentTarget: HTMLElement | null = null;
   private hideTimeout: any = null;
-  private options: HoverManagerOptions;
   private isHoveringButton = false;
-  private styleElement: HTMLStyleElement | null = null;
 
+  /**
+   * Creates an instance of HoverContextManager.
+   *
+   * @param options - Configuration options including target selectors and callbacks.
+   */
   constructor(options: HoverManagerOptions) {
     this.options = options;
   }
 
+  /**
+   * Initializes the manager by creating the button and attaching global event listeners.
+   */
   init() {
     this.createButton();
-    document.addEventListener('mouseover', this.onMouseOver);
-    document.addEventListener('mouseout', this.onMouseOut);
-    document.addEventListener('scroll', this.hideButton, { capture: true, passive: true });
+    document.addEventListener('mouseover', this.handleMouseOver);
   }
 
+  /**
+   * Cleans up the manager, removing the button and event listeners.
+   */
   destroy() {
-    if (this.button) {
-      this.button.remove();
-      this.button = null;
-    }
-    document.removeEventListener('mouseover', this.onMouseOver);
-    document.removeEventListener('mouseout', this.onMouseOut);
-    document.removeEventListener('scroll', this.hideButton);
+    this.button?.remove();
+    document.removeEventListener('mouseover', this.handleMouseOver);
   }
 
+  /**
+   * Creates the DOM element for the floating toggle button.
+   */
   private createButton() {
-    if (this.button) return;
-
     this.button = document.createElement('div');
-    this.button.className = 'rtl-hover-action-btn';
-    // Flip icon
-    this.button.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 9h16"/><path d="M4 9l4-4"/><path d="M20 9l-4 4"/>
-        <path d="M20 15H4"/><path d="M20 15l-4 4"/><path d="M4 15l4-4"/>
-      </svg>
-    `;
-    this.button.title = "Flip Direction";
+    this.button.className = 'rtl-hover-btn';
+    this.button.innerHTML = '⇄'; // Icon for switching direction
+    this.button.title = 'Switch Direction';
 
-    // Styles
-    this.styleElement = document.createElement('style');
-    this.styleElement.textContent = `
-      .rtl-hover-action-btn {
-        position: fixed;
-        z-index: 10000;
-        background: var(--bg-card, #fff);
-        border: 1px solid var(--border-color, #ddd);
-        border-radius: 4px;
-        padding: 4px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s ease, transform 0.2s ease;
-        transform: scale(0.9);
-        color: var(--text-color, #333);
-      }
-      .rtl-hover-action-btn.visible {
-        opacity: 1;
-        pointer-events: auto;
-        transform: scale(1);
-      }
-      .rtl-hover-action-btn:hover {
-        background: var(--bg-hover, #f5f5f5);
-        color: var(--primary-color, #0066cc);
-      }
-    `;
-    document.head.appendChild(this.styleElement);
-    document.body.appendChild(this.button);
+    // Inline styles for isolation
+    Object.assign(this.button.style, {
+      position: 'fixed',
+      display: 'none',
+      zIndex: '10000',
+      cursor: 'pointer',
+      background: 'var(--b3-theme-background, #fff)',
+      border: '1px solid var(--b3-border-color, #ccc)',
+      borderRadius: '4px',
+      padding: '2px 6px',
+      boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+      fontSize: '14px',
+      color: 'var(--b3-theme-on-background, #333)',
+      userSelect: 'none'
+    });
+
+    this.button.addEventListener('mouseenter', () => {
+        this.isHoveringButton = true;
+        if (this.hideTimeout) clearTimeout(this.hideTimeout);
+    });
+
+    this.button.addEventListener('mouseleave', () => {
+        this.isHoveringButton = false;
+        this.scheduleHide();
+    });
 
     this.button.addEventListener('click', this.onButtonClick);
-    this.button.addEventListener('mouseenter', () => { this.isHoveringButton = true; });
-    this.button.addEventListener('mouseleave', () => {
-      this.isHoveringButton = false;
-      this.scheduleHide();
-    });
+
+    document.body.appendChild(this.button);
+
+    // Add CSS class for visibility toggle
+    const style = document.createElement('style');
+    style.textContent = `
+      .rtl-hover-btn.visible { display: block !important; }
+    `;
+    document.head.appendChild(style);
   }
 
-  private onMouseOver = (e: MouseEvent) => {
+  /**
+   * Handles global mouseover events to detect when the user hovers over a target element.
+   *
+   * @param e - The mouse event.
+   */
+  private handleMouseOver = (e: MouseEvent) => {
     if (!this.options.isEnabled()) return;
 
     const target = e.target as HTMLElement;
-    const block = target.closest(this.options.selectors.join(','));
+    // Check if target matches selectors
+    const matched = target.closest(this.options.selectors.join(','));
 
-    if (block) {
-      this.showButton(block as HTMLElement);
+    if (matched && matched instanceof HTMLElement) {
+       this.showButton(matched);
+    } else if (!this.isHoveringButton) {
+       // If moved away from target and not on button, schedule hide
+       this.scheduleHide();
     }
   };
 
-  private onMouseOut = (e: MouseEvent) => {
-    // If moving to the button, don't hide
-    // We handle hiding via timeout and checking isHoveringButton
-    this.scheduleHide();
-  };
-
+  /**
+   * Shows the floating button positioned relative to the target element.
+   *
+   * @param target - The HTML element being hovered.
+   */
   private showButton(target: HTMLElement) {
     if (this.hideTimeout) {
       clearTimeout(this.hideTimeout);
@@ -122,6 +128,10 @@ export class HoverContextManager {
     this.button?.classList.add('visible');
   }
 
+  /**
+   * Schedules the button to be hidden after a short delay.
+   * This allows the user to move the mouse from the text to the button without it disappearing.
+   */
   private scheduleHide() {
     if (this.hideTimeout) clearTimeout(this.hideTimeout);
 
@@ -132,48 +142,33 @@ export class HoverContextManager {
     }, 300); // Small delay to allow moving to button
   }
 
+  /**
+   * Hides the floating button.
+   */
   private hideButton = () => {
     this.button?.classList.remove('visible');
-    // Clear current target only after transition?
-    // Actually, keeping it is fine until next show.
-    // this.currentTarget = null;
   };
 
+  /**
+   * Updates the position of the button to align with the top-right of the current target.
+   */
   private updateButtonPosition() {
     if (!this.button || !this.currentTarget) return;
 
     const rect = this.currentTarget.getBoundingClientRect();
 
-    // Position: Top-Right of the block (or Top-Left if currently RTL?)
-    // Let's stick to Right side (typical for tools) or End of line.
-    // Ideally it floats in the margin.
-
-    // Check if element is RTL to decide position?
-    // Let's just put it on the side that has more space or consistently on the right (like a context menu).
-
-    const buttonRect = this.button.getBoundingClientRect();
-    const top = rect.top; // Align with top of block
-
-    // Attempt to position in right margin
-    // const left = rect.right + 5;
-
-    // If it goes off screen, put it inside
-    // if (left + buttonRect.width > window.innerWidth) {
-    //   // Inside right
-    //   // this.button.style.left = (rect.right - buttonRect.width - 5) + 'px';
-    // } else {
-      // this.button.style.left = left + 'px';
-    // }
-
-    // Let's make it overlay top-right corner, subtle
+    // Position: Top-Right of the block
     this.button.style.top = (rect.top + 2) + 'px'; // +2 offset
-    // Align right
-    this.button.style.left = (rect.right - 30) + 'px'; // Inside right corner
-
-    // Handle RTL pages where "right" might be "start".
-    // But getBoundingClientRect returns viewport coordinates.
+    // Align right (inside)
+    this.button.style.left = (rect.right - 30) + 'px';
   }
 
+  /**
+   * Handles clicks on the toggle button.
+   * Toggles the `data-manual-dir` attribute on the target element between 'ltr' and 'rtl'.
+   *
+   * @param e - The mouse event.
+   */
   private onButtonClick = (e: MouseEvent) => {
     e.stopPropagation();
     if (!this.currentTarget) return;
@@ -194,8 +189,5 @@ export class HoverContextManager {
 
     this.currentTarget.setAttribute('data-manual-dir', newDir);
     this.options.processElement(this.currentTarget);
-
-    // Optional: Flash feedback
-    // window.Blinko?.toast.success(`Direction set to ${newDir.toUpperCase()}`);
   };
 }

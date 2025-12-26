@@ -1,20 +1,36 @@
 import { RTLDetector } from './rtlDetector';
 
+/**
+ * Class that intercepts paste events to handle mixed content (RTL/LTR).
+ * It detects when text with mixed directionality is pasted and offers the user
+ * options to split the content or wrap it for better isolation.
+ */
 export class PasteInterceptor {
   private detector: RTLDetector;
   private isEnabled: boolean = false;
   private activeToast: HTMLElement | null = null;
 
+  /**
+   * Creates an instance of PasteInterceptor.
+   *
+   * @param detector - The RTL detector to use for content analysis.
+   */
   constructor(detector: RTLDetector) {
     this.detector = detector;
   }
 
+  /**
+   * Enables the paste interceptor by adding the event listener to the document.
+   */
   public enable() {
     if (this.isEnabled) return;
     document.addEventListener('paste', this.handlePaste, true);
     this.isEnabled = true;
   }
 
+  /**
+   * Disables the paste interceptor and removes any active UI.
+   */
   public disable() {
     if (!this.isEnabled) return;
     document.removeEventListener('paste', this.handlePaste, true);
@@ -22,6 +38,12 @@ export class PasteInterceptor {
     this.isEnabled = false;
   }
 
+  /**
+   * Handles the paste event.
+   * Checks if the target is editable and if the pasted text contains mixed content.
+   *
+   * @param e - The clipboard event.
+   */
   private handlePaste = (e: ClipboardEvent) => {
     if (!this.isEnabled) return;
 
@@ -38,12 +60,23 @@ export class PasteInterceptor {
     }
   }
 
+  /**
+   * Checks if an element is editable (input, textarea, or contenteditable).
+   *
+   * @param element - The element to check.
+   */
   private isEditable(element: HTMLElement): boolean {
     return element.isContentEditable ||
            element.tagName === 'TEXTAREA' ||
            (element.tagName === 'INPUT' && (element as HTMLInputElement).type === 'text');
   }
 
+  /**
+   * Detects if the text contains a significant amount of both RTL and LTR characters.
+   *
+   * @param text - The text to analyze.
+   * @returns `true` if mixed content is detected, `false` otherwise.
+   */
   private detectMixedContent(text: string): boolean {
     const rtlCount = (text.match(/[\u0590-\u05FF\u0600-\u06FF]/g) || []).length;
     const ltrCount = (text.match(/[a-zA-Z]/g) || []).length;
@@ -52,6 +85,12 @@ export class PasteInterceptor {
     return rtlCount > 3 && ltrCount > 3;
   }
 
+  /**
+   * Displays a toast UI asking the user how to handle the mixed content.
+   *
+   * @param text - The original pasted text.
+   * @param target - The element where the paste occurred.
+   */
   private showSuggestionToast(text: string, target: HTMLElement) {
     this.removeToast();
 
@@ -110,6 +149,9 @@ export class PasteInterceptor {
     });
   }
 
+  /**
+   * Removes the active toast notification.
+   */
   private removeToast() {
     if (this.activeToast) {
       this.activeToast.remove();
@@ -117,6 +159,13 @@ export class PasteInterceptor {
     }
   }
 
+  /**
+   * Inserts text into the target element at the current cursor position.
+   * Supports both input/textarea and contenteditable elements.
+   *
+   * @param target - The target element.
+   * @param text - The text to insert.
+   */
   private insertText(target: HTMLElement, text: string) {
     if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') {
       const input = target as HTMLInputElement | HTMLTextAreaElement;
@@ -141,6 +190,11 @@ export class PasteInterceptor {
     }
   }
 
+  /**
+   * Splits mixed content into separate lines to isolate RTL and LTR blocks.
+   *
+   * @param text - The text to process.
+   */
   private processSplit(text: string): string {
     // Split mixed content into separate lines
     // Strategy: Identify contiguous blocks of RTL (Hebrew/Arabic) vs LTR
@@ -165,6 +219,11 @@ export class PasteInterceptor {
     return processed;
   }
 
+  /**
+   * Wraps RTL parts in Unicode Isolate characters (RLI/PDI) to properly isolate them in a mixed context.
+   *
+   * @param text - The text to process.
+   */
   private processWrap(text: string): string {
     // Wrap RTL parts in Unicode Isolation characters
     // RLI: \u2067 (Right-to-Left Isolate)

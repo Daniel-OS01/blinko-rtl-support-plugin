@@ -1,82 +1,82 @@
-import { RTLConfig } from './config';
+import { Config } from './config';
 
-export interface RTLRenderer {
-  applyRTL(element: HTMLElement): void;
-  applyLTR(element: HTMLElement): void;
-  clear(element: HTMLElement): void;
-  injectGlobalStyles(): void;
-  removeGlobalStyles(): void;
+/**
+ * Interface for DOM renderers responsible for applying RTL styles.
+ */
+export interface Renderer {
+    applyRTL(element: HTMLElement, direction: 'rtl' | 'ltr'): void;
+    cleanup(): void;
 }
 
-export class DOMRTLRenderer implements RTLRenderer {
-  private config: RTLConfig;
-  private styleElement: HTMLStyleElement | null = null;
+/**
+ * Implementation of the Renderer interface that manipulates the DOM directly.
+ * It applies classes and inline styles to elements to enforce directionality.
+ */
+export class DOMRTLRenderer implements Renderer {
+    /**
+     * Configuration object containing class names and other settings.
+     */
+    private config: Config;
 
-  constructor(config: RTLConfig) {
-    this.config = config;
-  }
-
-  applyRTL(element: HTMLElement): void {
-    // Apply attributes
-    Object.entries(this.config.attributes.rtl).forEach(([key, value]) => {
-      element.setAttribute(key, value);
-    });
-
-    // Apply inline styles
-    Object.entries(this.config.styles.rtl).forEach(([key, value]) => {
-      (element.style as any)[key] = value;
-    });
-
-    element.classList.add('rtl-detected');
-    element.classList.remove('ltr-detected');
-  }
-
-  applyLTR(element: HTMLElement): void {
-    // Apply attributes
-    Object.entries(this.config.attributes.ltr).forEach(([key, value]) => {
-      element.setAttribute(key, value);
-    });
-
-    // Apply inline styles
-    Object.entries(this.config.styles.ltr).forEach(([key, value]) => {
-      (element.style as any)[key] = value;
-    });
-
-    element.classList.add('ltr-detected');
-    element.classList.remove('rtl-detected');
-  }
-
-  clear(element: HTMLElement): void {
-    // Remove attributes
-    Object.keys(this.config.attributes.rtl).forEach(key => element.removeAttribute(key));
-    Object.keys(this.config.attributes.ltr).forEach(key => element.removeAttribute(key));
-
-    // Clear inline styles
-    const allStyleProps = new Set([
-        ...Object.keys(this.config.styles.rtl),
-        ...Object.keys(this.config.styles.ltr)
-    ]);
-
-    allStyleProps.forEach(key => {
-        (element.style as any)[key] = '';
-    });
-
-    element.classList.remove('rtl-detected', 'ltr-detected');
-  }
-
-  injectGlobalStyles(): void {
-    if (!this.styleElement) {
-      this.styleElement = document.createElement('style');
-      this.styleElement.id = 'blinko-rtl-global-styles';
-      this.styleElement.textContent = this.config.styles.common;
-      document.head.appendChild(this.styleElement);
+    /**
+     * Creates an instance of DOMRTLRenderer.
+     *
+     * @param config - The configuration object.
+     */
+    constructor(config: Config) {
+        this.config = config;
     }
-  }
 
-  removeGlobalStyles(): void {
-    if (this.styleElement) {
-      this.styleElement.remove();
-      this.styleElement = null;
+    /**
+     * Applies the specified text direction to an HTML element.
+     * It sets the 'dir' attribute, adds/removes CSS classes, and applies `unicode-bidi` styles.
+     *
+     * @param element - The element to modify.
+     * @param direction - The direction to apply ('rtl' or 'ltr').
+     */
+    applyRTL(element: HTMLElement, direction: 'rtl' | 'ltr'): void {
+        element.setAttribute('dir', direction);
+
+        if (direction === 'rtl') {
+            element.classList.add(this.config.styles.rtlClass);
+            element.classList.remove(this.config.styles.ltrClass);
+            element.style.direction = 'rtl';
+            element.style.textAlign = 'right';
+            element.style.unicodeBidi = 'plaintext';
+        } else {
+            element.classList.add(this.config.styles.ltrClass);
+            element.classList.remove(this.config.styles.rtlClass);
+            element.style.direction = 'ltr';
+            element.style.textAlign = 'left';
+            element.style.unicodeBidi = 'plaintext';
+        }
     }
-  }
+
+    /**
+     * Removes all applied styles and attributes from elements that were modified.
+     * This restores the DOM to its original state (mostly).
+     */
+    cleanup(): void {
+        const rtlElements = document.querySelectorAll(`.${this.config.styles.rtlClass}`);
+        rtlElements.forEach(el => {
+            if (el instanceof HTMLElement) {
+                el.classList.remove(this.config.styles.rtlClass);
+                el.removeAttribute('dir');
+                el.style.direction = '';
+                el.style.textAlign = '';
+                el.style.unicodeBidi = '';
+            }
+        });
+
+        const ltrElements = document.querySelectorAll(`.${this.config.styles.ltrClass}`);
+        ltrElements.forEach(el => {
+            if (el instanceof HTMLElement) {
+                el.classList.remove(this.config.styles.ltrClass);
+                el.removeAttribute('dir');
+                el.style.direction = '';
+                el.style.textAlign = '';
+                el.style.unicodeBidi = '';
+            }
+        });
+    }
 }

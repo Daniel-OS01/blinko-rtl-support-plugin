@@ -1,267 +1,187 @@
-import { RTLConfig } from '../config';
-import { RTLRenderer } from '../renderer';
 import { RTLDetector } from './rtlDetector';
+import { DOMRTLRenderer } from '../renderer';
+import { Config } from '../config';
 
 /**
- * Advanced RTL processor for comprehensive text element handling
+ * Class responsible for processing the DOM to apply RTL styling.
+ * It coordinates detection and rendering, handling element traversal and updates.
  */
 export class RTLProcessor {
-  private config: RTLConfig;
-  private renderer: RTLRenderer;
-  private detector: RTLDetector;
-  private settings: any;
-  private observer: MutationObserver | null = null;
-  private autoProcessInterval: any = null;
-  private isEnabled: boolean = false;
+  /**
+   * Configuration object for the plugin.
+   */
+  private config: Config;
 
-  constructor(
-    config: RTLConfig,
-    renderer: RTLRenderer,
-    detector: RTLDetector,
-    settings: any
-  ) {
+  /**
+   * The renderer instance used to apply styles to DOM elements.
+   */
+  private renderer: DOMRTLRenderer;
+
+  /**
+   * The detector instance used to identify RTL content.
+   */
+  private detector: RTLDetector;
+
+  /**
+   * Current active settings.
+   */
+  private settings: any;
+
+  /**
+   * Creates an instance of RTLProcessor.
+   *
+   * @param config - The base configuration.
+   * @param renderer - The DOM renderer.
+   * @param detector - The RTL detector.
+   * @param settings - The initial user settings.
+   */
+  constructor(config: Config, renderer: DOMRTLRenderer, detector: RTLDetector, settings: any) {
     this.config = config;
     this.renderer = renderer;
     this.detector = detector;
     this.settings = settings;
   }
 
+  /**
+   * Updates the current settings used by the processor.
+   *
+   * @param newSettings - The new settings object.
+   */
   updateSettings(newSettings: any) {
-    this.settings = { ...this.settings, ...newSettings };
+    this.settings = newSettings;
   }
 
   /**
-   * Process a single element
+   * Enables the processor.
+   * Triggers an initial processing of all matching elements in the DOM.
+   */
+  enable() {
+    this.processAllElements();
+  }
+
+  /**
+   * Disables the processor.
+   * Cleans up all applied RTL styles from the DOM.
+   */
+  disable() {
+    this.renderer.cleanup();
+  }
+
+  /**
+   * Processes a single HTML element to determine and apply appropriate directionality.
+   *
+   * Logic:
+   * 1. Check for manual overrides (via `data-manual-dir` attribute).
+   * 2. If no override, check the global force direction setting.
+   * 3. If set to 'auto', use the `RTLDetector` to analyze content.
+   * 4. Apply the resulting direction ('rtl' or 'ltr') using the renderer.
+   * 5. If mixed content handling is enabled, process child text nodes.
+   *
+   * @param element - The HTML element to process.
    */
   processElement(element: HTMLElement) {
-    if (!element || !this.shouldProcessElement(element)) return;
-
-    const text = this.getElementText(element);
-    if (!text.trim() || text.length < (this.settings.minRTLChars || 2)) return;
-
-    const isRTL = this.determineDirection(text);
-
-    if (isRTL) {
-      this.renderer.applyRTL(element);
-    } else {
-      this.renderer.applyLTR(element);
+    // 1. Check manual override first
+    const manualDir = element.getAttribute('data-manual-dir');
+    if (manualDir === 'rtl') {
+        this.renderer.applyRTL(element, 'rtl');
+        return;
+    } else if (manualDir === 'ltr') {
+        this.renderer.applyRTL(element, 'ltr');
+        return;
     }
 
-    // Process child text nodes if mixed content is enabled
-    if (this.settings.mixedContent) {
-        this.processChildTextNodes(element);
+    // 2. Check global settings
+    if (this.settings.manualToggle) {
+        this.renderer.applyRTL(element, 'rtl');
+        return;
     }
-  }
 
-  /**
-   * Process child text nodes for mixed content
-   */
-  private processChildTextNodes(element: HTMLElement) {
-    if (!element) return;
+    if (this.settings.forceDirection === 'rtl') {
+        this.renderer.applyRTL(element, 'rtl');
+        return;
+    } else if (this.settings.forceDirection === 'ltr') {
+        this.renderer.applyRTL(element, 'ltr');
+        return;
+    }
 
-    const walker = document.createTreeWalker(
-      element,
-      NodeFilter.SHOW_TEXT,
-      null
-    );
+    // 3. Auto-detection
+    if (this.settings.autoDetect) {
+        const isRTL = this.detector.isRTL(element);
+        if (isRTL) {
+            this.renderer.applyRTL(element, 'rtl');
 
-    let node;
-    while (node = walker.nextNode()) {
-      const textNode = node as Text;
-      const text = textNode.textContent || '';
-
-      // We only care about RTL segments in mixed content
-      // If it is RTL, we might want to wrap it or check its parent
-      if (text.trim() && this.detector.detectRTL(text)) {
-        const parent = textNode.parentElement;
-        if (parent && parent !== element && this.shouldProcessElement(parent)) {
-           // If the parent is a span or similar inline element, apply RTL to it
-           // This is recursive but safe because we check parent !== element
-           // and we only apply if it's detected as RTL
-           this.renderer.applyRTL(parent);
+            // 4. Mixed content handling (only if block is RTL)
+            if (this.settings.mixedContent) {
+                this.processChildTextNodes(element);
+            }
+        } else {
+            this.renderer.applyRTL(element, 'ltr');
         }
-      }
     }
   }
 
   /**
-   * Determine direction based on settings and detection
-   */
-  private determineDirection(text: string): boolean {
-      if (this.settings.manualToggle || this.settings.forceDirection === 'rtl') {
-          return true;
-      }
-      if (this.settings.forceDirection === 'ltr') {
-          return false;
-      }
-
-      // Hebrew/Arabic Regex Check (mimicking original index.tsx logic)
-      if (this.settings.hebrewRegex && /\p{Script=Hebrew}/u.test(text)) {
-          return true;
-      }
-      if (this.settings.arabicRegex && /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text)) {
-          return true;
-      }
-
-      return this.detector.detectRTL(text);
-  }
-
-
-  /**
-   * Check if element should be processed
-   */
-  private shouldProcessElement(element: HTMLElement): boolean {
-    // Check skip layout classes
-    const skipLayout = this.config.selectors.layout.some(selector => {
-        // Simple class check if selector is a class
-        if (selector.startsWith('.')) {
-             return element.classList.contains(selector.substring(1)) || element.closest(selector);
-        }
-        if (selector.startsWith('#')) {
-             return element.id === selector.substring(1) || element.closest(selector);
-        }
-        return element.matches(selector) || element.closest(selector);
-    });
-
-    if (skipLayout) return false;
-
-    // Check ignore selectors
-    if (this.config.selectors.ignore.some(selector => element.matches(selector))) {
-        return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Get text content from element
-   */
-  private getElementText(element: HTMLElement): string {
-    if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-      return (element as HTMLInputElement).value || '';
-    }
-    return element.textContent || '';
-  }
-
-  /**
-   * Process all elements matching target selectors
+   * Processes all elements matching the configured selectors within the document.
+   * It queries the DOM for targets defined in `config.selectors.target` and
+   * processes each one individually.
    */
   processAllElements() {
-    if (!this.isEnabled) return;
-    
-    // Use selectors from config
-    const allSelectors = this.config.selectors.target.join(', ');
-    const elements = document.querySelectorAll(allSelectors);
-    
-    elements.forEach(element => {
-      this.processElement(element as HTMLElement);
-    });
+    if (!this.settings.enabled) return;
 
-    // Also handle custom selectors if any
-    this.settings.customSelectors?.forEach((selector: string) => {
-        try {
-            document.querySelectorAll(selector).forEach(element => {
-                this.processElement(element as HTMLElement);
-            });
-        } catch (e) {
-            console.warn(`Invalid custom selector: ${selector}`);
+    const selectors = this.config.selectors.target.join(',');
+    const elements = document.querySelectorAll(selectors);
+
+    elements.forEach(el => {
+        if (el instanceof HTMLElement) {
+            this.processElement(el);
         }
     });
   }
 
-  enable() {
-      this.isEnabled = true;
-      this.renderer.injectGlobalStyles();
-      this.setupObserver();
-      this.startAutoProcessing();
-      setTimeout(() => this.processAllElements(), 100);
-  }
+  /**
+   * Handles mixed LTR/RTL content within a block element by wrapping text nodes.
+   * This ensures that LTR segments within an RTL block (or vice versa) are displayed correctly.
+   *
+   * It iterates through child nodes:
+   * - If a text node is detected as LTR (English), it wraps it in a span with `dir="ltr"`.
+   * - Recursively processes child elements.
+   *
+   * @param element - The parent element to scan for mixed content.
+   */
+  private processChildTextNodes(element: HTMLElement) {
+      // Simple implementation: Wrap English words in LTR spans if parent is RTL
+      // This is a naive approach; a full BIDI implementation is complex.
+      // We'll iterate over child nodes.
+      
+      Array.from(element.childNodes).forEach(node => {
+          if (node.nodeType === Node.TEXT_NODE) {
+              const text = node.textContent;
+              if (text && /[a-zA-Z]/.test(text)) {
+                   // Detected LTR content in text node
+                   // Check if it's purely LTR or mixed.
+                   // For now, let's just wrap the whole node if it looks like an English sentence
+                   // OR split by words? Splitting is dangerous for DOM integrity.
 
-  disable() {
-      this.isEnabled = false;
-      this.renderer.removeGlobalStyles();
-      this.stopAutoProcessing();
-      if (this.observer) {
-          this.observer.disconnect();
-          this.observer = null;
-      }
-
-      // Cleanup DOM
-      const allSelectors = this.config.selectors.target.join(', ');
-      document.querySelectorAll(allSelectors).forEach(el => {
-          this.renderer.clear(el as HTMLElement);
-      });
-  }
-
-  private setupObserver() {
-      if (this.observer) this.observer.disconnect();
-      if (!this.settings.autoDetect) return;
-
-      this.observer = new MutationObserver((mutations) => {
-          if (!this.isEnabled) return;
-
-          let shouldProcess = false;
-          mutations.forEach((mutation) => {
-             if (mutation.type === 'childList') {
-                 mutation.addedNodes.forEach(node => {
-                     if (node.nodeType === Node.ELEMENT_NODE) {
-                         const element = node as HTMLElement;
-                         // Check if the element itself needs processing
-                         if (this.config.selectors.target.some(s => element.matches(s))) {
-                             this.processElement(element);
-                         }
-                         // Check children
-                         const allSelectors = this.config.selectors.target.join(', ');
-                         element.querySelectorAll(allSelectors).forEach(child => {
-                             this.processElement(child as HTMLElement);
-                         });
-                         shouldProcess = true;
-                     }
-                 });
-             } else if (mutation.type === 'characterData' || mutation.type === 'attributes') {
-                  const target = mutation.target.nodeType === Node.ELEMENT_NODE
-                    ? mutation.target as HTMLElement
-                    : mutation.target.parentElement;
-
-                  if (target) {
-                      // Check if it matches any target selector
-                      if (this.config.selectors.target.some(s => target.matches(s))) {
-                          this.processElement(target);
-                          shouldProcess = true;
-                      }
-                  }
-             }
-          });
-
-          if (shouldProcess) {
-               // Debounce re-processing all if needed, but we try to process locally above
+                   // Safe approach: If the node is significant and mostly LTR, wrap it.
+                   const ltrCount = (text.match(/[a-zA-Z]/g) || []).length;
+                   if (ltrCount > 3) { // Threshold
+                       const span = document.createElement('span');
+                       span.dir = 'ltr';
+                       span.style.unicodeBidi = 'embed';
+                       span.textContent = text;
+                       element.replaceChild(span, node);
+                   }
+              }
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+              // Recursively check, but don't re-process blocks that are already handled
+              // preventing infinite loops or double processing
+              const el = node as HTMLElement;
+              // Only process inline elements or containers that aren't block targets themselves
+              const style = window.getComputedStyle(el);
+              if (style.display.includes('inline')) {
+                  this.processChildTextNodes(el);
+              }
           }
       });
-      
-      this.observer.observe(document.body, {
-          childList: true,
-          subtree: true,
-          characterData: true,
-          attributes: true,
-          attributeFilter: ['value', 'placeholder'] // monitor input value changes if needed (but value isn't an attribute usually)
-      });
-  }
-
-  private startAutoProcessing() {
-      if (this.autoProcessInterval) clearInterval(this.autoProcessInterval);
-      if (this.settings.autoDetect && this.isEnabled) {
-          this.autoProcessInterval = setInterval(() => {
-              if (this.isEnabled && this.settings.autoDetect) {
-                  this.processAllElements();
-              }
-          }, this.settings.processInterval || 2000);
-      }
-  }
-
-  private stopAutoProcessing() {
-      if (this.autoProcessInterval) {
-          clearInterval(this.autoProcessInterval);
-          this.autoProcessInterval = null;
-      }
   }
 }
