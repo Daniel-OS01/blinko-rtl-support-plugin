@@ -1,11 +1,27 @@
+import { RTLConfig } from '../config';
+import { RTLRenderer } from '../renderer';
+import { RTLDetector } from './rtlDetector';
+
 /**
  * Advanced RTL processor for comprehensive text element handling
  */
 export class RTLProcessor {
+  private config: RTLConfig;
+  private renderer: RTLRenderer;
+  private detector: RTLDetector;
   private settings: any;
-  private detector: any;
+  private observer: MutationObserver | null = null;
+  private autoProcessInterval: any = null;
+  private isEnabled: boolean = false;
 
-  constructor(detector: any, settings: any) {
+  constructor(
+    config: RTLConfig,
+    renderer: RTLRenderer,
+    detector: RTLDetector,
+    settings: any
+  ) {
+    this.config = config;
+    this.renderer = renderer;
     this.detector = detector;
     this.settings = settings;
   }
@@ -15,115 +31,103 @@ export class RTLProcessor {
   }
 
   /**
-   * Process vditor elements with special attention
+   * Process a single element
    */
-  processVditorElements() {
-    const vditorSelectors = [
-      '.vditor-reset',
-      '.vditor-content', 
-      '.vditor-ir',
-      '.vditor-wysiwyg',
-      '.vditor-sv',
-      '.vditor-reset p',
-      '.vditor-reset div',
-      '.vditor-reset span',
-      '.vditor-reset h1, .vditor-reset h2, .vditor-reset h3, .vditor-reset h4, .vditor-reset h5, .vditor-reset h6',
-      '.vditor-reset li',
-      '.vditor-reset blockquote'
-    ];
-
-    vditorSelectors.forEach(selector => {
-      document.querySelectorAll(selector).forEach(element => {
-        this.processTextElement(element as HTMLElement);
-      });
-    });
-  }
-
-  /**
-   * Process markdown-body elements with enhanced detection
-   */
-  processMarkdownElements() {
-    const markdownSelectors = [
-      '.markdown-body',
-      '.markdown-body p',
-      '.markdown-body div',
-      '.markdown-body span',
-      '.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6',
-      '.markdown-body li',
-      '.markdown-body blockquote',
-      '.markdown-body td',
-      '.markdown-body th'
-    ];
-
-    markdownSelectors.forEach(selector => {
-      document.querySelectorAll(selector).forEach(element => {
-        this.processTextElement(element as HTMLElement);
-      });
-    });
-  }
-
-  /**
-   * Process all text-related elements
-   */
-  processTextElements() {
-    const textSelectors = [
-      'p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'li', 'td', 'th', 'blockquote', 'pre', 'code',
-      'textarea', 'input[type="text"]', 'input[type="search"]',
-      '[contenteditable]', '.content', '.text', '.note-content'
-    ];
-
-    textSelectors.forEach(selector => {
-      document.querySelectorAll(selector).forEach(element => {
-        this.processTextElement(element as HTMLElement);
-      });
-    });
-  }
-
-  /**
-   * Enhanced text element processing
-   */
-  processTextElement(element: HTMLElement) {
+  processElement(element: HTMLElement) {
     if (!element || !this.shouldProcessElement(element)) return;
 
     const text = this.getElementText(element);
-    if (!text.trim()) return;
+    if (!text.trim() || text.length < (this.settings.minRTLChars || 2)) return;
 
-    const isRTL = this.detector.detectRTL(text);
-    const shouldApplyRTL = this.shouldApplyRTL(isRTL);
+    const isRTL = this.determineDirection(text);
 
-    if (shouldApplyRTL) {
-      this.applyRTLToElement(element, text);
+    if (isRTL) {
+      this.renderer.applyRTL(element);
     } else {
-      this.applyLTRToElement(element);
+      this.renderer.applyLTR(element);
     }
 
-    // Process child text nodes
-    this.processChildTextNodes(element);
+    // Process child text nodes if mixed content is enabled
+    if (this.settings.mixedContent) {
+        this.processChildTextNodes(element);
+    }
   }
+
+  /**
+   * Process child text nodes for mixed content
+   */
+  private processChildTextNodes(element: HTMLElement) {
+    if (!element) return;
+
+    const walker = document.createTreeWalker(
+      element,
+      NodeFilter.SHOW_TEXT,
+      null
+    );
+
+    let node;
+    while (node = walker.nextNode()) {
+      const textNode = node as Text;
+      const text = textNode.textContent || '';
+
+      // We only care about RTL segments in mixed content
+      // If it is RTL, we might want to wrap it or check its parent
+      if (text.trim() && this.detector.detectRTL(text)) {
+        const parent = textNode.parentElement;
+        if (parent && parent !== element && this.shouldProcessElement(parent)) {
+           // If the parent is a span or similar inline element, apply RTL to it
+           // This is recursive but safe because we check parent !== element
+           // and we only apply if it's detected as RTL
+           this.renderer.applyRTL(parent);
+        }
+      }
+    }
+  }
+
+  /**
+   * Determine direction based on settings and detection
+   */
+  private determineDirection(text: string): boolean {
+      if (this.settings.manualToggle || this.settings.forceDirection === 'rtl') {
+          return true;
+      }
+      if (this.settings.forceDirection === 'ltr') {
+          return false;
+      }
+
+      // Hebrew/Arabic Regex Check (mimicking original index.tsx logic)
+      if (this.settings.hebrewRegex && /\p{Script=Hebrew}/u.test(text)) {
+          return true;
+      }
+      if (this.settings.arabicRegex && /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text)) {
+          return true;
+      }
+
+      return this.detector.detectRTL(text);
+  }
+
 
   /**
    * Check if element should be processed
    */
   private shouldProcessElement(element: HTMLElement): boolean {
-    // Skip if element is a layout container
-    const layoutClasses = [
-      'flex', 'grid', 'container', 'wrapper', 'layout',
-      'sidebar', 'navigation', 'header', 'footer', 'toolbar'
-    ];
+    // Check skip layout classes
+    const skipLayout = this.config.selectors.layout.some(selector => {
+        // Simple class check if selector is a class
+        if (selector.startsWith('.')) {
+             return element.classList.contains(selector.substring(1)) || element.closest(selector);
+        }
+        if (selector.startsWith('#')) {
+             return element.id === selector.substring(1) || element.closest(selector);
+        }
+        return element.matches(selector) || element.closest(selector);
+    });
 
-    const hasLayoutClass = layoutClasses.some(cls => 
-      element.classList.contains(cls) || 
-      element.className.includes(cls)
-    );
+    if (skipLayout) return false;
 
-    if (hasLayoutClass) return false;
-
-    // Skip buttons and form controls
-    const skipTags = ['BUTTON', 'INPUT', 'SELECT', 'OPTION'];
-    if (skipTags.includes(element.tagName)) {
-      return element.tagName === 'INPUT' && 
-             ['text', 'search', 'email'].includes((element as HTMLInputElement).type);
+    // Check ignore selectors
+    if (this.config.selectors.ignore.some(selector => element.matches(selector))) {
+        return false;
     }
 
     return true;
@@ -136,201 +140,128 @@ export class RTLProcessor {
     if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
       return (element as HTMLInputElement).value || '';
     }
-    return element.textContent || element.innerText || '';
+    return element.textContent || '';
   }
 
   /**
-   * Determine if RTL should be applied
-   */
-  private shouldApplyRTL(isDetectedRTL: boolean): boolean {
-    switch (this.settings.forceDirection) {
-      case 'rtl': return true;
-      case 'ltr': return false;
-      case 'auto': 
-      default: return isDetectedRTL;
-    }
-  }
-
-  /**
-   * Apply RTL styling to element
-   */
-  private applyRTLToElement(element: HTMLElement, text: string) {
-    element.setAttribute('dir', 'rtl');
-    element.style.direction = 'rtl';
-    element.style.textAlign = 'right';
-    element.style.unicodeBidi = this.settings.unicodeBidiMode || 'plaintext';
-    
-    // Detect language for better support
-    const language = this.detectLanguage(text);
-    if (language) {
-      element.setAttribute('lang', language);
-    }
-
-    element.classList.add('rtl-detected');
-    element.classList.remove('ltr-detected');
-
-    // Special handling for specific elements
-    this.applySpecialRTLHandling(element);
-  }
-
-  /**
-   * Apply LTR styling to element
-   */
-  private applyLTRToElement(element: HTMLElement) {
-    element.setAttribute('dir', 'ltr');
-    element.style.direction = 'ltr';
-    element.style.textAlign = 'left';
-    element.style.unicodeBidi = 'normal';
-    element.removeAttribute('lang');
-    
-    element.classList.add('ltr-detected');
-    element.classList.remove('rtl-detected');
-  }
-
-  /**
-   * Detect specific RTL language
-   */
-  private detectLanguage(text: string): string | null {
-    const hebrewPattern = /[\u0590-\u05FF]/;
-    const arabicPattern = /[\u0600-\u06FF]/;
-    const persianPattern = /[\u06A0-\u06FF]/;
-
-    if (hebrewPattern.test(text)) return 'he';
-    if (arabicPattern.test(text)) return 'ar';
-    if (persianPattern.test(text)) return 'fa';
-    
-    return null;
-  }
-
-  /**
-   * Apply special RTL handling for specific elements
-   */
-  private applySpecialRTLHandling(element: HTMLElement) {
-    const tagName = element.tagName.toLowerCase();
-    
-    switch (tagName) {
-      case 'ul':
-      case 'ol':
-        element.style.paddingLeft = '0';
-        element.style.paddingRight = '2em';
-        element.style.listStylePosition = 'outside';
-        break;
-        
-      case 'blockquote':
-        element.style.borderLeft = 'none';
-        element.style.borderRight = '3px solid currentcolor';
-        element.style.paddingLeft = '0';
-        element.style.paddingRight = '0.9em';
-        break;
-        
-      case 'table':
-        element.style.direction = 'rtl';
-        break;
-    }
-
-    // Handle markdown-specific elements
-    if (element.classList.contains('markdown-body') || 
-        element.closest('.markdown-body')) {
-      this.applyMarkdownRTLHandling(element);
-    }
-
-    // Handle vditor-specific elements
-    if (element.classList.contains('vditor-reset') || 
-        element.closest('.vditor-reset')) {
-      this.applyVditorRTLHandling(element);
-    }
-  }
-
-  /**
-   * Apply markdown-specific RTL handling
-   */
-  private applyMarkdownRTLHandling(element: HTMLElement) {
-    if (element.tagName === 'P') {
-      element.style.marginBottom = '0.35em';
-      element.style.marginTop = '0.15em';
-    }
-    
-    if (element.tagName === 'DIV') {
-      element.style.marginBottom = '0.3em';
-    }
-  }
-
-  /**
-   * Apply vditor-specific RTL handling
-   */
-  private applyVditorRTLHandling(element: HTMLElement) {
-    element.style.unicodeBidi = 'plaintext';
-    
-    if (element.classList.contains('vditor-reset')) {
-      element.style.lineHeight = '1.35';
-    }
-  }
-
-  /**
-   * Process child text nodes for mixed content
-   */
-  private processChildTextNodes(element: HTMLElement) {
-    if (!this.settings.processMixedContent) return;
-
-    const walker = document.createTreeWalker(
-      element,
-      NodeFilter.SHOW_TEXT,
-      null
-    );
-
-    let node;
-    while (node = walker.nextNode()) {
-      const textNode = node as Text;
-      const text = textNode.textContent || '';
-      
-      if (text.trim() && this.detector.detectRTL(text)) {
-        const parent = textNode.parentElement;
-        if (parent && parent !== element) {
-          this.processTextElement(parent);
-        }
-      }
-    }
-  }
-
-  /**
-   * Process all elements based on current settings
+   * Process all elements matching target selectors
    */
   processAllElements() {
-    if (this.settings.vditorSupport) {
-      this.processVditorElements();
-    }
+    if (!this.isEnabled) return;
     
-    if (this.settings.markdownSupport) {
-      this.processMarkdownElements();
-    }
+    // Use selectors from config
+    const allSelectors = this.config.selectors.target.join(', ');
+    const elements = document.querySelectorAll(allSelectors);
     
-    if (this.settings.enhancedTextProcessing) {
-      this.processTextElements();
-    }
+    elements.forEach(element => {
+      this.processElement(element as HTMLElement);
+    });
 
-    // Process custom selectors
+    // Also handle custom selectors if any
     this.settings.customSelectors?.forEach((selector: string) => {
-      try {
-        document.querySelectorAll(selector).forEach(element => {
-          this.processTextElement(element as HTMLElement);
-        });
-      } catch (error) {
-        console.warn(`Invalid selector: ${selector}`, error);
-      }
+        try {
+            document.querySelectorAll(selector).forEach(element => {
+                this.processElement(element as HTMLElement);
+            });
+        } catch (e) {
+            console.warn(`Invalid custom selector: ${selector}`);
+        }
     });
   }
 
-  /**
-   * Remove all RTL attributes and classes
-   */
-  removeAllRTL() {
-    document.querySelectorAll('[dir="rtl"], .rtl-detected').forEach(element => {
-      element.removeAttribute('dir');
-      element.removeAttribute('lang');
-      (element as HTMLElement).style.direction = '';
-      (element as HTMLElement).style.textAlign = '';
-      (element as HTMLElement).style.unicodeBidi = '';
-      element.classList.remove('rtl-detected', 'ltr-detected');
-    });
+  enable() {
+      this.isEnabled = true;
+      this.renderer.injectGlobalStyles();
+      this.setupObserver();
+      this.startAutoProcessing();
+      setTimeout(() => this.processAllElements(), 100);
+  }
+
+  disable() {
+      this.isEnabled = false;
+      this.renderer.removeGlobalStyles();
+      this.stopAutoProcessing();
+      if (this.observer) {
+          this.observer.disconnect();
+          this.observer = null;
+      }
+
+      // Cleanup DOM
+      const allSelectors = this.config.selectors.target.join(', ');
+      document.querySelectorAll(allSelectors).forEach(el => {
+          this.renderer.clear(el as HTMLElement);
+      });
+  }
+
+  private setupObserver() {
+      if (this.observer) this.observer.disconnect();
+      if (!this.settings.autoDetect) return;
+
+      this.observer = new MutationObserver((mutations) => {
+          if (!this.isEnabled) return;
+
+          let shouldProcess = false;
+          mutations.forEach((mutation) => {
+             if (mutation.type === 'childList') {
+                 mutation.addedNodes.forEach(node => {
+                     if (node.nodeType === Node.ELEMENT_NODE) {
+                         const element = node as HTMLElement;
+                         // Check if the element itself needs processing
+                         if (this.config.selectors.target.some(s => element.matches(s))) {
+                             this.processElement(element);
+                         }
+                         // Check children
+                         const allSelectors = this.config.selectors.target.join(', ');
+                         element.querySelectorAll(allSelectors).forEach(child => {
+                             this.processElement(child as HTMLElement);
+                         });
+                         shouldProcess = true;
+                     }
+                 });
+             } else if (mutation.type === 'characterData' || mutation.type === 'attributes') {
+                  const target = mutation.target.nodeType === Node.ELEMENT_NODE
+                    ? mutation.target as HTMLElement
+                    : mutation.target.parentElement;
+
+                  if (target) {
+                      // Check if it matches any target selector
+                      if (this.config.selectors.target.some(s => target.matches(s))) {
+                          this.processElement(target);
+                          shouldProcess = true;
+                      }
+                  }
+             }
+          });
+
+          if (shouldProcess) {
+               // Debounce re-processing all if needed, but we try to process locally above
+          }
+      });
+      
+      this.observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+          attributes: true,
+          attributeFilter: ['value', 'placeholder'] // monitor input value changes if needed (but value isn't an attribute usually)
+      });
+  }
+
+  private startAutoProcessing() {
+      if (this.autoProcessInterval) clearInterval(this.autoProcessInterval);
+      if (this.settings.autoDetect && this.isEnabled) {
+          this.autoProcessInterval = setInterval(() => {
+              if (this.isEnabled && this.settings.autoDetect) {
+                  this.processAllElements();
+              }
+          }, this.settings.processInterval || 2000);
+      }
+  }
+
+  private stopAutoProcessing() {
+      if (this.autoProcessInterval) {
+          clearInterval(this.autoProcessInterval);
+          this.autoProcessInterval = null;
+      }
   }
 }

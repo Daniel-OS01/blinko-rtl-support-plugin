@@ -7,7 +7,12 @@ import { RTLApp } from './app';
 import { RTLSetting } from './setting';
 import plugin from '../plugin.json';
 import { RTLDetector } from './utils/rtlDetector';
+import { RTLProcessor } from './utils/rtlProcessor';
+import { defaultConfig } from './config';
+import { DOMRTLRenderer } from './renderer';
 import { RTLStyler } from './utils/rtlStyler';
+import { HoverContextManager } from './utils/hoverManager';
+import { PasteInterceptor } from './utils/pasteInterceptor';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
 import he from './locales/he.json';
@@ -15,11 +20,19 @@ import ar from './locales/ar.json';
 
 // Advanced RTL CSS with multiple methods
 const advancedRTLCSS = `
+:root {
+  --rtl-font-family: inherit;
+  --rtl-line-height: inherit;
+  --rtl-paragraph-margin: inherit;
+}
+
 /* Method 1: Direct RTL styling */
 .rtl-force {
     direction: rtl !important;
     text-align: right !important;
     unicode-bidi: embed !important;
+    font-family: var(--rtl-font-family) !important;
+    line-height: var(--rtl-line-height) !important;
 }
 
 .ltr-force {
@@ -32,11 +45,15 @@ const advancedRTLCSS = `
 *[lang="he"], *[lang="ar"], *[dir="rtl"] {
     direction: rtl !important;
     text-align: right !important;
+    font-family: var(--rtl-font-family) !important;
+    line-height: var(--rtl-line-height) !important;
 }
 
 /* Method 3: Unicode bidi for auto-detection */
 .rtl-auto {
     unicode-bidi: plaintext !important;
+    font-family: var(--rtl-font-family) !important;
+    line-height: var(--rtl-line-height) !important;
 }
 
 /* Method 4: CSS content detection */
@@ -44,6 +61,8 @@ p:has-text(/[\u0590-\u05FF\u0600-\u06FF]/),
 div:has-text(/[\u0590-\u05FF\u0600-\u06FF]/) {
     direction: rtl !important;
     text-align: right !important;
+    font-family: var(--rtl-font-family) !important;
+    line-height: var(--rtl-line-height) !important;
 }
 
 /* Method 5: Comprehensive element targeting */
@@ -52,6 +71,14 @@ div:has-text(/[\u0590-\u05FF\u0600-\u06FF]/) {
 .card-masonry-grid p, .card-masonry-grid div,
 textarea, [contenteditable], input[type="text"] {
     unicode-bidi: plaintext !important;
+    font-family: var(--rtl-font-family) !important;
+    line-height: var(--rtl-line-height) !important;
+}
+
+/* Paragraph margins for RTL content */
+.rtl-force, *[lang="he"], *[lang="ar"], *[dir="rtl"], .rtl-auto,
+.markdown-body p[dir="rtl"], .vditor-reset p[dir="rtl"] {
+    margin-bottom: var(--rtl-paragraph-margin) !important;
 }
 
 /* RTL Toggle Button */
@@ -139,18 +166,25 @@ textarea, [contenteditable], input[type="text"] {
  */
 System.register([], (exports) => ({
   execute: () => {
+    // Core components
     const detector = new RTLDetector();
+    const renderer = new DOMRTLRenderer(defaultConfig);
     const styler = new RTLStyler(detector);
+    let hoverManager: HoverContextManager | null = null;
+    const pasteInterceptor = new PasteInterceptor(detector);
     let isRTLEnabled = false;
     let styleElement: HTMLStyleElement | null = null;
     let permanentStyleElement: HTMLStyleElement | null = null;
+    let visualStyleElement: HTMLStyleElement | null = null;
     let toggleButton: HTMLButtonElement | null = null;
     let observer: MutationObserver | null = null;
     let autoProcessInterval: NodeJS.Timeout | null = null;
     
+    // Initial settings
     let settings = {
       enabled: false,
       sensitivity: 'medium' as 'high' | 'medium' | 'low',
+      threshold: 0.15,
       forceDirection: 'auto' as 'auto' | 'rtl' | 'ltr',
       autoDetect: true,
       manualMode: false,
@@ -159,6 +193,12 @@ System.register([], (exports) => ({
       method: 'all' as 'direct' | 'attributes' | 'css' | 'unicode' | 'all',
       customCSS: '',
       permanentCSS: false,
+      customSelectors: [] as string[],
+      visualStyles: {
+        fontFamily: 'inherit',
+        lineHeight: 1.5,
+        paragraphMargin: 1
+      },
       targetSelectors: [
         '.markdown-body p',
         '.markdown-body div',
@@ -186,7 +226,26 @@ System.register([], (exports) => ({
         styleElement.id = 'blinko-rtl-advanced-styles';
         styleElement.textContent = advancedRTLCSS;
         document.head.appendChild(styleElement);
+    const processor = new RTLProcessor(defaultConfig, renderer, detector, settings);
+
+    let toggleButton: HTMLButtonElement | null = null;
+    let permanentStyleElement: HTMLStyleElement | null = null;
+
+    function injectVisualStyles() {
+      if (!visualStyleElement) {
+        visualStyleElement = document.createElement('style');
+        visualStyleElement.id = 'blinko-rtl-visual-styles';
+        document.head.appendChild(visualStyleElement);
       }
+
+      const { fontFamily = 'inherit', lineHeight = 1.5, paragraphMargin = 1 } = settings.visualStyles || {};
+      visualStyleElement.textContent = `
+        :root {
+          --rtl-font-family: ${fontFamily === 'inherit' || !fontFamily ? 'inherit' : `"${fontFamily}", sans-serif`};
+          --rtl-line-height: ${lineHeight};
+          --rtl-paragraph-margin: ${paragraphMargin}em;
+        }
+      `;
     }
 
     function injectPermanentCSS() {
@@ -204,6 +263,13 @@ System.register([], (exports) => ({
       if (permanentStyleElement) {
         permanentStyleElement.remove();
         permanentStyleElement = null;
+      }
+    }
+
+    function removeVisualStyles() {
+      if (visualStyleElement) {
+        visualStyleElement.remove();
+        visualStyleElement = null;
       }
     }
 
@@ -298,8 +364,15 @@ System.register([], (exports) => ({
 
       let isRTL = false;
 
+      // Check manual override first
+      const manualDir = element.getAttribute('data-manual-dir');
+      if (manualDir === 'rtl') {
+        isRTL = true;
+      } else if (manualDir === 'ltr') {
+        isRTL = false;
+      }
       // Manual toggle - force RTL on all
-      if (settings.manualToggle) {
+      else if (settings.manualToggle) {
         isRTL = true;
       }
       // Force direction override
@@ -337,17 +410,17 @@ System.register([], (exports) => ({
           break;
       }
 
-      console.log(`Processed element with text: "${text.substring(0, 50)}..." -> ${isRTL ? 'RTL' : 'LTR'}`);
+      // console.log(`Processed element with text: "${text.substring(0, 50)}..." -> ${isRTL ? 'RTL' : 'LTR'}`);
     }
 
     function processAllElements() {
-      console.log('Processing all elements, RTL enabled:', isRTLEnabled, 'Method:', settings.method);
+      // console.log('Processing all elements, RTL enabled:', isRTLEnabled, 'Method:', settings.method);
       
       let totalProcessed = 0;
       settings.targetSelectors.forEach(selector => {
         try {
           const elements = document.querySelectorAll(selector);
-          console.log(`Found ${elements.length} elements for selector: ${selector}`);
+          // console.log(`Found ${elements.length} elements for selector: ${selector}`);
           elements.forEach(element => {
             processElement(element as HTMLElement);
             totalProcessed++;
@@ -357,7 +430,7 @@ System.register([], (exports) => ({
         }
       });
       
-      console.log(`Total elements processed: ${totalProcessed}`);
+      // console.log(`Total elements processed: ${totalProcessed}`);
     }
 
     function setupObserver() {
@@ -429,17 +502,36 @@ System.register([], (exports) => ({
 
     function enableRTL() {
       console.log('Enabling RTL with settings:', settings);
-      isRTLEnabled = true;
-      injectCSS();
+      settings.enabled = true;
       injectPermanentCSS();
+      processor.enable();
+      injectVisualStyles();
       setupObserver();
       startAutoProcessing();
+      pasteInterceptor.enable();
       
       if (toggleButton) {
         toggleButton.classList.add('active');
       }
       
       localStorage.setItem('blinko-rtl-enabled', 'true');
+    }
+
+    function disableRTL() {
+      settings.enabled = false;
+      if (!settings.permanentCSS) {
+        removePermanentCSS();
+      }
+      processor.disable();
+
+      if (!hoverManager) {
+        hoverManager = new HoverContextManager({
+          selectors: settings.targetSelectors,
+          processElement: processElement,
+          isEnabled: () => isRTLEnabled
+        });
+        hoverManager.init();
+      }
       
       // Process existing elements immediately
       setTimeout(processAllElements, 100);
@@ -448,11 +540,18 @@ System.register([], (exports) => ({
     function disableRTL() {
       isRTLEnabled = false;
       removeCSS();
+      removeVisualStyles();
       stopAutoProcessing();
+      pasteInterceptor.disable();
       
       if (observer) {
         observer.disconnect();
         observer = null;
+      }
+
+      if (hoverManager) {
+        hoverManager.destroy();
+        hoverManager = null;
       }
       
       if (toggleButton) {
@@ -466,6 +565,10 @@ System.register([], (exports) => ({
         el.removeAttribute('dir');
         el.removeAttribute('lang');
       });
+
+      document.querySelectorAll('[data-manual-dir]').forEach(el => {
+        el.removeAttribute('data-manual-dir');
+      });
       
       document.querySelectorAll('.rtl-force, .rtl-auto, .ltr-force').forEach(el => {
         el.classList.remove('rtl-force', 'rtl-auto', 'ltr-force');
@@ -476,7 +579,7 @@ System.register([], (exports) => ({
     }
 
     function toggleRTL() {
-      if (isRTLEnabled) {
+      if (settings.enabled) {
         disableRTL();
       } else {
         enableRTL();
@@ -492,9 +595,12 @@ System.register([], (exports) => ({
           
           detector.updateConfig({
             sensitivity: settings.sensitivity,
+            threshold: settings.threshold,
             minRTLChars: settings.minRTLChars
           });
           
+          processor.updateSettings(settings);
+
           if (settings.permanentCSS && settings.customCSS) {
             injectPermanentCSS();
           }
@@ -517,13 +623,20 @@ System.register([], (exports) => ({
         
         detector.updateConfig({
           sensitivity: settings.sensitivity,
+          threshold: settings.threshold,
           minRTLChars: settings.minRTLChars
         });
+
+        processor.updateSettings(settings);
 
         if (settings.permanentCSS && settings.customCSS) {
           injectPermanentCSS();
         } else {
           removePermanentCSS();
+        }
+
+        if (isRTLEnabled) {
+            injectVisualStyles();
         }
 
         if (toggleButton) {
@@ -534,30 +647,39 @@ System.register([], (exports) => ({
           }
         }
 
-        setupObserver();
-        startAutoProcessing();
-
-        if (isRTLEnabled) {
-          setTimeout(processAllElements, 100);
+        // Restart processor if enabled to pick up new settings
+        if (settings.enabled) {
+            processor.disable();
+            processor.enable();
         }
       });
 
       // Global API
       (window as any).blinkoRTL = {
         detector,
+        toggle: toggleRTL,
+        enable: enableRTL,
+        disable: disableRTL,
+        isEnabled: () => settings.enabled,
+        settings: () => ({ ...settings }),
+        processAll: () => processor.processAllElements(),
+        processElement: (el: HTMLElement) => processor.processElement(el),
         styler,
+        pasteInterceptor,
         toggle: toggleRTL,
         enable: enableRTL,
         disable: disableRTL,
         isEnabled: () => isRTLEnabled,
-        settings: () => ({ ...settings }),
+        getSettings: () => ({ ...settings }),
+        settings: () => ({ ...settings }), // Keep for backward compatibility if needed, but getSettings is preferred
         processAll: processAllElements,
         processElement: processElement,
         toggleManual: () => {
           settings.manualToggle = !settings.manualToggle;
           localStorage.setItem('blinko-rtl-settings', JSON.stringify(settings));
-          if (isRTLEnabled) {
-            processAllElements();
+          processor.updateSettings(settings);
+          if (settings.enabled) {
+            processor.processAllElements();
           }
           return settings.manualToggle;
         },
@@ -565,6 +687,59 @@ System.register([], (exports) => ({
           const isRTL = detector.detectRTL(text);
           console.log(`Text "${text}" -> RTL: ${isRTL ? 'Yes' : 'No'}`);
           return isRTL;
+          console.log(`Text "${text}" -> Detected: ${isRTL ? 'RTL' : 'LTR'}`);
+          return isRTL;
+        },
+        testHebrew: (text: string) => detectHebrewRegex(text),
+        testArabic: (text: string) => detectArabicRegex(text),
+        getStats: () => {
+           // Count elements with RTL styling
+           return document.querySelectorAll('.rtl-force, [dir="rtl"], .rtl-auto').length;
+        },
+        fixSelection: () => {
+           const selection = window.getSelection();
+           if (selection && selection.rangeCount > 0) {
+             const range = selection.getRangeAt(0);
+             let node = range.commonAncestorContainer;
+             if (node.nodeType === Node.TEXT_NODE) {
+               node = node.parentNode!;
+             }
+             if (node instanceof HTMLElement) {
+               // Process this element and its parents up to a block container
+               // And also children
+               processElement(node);
+               node.querySelectorAll(settings.targetSelectors.join(', ')).forEach((el) => {
+                   processElement(el as HTMLElement);
+               });
+
+               // Also try to find a parent paragraph or block
+               const parentBlock = node.closest('p, div, li, td, th, h1, h2, h3, h4, h5, h6');
+               if (parentBlock) {
+                   processElement(parentBlock as HTMLElement);
+               }
+             }
+           }
+        },
+        setSensitivity: (threshold: number) => {
+           settings.threshold = threshold;
+           // Also update sensitivity enum approximation
+           if (threshold < 0.12) settings.sensitivity = 'high';
+           else if (threshold > 0.3) settings.sensitivity = 'low';
+           else settings.sensitivity = 'medium';
+
+           localStorage.setItem('blinko-rtl-settings', JSON.stringify(settings));
+           detector.updateConfig({ threshold: settings.threshold, sensitivity: settings.sensitivity });
+
+           // Dispatch event
+           window.dispatchEvent(
+             new CustomEvent('rtl-settings-changed', {
+               detail: settings
+             })
+           );
+
+           if (isRTLEnabled) {
+              processAllElements();
+           }
         }
       };
 
@@ -601,7 +776,7 @@ System.register([], (exports) => ({
           content: () => {
             const container = document.createElement('div');
             container.setAttribute('data-plugin', 'rtl-support');
-            render(<RTLApp detector={detector} styler={styler} />, container);
+            render(<RTLApp detector={detector} />, container);
             return container;
           }
         });
@@ -614,7 +789,7 @@ System.register([], (exports) => ({
             toggleRTL();
             const i18n = window.Blinko.i18n;
             window.Blinko.toast.success(
-              isRTLEnabled ? i18n.t('rtl_enabled') : i18n.t('rtl_disabled')
+              settings.enabled ? i18n.t('rtl_enabled') : i18n.t('rtl_disabled')
             );
           }
         });
@@ -631,8 +806,13 @@ System.register([], (exports) => ({
         disableRTL();
         removeToggleButton();
         stopAutoProcessing();
+        pasteInterceptor.disable();
         if (observer) {
           observer.disconnect();
+        }
+        if (hoverManager) {
+          hoverManager.destroy();
+          hoverManager = null;
         }
         styler.destroy();
         console.log('Advanced RTL Plugin destroyed');
