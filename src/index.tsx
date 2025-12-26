@@ -8,6 +8,7 @@ import { RTLSetting } from './setting';
 import plugin from '../plugin.json';
 import { RTLDetector } from './utils/rtlDetector';
 import { RTLStyler } from './utils/rtlStyler';
+import { PasteInterceptor } from './utils/pasteInterceptor';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
 import he from './locales/he.json';
@@ -141,6 +142,7 @@ System.register([], (exports) => ({
   execute: () => {
     const detector = new RTLDetector();
     const styler = new RTLStyler(detector);
+    const pasteInterceptor = new PasteInterceptor(detector);
     let isRTLEnabled = false;
     let styleElement: HTMLStyleElement | null = null;
     let permanentStyleElement: HTMLStyleElement | null = null;
@@ -458,6 +460,7 @@ System.register([], (exports) => ({
       injectPermanentCSS();
       setupObserver();
       startAutoProcessing();
+      pasteInterceptor.enable();
       
       if (toggleButton) {
         toggleButton.classList.add('active');
@@ -473,6 +476,7 @@ System.register([], (exports) => ({
       isRTLEnabled = false;
       removeCSS();
       stopAutoProcessing();
+      pasteInterceptor.disable();
       
       if (observer) {
         observer.disconnect();
@@ -570,6 +574,7 @@ System.register([], (exports) => ({
       (window as any).blinkoRTL = {
         detector,
         styler,
+        pasteInterceptor,
         toggle: toggleRTL,
         enable: enableRTL,
         disable: disableRTL,
@@ -659,6 +664,7 @@ System.register([], (exports) => ({
         disableRTL();
         removeToggleButton();
         stopAutoProcessing();
+        pasteInterceptor.disable();
         if (observer) {
           observer.disconnect();
         }
