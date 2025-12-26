@@ -180,10 +180,6 @@ System.register([], (exports) => ({
       mixedContent: true
     };
 
-    // Hebrew regex from userscript
-    const hebrewRegex = /\p{Script=Hebrew}/u;
-    const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
-
     function injectCSS() {
       if (!styleElement) {
         styleElement = document.createElement('style');
@@ -289,15 +285,6 @@ System.register([], (exports) => ({
       element.style.unicodeBidi = 'plaintext';
     }
 
-    // Method 5: Hebrew regex detection (from userscript)
-    function detectHebrewRegex(text: string): boolean {
-      return hebrewRegex.test(text);
-    }
-
-    function detectArabicRegex(text: string): boolean {
-      return arabicRegex.test(text);
-    }
-
     function processElement(element: HTMLElement) {
       if (!element) return;
       
@@ -324,18 +311,7 @@ System.register([], (exports) => ({
       }
       // Auto-detection with multiple methods
       else {
-        // Hebrew regex detection
-        if (settings.hebrewRegex && detectHebrewRegex(text)) {
-          isRTL = true;
-        }
-        // Arabic regex detection
-        else if (settings.arabicRegex && detectArabicRegex(text)) {
-          isRTL = true;
-        }
-        // Original detector
-        else {
-          isRTL = detector.detectRTL(text);
-        }
+        isRTL = detector.detectRTL(text);
       }
 
       // Apply RTL using selected method
@@ -587,13 +563,9 @@ System.register([], (exports) => ({
         },
         test: (text: string) => {
           const isRTL = detector.detectRTL(text);
-          const hebrewTest = detectHebrewRegex(text);
-          const arabicTest = detectArabicRegex(text);
-          console.log(`Text "${text}" -> Original: ${isRTL ? 'RTL' : 'LTR'}, Hebrew: ${hebrewTest}, Arabic: ${arabicTest}`);
+          console.log(`Text "${text}" -> RTL: ${isRTL ? 'Yes' : 'No'}`);
           return isRTL;
-        },
-        testHebrew: (text: string) => detectHebrewRegex(text),
-        testArabic: (text: string) => detectArabicRegex(text)
+        }
       };
 
       console.log('Advanced Blinko RTL Plugin initialized successfully');
