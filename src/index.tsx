@@ -31,6 +31,7 @@ System.register([], (exports) => ({
         autoDetect: true,
         manualMode: false,
         manualToggle: false,
+        mobileView: false,
         darkMode: false,
         method: 'all',
         customCSS: '',
@@ -90,12 +91,47 @@ System.register([], (exports) => ({
         }
 
         const { fontFamily = 'inherit', lineHeight = 1.5, paragraphMargin = 1 } = currentSettings.visualStyles || {};
+
+        // Mobile specific adjustments
+        let mobileCSS = '';
+        if (currentSettings.mobileView) {
+             mobileCSS = `
+                @media (max-width: 768px), screen and (max-width: 768px) {
+                    .rtl-toggle-btn {
+                        width: 60px !important;
+                        height: 60px !important;
+                        font-size: 24px !important;
+                        bottom: 20px !important;
+                        top: auto !important;
+                    }
+                    /* Ensure RTL control center is usable on small screens */
+                    div[data-plugin="rtl-support"] > div {
+                        width: 280px !important;
+                        max-width: 90vw !important;
+                    }
+                }
+
+                /* Force mobile layout if toggled explicitly, even on desktop for testing */
+                body.blinko-rtl-mobile .rtl-toggle-btn {
+                    width: 60px !important;
+                    height: 60px !important;
+                    font-size: 24px !important;
+                    bottom: 20px !important;
+                    top: auto !important;
+                }
+             `;
+             document.body.classList.add('blinko-rtl-mobile');
+        } else {
+             document.body.classList.remove('blinko-rtl-mobile');
+        }
+
         visualStyleElement.textContent = `
             :root {
                 --rtl-font-family: ${fontFamily === 'inherit' || !fontFamily ? 'inherit' : `"${fontFamily}", sans-serif`};
                 --rtl-line-height: ${lineHeight};
                 --rtl-paragraph-margin: ${paragraphMargin}em;
             }
+            ${mobileCSS}
         `;
     }
 

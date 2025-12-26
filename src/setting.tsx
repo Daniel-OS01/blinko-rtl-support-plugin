@@ -16,6 +16,7 @@ interface RTLSettings {
   autoDetect: boolean;
   manualMode: boolean;
   manualToggle: boolean;
+  mobileView: boolean;
   darkMode: boolean;
   method: 'direct' | 'attributes' | 'css' | 'unicode' | 'all';
   customCSS: string;
@@ -246,6 +247,7 @@ export function RTLSetting(): JSXInternal.Element {
     autoDetect: false,
     manualMode: true,
     manualToggle: false,
+    mobileView: false,
     darkMode: false,
     method: 'all',
     customCSS: '',
@@ -570,6 +572,18 @@ export function RTLSetting(): JSXInternal.Element {
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
               type="checkbox"
+              checked={settings.mobileView}
+              onChange={(e) => saveSettings({ mobileView: (e.target as HTMLInputElement).checked })}
+            />
+            <span>📱 Mobile View</span>
+          </label>
+          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: '#666' }}>
+            Optimizes layout for mobile devices
+          </p>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
               checked={settings.autoDetect}
               onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked })}
               disabled={!settings.enabled}
@@ -658,7 +672,7 @@ export function RTLSetting(): JSXInternal.Element {
       }}>
         <h3 style={{ margin: '0 0 15px 0', color: '#6610f2' }}>🎨 Visual Style Editor</h3>
 
-        <div style={{ display: 'grid', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Font Family */}
           <div>
             <label style={{ display: 'block', fontWeight: '500', marginBottom: '8px' }}>
@@ -785,12 +799,12 @@ export function RTLSetting(): JSXInternal.Element {
       }}>
         <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🎯 Detection Settings</h3>
 
-        <div style={{ display: 'grid', gap: '15px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
+            <label style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
               Detection Sensitivity:
-              <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '5px', width: '100%', maxWidth: '300px' }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', justifyContent: 'flex-end' }}>
                     <span style={{ fontSize: '12px', color: '#666' }}>{Math.round(settings.threshold * 100)}%</span>
                     <input
                       type="range"

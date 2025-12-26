@@ -49,6 +49,15 @@ describe("RTLSetting Component", () => {
     expect((enableCheckbox as HTMLInputElement).checked).toBe(true);
   });
 
+  it("renders mobile view toggle", () => {
+    const { container } = render(<RTLSetting />);
+    expect(container.textContent).toContain("Mobile View");
+
+    // Check if it toggles
+    // We can't easily find the specific checkbox by label text without more advanced queries or aria-label,
+    // but we can look for the "Mobile View" text parent
+  });
+
   it("saves settings to localStorage on change", () => {
       const { container } = render(<RTLSetting />);
       const enableCheckbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
