@@ -8,6 +8,7 @@ import { RTLSetting } from './setting';
 import plugin from '../plugin.json';
 import { RTLDetector } from './utils/rtlDetector';
 import { RTLStyler } from './utils/rtlStyler';
+import { HoverContextManager } from './utils/hoverManager';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
 import he from './locales/he.json';
@@ -141,6 +142,7 @@ System.register([], (exports) => ({
   execute: () => {
     const detector = new RTLDetector();
     const styler = new RTLStyler(detector);
+    let hoverManager: HoverContextManager | null = null;
     let isRTLEnabled = false;
     let styleElement: HTMLStyleElement | null = null;
     let permanentStyleElement: HTMLStyleElement | null = null;
@@ -311,8 +313,15 @@ System.register([], (exports) => ({
 
       let isRTL = false;
 
+      // Check manual override first
+      const manualDir = element.getAttribute('data-manual-dir');
+      if (manualDir === 'rtl') {
+        isRTL = true;
+      } else if (manualDir === 'ltr') {
+        isRTL = false;
+      }
       // Manual toggle - force RTL on all
-      if (settings.manualToggle) {
+      else if (settings.manualToggle) {
         isRTL = true;
       }
       // Force direction override
@@ -464,6 +473,15 @@ System.register([], (exports) => ({
       }
       
       localStorage.setItem('blinko-rtl-enabled', 'true');
+
+      if (!hoverManager) {
+        hoverManager = new HoverContextManager({
+          selectors: settings.targetSelectors,
+          processElement: processElement,
+          isEnabled: () => isRTLEnabled
+        });
+        hoverManager.init();
+      }
       
       // Process existing elements immediately
       setTimeout(processAllElements, 100);
@@ -478,6 +496,11 @@ System.register([], (exports) => ({
         observer.disconnect();
         observer = null;
       }
+
+      if (hoverManager) {
+        hoverManager.destroy();
+        hoverManager = null;
+      }
       
       if (toggleButton) {
         toggleButton.classList.remove('active');
@@ -489,6 +512,10 @@ System.register([], (exports) => ({
       document.querySelectorAll('[dir="rtl"], [lang="he"], [lang="ar"]').forEach(el => {
         el.removeAttribute('dir');
         el.removeAttribute('lang');
+      });
+
+      document.querySelectorAll('[data-manual-dir]').forEach(el => {
+        el.removeAttribute('data-manual-dir');
       });
       
       document.querySelectorAll('.rtl-force, .rtl-auto, .ltr-force').forEach(el => {
@@ -661,6 +688,10 @@ System.register([], (exports) => ({
         stopAutoProcessing();
         if (observer) {
           observer.disconnect();
+        }
+        if (hoverManager) {
+          hoverManager.destroy();
+          hoverManager = null;
         }
         styler.destroy();
         console.log('Advanced RTL Plugin destroyed');
