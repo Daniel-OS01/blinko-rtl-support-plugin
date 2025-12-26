@@ -1,32 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { JSXInternal } from 'preact/src/jsx';
-
-interface Preset {
-  id: string;
-  name: string;
-  css: string;
-  isBuiltIn?: boolean;
-}
-
-interface RTLSettings {
-  enabled: boolean;
-  sensitivity: 'high' | 'medium' | 'low';
-  forceDirection: 'auto' | 'rtl' | 'ltr';
-  autoDetect: boolean;
-  manualMode: boolean;
-  manualToggle: boolean;
-  darkMode: boolean;
-  method: 'direct' | 'attributes' | 'css' | 'unicode' | 'all';
-  customCSS: string;
-  permanentCSS: boolean;
-  targetSelectors: string[];
-  minRTLChars: number;
-  processInterval: number;
-  hebrewRegex: boolean;
-  arabicRegex: boolean;
-  mixedContent: boolean;
-  savedPresets: Preset[];
-}
+import { RTLSettings, Preset } from './types';
 
 const DEFAULT_CSS = `/* Enhanced RTL Support from Blinko-RTL.css */
 *:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"] {
@@ -254,27 +228,38 @@ export function RTLSetting(): JSXInternal.Element {
   const i18n = window.Blinko.i18n;
 
   useEffect(() => {
-    const savedSettings = localStorage.getItem('blinko-rtl-settings');
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        setSettings(prev => ({ ...prev, ...parsed }));
-      } catch (error) {
-        console.error('Failed to load RTL plugin settings:', error);
-      }
+    // We can also get settings from the service via global
+    const currentSettings = (window as any).blinkoRTL?.settings();
+    if (currentSettings) {
+        setSettings(currentSettings);
+    } else {
+        const savedSettings = localStorage.getItem('blinko-rtl-settings');
+        if (savedSettings) {
+        try {
+            const parsed = JSON.parse(savedSettings);
+            setSettings(prev => ({ ...prev, ...parsed }));
+        } catch (error) {
+            console.error('Failed to load RTL plugin settings:', error);
+        }
+        }
     }
   }, []);
 
   const saveSettings = (newSettings: Partial<RTLSettings>) => {
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
-    localStorage.setItem('blinko-rtl-settings', JSON.stringify(updatedSettings));
     
-    window.dispatchEvent(
-      new CustomEvent('rtl-settings-changed', {
-        detail: updatedSettings
-      })
-    );
+    // Use service to update settings
+    if ((window as any).blinkoRTL?.service) {
+        (window as any).blinkoRTL.service.updateSettings(newSettings);
+    } else {
+        localStorage.setItem('blinko-rtl-settings', JSON.stringify(updatedSettings));
+        window.dispatchEvent(
+            new CustomEvent('rtl-settings-changed', {
+                detail: updatedSettings
+            })
+        );
+    }
     
     window.Blinko.toast.success('Settings saved!');
   };
@@ -648,9 +633,9 @@ export function RTLSetting(): JSXInternal.Element {
                   minWidth: '200px' 
                 }}
               >
-                <option value="high">🔥 High - 10% RTL characters</option>
-                <option value="medium">⚖️ Medium - 20% RTL characters</option>
-                <option value="low">🎯 Low - 40% RTL characters</option>
+                <option value="high">🔥 High - 10% RTL chars</option>
+                <option value="medium">⚖️ Medium - 15% RTL chars</option>
+                <option value="low">🎯 Low - 40% RTL chars</option>
               </select>
             </label>
           </div>
