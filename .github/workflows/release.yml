@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -29,11 +31,12 @@ jobs:
         run: bun run build:prod
 
       - name: Commit and Push Release Artifacts
+        if: github.ref_type == 'branch'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Force add the release directory in case it's ignored (though we checked .gitignore)
+          # Force add the release directory in case it's ignored
           git add release/
 
           # Check if there are changes to commit
@@ -43,3 +46,26 @@ jobs:
             git commit -m "chore: update release artifacts [skip ci]"
             git push
           fi
+
+      - name: Publish with Blinko CLI
+        if: startsWith(github.ref, 'refs/tags/')
+        id: blinko_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        run: bun run release:publish
+
+      - name: Create Release Zip (Backup)
+        if: startsWith(github.ref, 'refs/tags/') && (steps.blinko_release.outcome == 'failure' || steps.blinko_release.outcome == 'skipped')
+        run: |
+          cd release
+          zip -r ../release.zip .
+          cd ..
+
+      - name: Upload Release Asset (Backup)
+        if: startsWith(github.ref, 'refs/tags/') && (steps.blinko_release.outcome == 'failure' || steps.blinko_release.outcome == 'skipped')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
