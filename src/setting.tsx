@@ -11,6 +11,7 @@ interface Preset {
 interface RTLSettings {
   enabled: boolean;
   sensitivity: 'high' | 'medium' | 'low';
+  threshold: number;
   forceDirection: 'auto' | 'rtl' | 'ltr';
   autoDetect: boolean;
   manualMode: boolean;
@@ -19,6 +20,11 @@ interface RTLSettings {
   method: 'direct' | 'attributes' | 'css' | 'unicode' | 'all';
   customCSS: string;
   permanentCSS: boolean;
+  visualStyles: {
+    fontFamily: string;
+    lineHeight: number;
+    paragraphMargin: number;
+  };
   targetSelectors: string[];
   minRTLChars: number;
   processInterval: number;
@@ -221,10 +227,21 @@ const BUILT_IN_PRESETS: Preset[] = [
   }
 ];
 
+const STANDARD_FONTS = [
+  'inherit',
+  'Arial',
+  'Arial Hebrew',
+  'David',
+  'Miriam',
+  'Segoe UI',
+  'Tahoma'
+];
+
 export function RTLSetting(): JSXInternal.Element {
   const [settings, setSettings] = useState<RTLSettings>({
     enabled: true,
     sensitivity: 'medium',
+    threshold: 0.15,
     forceDirection: 'auto',
     autoDetect: false,
     manualMode: true,
@@ -233,6 +250,11 @@ export function RTLSetting(): JSXInternal.Element {
     method: 'all',
     customCSS: '',
     permanentCSS: false,
+    visualStyles: {
+      fontFamily: 'inherit',
+      lineHeight: 1.5,
+      paragraphMargin: 1
+    },
     targetSelectors: [
       '.markdown-body p',
       '.vditor-reset p',
@@ -357,6 +379,7 @@ export function RTLSetting(): JSXInternal.Element {
     const defaultSettings: RTLSettings = {
       enabled: true,
       sensitivity: 'medium',
+      threshold: 0.15,
       forceDirection: 'auto',
       autoDetect: false,
       manualMode: true,
@@ -365,6 +388,11 @@ export function RTLSetting(): JSXInternal.Element {
       method: 'all',
       customCSS: '',
       permanentCSS: false,
+      visualStyles: {
+        fontFamily: 'inherit',
+        lineHeight: 1.5,
+        paragraphMargin: 1
+      },
       targetSelectors: [
         '.markdown-body p',
         '.vditor-reset p',
@@ -620,6 +648,133 @@ export function RTLSetting(): JSXInternal.Element {
         </div>
       </div>
 
+      {/* Visual Style Editor */}
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '2px solid #6610f2',
+        borderRadius: '8px',
+        background: '#f8f9ff'
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#6610f2' }}>🎨 Visual Style Editor</h3>
+
+        <div style={{ display: 'grid', gap: '20px' }}>
+          {/* Font Family */}
+          <div>
+            <label style={{ display: 'block', fontWeight: '500', marginBottom: '8px' }}>
+              Font Family:
+            </label>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <select
+                value={STANDARD_FONTS.includes(settings.visualStyles?.fontFamily || 'inherit')
+                  ? (settings.visualStyles?.fontFamily || 'inherit')
+                  : 'custom'}
+                onChange={(e) => {
+                  const val = (e.target as HTMLSelectElement).value;
+                  if (val === 'custom') {
+                    // Switch to custom mode by clearing the font or keeping current if it's already custom-like
+                    if (STANDARD_FONTS.includes(settings.visualStyles?.fontFamily || 'inherit')) {
+                       saveSettings({
+                        visualStyles: {
+                          ...settings.visualStyles,
+                          fontFamily: ''
+                        }
+                      });
+                    }
+                  } else {
+                    saveSettings({
+                      visualStyles: {
+                        ...settings.visualStyles,
+                        fontFamily: val
+                      }
+                    });
+                  }
+                }}
+                disabled={!settings.enabled}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px'
+                }}
+              >
+                {STANDARD_FONTS.map(font => (
+                  <option key={font} value={font}>
+                    {font === 'inherit' ? 'Default (Inherit)' : font}
+                  </option>
+                ))}
+                <option value="custom">Custom...</option>
+              </select>
+              <input
+                type="text"
+                value={settings.visualStyles?.fontFamily || ''}
+                onChange={(e) => saveSettings({
+                  visualStyles: {
+                    ...settings.visualStyles,
+                    fontFamily: (e.target as HTMLInputElement).value
+                  }
+                })}
+                placeholder="Custom font name"
+                disabled={!settings.enabled}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  display: STANDARD_FONTS.includes(settings.visualStyles?.fontFamily || 'inherit') ? 'none' : 'block'
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Line Height */}
+          <div>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '500', marginBottom: '8px' }}>
+              <span>Line Height:</span>
+              <span>{settings.visualStyles?.lineHeight || 1.5}</span>
+            </label>
+            <input
+              type="range"
+              min="1.0"
+              max="3.0"
+              step="0.1"
+              value={settings.visualStyles?.lineHeight || 1.5}
+              onChange={(e) => saveSettings({
+                visualStyles: {
+                  ...settings.visualStyles,
+                  lineHeight: parseFloat((e.target as HTMLInputElement).value)
+                }
+              })}
+              disabled={!settings.enabled}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          {/* Paragraph Margin */}
+          <div>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '500', marginBottom: '8px' }}>
+              <span>Paragraph Spacing (em):</span>
+              <span>{settings.visualStyles?.paragraphMargin || 1.0}em</span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="3.0"
+              step="0.1"
+              value={settings.visualStyles?.paragraphMargin || 1.0}
+              onChange={(e) => saveSettings({
+                visualStyles: {
+                  ...settings.visualStyles,
+                  paragraphMargin: parseFloat((e.target as HTMLInputElement).value)
+                }
+              })}
+              disabled={!settings.enabled}
+              style={{ width: '100%' }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Detection Settings */}
       <div style={{ 
         marginBottom: '30px', 
@@ -634,24 +789,49 @@ export function RTLSetting(): JSXInternal.Element {
           <div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
               Detection Sensitivity:
-              <select
-                value={settings.sensitivity}
-                onChange={(e) => saveSettings({ 
-                  sensitivity: (e.target as HTMLSelectElement).value as 'high' | 'medium' | 'low' 
-                })}
-                disabled={!settings.enabled}
-                style={{ 
-                  marginLeft: 'auto', 
-                  padding: '5px 10px', 
-                  border: '1px solid #ccc', 
-                  borderRadius: '4px', 
-                  minWidth: '200px' 
-                }}
-              >
-                <option value="high">🔥 High - 10% RTL characters</option>
-                <option value="medium">⚖️ Medium - 20% RTL characters</option>
-                <option value="low">🎯 Low - 40% RTL characters</option>
-              </select>
+              <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '12px', color: '#666' }}>{Math.round(settings.threshold * 100)}%</span>
+                    <input
+                      type="range"
+                      min="1"
+                      max="50"
+                      value={Math.round(settings.threshold * 100)}
+                      onChange={(e) => {
+                          const val = parseInt((e.target as HTMLInputElement).value) / 100;
+                          let sens: 'high' | 'medium' | 'low' = 'medium';
+                          if (val < 0.12) sens = 'high';
+                          else if (val > 0.3) sens = 'low';
+                          saveSettings({ threshold: val, sensitivity: sens });
+                      }}
+                      disabled={!settings.enabled}
+                      style={{ width: '150px' }}
+                    />
+                 </div>
+                 <select
+                    value={settings.sensitivity}
+                    onChange={(e) => {
+                        const val = (e.target as HTMLSelectElement).value as 'high' | 'medium' | 'low';
+                        const thresholds = {
+                            high: 0.1,    // 10% RTL chars
+                            medium: 0.15, // 15% RTL chars
+                            low: 0.4      // 40% RTL chars
+                        };
+                        saveSettings({ sensitivity: val, threshold: thresholds[val] });
+                    }}
+                    disabled={!settings.enabled}
+                    style={{
+                      padding: '5px 10px',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      minWidth: '200px'
+                    }}
+                 >
+                    <option value="high">🔥 High - 10% RTL characters</option>
+                    <option value="medium">⚖️ Medium - 15% RTL characters</option>
+                    <option value="low">🎯 Low - 40% RTL characters</option>
+                 </select>
+              </div>
             </label>
           </div>
 

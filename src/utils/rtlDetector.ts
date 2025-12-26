@@ -1,5 +1,6 @@
 export interface RTLDetectionConfig {
-  sensitivity: 'high' | 'medium' | 'low';
+  sensitivity: 'high' | 'medium' | 'low'; // Kept for backward compatibility
+  threshold: number; // 0.0 to 1.0, lower means more sensitive (requires less RTL content)
   minRTLChars: number;
   sampleSize: number;
 }
@@ -17,12 +18,14 @@ export class RTLDetector {
     [0x0780, 0x07BF], // Thaana
   ];
 
-  constructor(config: RTLDetectionConfig = {
-    sensitivity: 'medium',
-    minRTLChars: 3,
-    sampleSize: 100
-  }) {
-    this.config = config;
+  constructor(config: Partial<RTLDetectionConfig> = {}) {
+    this.config = {
+      sensitivity: 'medium',
+      threshold: 0.15, // Default for medium
+      minRTLChars: 3,
+      sampleSize: 100,
+      ...config
+    };
   }
 
   /**
@@ -63,13 +66,8 @@ export class RTLDetector {
     // Calculate RTL percentage based on sensitivity
     const rtlPercentage = totalSignificantChars > 0 ? rtlCharCount / totalSignificantChars : 0;
 
-    const thresholds = {
-      high: 0.1,    // 10% RTL chars
-      medium: 0.15, // 15% RTL chars
-      low: 0.4      // 40% RTL chars
-    };
-
-    return rtlPercentage >= thresholds[this.config.sensitivity];
+    // Use threshold directly
+    return rtlPercentage >= this.config.threshold;
   }
 
   /**
@@ -84,5 +82,15 @@ export class RTLDetector {
    */
   public updateConfig(config: Partial<RTLDetectionConfig>): void {
     this.config = { ...this.config, ...config };
+
+    // If sensitivity is updated but threshold isn't, map it
+    if (config.sensitivity && !config.threshold) {
+      const thresholds = {
+        high: 0.1,    // 10% RTL chars
+        medium: 0.15, // 15% RTL chars
+        low: 0.4      // 40% RTL chars
+      };
+      this.config.threshold = thresholds[config.sensitivity];
+    }
   }
 }
