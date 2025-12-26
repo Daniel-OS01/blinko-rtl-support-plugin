@@ -3,78 +3,53 @@ import { DetectionStrategy } from './types';
 export class RegexStrategy implements DetectionStrategy {
   readonly name = 'Regex';
 
-  // Hebrew regex from userscript
-  private readonly hebrewRegex = /\p{Script=Hebrew}/u;
-  // Arabic regex
-  private readonly arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+  // Hebrew regex range: 0590-05FF, FB1D-FB4F (Presentation forms A), FB50-FBB1 (Presentation forms B - wait, that's Arabic)
+  // Hebrew: \u0590-\u05FF
+  private readonly hebrewPattern = '\\u0590-\\u05FF';
+
+  // Arabic regex range
+  private readonly arabicPattern = '\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF';
 
   private checkHebrew: boolean;
   private checkArabic: boolean;
-  private minRTLChars: number;
-  private combinedRegex: RegExp | null = null;
+  private threshold: number; // Ratio 0.0 - 1.0
 
-  constructor(checkHebrew: boolean = true, checkArabic: boolean = true, minRTLChars: number = 1) {
+  constructor(checkHebrew: boolean = true, checkArabic: boolean = true, threshold: number = 0.3) {
     this.checkHebrew = checkHebrew;
     this.checkArabic = checkArabic;
-    this.minRTLChars = minRTLChars;
-    this.updateCombinedRegex();
-  }
-
-  private updateCombinedRegex() {
-    if (this.minRTLChars <= 1) {
-      this.combinedRegex = null;
-      return;
-    }
-
-    const sources: string[] = [];
-    if (this.checkHebrew) {
-      sources.push(this.hebrewRegex.source);
-    }
-    if (this.checkArabic) {
-      sources.push(this.arabicRegex.source);
-    }
-
-    if (sources.length > 0) {
-      this.combinedRegex = new RegExp(sources.join('|'), 'gu');
-    } else {
-      this.combinedRegex = null;
-    }
+    this.threshold = threshold;
   }
 
   detect(text: string): boolean {
-    if (!text) return false;
+    if (!text || !text.trim()) return false;
 
-    // Optimization: if minRTLChars is 1, return fast using test()
-    if (this.minRTLChars <= 1) {
-      if (this.checkHebrew && this.hebrewRegex.test(text)) {
-        return true;
-      }
+    // Clean text: remove non-alphabetic chars (optional, but good for ratio)
+    // Actually, we should count total words or characters that are "strong" (L or R).
+    // Simplifying: Count total alphanumeric characters vs RTL characters.
 
-      if (this.checkArabic && this.arabicRegex.test(text)) {
-        return true;
-      }
-      return false;
-    }
+    // Match all RTL chars
+    let patterns: string[] = [];
+    if (this.checkHebrew) patterns.push(this.hebrewPattern);
+    if (this.checkArabic) patterns.push(this.arabicPattern);
 
-    // If minRTLChars > 1, use cached combined regex
-    if (!this.combinedRegex) return false;
+    if (patterns.length === 0) return false;
 
-    // Reset lastIndex because we use 'g' flag and reuse the regex instance
-    this.combinedRegex.lastIndex = 0;
+    const rtlRegex = new RegExp(`[${patterns.join('')}]`, 'g');
+    const matches = text.match(rtlRegex);
 
-    let count = 0;
-    while (this.combinedRegex.exec(text) !== null) {
-      count++;
-      if (count >= this.minRTLChars) return true;
-    }
+    if (!matches) return false;
 
-    return false;
-  }
+    const rtlCount = matches.length;
+    const totalCount = text.length; // Or stripped length?
 
-  public updateConfig(config: { minRTLChars?: number }): void {
-    if (config.minRTLChars !== undefined) {
-      this.minRTLChars = config.minRTLChars;
-      this.updateCombinedRegex();
-    }
+    // If text is very short (e.g. 1-3 chars), and has ANY RTL, it should probably be RTL?
+    // "שלום" -> 4 chars, 4 matches -> 100%.
+    // "Hi שלום" -> 3+1+4 = 8 chars. 4 matches. 50%.
+    // "Hello (שלום)" -> 12 chars. 4 matches. 33%.
+    // Threshold 0.3 seems reasonable.
+
+    if (totalCount === 0) return false;
+
+    return (rtlCount / totalCount) > this.threshold;
   }
 }
