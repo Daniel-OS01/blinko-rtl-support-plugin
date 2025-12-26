@@ -176,12 +176,48 @@ window.blinkoRTL.test("your text here");
 
 ## 📋 Changelog
 
-### v1.0.5 (Latest)
-- ✅ Enhanced dark mode with complete color inversion
-- ✅ Fixed auto-detection to continuously process all content
-- ✅ Improved manual RTL toggle synchronization
-- ✅ Plugin-specific dark mode (doesn't affect application)
-- ✅ Better settings panel integration
+### v1.0.8 (Latest)
+**Mobile Optimization & Codebase Stability**
+- **📱 New Feature: Mobile View**
+    - Introduced a dedicated toggle for mobile-optimized layouts.
+    - Implemented responsive CSS adaptation for seamless usage on smaller screens.
+    - Optimized the Settings Panel layout for touch interactions.
+- **🏗️ Architecture & Refactoring**
+    - Major refactoring of the core initialization logic (`src/index.tsx`) for better modularity.
+    - Standardized `RTLProcessor` usage across the application.
+- **🛡️ Quality Assurance**
+    - Comprehensive codebase audit completed.
+    - Implemented robust unit testing suite for core detection logic and UI components.
+    - Resolved conflicts with global test environment variables.
+- **🔒 Security**
+    - Verified safety of settings persistence and CSS injection mechanisms.
+
+### v1.0.7
+**Advanced Detection Strategies**
+- **🧠 New Feature: Strategy Pattern**
+    - Implemented a flexible Strategy Pattern for RTL detection.
+    - Added specialized strategies: `CharacterCodeStrategy`, `RegexStrategy`, and `CombinedStrategy`.
+- **🌍 Expanded Language Support**
+    - Improved detection for Syriac and Thaana scripts.
+    - Refined character code ranges for higher accuracy.
+
+### v1.0.6
+**Performance & Stability**
+- **⚡ Improvements**
+    - Optimized auto-detection intervals for better performance.
+    - Enhanced error handling for custom selector injections.
+- **🐛 Bug Fixes**
+    - Fixed minor layout regressions in mixed-content blocks.
+
+### v1.0.5
+**Dark Mode & UX Enhancements**
+- **🌙 Enhancements**
+    - Enhanced dark mode with complete color inversion.
+    - Plugin-specific dark theme (isolated from main application).
+- **⚙️ Improvements**
+    - Fixed auto-detection to continuously process all content.
+    - Improved manual RTL toggle synchronization.
+    - Better settings panel integration.
 
 ### v1.0.4
 - ✅ Fixed auto-detection to process all content continuously
