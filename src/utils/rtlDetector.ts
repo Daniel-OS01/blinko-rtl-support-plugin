@@ -27,7 +27,7 @@ export class RTLDetector {
 
     // Initialize strategies
     this.charCodeStrategy = new CharacterCodeStrategy(this.config);
-    this.regexStrategy = new RegexStrategy(true, true);
+    this.regexStrategy = new RegexStrategy(true, true, this.config.minRTLChars);
 
     // Default to combined strategy
     this.strategy = new CombinedStrategy([
@@ -72,6 +72,7 @@ export class RTLDetector {
    */
   public updateConfig(config: Partial<RTLDetectionConfig>): void {
     this.charCodeStrategy.updateConfig(config);
+    this.regexStrategy.updateConfig({ minRTLChars: config.minRTLChars });
     this.config = { ...this.config, ...config };
   }
 }

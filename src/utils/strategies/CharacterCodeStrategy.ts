@@ -17,7 +17,9 @@ export class CharacterCodeStrategy implements DetectionStrategy {
     [0x0590, 0x05FF], // Hebrew
     [0x0600, 0x06FF], // Arabic
     [0x0700, 0x074F], // Syriac
+    [0x0750, 0x077F], // Arabic Supplement
     [0x0780, 0x07BF], // Thaana
+    [0x08A0, 0x08FF], // Arabic Extended-A
   ];
 
   constructor(config: RTLDetectionConfig = {
