@@ -11,6 +11,7 @@ interface Preset {
 interface RTLSettings {
   enabled: boolean;
   sensitivity: 'high' | 'medium' | 'low';
+  threshold: number;
   forceDirection: 'auto' | 'rtl' | 'ltr';
   autoDetect: boolean;
   manualMode: boolean;
@@ -240,6 +241,7 @@ export function RTLSetting(): JSXInternal.Element {
   const [settings, setSettings] = useState<RTLSettings>({
     enabled: true,
     sensitivity: 'medium',
+    threshold: 0.15,
     forceDirection: 'auto',
     autoDetect: false,
     manualMode: true,
@@ -377,6 +379,7 @@ export function RTLSetting(): JSXInternal.Element {
     const defaultSettings: RTLSettings = {
       enabled: true,
       sensitivity: 'medium',
+      threshold: 0.15,
       forceDirection: 'auto',
       autoDetect: false,
       manualMode: true,
@@ -786,24 +789,49 @@ export function RTLSetting(): JSXInternal.Element {
           <div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500' }}>
               Detection Sensitivity:
-              <select
-                value={settings.sensitivity}
-                onChange={(e) => saveSettings({ 
-                  sensitivity: (e.target as HTMLSelectElement).value as 'high' | 'medium' | 'low' 
-                })}
-                disabled={!settings.enabled}
-                style={{ 
-                  marginLeft: 'auto', 
-                  padding: '5px 10px', 
-                  border: '1px solid #ccc', 
-                  borderRadius: '4px', 
-                  minWidth: '200px' 
-                }}
-              >
-                <option value="high">🔥 High - 10% RTL characters</option>
-                <option value="medium">⚖️ Medium - 20% RTL characters</option>
-                <option value="low">🎯 Low - 40% RTL characters</option>
-              </select>
+              <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '12px', color: '#666' }}>{Math.round(settings.threshold * 100)}%</span>
+                    <input
+                      type="range"
+                      min="1"
+                      max="50"
+                      value={Math.round(settings.threshold * 100)}
+                      onChange={(e) => {
+                          const val = parseInt((e.target as HTMLInputElement).value) / 100;
+                          let sens: 'high' | 'medium' | 'low' = 'medium';
+                          if (val < 0.12) sens = 'high';
+                          else if (val > 0.3) sens = 'low';
+                          saveSettings({ threshold: val, sensitivity: sens });
+                      }}
+                      disabled={!settings.enabled}
+                      style={{ width: '150px' }}
+                    />
+                 </div>
+                 <select
+                    value={settings.sensitivity}
+                    onChange={(e) => {
+                        const val = (e.target as HTMLSelectElement).value as 'high' | 'medium' | 'low';
+                        const thresholds = {
+                            high: 0.1,    // 10% RTL chars
+                            medium: 0.15, // 15% RTL chars
+                            low: 0.4      // 40% RTL chars
+                        };
+                        saveSettings({ sensitivity: val, threshold: thresholds[val] });
+                    }}
+                    disabled={!settings.enabled}
+                    style={{
+                      padding: '5px 10px',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      minWidth: '200px'
+                    }}
+                 >
+                    <option value="high">🔥 High - 10% RTL characters</option>
+                    <option value="medium">⚖️ Medium - 15% RTL characters</option>
+                    <option value="low">🎯 Low - 40% RTL characters</option>
+                 </select>
+              </div>
             </label>
           </div>
 

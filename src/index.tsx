@@ -176,6 +176,7 @@ System.register([], (exports) => ({
     let settings = {
       enabled: false,
       sensitivity: 'medium' as 'high' | 'medium' | 'low',
+      threshold: 0.15,
       forceDirection: 'auto' as 'auto' | 'rtl' | 'ltr',
       autoDetect: true,
       manualMode: false,
@@ -415,17 +416,17 @@ System.register([], (exports) => ({
           break;
       }
 
-      console.log(`Processed element with text: "${text.substring(0, 50)}..." -> ${isRTL ? 'RTL' : 'LTR'}`);
+      // console.log(`Processed element with text: "${text.substring(0, 50)}..." -> ${isRTL ? 'RTL' : 'LTR'}`);
     }
 
     function processAllElements() {
-      console.log('Processing all elements, RTL enabled:', isRTLEnabled, 'Method:', settings.method);
+      // console.log('Processing all elements, RTL enabled:', isRTLEnabled, 'Method:', settings.method);
       
       let totalProcessed = 0;
       settings.targetSelectors.forEach(selector => {
         try {
           const elements = document.querySelectorAll(selector);
-          console.log(`Found ${elements.length} elements for selector: ${selector}`);
+          // console.log(`Found ${elements.length} elements for selector: ${selector}`);
           elements.forEach(element => {
             processElement(element as HTMLElement);
             totalProcessed++;
@@ -435,7 +436,7 @@ System.register([], (exports) => ({
         }
       });
       
-      console.log(`Total elements processed: ${totalProcessed}`);
+      // console.log(`Total elements processed: ${totalProcessed}`);
     }
 
     function setupObserver() {
@@ -574,6 +575,7 @@ System.register([], (exports) => ({
           
           detector.updateConfig({
             sensitivity: settings.sensitivity,
+            threshold: settings.threshold,
             minRTLChars: settings.minRTLChars
           });
           
@@ -599,6 +601,7 @@ System.register([], (exports) => ({
         
         detector.updateConfig({
           sensitivity: settings.sensitivity,
+          threshold: settings.threshold,
           minRTLChars: settings.minRTLChars
         });
 
@@ -637,7 +640,8 @@ System.register([], (exports) => ({
         enable: enableRTL,
         disable: disableRTL,
         isEnabled: () => isRTLEnabled,
-        settings: () => ({ ...settings }),
+        getSettings: () => ({ ...settings }),
+        settings: () => ({ ...settings }), // Keep for backward compatibility if needed, but getSettings is preferred
         processAll: processAllElements,
         processElement: processElement,
         toggleManual: () => {
@@ -656,7 +660,56 @@ System.register([], (exports) => ({
           return isRTL;
         },
         testHebrew: (text: string) => detectHebrewRegex(text),
-        testArabic: (text: string) => detectArabicRegex(text)
+        testArabic: (text: string) => detectArabicRegex(text),
+        getStats: () => {
+           // Count elements with RTL styling
+           return document.querySelectorAll('.rtl-force, [dir="rtl"], .rtl-auto').length;
+        },
+        fixSelection: () => {
+           const selection = window.getSelection();
+           if (selection && selection.rangeCount > 0) {
+             const range = selection.getRangeAt(0);
+             let node = range.commonAncestorContainer;
+             if (node.nodeType === Node.TEXT_NODE) {
+               node = node.parentNode!;
+             }
+             if (node instanceof HTMLElement) {
+               // Process this element and its parents up to a block container
+               // And also children
+               processElement(node);
+               node.querySelectorAll(settings.targetSelectors.join(', ')).forEach((el) => {
+                   processElement(el as HTMLElement);
+               });
+
+               // Also try to find a parent paragraph or block
+               const parentBlock = node.closest('p, div, li, td, th, h1, h2, h3, h4, h5, h6');
+               if (parentBlock) {
+                   processElement(parentBlock as HTMLElement);
+               }
+             }
+           }
+        },
+        setSensitivity: (threshold: number) => {
+           settings.threshold = threshold;
+           // Also update sensitivity enum approximation
+           if (threshold < 0.12) settings.sensitivity = 'high';
+           else if (threshold > 0.3) settings.sensitivity = 'low';
+           else settings.sensitivity = 'medium';
+
+           localStorage.setItem('blinko-rtl-settings', JSON.stringify(settings));
+           detector.updateConfig({ threshold: settings.threshold, sensitivity: settings.sensitivity });
+
+           // Dispatch event
+           window.dispatchEvent(
+             new CustomEvent('rtl-settings-changed', {
+               detail: settings
+             })
+           );
+
+           if (isRTLEnabled) {
+              processAllElements();
+           }
+        }
       };
 
       console.log('Advanced Blinko RTL Plugin initialized successfully');
