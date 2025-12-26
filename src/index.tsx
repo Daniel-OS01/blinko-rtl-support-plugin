@@ -17,6 +17,7 @@ import zh from './locales/zh.json';
 import he from './locales/he.json';
 import ar from './locales/ar.json';
 
+// Refactor: Aligning repository structure
 System.register([], (exports) => ({
   execute: () => {
     // Core components instances
