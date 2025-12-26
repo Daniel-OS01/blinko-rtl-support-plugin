@@ -27,19 +27,35 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Extract Version from Tag
+        if: startsWith(github.ref, 'refs/tags/')
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Bump Version in Files
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          echo "Updating version to $VERSION"
+
+          # Update package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
+
+          # Update plugin.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" plugin.json
+
       - name: Build for production
         run: bun run build:prod
 
-      - name: Commit and Push Release Artifacts
+      - name: Commit and Push Release Artifacts (Branch)
         if: github.ref_type == 'branch'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Force add the release directory in case it's ignored
+          # Force add the release directory
           git add release/
 
-          # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "No changes to release artifacts."
           else
@@ -47,25 +63,59 @@ jobs:
             git push
           fi
 
-      - name: Publish with Blinko CLI
+      - name: Create Release Zip (Tag)
         if: startsWith(github.ref, 'refs/tags/')
-        id: blinko_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-        run: bun run release:publish
-
-      - name: Create Release Zip (Backup)
-        if: startsWith(github.ref, 'refs/tags/') && (steps.blinko_release.outcome == 'failure' || steps.blinko_release.outcome == 'skipped')
         run: |
           cd release
           zip -r ../release.zip .
           cd ..
 
-      - name: Upload Release Asset (Backup)
-        if: startsWith(github.ref, 'refs/tags/') && (steps.blinko_release.outcome == 'failure' || steps.blinko_release.outcome == 'skipped')
+      - name: Create Release and Commit Artifacts (Tag)
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: release.zip
+          files: |
+            release.zip
+            release/index.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit Version Updates and Artifacts (Tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Add updated version files and release artifacts
+          git add package.json plugin.json release/
+
+          # Commit back to main (assuming we want to persist the version bump)
+          # We need to fetch main first to ensure we can switch to it if we are on a detached tag
+          git fetch origin main
+          git checkout main
+          git pull origin main
+
+          # Re-apply changes (they might be lost on checkout if not stashed, but since we modified them in place on the detached head, let's stash and pop)
+          # Actually, checkout might fail if files are dirty.
+          # Safer approach:
+          # 1. Stash changes
+          # 2. Checkout main
+          # 3. Apply changes (pop)
+          # 4. Commit and push
+
+          # BUT, if we are on a tag, the files are modified.
+          # Let's simple commit to the tag reference? No, that's not good practice.
+          # Best practice: Commit to main.
+
+          git stash
+          git checkout main
+          git pull origin main
+          git stash pop
+
+          if git diff --staged --quiet && git diff --quiet; then
+             echo "No changes to commit."
+          else
+             git add package.json plugin.json release/
+             git commit -m "chore: bump version to ${{ steps.get_version.outputs.VERSION }} and update artifacts [skip ci]"
+             git push origin main
+          fi

@@ -10,6 +10,9 @@ try {
   // Ignore if already registered
 }
 
+// Set global version for tests
+(global as any).__PLUGIN_VERSION__ = "1.0.8";
+
 // Mock Blinko API
 const mockToast = {
   success: jest.fn(),
@@ -18,8 +21,8 @@ const mockToast = {
 
 window.Blinko = {
   toast: mockToast,
-  i18n: { t: (key) => key }
-};
+  i18n: { t: (key: string) => key }
+} as any;
 
 window.blinkoRTL = {
   test: jest.fn(),
@@ -31,10 +34,10 @@ window.blinkoRTL = {
   fixSelection: jest.fn(),
   setSensitivity: jest.fn(),
   getSettings: jest.fn().mockReturnValue({ threshold: 0.15 })
-};
+} as any;
 
 describe("RTLApp Component", () => {
-  let mockDetector;
+  let mockDetector: any;
 
   beforeEach(() => {
     localStorage.clear();
@@ -51,6 +54,8 @@ describe("RTLApp Component", () => {
     // Check for stats
     expect(container.textContent).toContain("5");
     expect(container.textContent).toContain("Active RTL Blocks");
+    // Check for version
+    expect(container.textContent).toContain("v1.0.8");
   });
 
   it("handles fix selection click", () => {
