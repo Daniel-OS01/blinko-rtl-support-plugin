@@ -19,6 +19,11 @@ interface RTLSettings {
   method: 'direct' | 'attributes' | 'css' | 'unicode' | 'all';
   customCSS: string;
   permanentCSS: boolean;
+  visualStyles: {
+    fontFamily: string;
+    lineHeight: number;
+    paragraphMargin: number;
+  };
   targetSelectors: string[];
   minRTLChars: number;
   processInterval: number;
@@ -221,6 +226,16 @@ const BUILT_IN_PRESETS: Preset[] = [
   }
 ];
 
+const STANDARD_FONTS = [
+  'inherit',
+  'Arial',
+  'Arial Hebrew',
+  'David',
+  'Miriam',
+  'Segoe UI',
+  'Tahoma'
+];
+
 export function RTLSetting(): JSXInternal.Element {
   const [settings, setSettings] = useState<RTLSettings>({
     enabled: true,
@@ -233,6 +248,11 @@ export function RTLSetting(): JSXInternal.Element {
     method: 'all',
     customCSS: '',
     permanentCSS: false,
+    visualStyles: {
+      fontFamily: 'inherit',
+      lineHeight: 1.5,
+      paragraphMargin: 1
+    },
     targetSelectors: [
       '.markdown-body p',
       '.vditor-reset p',
@@ -365,6 +385,11 @@ export function RTLSetting(): JSXInternal.Element {
       method: 'all',
       customCSS: '',
       permanentCSS: false,
+      visualStyles: {
+        fontFamily: 'inherit',
+        lineHeight: 1.5,
+        paragraphMargin: 1
+      },
       targetSelectors: [
         '.markdown-body p',
         '.vditor-reset p',
@@ -617,6 +642,133 @@ export function RTLSetting(): JSXInternal.Element {
           <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: '#666' }}>
             Applies dark styling to RTL plugin components only
           </p>
+        </div>
+      </div>
+
+      {/* Visual Style Editor */}
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '2px solid #6610f2',
+        borderRadius: '8px',
+        background: '#f8f9ff'
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#6610f2' }}>🎨 Visual Style Editor</h3>
+
+        <div style={{ display: 'grid', gap: '20px' }}>
+          {/* Font Family */}
+          <div>
+            <label style={{ display: 'block', fontWeight: '500', marginBottom: '8px' }}>
+              Font Family:
+            </label>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <select
+                value={STANDARD_FONTS.includes(settings.visualStyles?.fontFamily || 'inherit')
+                  ? (settings.visualStyles?.fontFamily || 'inherit')
+                  : 'custom'}
+                onChange={(e) => {
+                  const val = (e.target as HTMLSelectElement).value;
+                  if (val === 'custom') {
+                    // Switch to custom mode by clearing the font or keeping current if it's already custom-like
+                    if (STANDARD_FONTS.includes(settings.visualStyles?.fontFamily || 'inherit')) {
+                       saveSettings({
+                        visualStyles: {
+                          ...settings.visualStyles,
+                          fontFamily: ''
+                        }
+                      });
+                    }
+                  } else {
+                    saveSettings({
+                      visualStyles: {
+                        ...settings.visualStyles,
+                        fontFamily: val
+                      }
+                    });
+                  }
+                }}
+                disabled={!settings.enabled}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px'
+                }}
+              >
+                {STANDARD_FONTS.map(font => (
+                  <option key={font} value={font}>
+                    {font === 'inherit' ? 'Default (Inherit)' : font}
+                  </option>
+                ))}
+                <option value="custom">Custom...</option>
+              </select>
+              <input
+                type="text"
+                value={settings.visualStyles?.fontFamily || ''}
+                onChange={(e) => saveSettings({
+                  visualStyles: {
+                    ...settings.visualStyles,
+                    fontFamily: (e.target as HTMLInputElement).value
+                  }
+                })}
+                placeholder="Custom font name"
+                disabled={!settings.enabled}
+                style={{
+                  flex: 1,
+                  padding: '8px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  display: STANDARD_FONTS.includes(settings.visualStyles?.fontFamily || 'inherit') ? 'none' : 'block'
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Line Height */}
+          <div>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '500', marginBottom: '8px' }}>
+              <span>Line Height:</span>
+              <span>{settings.visualStyles?.lineHeight || 1.5}</span>
+            </label>
+            <input
+              type="range"
+              min="1.0"
+              max="3.0"
+              step="0.1"
+              value={settings.visualStyles?.lineHeight || 1.5}
+              onChange={(e) => saveSettings({
+                visualStyles: {
+                  ...settings.visualStyles,
+                  lineHeight: parseFloat((e.target as HTMLInputElement).value)
+                }
+              })}
+              disabled={!settings.enabled}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          {/* Paragraph Margin */}
+          <div>
+            <label style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '500', marginBottom: '8px' }}>
+              <span>Paragraph Spacing (em):</span>
+              <span>{settings.visualStyles?.paragraphMargin || 1.0}em</span>
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="3.0"
+              step="0.1"
+              value={settings.visualStyles?.paragraphMargin || 1.0}
+              onChange={(e) => saveSettings({
+                visualStyles: {
+                  ...settings.visualStyles,
+                  paragraphMargin: parseFloat((e.target as HTMLInputElement).value)
+                }
+              })}
+              disabled={!settings.enabled}
+              style={{ width: '100%' }}
+            />
+          </div>
         </div>
       </div>
 

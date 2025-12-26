@@ -16,11 +16,19 @@ import ar from './locales/ar.json';
 
 // Advanced RTL CSS with multiple methods
 const advancedRTLCSS = `
+:root {
+  --rtl-font-family: inherit;
+  --rtl-line-height: inherit;
+  --rtl-paragraph-margin: inherit;
+}
+
 /* Method 1: Direct RTL styling */
 .rtl-force {
     direction: rtl !important;
     text-align: right !important;
     unicode-bidi: embed !important;
+    font-family: var(--rtl-font-family) !important;
+    line-height: var(--rtl-line-height) !important;
 }
 
 .ltr-force {
@@ -33,11 +41,15 @@ const advancedRTLCSS = `
 *[lang="he"], *[lang="ar"], *[dir="rtl"] {
     direction: rtl !important;
     text-align: right !important;
+    font-family: var(--rtl-font-family) !important;
+    line-height: var(--rtl-line-height) !important;
 }
 
 /* Method 3: Unicode bidi for auto-detection */
 .rtl-auto {
     unicode-bidi: plaintext !important;
+    font-family: var(--rtl-font-family) !important;
+    line-height: var(--rtl-line-height) !important;
 }
 
 /* Method 4: CSS content detection */
@@ -45,6 +57,8 @@ p:has-text(/[\u0590-\u05FF\u0600-\u06FF]/),
 div:has-text(/[\u0590-\u05FF\u0600-\u06FF]/) {
     direction: rtl !important;
     text-align: right !important;
+    font-family: var(--rtl-font-family) !important;
+    line-height: var(--rtl-line-height) !important;
 }
 
 /* Method 5: Comprehensive element targeting */
@@ -53,6 +67,14 @@ div:has-text(/[\u0590-\u05FF\u0600-\u06FF]/) {
 .card-masonry-grid p, .card-masonry-grid div,
 textarea, [contenteditable], input[type="text"] {
     unicode-bidi: plaintext !important;
+    font-family: var(--rtl-font-family) !important;
+    line-height: var(--rtl-line-height) !important;
+}
+
+/* Paragraph margins for RTL content */
+.rtl-force, *[lang="he"], *[lang="ar"], *[dir="rtl"], .rtl-auto,
+.markdown-body p[dir="rtl"], .vditor-reset p[dir="rtl"] {
+    margin-bottom: var(--rtl-paragraph-margin) !important;
 }
 
 /* RTL Toggle Button */
@@ -146,6 +168,7 @@ System.register([], (exports) => ({
     let isRTLEnabled = false;
     let styleElement: HTMLStyleElement | null = null;
     let permanentStyleElement: HTMLStyleElement | null = null;
+    let visualStyleElement: HTMLStyleElement | null = null;
     let toggleButton: HTMLButtonElement | null = null;
     let observer: MutationObserver | null = null;
     let autoProcessInterval: NodeJS.Timeout | null = null;
@@ -161,6 +184,11 @@ System.register([], (exports) => ({
       method: 'all' as 'direct' | 'attributes' | 'css' | 'unicode' | 'all',
       customCSS: '',
       permanentCSS: false,
+      visualStyles: {
+        fontFamily: 'inherit',
+        lineHeight: 1.5,
+        paragraphMargin: 1
+      },
       targetSelectors: [
         '.markdown-body p',
         '.markdown-body div',
@@ -195,6 +223,23 @@ System.register([], (exports) => ({
       }
     }
 
+    function injectVisualStyles() {
+      if (!visualStyleElement) {
+        visualStyleElement = document.createElement('style');
+        visualStyleElement.id = 'blinko-rtl-visual-styles';
+        document.head.appendChild(visualStyleElement);
+      }
+
+      const { fontFamily = 'inherit', lineHeight = 1.5, paragraphMargin = 1 } = settings.visualStyles || {};
+      visualStyleElement.textContent = `
+        :root {
+          --rtl-font-family: ${fontFamily === 'inherit' || !fontFamily ? 'inherit' : `"${fontFamily}", sans-serif`};
+          --rtl-line-height: ${lineHeight};
+          --rtl-paragraph-margin: ${paragraphMargin}em;
+        }
+      `;
+    }
+
     function injectPermanentCSS() {
       if (settings.customCSS && settings.permanentCSS) {
         if (!permanentStyleElement) {
@@ -210,6 +255,13 @@ System.register([], (exports) => ({
       if (permanentStyleElement) {
         permanentStyleElement.remove();
         permanentStyleElement = null;
+      }
+    }
+
+    function removeVisualStyles() {
+      if (visualStyleElement) {
+        visualStyleElement.remove();
+        visualStyleElement = null;
       }
     }
 
@@ -458,6 +510,7 @@ System.register([], (exports) => ({
       isRTLEnabled = true;
       injectCSS();
       injectPermanentCSS();
+      injectVisualStyles();
       setupObserver();
       startAutoProcessing();
       pasteInterceptor.enable();
@@ -475,6 +528,7 @@ System.register([], (exports) => ({
     function disableRTL() {
       isRTLEnabled = false;
       removeCSS();
+      removeVisualStyles();
       stopAutoProcessing();
       pasteInterceptor.disable();
       
@@ -552,6 +606,10 @@ System.register([], (exports) => ({
           injectPermanentCSS();
         } else {
           removePermanentCSS();
+        }
+
+        if (isRTLEnabled) {
+            injectVisualStyles();
         }
 
         if (toggleButton) {
