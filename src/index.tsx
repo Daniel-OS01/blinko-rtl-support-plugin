@@ -220,6 +220,12 @@ System.register([], (exports) => ({
       mixedContent: true
     };
 
+    function injectCSS() {
+      if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = 'blinko-rtl-advanced-styles';
+        styleElement.textContent = advancedRTLCSS;
+        document.head.appendChild(styleElement);
     const processor = new RTLProcessor(defaultConfig, renderer, detector, settings);
 
     let toggleButton: HTMLButtonElement | null = null;
@@ -345,15 +351,6 @@ System.register([], (exports) => ({
       element.style.unicodeBidi = 'plaintext';
     }
 
-    // Method 5: Hebrew regex detection (from userscript)
-    function detectHebrewRegex(text: string): boolean {
-      return hebrewRegex.test(text);
-    }
-
-    function detectArabicRegex(text: string): boolean {
-      return arabicRegex.test(text);
-    }
-
     function processElement(element: HTMLElement) {
       if (!element) return;
       
@@ -387,18 +384,7 @@ System.register([], (exports) => ({
       }
       // Auto-detection with multiple methods
       else {
-        // Hebrew regex detection
-        if (settings.hebrewRegex && detectHebrewRegex(text)) {
-          isRTL = true;
-        }
-        // Arabic regex detection
-        else if (settings.arabicRegex && detectArabicRegex(text)) {
-          isRTL = true;
-        }
-        // Original detector
-        else {
-          isRTL = detector.detectRTL(text);
-        }
+        isRTL = detector.detectRTL(text);
       }
 
       // Apply RTL using selected method
@@ -699,6 +685,8 @@ System.register([], (exports) => ({
         },
         test: (text: string) => {
           const isRTL = detector.detectRTL(text);
+          console.log(`Text "${text}" -> RTL: ${isRTL ? 'Yes' : 'No'}`);
+          return isRTL;
           console.log(`Text "${text}" -> Detected: ${isRTL ? 'RTL' : 'LTR'}`);
           return isRTL;
         },

@@ -1,3 +1,7 @@
+import { DetectionStrategy } from './strategies/types';
+import { CharacterCodeStrategy, RTLDetectionConfig } from './strategies/CharacterCodeStrategy';
+import { RegexStrategy } from './strategies/RegexStrategy';
+import { CombinedStrategy } from './strategies/CombinedStrategy';
 export interface RTLDetectionConfig {
   sensitivity: 'high' | 'medium' | 'low'; // Kept for backward compatibility
   threshold: number; // 0.0 to 1.0, lower means more sensitive (requires less RTL content)
@@ -5,19 +9,27 @@ export interface RTLDetectionConfig {
   sampleSize: number;
 }
 
+export type { RTLDetectionConfig };
+
 export class RTLDetector {
-  private config: RTLDetectionConfig;
+  private strategy: DetectionStrategy;
+  private charCodeStrategy: CharacterCodeStrategy;
+  private regexStrategy: RegexStrategy;
 
-  // Hebrew: \u0590-\u05FF
-  // Arabic: \u0600-\u06FF
-  // Additional RTL: \u0700-\u074F, \u0780-\u07BF
-  private readonly RTL_RANGES = [
-    [0x0590, 0x05FF], // Hebrew
-    [0x0600, 0x06FF], // Arabic
-    [0x0700, 0x074F], // Syriac
-    [0x0780, 0x07BF], // Thaana
-  ];
+  constructor(config: RTLDetectionConfig = {
+    sensitivity: 'medium',
+    minRTLChars: 3,
+    sampleSize: 100
+  }) {
+    // Initialize strategies
+    this.charCodeStrategy = new CharacterCodeStrategy(config);
+    this.regexStrategy = new RegexStrategy(true, true);
 
+    // Default to combined strategy for backward compatibility with "smart" behavior
+    this.strategy = new CombinedStrategy([
+        this.charCodeStrategy,
+        this.regexStrategy
+    ]);
   constructor(config: Partial<RTLDetectionConfig> = {}) {
     this.config = {
       sensitivity: 'medium',
@@ -28,18 +40,28 @@ export class RTLDetector {
     };
   }
 
-  /**
-   * Check if a character is RTL
-   */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+  public setStrategy(strategyName: 'CharacterCode' | 'Regex' | 'Combined') {
+      switch (strategyName) {
+          case 'CharacterCode':
+              this.strategy = this.charCodeStrategy;
+              break;
+          case 'Regex':
+              this.strategy = this.regexStrategy;
+              break;
+          case 'Combined':
+              this.strategy = new CombinedStrategy([
+                  this.charCodeStrategy,
+                  this.regexStrategy
+              ]);
+              break;
+      }
   }
 
   /**
-   * Detect RTL content in text
+   * Detect RTL content in text using current strategy
    */
   public detectRTL(text: string): boolean {
+    return this.strategy.detect(text);
     if (!text || text.length === 0) return false;
 
     // Take sample from beginning of text for performance
@@ -81,6 +103,7 @@ export class RTLDetector {
    * Update detection configuration
    */
   public updateConfig(config: Partial<RTLDetectionConfig>): void {
+    this.charCodeStrategy.updateConfig(config);
     this.config = { ...this.config, ...config };
 
     // If sensitivity is updated but threshold isn't, map it
