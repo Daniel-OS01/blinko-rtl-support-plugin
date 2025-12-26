@@ -37,6 +37,18 @@ jobs:
       - name: Build Plugin
         run: npm run build:prod
 
+      - name: Commit Release Build
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          if [[ `git status --porcelain release/` ]]; then
+            git add release/
+            git commit -m "chore: update release build [skip ci]"
+            git push origin HEAD:${{ github.ref }}
+          else
+            echo "No changes in release/ directory"
+          fi
+
       - name: Create Release Artifact
         run: |
           zip -r release.zip plugin.json README.md README_he.md release/
