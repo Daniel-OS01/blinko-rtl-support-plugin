@@ -9,5 +9,9 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     preact(),
     ...blinkoPlugin()
-  ]
+  ],
+  build: {
+    outDir: mode === "production" ? "release" : "dist",
+    emptyOutDir: true,
+  }
 }));

@@ -49,10 +49,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '18'
+          bun-version: latest
 
       - name: Install jq for JSON validation
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -317,16 +317,25 @@ jobs:
               echo "✅ package.json is valid JSON"
               DETAILED_RESULTS+="\n✅ package.json is valid JSON"
 
-              if command -v npm >/dev/null 2>&1; then
-                echo "Checking for security vulnerabilities..."
-                npm install --package-lock-only --silent || true
-                if npm audit --audit-level=moderate --silent >/dev/null 2>&1; then
-                  echo "✅ No moderate+ security vulnerabilities found"
-                  DETAILED_RESULTS+="\n✅ No moderate+ security vulnerabilities found"
+              if command -v bun >/dev/null 2>&1; then
+                echo "Checking for security vulnerabilities (using npm as fallback)..."
+                # Bun doesn't have a direct 'audit' command yet that matches npm's output exactly for this check
+                # so we will try to use npm if available, or skip if only bun is present.
+                # However, since we installed bun, we might not have npm in path unless setup-node was used.
+                # But typically ubuntu-latest has npm.
+
+                if command -v npm >/dev/null 2>&1; then
+                    npm install --package-lock-only --silent || true
+                    if npm audit --audit-level=moderate --silent >/dev/null 2>&1; then
+                      echo "✅ No moderate+ security vulnerabilities found"
+                      DETAILED_RESULTS+="\n✅ No moderate+ security vulnerabilities found"
+                    else
+                      echo "⚠️ Security vulnerabilities detected in dependencies"
+                      DETAILED_RESULTS+="\n⚠️ Security vulnerabilities detected in dependencies"
+                      WARNING_COUNT=$((WARNING_COUNT + 1))
+                    fi
                 else
-                  echo "⚠️ Security vulnerabilities detected in dependencies"
-                  DETAILED_RESULTS+="\n⚠️ Security vulnerabilities detected in dependencies"
-                  WARNING_COUNT=$((WARNING_COUNT + 1))
+                    echo "ℹ️ Skipping security audit (npm not found)"
                 fi
               fi
             else
