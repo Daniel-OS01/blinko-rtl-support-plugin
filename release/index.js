@@ -759,7 +759,7 @@ var b = (B, m, F) => (Dt(B, typeof m != "symbol" ? m + "" : m, F), F);
       /* @__PURE__ */ r("div", { style: { marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #eee", fontSize: "11px", color: "#888", textAlign: "center" }, children: "Click 'Fix Selected' to force detection on specific text." }),
       /* @__PURE__ */ r("div", { style: { marginTop: "5px", fontSize: "10px", color: "#aaa", textAlign: "center" }, children: [
         "v",
-        "1.0.8"
+        "1.0.9"
       ] })
     ] });
   }
@@ -1927,7 +1927,7 @@ ul {
     name: "blinko-plugin-rtl-support",
     author: "Daniel-OS01",
     url: "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
-    version: "1.0.8",
+    version: "1.0.9",
     minAppVersion: "0.0.0",
     displayName: {
       default: "RTL Language Support",
