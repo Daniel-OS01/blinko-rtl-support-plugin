@@ -38,6 +38,7 @@ jobs:
         run: npm run build:prod
 
       - name: Commit Release Build
+        id: commit_build
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -45,13 +46,21 @@ jobs:
             git add release/
             git commit -m "chore: update release build [skip ci]"
             git push origin HEAD:${{ github.ref }}
+            echo "Build committed and pushed."
           else
             echo "No changes in release/ directory"
           fi
 
-      - name: Create Release Artifact
+      - name: Create Release Artifact (Zip)
         run: |
           zip -r release.zip plugin.json README.md README_he.md release/
+
+      - name: Backup Artifacts to Action Run
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-release-backup
+          path: release.zip
+          retention-days: 5
 
       - name: Handle Tag for Manual Dispatch
         if: github.event_name == 'workflow_dispatch'
