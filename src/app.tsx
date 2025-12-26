@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { JSXInternal } from 'preact/src/jsx';
 import type { RTLDetector } from './utils/rtlDetector';
-import type { RTLStyler } from './utils/rtlStyler';
 
 interface RTLAppProps {
   detector: RTLDetector;
-  styler: RTLStyler;
 }
 
 export function RTLApp({ detector }: RTLAppProps): JSXInternal.Element {

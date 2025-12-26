@@ -7,6 +7,9 @@ import { RTLApp } from './app';
 import { RTLSetting } from './setting';
 import plugin from '../plugin.json';
 import { RTLDetector } from './utils/rtlDetector';
+import { RTLProcessor } from './utils/rtlProcessor';
+import { defaultConfig } from './config';
+import { DOMRTLRenderer } from './renderer';
 import { RTLStyler } from './utils/rtlStyler';
 import { HoverContextManager } from './utils/hoverManager';
 import { PasteInterceptor } from './utils/pasteInterceptor';
@@ -163,7 +166,9 @@ textarea, [contenteditable], input[type="text"] {
  */
 System.register([], (exports) => ({
   execute: () => {
+    // Core components
     const detector = new RTLDetector();
+    const renderer = new DOMRTLRenderer(defaultConfig);
     const styler = new RTLStyler(detector);
     let hoverManager: HoverContextManager | null = null;
     const pasteInterceptor = new PasteInterceptor(detector);
@@ -175,6 +180,7 @@ System.register([], (exports) => ({
     let observer: MutationObserver | null = null;
     let autoProcessInterval: NodeJS.Timeout | null = null;
     
+    // Initial settings
     let settings = {
       enabled: false,
       sensitivity: 'medium' as 'high' | 'medium' | 'low',
@@ -187,6 +193,7 @@ System.register([], (exports) => ({
       method: 'all' as 'direct' | 'attributes' | 'css' | 'unicode' | 'all',
       customCSS: '',
       permanentCSS: false,
+      customSelectors: [] as string[],
       visualStyles: {
         fontFamily: 'inherit',
         lineHeight: 1.5,
@@ -213,18 +220,10 @@ System.register([], (exports) => ({
       mixedContent: true
     };
 
-    // Hebrew regex from userscript
-    const hebrewRegex = /\p{Script=Hebrew}/u;
-    const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+    const processor = new RTLProcessor(defaultConfig, renderer, detector, settings);
 
-    function injectCSS() {
-      if (!styleElement) {
-        styleElement = document.createElement('style');
-        styleElement.id = 'blinko-rtl-advanced-styles';
-        styleElement.textContent = advancedRTLCSS;
-        document.head.appendChild(styleElement);
-      }
-    }
+    let toggleButton: HTMLButtonElement | null = null;
+    let permanentStyleElement: HTMLStyleElement | null = null;
 
     function injectVisualStyles() {
       if (!visualStyleElement) {
@@ -517,9 +516,9 @@ System.register([], (exports) => ({
 
     function enableRTL() {
       console.log('Enabling RTL with settings:', settings);
-      isRTLEnabled = true;
-      injectCSS();
+      settings.enabled = true;
       injectPermanentCSS();
+      processor.enable();
       injectVisualStyles();
       setupObserver();
       startAutoProcessing();
@@ -530,6 +529,14 @@ System.register([], (exports) => ({
       }
       
       localStorage.setItem('blinko-rtl-enabled', 'true');
+    }
+
+    function disableRTL() {
+      settings.enabled = false;
+      if (!settings.permanentCSS) {
+        removePermanentCSS();
+      }
+      processor.disable();
 
       if (!hoverManager) {
         hoverManager = new HoverContextManager({
@@ -586,7 +593,7 @@ System.register([], (exports) => ({
     }
 
     function toggleRTL() {
-      if (isRTLEnabled) {
+      if (settings.enabled) {
         disableRTL();
       } else {
         enableRTL();
@@ -606,6 +613,8 @@ System.register([], (exports) => ({
             minRTLChars: settings.minRTLChars
           });
           
+          processor.updateSettings(settings);
+
           if (settings.permanentCSS && settings.customCSS) {
             injectPermanentCSS();
           }
@@ -632,6 +641,8 @@ System.register([], (exports) => ({
           minRTLChars: settings.minRTLChars
         });
 
+        processor.updateSettings(settings);
+
         if (settings.permanentCSS && settings.customCSS) {
           injectPermanentCSS();
         } else {
@@ -650,17 +661,23 @@ System.register([], (exports) => ({
           }
         }
 
-        setupObserver();
-        startAutoProcessing();
-
-        if (isRTLEnabled) {
-          setTimeout(processAllElements, 100);
+        // Restart processor if enabled to pick up new settings
+        if (settings.enabled) {
+            processor.disable();
+            processor.enable();
         }
       });
 
       // Global API
       (window as any).blinkoRTL = {
         detector,
+        toggle: toggleRTL,
+        enable: enableRTL,
+        disable: disableRTL,
+        isEnabled: () => settings.enabled,
+        settings: () => ({ ...settings }),
+        processAll: () => processor.processAllElements(),
+        processElement: (el: HTMLElement) => processor.processElement(el),
         styler,
         pasteInterceptor,
         toggle: toggleRTL,
@@ -674,16 +691,15 @@ System.register([], (exports) => ({
         toggleManual: () => {
           settings.manualToggle = !settings.manualToggle;
           localStorage.setItem('blinko-rtl-settings', JSON.stringify(settings));
-          if (isRTLEnabled) {
-            processAllElements();
+          processor.updateSettings(settings);
+          if (settings.enabled) {
+            processor.processAllElements();
           }
           return settings.manualToggle;
         },
         test: (text: string) => {
           const isRTL = detector.detectRTL(text);
-          const hebrewTest = detectHebrewRegex(text);
-          const arabicTest = detectArabicRegex(text);
-          console.log(`Text "${text}" -> Original: ${isRTL ? 'RTL' : 'LTR'}, Hebrew: ${hebrewTest}, Arabic: ${arabicTest}`);
+          console.log(`Text "${text}" -> Detected: ${isRTL ? 'RTL' : 'LTR'}`);
           return isRTL;
         },
         testHebrew: (text: string) => detectHebrewRegex(text),
@@ -772,7 +788,7 @@ System.register([], (exports) => ({
           content: () => {
             const container = document.createElement('div');
             container.setAttribute('data-plugin', 'rtl-support');
-            render(<RTLApp detector={detector} styler={styler} />, container);
+            render(<RTLApp detector={detector} />, container);
             return container;
           }
         });
@@ -785,7 +801,7 @@ System.register([], (exports) => ({
             toggleRTL();
             const i18n = window.Blinko.i18n;
             window.Blinko.toast.success(
-              isRTLEnabled ? i18n.t('rtl_enabled') : i18n.t('rtl_disabled')
+              settings.enabled ? i18n.t('rtl_enabled') : i18n.t('rtl_disabled')
             );
           }
         });
