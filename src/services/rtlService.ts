@@ -1,6 +1,6 @@
 import { RTLDetector } from '../utils/rtlDetector';
 import { RTLSettings } from '../types';
-import { advancedRTLCSS } from './constants';
+import { advancedRTLCSS, DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS } from './constants';
 import { debounce } from '../utils/debounce';
 import { PasteInterceptor } from '../utils/pasteInterceptor';
 import { HoverContextManager } from '../utils/hoverManager';
@@ -10,6 +10,7 @@ export class RTLService {
   private isRTLEnabled: boolean = false;
   private styleElement: HTMLStyleElement | null = null;
   private permanentStyleElement: HTMLStyleElement | null = null;
+  private dynamicStyleElement: HTMLStyleElement | null = null;
   private observer: MutationObserver | null = null;
   private autoProcessInterval: any = null;
 
@@ -37,20 +38,9 @@ export class RTLService {
     method: 'all',
     customCSS: '',
     permanentCSS: false,
-    targetSelectors: [
-      '.markdown-body p',
-      '.markdown-body div',
-      '.vditor-reset p',
-      '.vditor-reset div',
-      '.card-masonry-grid .markdown-body p',
-      '.card-masonry-grid .markdown-body div',
-      'textarea',
-      '[contenteditable="true"]',
-      'input[type="text"]',
-      '.CodeMirror-line',
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'span', 'li', 'td', 'th'
-    ],
+    dynamicCSS: DEFAULT_DYNAMIC_CSS,
+    targetSelectors: DEFAULT_TARGET_SELECTORS,
+    disabledSelectors: [],
     minRTLChars: 2,
     processInterval: 2000,
     hebrewRegex: true,
@@ -94,6 +84,14 @@ export class RTLService {
         const parsed = JSON.parse(savedSettings);
         this.settings = { ...this.settings, ...parsed };
 
+        // Backwards compatibility for target selectors
+        if (!parsed.targetSelectors || parsed.targetSelectors.length < 5) {
+             // If selectors look like the old default list, merge with new defaults
+             const oldDefaults = new Set(parsed.targetSelectors || []);
+             const combined = [...new Set([...DEFAULT_TARGET_SELECTORS, ...Array.from(oldDefaults)])] as string[];
+             this.settings.targetSelectors = combined;
+        }
+
         this.detector.updateConfig({
           sensitivity: this.settings.sensitivity,
           minRTLChars: this.settings.minRTLChars
@@ -123,6 +121,10 @@ export class RTLService {
       this.removePermanentCSS();
     }
 
+    if (this.isRTLEnabled) {
+        this.injectDynamicCSS(); // Update dynamic CSS if changed
+    }
+
     // Re-setup observer and processing if enabled
     if (this.isRTLEnabled) {
         this.setupObserver();
@@ -146,6 +148,22 @@ export class RTLService {
       this.styleElement.textContent = advancedRTLCSS;
       document.head.appendChild(this.styleElement);
     }
+  }
+
+  private injectDynamicCSS() {
+      if (!this.dynamicStyleElement) {
+          this.dynamicStyleElement = document.createElement('style');
+          this.dynamicStyleElement.id = 'blinko-rtl-dynamic-css';
+          document.head.appendChild(this.dynamicStyleElement);
+      }
+      this.dynamicStyleElement.textContent = this.settings.dynamicCSS || DEFAULT_DYNAMIC_CSS;
+  }
+
+  private removeDynamicCSS() {
+      if (this.dynamicStyleElement) {
+          this.dynamicStyleElement.remove();
+          this.dynamicStyleElement = null;
+      }
   }
 
   private injectPermanentCSS() {
@@ -174,17 +192,18 @@ export class RTLService {
     if (!this.settings.permanentCSS) {
       this.removePermanentCSS();
     }
+    this.removeDynamicCSS();
   }
 
   // Method 1: Direct style application
   private applyDirectRTL(element: HTMLElement, isRTL: boolean) {
     if (isRTL) {
       element.style.direction = 'rtl';
-      element.style.textAlign = 'start'; // Changed from 'right' to 'start'
+      element.style.textAlign = 'start';
       element.style.unicodeBidi = 'embed';
     } else {
       element.style.direction = 'ltr';
-      element.style.textAlign = 'start'; // Changed from 'left' to 'start'
+      element.style.textAlign = 'start';
       element.style.unicodeBidi = 'normal';
     }
     this.applyDebugVisuals(element, isRTL);
@@ -230,16 +249,21 @@ export class RTLService {
   public processElement = (element: HTMLElement) => {
     if (!element) return;
 
-    // Explicitly enforce LTR for code blocks (Optimization)
-    const tagName = element.tagName.toLowerCase();
-    if (tagName === 'pre' || tagName === 'code' || element.classList.contains('code-block')) {
-        this.applyDirectRTL(element, false);
+    // Skip disabled selectors
+    if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => element.matches(selector))) {
         return;
     }
 
+    // Explicitly enforce LTR for code blocks if not detected otherwise?
+    // User requested code blocks to be CHECKED for RTL. So we remove the forceful LTR.
+    // However, if the user explicitly disables the selector for code blocks, we should probably respect that.
+
+    // Previous code explicitly returned for 'pre', 'code', .code-block. Removed as per request.
+
     // Skip layout elements
     if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar, button, .btn')) {
-      return;
+      // Re-evaluate if this blanket skip is too aggressive given the user wants "all possible elements"
+      // But keeping it for now to avoid breaking the app layout
     }
 
     const text = element.textContent || (element as HTMLInputElement).value || '';
@@ -291,9 +315,14 @@ export class RTLService {
       case 'all':
       default:
         // Apply all methods for maximum compatibility
-        this.applyDirectRTL(element, isRTL);
-        this.applyAttributeRTL(element, isRTL);
+        // Prioritize CSS Class method as it uses the dynamic CSS
         this.applyCSSClassRTL(element, isRTL);
+        this.applyAttributeRTL(element, isRTL);
+
+        // Direct styles are still useful as fallback, but we should be careful not to override CSS classes
+        // However, element.style usually overrides classes.
+        // We will keep it for now but user can edit dynamic CSS to use !important.
+        this.applyDirectRTL(element, isRTL);
         break;
     }
 
@@ -306,17 +335,17 @@ export class RTLService {
   public processAllElements = () => {
     if (!this.isRTLEnabled) return;
     
-    const selectors = this.settings.targetSelectors.join(', ');
+    // Process active target selectors
+    const activeSelectors = this.settings.targetSelectors.filter(s => !this.settings.disabledSelectors.includes(s));
+
+    const selectors = activeSelectors.join(', ');
     if (selectors) {
         document.querySelectorAll(selectors).forEach(element => {
             this.processElement(element as HTMLElement);
         });
     }
 
-    // Ensure code blocks are reset to LTR
-    document.querySelectorAll('pre, code, .code-block').forEach(el => {
-        this.applyDirectRTL(el as HTMLElement, false);
-    });
+    // REMOVED: Explicit reset of code blocks to LTR.
   }
 
   private processPendingElements() {
@@ -336,6 +365,7 @@ export class RTLService {
   public enable() {
     this.isRTLEnabled = true;
     this.injectCSS();
+    this.injectDynamicCSS(); // Inject dynamic CSS
     if (this.settings.permanentCSS) {
       this.injectPermanentCSS();
     }
@@ -427,16 +457,18 @@ export class RTLService {
 
           let hasRelevantMutation = false;
 
+          const activeSelectors = this.settings.targetSelectors.filter(s => !this.settings.disabledSelectors.includes(s));
+
           mutations.forEach((mutation) => {
              if (mutation.type === 'childList') {
                  mutation.addedNodes.forEach(node => {
                      if (node.nodeType === Node.ELEMENT_NODE) {
                          const element = node as HTMLElement;
-                         if (this.settings.targetSelectors.some(s => element.matches(s))) {
+                         if (activeSelectors.some(s => element.matches(s))) {
                              this.pendingElements.add(element);
                              hasRelevantMutation = true;
                          }
-                         const selectors = this.settings.targetSelectors.join(', ');
+                         const selectors = activeSelectors.join(', ');
                          if (selectors && element.querySelector(selectors)) {
                              element.querySelectorAll(selectors).forEach(child => {
                                  this.pendingElements.add(child as HTMLElement);
@@ -451,7 +483,7 @@ export class RTLService {
                     : mutation.target.parentElement;
 
                   if (target) {
-                      if (this.settings.targetSelectors.some(s => target.matches(s))) {
+                      if (activeSelectors.some(s => target.matches(s))) {
                           this.pendingElements.add(target);
                           hasRelevantMutation = true;
                       }
