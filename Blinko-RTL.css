@@ -1634,29 +1634,17 @@ input[type="email"], input[type="url"] {
     /* Removed overly broad responsive flex direction change */
 }
 
-/* --- Z-Index RTL Compatibility --- */
-/* Removed overly broad z-index direction changes */
+/* ==========================================================================
+   2. Core RTL Logic (Using Logical Properties)
+   ========================================================================== */
 
-/* --- Utility Classes RTL Support --- */
-/* Removed overly broad utility direction changes */
-
-/* Removed overly broad utility direction changes */
-
-/* Removed overly broad utility direction changes */
-
-/* --- Animation Duration RTL Support --- */
-/* Removed overly broad animation direction changes */
-
-/* --- Fade and Transition RTL Support --- */
-/* Removed overly broad animation direction changes */
-
-/* Removed overly broad animation direction changes */
-
-/* --- Final RTL Body and HTML Enforcement --- */
-/* Removed overly broad HTML/body enforcement that could break functionality */
-
-/* --- Specific Blinko Component Overrides --- */
-[class*="blinko"] {
+/*
+   Apply RTL direction and start alignment to Hebrew/Arabic content.
+   Using logical properties to ensure correct behavior.
+*/
+*:lang(he), *:lang(ar), *:lang(fa), *:lang(ur),
+*[dir="rtl"][lang="he"], *[dir="rtl"][lang="ar"],
+.rtl-content {
     direction: rtl !important;
     text-align: start !important;
     unicode-bidi: plaintext !important;
@@ -1862,18 +1850,18 @@ input[type="email"], input[type="url"] {
     text-align: start !important;
 }
 
-/* Default tree maintains original structure */
-.tree ul, .tree li {
-    direction: inherit;
-    text-align: inherit;
+/* Ensure list items align correctly */
+.markdown-body li,
+.vditor-reset li,
+[dir="rtl"] li,
+:lang(he) li {
+    direction: inherit !important;
+    text-align: start !important;
 }
 
-/* --- Vditor Editor Enhanced RTL Support --- */
-/* Vditor editor - preserve layout structure */
-.vditor {
-    /* Main vditor container maintains layout */
-    direction: ltr !important;
-}
+/* ==========================================================================
+   4. Blockquotes
+   ========================================================================== */
 
 /* Vditor toolbar - maintain layout structure */
 .vditor-toolbar {
@@ -1891,10 +1879,6 @@ input[type="email"], input[type="url"] {
     unicode-bidi: plaintext !important;
 }
 
-.vditor-reset ul, .vditor-reset ol {
-    /* List automatic language detection with RTL padding when needed */
-    unicode-bidi: plaintext !important;
-}
 
 .vditor-reset ul:lang(he), .vditor-reset ol:lang(he),
 .vditor-reset ul[dir="rtl"], .vditor-reset ol[dir="rtl"] {
@@ -1903,8 +1887,8 @@ input[type="email"], input[type="url"] {
     direction: rtl !important;
 }
 
-.vditor-reset li {
-    /* List items use automatic language detection */
+h1, h2, h3, h4, h5, h6 {
+    /* Allow headers to naturally follow direction */
     unicode-bidi: plaintext !important;
 }
 
@@ -1912,20 +1896,18 @@ input[type="email"], input[type="url"] {
     text-align: start !important;
 }
 
-.vditor-reset p {
-    /* Paragraphs use automatic language detection */
-    unicode-bidi: plaintext !important;
-}
 
 .vditor-reset p:lang(he), .vditor-reset p[dir="rtl"] {
     text-align: start !important;
     direction: rtl !important;
 }
 
-.vditor-reset h1, .vditor-reset h2, .vditor-reset h3,
-.vditor-reset h4, .vditor-reset h5, .vditor-reset h6 {
-    /* Headers use automatic language detection */
+input[type="text"],
+input[type="search"],
+textarea,
+[contenteditable] {
     unicode-bidi: plaintext !important;
+    text-align: start;
 }
 
 .vditor-reset h1:lang(he), .vditor-reset h2:lang(he), .vditor-reset h3:lang(he),
@@ -1934,6 +1916,7 @@ input[type="email"], input[type="url"] {
 .vditor-reset h4[dir="rtl"], .vditor-reset h5[dir="rtl"], .vditor-reset h6[dir="rtl"] {
     text-align: start !important;
     direction: rtl !important;
+    text-align: start !important;
 }
 
 /* Smart RTL for vditor blockquotes - only when Hebrew */
@@ -1954,9 +1937,9 @@ input[type="email"], input[type="url"] {
     unicode-bidi: plaintext !important;
 }
 
-.vditor-reset pre > code {
-    unicode-bidi: plaintext !important;
-}
+/* ==========================================================================
+   7. Tables
+   ========================================================================== */
 
 .vditor-task input {
     /* Task checkbox RTL positioning */
@@ -1964,9 +1947,8 @@ input[type="email"], input[type="url"] {
     margin-inline-end: 8px !important;
 }
 
-.vditor-toolbar__item .vditor-tooltipped {
-    /* Toolbar items RTL support */
-    direction: rtl !important;
+th, td {
+    text-align: start !important;
 }
 
 .vditor-upload {
@@ -1975,20 +1957,26 @@ input[type="email"], input[type="url"] {
     inset-inline-start: 8px !important;
 }
 
-.vditor-hint {
-    /* Hint popup RTL support */
+/*
+   Some main layout containers MUST remain LTR to prevent the whole app
+   UI from flipping (sidebar, etc) if that's the desired behavior.
+*/
+#page-wrap,
+#outer-container,
+.sidebar,
+.navigation,
+header {
+    direction: ltr !important;
+}
+
+/* But content INSIDE them can be RTL */
+.app-content:lang(he),
+.app-content[dir="rtl"],
+.scroll-area:lang(he),
+.scroll-area[dir="rtl"] {
     direction: rtl !important;
 }
 
-.vditor-panel {
-    /* Panel RTL support */
-    direction: rtl !important;
-}
-
-.vditor-outline {
-    /* Outline RTL support */
-    direction: rtl !important;
-}
 
 .vditor-preview {
     /* Preview pane RTL */
@@ -1998,11 +1986,12 @@ input[type="email"], input[type="url"] {
     text-align: start !important;
 }
 
-/* --- Swiper Cards RTL Support --- */
-/* Swiper - maintain layout structure */
-.swiper {
-    /* Swiper container maintains original layout */
-    direction: inherit;
+/* Flip back/forward arrows in RTL */
+[dir="rtl"] .icon-chevron-right,
+:lang(he) .icon-chevron-right,
+[dir="rtl"] .notion-back-icon, /* Example selector */
+:lang(he) .notion-back-icon {
+    transform: scaleX(-1);
 }
 
 /* Swiper slide - only RTL when content is Hebrew */
@@ -2012,17 +2001,17 @@ input[type="email"], input[type="url"] {
     text-align: start !important;
 }
 
-.swiper-3d .swiper-slide-shadow {
-    /* Swiper 3D shadow RTL */
-    direction: rtl !important;
+/* Ensure toggle button looks good in dark mode */
+.rtl-toggle-btn {
+    /* Using variables if available, else standard fallback */
+    background-color: var(--primary, #007bff);
+    color: var(--text-on-primary, #ffffff);
 }
 
-/* --- Context Menu Enhanced RTL --- */
-/* Context menu - maintain layout structure */
-.contextmenu {
-    /* Context menu maintains original layout */
-    direction: inherit;
-    text-align: inherit;
+.dark .rtl-toggle-btn {
+    background-color: var(--primary-dark, #0056b3);
+    color: var(--text-on-primary, #e0e0e0);
+    border: 1px solid var(--border-color, #444);
 }
 
 /* Context menu item - only RTL when content is Hebrew */
@@ -2032,14 +2021,11 @@ input[type="email"], input[type="url"] {
     text-align: start !important;
 }
 
-/* --- PhotoView Enhanced RTL --- */
-/* PhotoView - maintain layout structure */
-.PhotoView-Portal {
-    /* PhotoView portal maintains original layout */
-    direction: inherit;
-}
+/* ==========================================================================
+   11. Specific Component Overrides (Refactored to Logical)
+   ========================================================================== */
 
-/* PhotoView RTL only for Hebrew content */
+/* PhotoView */
 .PhotoView-Portal:lang(he),
 .PhotoView-Portal[dir="rtl"] {
     direction: rtl !important;
@@ -2160,16 +2146,16 @@ input[type="email"], input[type="url"] {
     }
 }
 
-@media screen and (max-width: 520px) {
-    /* Small screen layout containers maintain structure */
-    .vditor-toolbar__item {
-        direction: ltr !important;
-        padding: 0 !important;
-    }
+/* Notion-like Styles */
+.notion-quote-block {
+    padding-inline-start: 0 !important;
+    border-inline-start: 3px solid currentColor !important;
+    border-inline-end: none !important;
+    padding-inline-end: 0.9em !important;
 }
 
-/* --- Advanced Positioning RTL --- */
-/* Removed overly broad universal direction enforcement */
+/* Margin/Padding Logical Utilities replacements */
+/* Instead of overriding .ml-1 etc, we rely on the app's potential logical props or force direction */
 
 [dir="rtl"] input, [dir="rtl"] textarea {
     /* RTL form elements */
@@ -2184,41 +2170,18 @@ input[type="email"], input[type="url"] {
     unicode-bidi: embed !important;
 }
 
-/* --- Browser Specific RTL Fixes --- */
-@-moz-document url-prefix() {
-    /* Firefox specific RTL fixes */
-    .vditor-reset {
-        direction: rtl !important;
-    }
-    
-    .markdown-body {
-        direction: rtl !important;
-    }
+/* Float Logic */
+.float-left {
+    float: inline-start !important;
+}
+.float-right {
+    float: inline-end !important;
 }
 
-/* Webkit Specific RTL Fixes - only when content is Hebrew */
-@media screen and (-webkit-min-device-pixel-ratio:0) {
-    /* Webkit specific RTL fixes - only for Hebrew content */
-    .vditor-toolbar:lang(he), .vditor-toolbar[dir="rtl"] {
-        direction: rtl !important;
-    }
-    
-    .contextmenu:lang(he), .contextmenu[dir="rtl"] {
-        direction: rtl !important;
-    }
+/* Scrollbar */
+::-webkit-scrollbar {
+    /* direction: rtl is usually sufficient for scrollbar placement */
 }
 
-/* --- Final RTL Enforcement --- */
-/* Removed overly broad HTML enforcement that could break layout */
-
-html[dir="rtl"] code, html[dir="rtl"] pre, html[dir="rtl"] .hljs {
-    /* Code blocks use automatic language detection for Hebrew content */
-    unicode-bidi: plaintext !important;
-}
-
-/* End of Advanced RTL Enhancements */
-
-/* === SMART CONTENT DETECTION OVERRIDES === */
-/* Prevent forced RTL on layout containers - preserve structural integrity */
-
-/* End of Smart Content Detection and Layout Preservation */
+/* Clean up of legacy "force everything" blocks */
+/* Replaced by targeted logical properties above */

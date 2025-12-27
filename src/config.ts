@@ -79,23 +79,23 @@ export const defaultConfig: RTLConfig = {
   styles: {
     rtl: {
       direction: 'rtl',
-      textAlign: 'right',
+      textAlign: 'start',
       unicodeBidi: 'plaintext'
     },
     ltr: {
       direction: 'ltr',
-      textAlign: 'left',
+      textAlign: 'start',
       unicodeBidi: 'normal'
     },
     common: `
       .rtl-detected {
         direction: rtl !important;
-        text-align: right !important;
+        text-align: start !important;
         unicode-bidi: plaintext !important;
       }
       .ltr-detected {
         direction: ltr !important;
-        text-align: left !important;
+        text-align: start !important;
         unicode-bidi: normal !important;
       }
 
@@ -103,10 +103,10 @@ export const defaultConfig: RTLConfig = {
       .rtl-toggle-btn {
           position: fixed;
           top: 20px;
-          right: 20px;
+          inset-inline-end: 20px; /* Logical property */
           z-index: 9999;
-          background: #007bff;
-          color: white;
+          background: var(--primary, #007bff);
+          color: var(--text-on-primary, white);
           border: none;
           border-radius: 50%;
           width: 50px;
@@ -118,25 +118,26 @@ export const defaultConfig: RTLConfig = {
       }
 
       .rtl-toggle-btn:hover {
-          background: #0056b3;
+          background: var(--primary-dark, #0056b3);
           transform: scale(1.1);
       }
 
       .rtl-toggle-btn.active {
-          background: #28a745;
+          background: var(--success, #28a745);
       }
 
       .rtl-toggle-btn.dark-mode {
-          background: #1a1a1a;
-          color: #fff;
+          background: var(--bg-secondary, #1a1a1a);
+          color: var(--text-primary, #fff);
+          border: 1px solid var(--border-color, #444);
       }
 
       .rtl-toggle-btn.dark-mode:hover {
-          background: #333;
+          background: var(--bg-tertiary, #333);
       }
 
       .rtl-toggle-btn.dark-mode.active {
-          background: #0d7377;
+          background: var(--success-dark, #0d7377);
       }
     `
   },
