@@ -183,6 +183,9 @@ export function RTLApp({ detector }: RTLAppProps): JSXInternal.Element {
       <div style={{ marginTop: '15px', paddingTop: '10px', borderTop: '1px solid #eee', fontSize: '11px', color: '#888', textAlign: 'center' }}>
         Click 'Fix Selected' to force detection on specific text.
       </div>
+      <div style={{ marginTop: '5px', fontSize: '10px', color: '#aaa', textAlign: 'center' }}>
+        v{__PLUGIN_VERSION__}
+      </div>
     </div>
   );
 }
