@@ -117,3 +117,104 @@ textarea, [contenteditable], input[type="text"] {
     unicode-bidi: isolate !important;
 }
 `;
+
+export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
+   These rules are applied via the 'css' method when RTL/LTR is detected.
+   You can modify these rules to customize the appearance of detected elements.
+*/
+
+/* Applied when RTL is detected */
+.rtl-force {
+    direction: rtl !important;
+    text-align: start !important;
+    unicode-bidi: embed !important;
+}
+
+/* Applied when LTR is detected */
+.ltr-force {
+    direction: ltr !important;
+    text-align: start !important;
+    unicode-bidi: embed !important;
+}
+
+/* Visual Debugger - RTL Detected */
+.rtl-debug-rtl {
+    outline: 2px solid rgba(255, 0, 0, 0.5) !important;
+    position: relative !important;
+}
+.rtl-debug-rtl::after {
+    content: "RTL";
+    position: absolute;
+    top: -15px;
+    right: 0;
+    background: red;
+    color: white;
+    font-size: 10px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 10000;
+    pointer-events: none;
+}
+
+/* Visual Debugger - LTR Detected */
+.rtl-debug-ltr {
+    outline: 2px solid rgba(0, 0, 255, 0.3) !important;
+    position: relative !important;
+}
+.rtl-debug-ltr::after {
+    content: "LTR";
+    position: absolute;
+    top: -15px;
+    left: 0;
+    background: blue;
+    color: white;
+    font-size: 10px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 10000;
+    pointer-events: none;
+}
+`;
+
+export const DEFAULT_TARGET_SELECTORS = [
+    // Content containers
+    '.markdown-body p',
+    '.markdown-body div',
+    '.markdown-body span',
+    '.markdown-body h1', '.markdown-body h2', '.markdown-body h3', '.markdown-body h4', '.markdown-body h5', '.markdown-body h6',
+    '.markdown-body li',
+    '.markdown-body blockquote',
+    '.markdown-body td', '.markdown-body th',
+
+    // Editor elements
+    '.vditor-reset p',
+    '.vditor-reset div',
+    '.vditor-reset span',
+    '.vditor-reset h1', '.vditor-reset h2', '.vditor-reset h3', '.vditor-reset h4', '.vditor-reset h5', '.vditor-reset h6',
+    '.vditor-reset li',
+
+    // Code blocks (Explicitly requested to be checked)
+    'pre',
+    'code',
+    '.code-block',
+    '.CodeMirror-line',
+    '.notion-code-block',
+
+    // Inputs and Editable
+    'textarea',
+    'input[type="text"]',
+    'input[type="search"]',
+    '[contenteditable="true"]',
+    '[contenteditable]',
+
+    // UI Elements that might contain text
+    '[role="button"]',
+    '.btn',
+    'button',
+    '.checkbox-label',
+    'label',
+    '.tooltip',
+    '.popover',
+    '.card-masonry-grid .markdown-body p',
+    '.card-masonry-grid .markdown-body div'
+];

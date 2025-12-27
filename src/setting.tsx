@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { JSXInternal } from 'preact/src/jsx';
 import { RTLSettings, Preset } from './types';
+import { DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS } from './services/constants';
 
 const DEFAULT_CSS = `/* Enhanced RTL Support from Blinko-RTL.css */
 *:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"] {
@@ -219,17 +220,14 @@ export function RTLSetting(): JSXInternal.Element {
     method: 'all',
     customCSS: '',
     permanentCSS: false,
+    dynamicCSS: DEFAULT_DYNAMIC_CSS,
     visualStyles: {
       fontFamily: 'inherit',
       lineHeight: 1.5,
       paragraphMargin: 1
     },
-    targetSelectors: [
-      '.markdown-body p',
-      '.vditor-reset p',
-      'textarea',
-      '[contenteditable]'
-    ],
+    targetSelectors: DEFAULT_TARGET_SELECTORS,
+    disabledSelectors: [],
     minRTLChars: 3,
     processInterval: 2000,
     hebrewRegex: true,
@@ -242,6 +240,7 @@ export function RTLSetting(): JSXInternal.Element {
   const [testText, setTestText] = useState('');
   const [testResult, setTestResult] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState('');
+  const [dynamicCSSPresetId, setDynamicCSSPresetId] = useState('');
   const i18n = window.Blinko.i18n;
 
   useEffect(() => {
@@ -278,7 +277,9 @@ export function RTLSetting(): JSXInternal.Element {
         );
     }
     
-    window.Blinko.toast.success('Settings saved!');
+    // Toast only for manual actions, not implicit state updates if needed
+    // But keeping it simple for now
+    // window.Blinko.toast.success('Settings saved!');
   };
 
   const testRTL = () => {
@@ -303,8 +304,23 @@ export function RTLSetting(): JSXInternal.Element {
 
   const removeCustomSelector = (selector: string) => {
     saveSettings({
-      targetSelectors: settings.targetSelectors.filter(s => s !== selector)
+      targetSelectors: settings.targetSelectors.filter(s => s !== selector),
+      disabledSelectors: settings.disabledSelectors.filter(s => s !== selector)
     });
+  };
+
+  const toggleSelector = (selector: string, isChecked: boolean) => {
+      let newDisabled = [...settings.disabledSelectors];
+      if (isChecked) {
+          // If checked (enabled), remove from disabled list
+          newDisabled = newDisabled.filter(s => s !== selector);
+      } else {
+          // If unchecked (disabled), add to disabled list
+          if (!newDisabled.includes(selector)) {
+              newDisabled.push(selector);
+          }
+      }
+      saveSettings({ disabledSelectors: newDisabled });
   };
 
   const loadPreset = () => {
@@ -368,17 +384,14 @@ export function RTLSetting(): JSXInternal.Element {
       method: 'all',
       customCSS: '',
       permanentCSS: false,
+      dynamicCSS: DEFAULT_DYNAMIC_CSS,
       visualStyles: {
         fontFamily: 'inherit',
         lineHeight: 1.5,
         paragraphMargin: 1
       },
-      targetSelectors: [
-        '.markdown-body p',
-        '.vditor-reset p',
-        'textarea',
-        '[contenteditable]'
-      ],
+      targetSelectors: DEFAULT_TARGET_SELECTORS,
+      disabledSelectors: [],
       minRTLChars: 3,
       processInterval: 2000,
       hebrewRegex: true,
@@ -387,9 +400,8 @@ export function RTLSetting(): JSXInternal.Element {
       savedPresets: settings.savedPresets || []
     };
     saveSettings(defaultSettings);
+    window.Blinko.toast.success('Settings reset to defaults');
   };
-
-  const allPresets = [...BUILT_IN_PRESETS, ...(settings.savedPresets || [])];
 
   return (
     <div 
@@ -473,6 +485,71 @@ export function RTLSetting(): JSXInternal.Element {
             }}
           >
             🔄 Manual Toggle {settings.manualToggle ? 'ON' : 'OFF'}
+          </button>
+        </div>
+      </div>
+
+      {/* Dynamic CSS Rules Section */}
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '2px solid #6610f2',
+        borderRadius: '8px',
+        background: '#f8f9ff'
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#6610f2' }}>🎨 Dynamic CSS Rules</h3>
+        <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: settings.darkMode ? '#333' : '#666' }}>
+            These CSS rules are applied dynamically when RTL or LTR content is detected.
+            Customize the class definitions below to control how detected elements are styled.
+        </p>
+
+        <div style={{ marginBottom: '15px' }}>
+          <textarea
+            value={settings.dynamicCSS}
+            onChange={(e) => saveSettings({ dynamicCSS: (e.target as HTMLTextAreaElement).value })}
+            placeholder="Enter your dynamic CSS rules here..."
+            disabled={!settings.enabled}
+            style={{
+              width: '100%',
+              height: '250px',
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
+              fontSize: '13px',
+              resize: 'vertical'
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => saveSettings({ dynamicCSS: DEFAULT_DYNAMIC_CSS })}
+            disabled={!settings.enabled}
+            style={{
+              background: '#17a2b8',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            🔄 Reset Dynamic CSS
+          </button>
+          <button
+            onClick={() => window.Blinko.toast.success('Dynamic CSS Settings Saved')}
+            disabled={!settings.enabled}
+             style={{
+              background: '#28a745',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+             💾 Save Settings
           </button>
         </div>
       </div>
@@ -637,6 +714,106 @@ export function RTLSetting(): JSXInternal.Element {
           <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: '#666' }}>
             Applies dark styling to RTL plugin components only
           </p>
+        </div>
+      </div>
+
+      {/* Target Selectors */}
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        background: '#fafafa'
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🎯 Target Selectors</h3>
+        <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: settings.darkMode ? '#333' : '#666' }}>
+          Specific elements to process for RTL detection (focused approach)
+        </p>
+
+        <div style={{ marginBottom: '15px', maxHeight: '300px', overflowY: 'auto' }}>
+          {settings.targetSelectors.map((selector, index) => {
+             const isDisabled = settings.disabledSelectors.includes(selector);
+             return (
+            <div key={index} style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '8px 12px',
+              marginBottom: '5px',
+              background: 'white',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              opacity: isDisabled ? 0.6 : 1
+            }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={!isDisabled}
+                  onChange={(e) => toggleSelector(selector, (e.target as HTMLInputElement).checked)}
+                  disabled={!settings.enabled}
+                />
+                <code style={{
+                    fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
+                    fontSize: '13px',
+                    color: '#333',
+                    textDecoration: isDisabled ? 'line-through' : 'none'
+                }}>
+                    {selector}
+                </code>
+              </label>
+              <button
+                type="button"
+                onClick={() => removeCustomSelector(selector)}
+                disabled={!settings.enabled}
+                style={{
+                  background: '#ff4757',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  lineHeight: '1',
+                  marginLeft: '10px'
+                }}
+              >
+                ×
+              </button>
+            </div>
+          )})}
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input
+            type="text"
+            value={customSelector}
+            onChange={(e) => setCustomSelector((e.target as HTMLInputElement).value)}
+            placeholder="e.g., .markdown-body p, .vditor-reset div"
+            disabled={!settings.enabled}
+            onKeyPress={(e) => e.key === 'Enter' && addCustomSelector()}
+            style={{
+              flex: '1',
+              padding: '8px 12px',
+              border: '1px solid #ccc',
+              borderRadius: '4px'
+            }}
+          />
+          <button
+            type="button"
+            onClick={addCustomSelector}
+            disabled={!settings.enabled || !customSelector.trim()}
+            style={{
+              padding: '8px 16px',
+              background: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Add
+          </button>
         </div>
       </div>
 
@@ -1039,95 +1216,6 @@ export function RTLSetting(): JSXInternal.Element {
             }}
           >
             🗑️ Clear CSS
-          </button>
-        </div>
-      </div>
-
-      {/* Target Selectors */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #ddd', 
-        borderRadius: '8px', 
-        background: '#fafafa' 
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🎯 Target Selectors</h3>
-        <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: settings.darkMode ? '#333' : '#666' }}>
-          Specific elements to process for RTL detection (focused approach)
-        </p>
-
-        <div style={{ marginBottom: '15px', maxHeight: '150px', overflowY: 'auto' }}>
-          {settings.targetSelectors.map((selector, index) => (
-            <div key={index} style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between', 
-              padding: '8px 12px', 
-              marginBottom: '5px', 
-              background: 'white', 
-              border: '1px solid #ddd', 
-              borderRadius: '4px' 
-            }}>
-              <code style={{ 
-                fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace', 
-                fontSize: '13px', 
-                color: '#333',
-                flex: 1
-              }}>
-                {selector}
-              </code>
-              <button
-                type="button"
-                onClick={() => removeCustomSelector(selector)}
-                disabled={!settings.enabled}
-                style={{ 
-                  background: '#ff4757', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '50%', 
-                  width: '24px', 
-                  height: '24px', 
-                  cursor: 'pointer', 
-                  fontSize: '16px', 
-                  lineHeight: '1',
-                  marginLeft: '10px'
-                }}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <input
-            type="text"
-            value={customSelector}
-            onChange={(e) => setCustomSelector((e.target as HTMLInputElement).value)}
-            placeholder="e.g., .markdown-body p, .vditor-reset div"
-            disabled={!settings.enabled}
-            onKeyPress={(e) => e.key === 'Enter' && addCustomSelector()}
-            style={{ 
-              flex: '1', 
-              padding: '8px 12px', 
-              border: '1px solid #ccc', 
-              borderRadius: '4px' 
-            }}
-          />
-          <button
-            type="button"
-            onClick={addCustomSelector}
-            disabled={!settings.enabled || !customSelector.trim()}
-            style={{ 
-              padding: '8px 16px', 
-              background: '#007bff', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
-            }}
-          >
-            Add
           </button>
         </div>
       </div>
