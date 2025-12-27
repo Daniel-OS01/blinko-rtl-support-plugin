@@ -99,11 +99,17 @@ nav,
 
 
 /* Button elements maintain original layout and styling */
-button, .btn, [role="button"], 
+button, .btn,
 input[type="button"], input[type="submit"], input[type="reset"] {
     direction: ltr !important;
     unicode-bidi: isolate !important;
     text-align: center !important;
+}
+
+/* Relaxed rule for [role="button"] to avoid centering generic clickable content */
+[role="button"] {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
 }
 
 /* Button text should not be affected by RTL rules */
@@ -1570,7 +1576,7 @@ pre > div, pre > div > div {
 
 input[type="email"], input[type="url"] {
     direction: ltr !important;
-    text-align: end !important;
+    text-align: start !important;
     unicode-bidi: embed !important;
 }
 
@@ -2166,7 +2172,7 @@ header {
 [dir="rtl"] code, [dir="rtl"] pre {
     /* RTL code elements remain LTR for readability */
     direction: ltr !important;
-    text-align: end !important;
+    text-align: start !important;
     unicode-bidi: embed !important;
 }
 
@@ -2185,3 +2191,42 @@ header {
 
 /* Clean up of legacy "force everything" blocks */
 /* Replaced by targeted logical properties above */
+
+/* === VISUAL DEBUGGER STYLES === */
+.rtl-debug-mode .rtl-debug-rtl {
+    outline: 2px solid rgba(255, 0, 0, 0.5) !important;
+    position: relative !important;
+}
+
+.rtl-debug-mode .rtl-debug-ltr {
+    outline: 2px solid rgba(0, 0, 255, 0.3) !important;
+    position: relative !important;
+}
+
+.rtl-debug-mode .rtl-debug-rtl::after {
+    content: "RTL Detected";
+    position: absolute;
+    top: -20px;
+    inset-inline-end: 0;
+    background: red;
+    color: white;
+    font-size: 10px;
+    padding: 2px 4px;
+    border-radius: 2px;
+    z-index: 10000;
+    pointer-events: none;
+}
+
+.rtl-debug-mode .rtl-debug-ltr::after {
+    content: "LTR Detected";
+    position: absolute;
+    top: -20px;
+    inset-inline-start: 0;
+    background: blue;
+    color: white;
+    font-size: 10px;
+    padding: 2px 4px;
+    border-radius: 2px;
+    z-index: 10000;
+    pointer-events: none;
+}

@@ -61,7 +61,8 @@ export class RTLService {
     vditorSupport: true,
     markdownSupport: true,
     enhancedTextProcessing: true,
-    processMixedContent: false
+    processMixedContent: false,
+    debugMode: false
   };
 
   constructor(detector: RTLDetector) {
@@ -179,13 +180,14 @@ export class RTLService {
   private applyDirectRTL(element: HTMLElement, isRTL: boolean) {
     if (isRTL) {
       element.style.direction = 'rtl';
-      element.style.textAlign = 'right';
+      element.style.textAlign = 'start'; // Changed from 'right' to 'start'
       element.style.unicodeBidi = 'embed';
     } else {
       element.style.direction = 'ltr';
-      element.style.textAlign = 'left';
+      element.style.textAlign = 'start'; // Changed from 'left' to 'start'
       element.style.unicodeBidi = 'normal';
     }
+    this.applyDebugVisuals(element, isRTL);
   }
 
   // Method 2: Attribute-based RTL
@@ -197,6 +199,7 @@ export class RTLService {
       element.setAttribute('dir', 'ltr');
       element.removeAttribute('lang');
     }
+    this.applyDebugVisuals(element, isRTL);
   }
 
   // Method 3: CSS class-based RTL
@@ -207,6 +210,7 @@ export class RTLService {
     } else {
       element.classList.add('ltr-force');
     }
+    this.applyDebugVisuals(element, isRTL);
   }
 
   // Method 4: Unicode bidi method
@@ -383,6 +387,35 @@ export class RTLService {
     const newVal = !this.settings.manualToggle;
     this.updateSettings({ manualToggle: newVal });
     return newVal;
+  }
+
+  public toggleDebugMode() {
+      const newVal = !this.settings.debugMode;
+      this.updateSettings({ debugMode: newVal });
+      if (newVal) {
+          document.body.classList.add('rtl-debug-mode');
+          this.processAllElements(); // Re-process to apply visuals
+      } else {
+          document.body.classList.remove('rtl-debug-mode');
+          // Clear debug styles
+          document.querySelectorAll('.rtl-debug-rtl, .rtl-debug-ltr').forEach(el => {
+              el.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
+          });
+      }
+      return newVal;
+  }
+
+  private applyDebugVisuals(element: HTMLElement, isRTL: boolean) {
+      if (this.settings.debugMode) {
+          element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
+          if (isRTL) {
+              element.classList.add('rtl-debug-rtl');
+              element.setAttribute('data-rtl-debug', 'RTL Detected');
+          } else {
+              element.classList.add('rtl-debug-ltr');
+              element.setAttribute('data-rtl-debug', 'LTR Detected');
+          }
+      }
   }
 
   private setupObserver() {

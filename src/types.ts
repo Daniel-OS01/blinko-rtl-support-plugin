@@ -37,4 +37,5 @@ export interface RTLSettings {
   customSelectors?: string[];
   unicodeBidiMode?: string;
   processMixedContent?: boolean;
+  debugMode?: boolean;
 }
