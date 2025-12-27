@@ -1,39 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { JSXInternal } from 'preact/src/jsx';
-
-interface Preset {
-  id: string;
-  name: string;
-  css: string;
-  isBuiltIn?: boolean;
-}
-
-interface RTLSettings {
-  enabled: boolean;
-  sensitivity: 'high' | 'medium' | 'low';
-  threshold: number;
-  forceDirection: 'auto' | 'rtl' | 'ltr';
-  autoDetect: boolean;
-  manualMode: boolean;
-  manualToggle: boolean;
-  mobileView: boolean;
-  darkMode: boolean;
-  method: 'direct' | 'attributes' | 'css' | 'unicode' | 'all';
-  customCSS: string;
-  permanentCSS: boolean;
-  visualStyles: {
-    fontFamily: string;
-    lineHeight: number;
-    paragraphMargin: number;
-  };
-  targetSelectors: string[];
-  minRTLChars: number;
-  processInterval: number;
-  hebrewRegex: boolean;
-  arabicRegex: boolean;
-  mixedContent: boolean;
-  savedPresets: Preset[];
-}
+import { RTLSettings, Preset } from './types';
 
 const DEFAULT_CSS = `/* Enhanced RTL Support from Blinko-RTL.css */
 *:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"] {
@@ -278,27 +245,38 @@ export function RTLSetting(): JSXInternal.Element {
   const i18n = window.Blinko.i18n;
 
   useEffect(() => {
-    const savedSettings = localStorage.getItem('blinko-rtl-settings');
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        setSettings(prev => ({ ...prev, ...parsed }));
-      } catch (error) {
-        console.error('Failed to load RTL plugin settings:', error);
-      }
+    // We can also get settings from the service via global
+    const currentSettings = (window as any).blinkoRTL?.settings();
+    if (currentSettings) {
+        setSettings(currentSettings);
+    } else {
+        const savedSettings = localStorage.getItem('blinko-rtl-settings');
+        if (savedSettings) {
+        try {
+            const parsed = JSON.parse(savedSettings);
+            setSettings(prev => ({ ...prev, ...parsed }));
+        } catch (error) {
+            console.error('Failed to load RTL plugin settings:', error);
+        }
+        }
     }
   }, []);
 
   const saveSettings = (newSettings: Partial<RTLSettings>) => {
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
-    localStorage.setItem('blinko-rtl-settings', JSON.stringify(updatedSettings));
     
-    window.dispatchEvent(
-      new CustomEvent('rtl-settings-changed', {
-        detail: updatedSettings
-      })
-    );
+    // Use service to update settings
+    if ((window as any).blinkoRTL?.service) {
+        (window as any).blinkoRTL.service.updateSettings(newSettings);
+    } else {
+        localStorage.setItem('blinko-rtl-settings', JSON.stringify(updatedSettings));
+        window.dispatchEvent(
+            new CustomEvent('rtl-settings-changed', {
+                detail: updatedSettings
+            })
+        );
+    }
     
     window.Blinko.toast.success('Settings saved!');
   };
@@ -805,12 +783,12 @@ export function RTLSetting(): JSXInternal.Element {
               Detection Sensitivity:
               <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '5px', width: '100%', maxWidth: '300px' }}>
                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', justifyContent: 'flex-end' }}>
-                    <span style={{ fontSize: '12px', color: '#666' }}>{Math.round(settings.threshold * 100)}%</span>
+                    <span style={{ fontSize: '12px', color: '#666' }}>{Math.round((settings.threshold || 0.15) * 100)}%</span>
                     <input
                       type="range"
                       min="1"
                       max="50"
-                      value={Math.round(settings.threshold * 100)}
+                      value={Math.round((settings.threshold || 0.15) * 100)}
                       onChange={(e) => {
                           const val = parseInt((e.target as HTMLInputElement).value) / 100;
                           let sens: 'high' | 'medium' | 'low' = 'medium';

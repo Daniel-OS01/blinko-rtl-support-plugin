@@ -1,5 +1,4 @@
-
-export function debounce<T extends (...args: any[]) => void>(func: T, wait: number): (...args: Parameters<T>) => void {
+export function debounce<T extends (...args: any[]) => void>(func: T, wait: number, immediate: boolean = false): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
 
   return function(this: any, ...args: Parameters<T>) {
@@ -9,6 +8,7 @@ export function debounce<T extends (...args: any[]) => void>(func: T, wait: numb
       if (!immediate) func.apply(context, args);
     };
 
+    const callNow = immediate && !timeout;
     if (timeout) {
       clearTimeout(timeout);
     }
