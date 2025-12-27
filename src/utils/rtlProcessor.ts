@@ -15,6 +15,11 @@ export class RTLProcessor {
   private isEnabled: boolean = false;
   private debouncedProcessAll: () => void;
 
+  // Queue for debounced processing
+  private pendingElements: Set<HTMLElement> = new Set();
+  private debouncedProcessQueue: () => void;
+  private autoProcessInterval: any = null;
+
   constructor(
     config: RTLConfig,
     renderer: RTLRenderer,
@@ -26,6 +31,11 @@ export class RTLProcessor {
     this.detector = detector;
     this.settings = settings;
     this.debouncedProcessAll = debounce(() => this.processAllElements(), 200);
+    
+    // Create debounced processor for the queue
+    this.debouncedProcessQueue = debounce(() => {
+       this.processPendingElements();
+    }, 50); // Fast debounce for UI responsiveness
   }
 
   updateSettings(newSettings: any) {
@@ -39,7 +49,16 @@ export class RTLProcessor {
    * Process a single element
    */
   processElement(element: HTMLElement) {
-    if (!element || !this.shouldProcessElement(element)) return;
+    if (!element) return;
+
+    // Explicitly enforce LTR for code blocks
+    const tagName = element.tagName.toLowerCase();
+    if (tagName === 'pre' || tagName === 'code' || element.classList.contains('code-block')) {
+        this.renderer.applyLTR(element);
+        return;
+    }
+
+    if (!this.shouldProcessElement(element)) return;
 
     // Check if direction is already set to avoid re-processing
     // (Optimization: only process if strictly necessary)
@@ -179,6 +198,12 @@ export class RTLProcessor {
       this.processElement(element as HTMLElement);
     });
 
+    // Ensure code blocks are reset to LTR
+    document.querySelectorAll('pre, code, .code-block').forEach(el => {
+        this.renderer.applyLTR(el as HTMLElement);
+    });
+
+    // Also handle custom selectors if any
     this.settings.customSelectors?.forEach((selector: string) => {
         try {
             document.querySelectorAll(selector).forEach(element => {
@@ -190,10 +215,26 @@ export class RTLProcessor {
     });
   }
 
+  private processPendingElements() {
+      if (!this.isEnabled) {
+          this.pendingElements.clear();
+          return;
+      }
+
+      this.pendingElements.forEach(element => {
+          // Double check if element is still connected
+          if (document.contains(element)) {
+              this.processElement(element);
+          }
+      });
+      this.pendingElements.clear();
+  }
+
   enable() {
       this.isEnabled = true;
       this.renderer.injectGlobalStyles();
       this.setupObserver();
+      this.startAutoProcessing();
       // Remove redundant polling - rely on observer
       setTimeout(() => this.processAllElements(), 100);
   }
@@ -201,10 +242,12 @@ export class RTLProcessor {
   disable() {
       this.isEnabled = false;
       this.renderer.removeGlobalStyles();
+      this.stopAutoProcessing();
       if (this.observer) {
           this.observer.disconnect();
           this.observer = null;
       }
+      this.pendingElements.clear();
 
       const allSelectors = this.config.selectors.target.join(', ');
       document.querySelectorAll(allSelectors).forEach(el => {
@@ -219,8 +262,7 @@ export class RTLProcessor {
       this.observer = new MutationObserver((mutations) => {
           if (!this.isEnabled) return;
 
-          let shouldProcess = false;
-          const candidates = new Set<HTMLElement>();
+          let hasRelevantMutation = false;
 
           mutations.forEach((mutation) => {
              // Avoid loop: Ignore attribute mutations that we caused (e.g., 'dir' or 'style' changes if we didn't filter them)
@@ -231,36 +273,36 @@ export class RTLProcessor {
                      if (node.nodeType === Node.ELEMENT_NODE) {
                          const element = node as HTMLElement;
                          if (this.config.selectors.target.some(s => element.matches(s))) {
-                             candidates.add(element);
+                             this.pendingElements.add(element);
+                             hasRelevantMutation = true;
                          }
                          const allSelectors = this.config.selectors.target.join(', ');
                          element.querySelectorAll(allSelectors).forEach(child => {
-                             candidates.add(child as HTMLElement);
+                             this.pendingElements.add(child as HTMLElement);
                          });
-                         shouldProcess = true;
+                         if (element.querySelectorAll(allSelectors).length > 0) {
+                             hasRelevantMutation = true;
+                         }
                      }
                  });
-             } else if (mutation.type === 'characterData') {
-                 const target = mutation.target.parentElement;
-                 if (target && this.config.selectors.target.some(s => target.matches(s))) {
-                      candidates.add(target);
-                      shouldProcess = true;
-                 }
-             } else if (mutation.type === 'attributes') {
-                 // Should be safe due to attributeFilter
-                 const target = mutation.target as HTMLElement;
-                 if (this.config.selectors.target.some(s => target.matches(s))) {
-                      candidates.add(target);
-                      shouldProcess = true;
-                 }
+             } else if (mutation.type === 'characterData' || mutation.type === 'attributes') {
+                  const target = mutation.target.nodeType === Node.ELEMENT_NODE
+                    ? mutation.target as HTMLElement
+                    : mutation.target.parentElement;
+
+                  if (target) {
+                      // Check if it matches any target selector
+                      if (this.config.selectors.target.some(s => target.matches(s))) {
+                          this.pendingElements.add(target);
+                          hasRelevantMutation = true;
+                      }
+                  }
              }
           });
 
-          // Process localized candidates immediately
-          candidates.forEach(el => this.processElement(el));
-
-          // If massive changes, debounce a full scan?
-          // For now, rely on localized updates.
+          if (hasRelevantMutation) {
+               this.debouncedProcessQueue();
+          }
       });
       
       // Observe with specific options
@@ -271,7 +313,26 @@ export class RTLProcessor {
           subtree: true,
           characterData: true, // Watch text content changes
           attributes: true,
-          attributeFilter: ['value', 'placeholder'] // EXCLUDE 'dir', 'class', 'style' to prevent loops
+          attributeFilter: ['value', 'placeholder']
       });
+  }
+
+  private startAutoProcessing() {
+      if (this.autoProcessInterval) clearInterval(this.autoProcessInterval);
+      if (this.settings.autoDetect && this.isEnabled) {
+          // Less aggressive polling since we have a better observer now
+          this.autoProcessInterval = setInterval(() => {
+              if (this.isEnabled && this.settings.autoDetect) {
+                  this.processAllElements();
+              }
+          }, this.settings.processInterval || 5000);
+      }
+  }
+
+  private stopAutoProcessing() {
+      if (this.autoProcessInterval) {
+          clearInterval(this.autoProcessInterval);
+          this.autoProcessInterval = null;
+      }
   }
 }
