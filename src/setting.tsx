@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { JSXInternal } from 'preact/src/jsx';
 import { RTLSettings, Preset } from './types';
+import { DEFAULT_DYNAMIC_CSS } from './services/constants';
 
 const DEFAULT_CSS = `/* Enhanced RTL Support from Blinko-RTL.css */
 *:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"] {
@@ -218,6 +219,7 @@ export function RTLSetting(): JSXInternal.Element {
     darkMode: false,
     method: 'all',
     customCSS: '',
+    dynamicCSS: DEFAULT_DYNAMIC_CSS,
     permanentCSS: false,
     visualStyles: {
       fontFamily: 'inherit',
@@ -230,6 +232,7 @@ export function RTLSetting(): JSXInternal.Element {
       'textarea',
       '[contenteditable]'
     ],
+    disabledSelectors: [],
     minRTLChars: 3,
     processInterval: 2000,
     hebrewRegex: true,
@@ -302,9 +305,26 @@ export function RTLSetting(): JSXInternal.Element {
   };
 
   const removeCustomSelector = (selector: string) => {
+    // If we remove it completely, we also should remove it from disabled list
     saveSettings({
-      targetSelectors: settings.targetSelectors.filter(s => s !== selector)
+      targetSelectors: settings.targetSelectors.filter(s => s !== selector),
+      disabledSelectors: settings.disabledSelectors.filter(s => s !== selector)
     });
+  };
+
+  const toggleSelector = (selector: string) => {
+      const isDisabled = settings.disabledSelectors.includes(selector);
+      let newDisabledSelectors: string[];
+
+      if (isDisabled) {
+          // Enable it (remove from disabled list)
+          newDisabledSelectors = settings.disabledSelectors.filter(s => s !== selector);
+      } else {
+          // Disable it (add to disabled list)
+          newDisabledSelectors = [...settings.disabledSelectors, selector];
+      }
+
+      saveSettings({ disabledSelectors: newDisabledSelectors });
   };
 
   const loadPreset = () => {
@@ -367,6 +387,7 @@ export function RTLSetting(): JSXInternal.Element {
       darkMode: false,
       method: 'all',
       customCSS: '',
+      dynamicCSS: DEFAULT_DYNAMIC_CSS,
       permanentCSS: false,
       visualStyles: {
         fontFamily: 'inherit',
@@ -379,6 +400,7 @@ export function RTLSetting(): JSXInternal.Element {
         'textarea',
         '[contenteditable]'
       ],
+      disabledSelectors: [],
       minRTLChars: 3,
       processInterval: 2000,
       hebrewRegex: true,
@@ -387,6 +409,10 @@ export function RTLSetting(): JSXInternal.Element {
       savedPresets: settings.savedPresets || []
     };
     saveSettings(defaultSettings);
+  };
+
+  const resetDynamicCSS = () => {
+      saveSettings({ dynamicCSS: DEFAULT_DYNAMIC_CSS });
   };
 
   const allPresets = [...BUILT_IN_PRESETS, ...(settings.savedPresets || [])];
@@ -511,6 +537,56 @@ export function RTLSetting(): JSXInternal.Element {
               <option value="all">🚀 All Methods (Recommended)</option>
             </select>
           </label>
+        </div>
+      </div>
+
+      {/* Dynamic CSS Rules Section */}
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '2px solid #fd7e14',
+        borderRadius: '8px',
+        background: '#fff9f0'
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#fd7e14' }}>🎨 Dynamic CSS Rules</h3>
+        <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: settings.darkMode ? '#333' : '#666' }}>
+            These styles are automatically injected when RTL is detected. The class <code>.blinko-detected-rtl</code> is applied to RTL elements.
+        </p>
+
+        <div style={{ marginBottom: '15px' }}>
+          <textarea
+            value={settings.dynamicCSS || DEFAULT_DYNAMIC_CSS}
+            onChange={(e) => saveSettings({ dynamicCSS: (e.target as HTMLTextAreaElement).value })}
+            placeholder="Enter your dynamic CSS rules here..."
+            disabled={!settings.enabled}
+            style={{
+              width: '100%',
+              height: '200px',
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
+              fontSize: '13px',
+              resize: 'vertical'
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            onClick={resetDynamicCSS}
+            disabled={!settings.enabled}
+            style={{
+              background: '#dc3545',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            🔄 Reset to Default
+          </button>
         </div>
       </div>
 
@@ -1053,7 +1129,7 @@ export function RTLSetting(): JSXInternal.Element {
       }}>
         <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🎯 Target Selectors</h3>
         <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: settings.darkMode ? '#333' : '#666' }}>
-          Specific elements to process for RTL detection (focused approach)
+          Specific elements to process for RTL detection. Uncheck to disable without removing.
         </p>
 
         <div style={{ marginBottom: '15px', maxHeight: '150px', overflowY: 'auto' }}>
@@ -1068,14 +1144,21 @@ export function RTLSetting(): JSXInternal.Element {
               border: '1px solid #ddd', 
               borderRadius: '4px' 
             }}>
-              <code style={{ 
-                fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace', 
-                fontSize: '13px', 
-                color: '#333',
-                flex: 1
-              }}>
-                {selector}
-              </code>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={!settings.disabledSelectors.includes(selector)}
+                    onChange={() => toggleSelector(selector)}
+                  />
+                  <code style={{
+                    fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
+                    fontSize: '13px',
+                    color: settings.disabledSelectors.includes(selector) ? '#999' : '#333',
+                    textDecoration: settings.disabledSelectors.includes(selector) ? 'line-through' : 'none'
+                  }}>
+                    {selector}
+                  </code>
+              </label>
               <button
                 type="button"
                 onClick={() => removeCustomSelector(selector)}

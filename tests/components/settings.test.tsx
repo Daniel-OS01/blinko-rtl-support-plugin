@@ -33,13 +33,15 @@ window.blinkoRTL = {
     threshold: 0.15,
     sensitivity: 'medium',
     targetSelectors: ['.test-selector'],
-    ignoreSelectors: ['.ignore-me']
+    // ignoreSelectors: ['.ignore-me'], // Removed invalid field
+    disabledSelectors: [] // Added missing field to prevent test crash
   }),
   getSettings: () => ({
     threshold: 0.15,
     sensitivity: 'medium',
     targetSelectors: ['.test-selector'],
-    ignoreSelectors: ['.ignore-me']
+    // ignoreSelectors: ['.ignore-me'], // Removed invalid field
+    disabledSelectors: [] // Added missing field
   }),
   setSensitivity: jest.fn()
 };
