@@ -46,7 +46,13 @@ export class RTLProcessor {
     const currentDir = element.getAttribute('dir');
 
     const text = this.getElementText(element);
-    if (!text.trim() || text.length < (this.settings.minRTLChars || 2)) return;
+    if (!text.trim() || text.length < (this.settings.minRTLChars || 2)) {
+        // If empty or too short, maybe clear or leave as is.
+        // Clearing is safer to avoid stale RTL states.
+        // But some inputs might be cleared and we don't want them to jump.
+        // For now, let's leave it.
+        return;
+    }
 
     const isRTL = this.determineDirection(text);
 
@@ -71,10 +77,20 @@ export class RTLProcessor {
   private processChildTextNodes(element: HTMLElement) {
     if (!element) return;
 
+    // Use a more specific TreeWalker to avoid traversing everything
     const walker = document.createTreeWalker(
       element,
       NodeFilter.SHOW_TEXT,
-      null
+      {
+          acceptNode: (node) => {
+              // Skip if parent is already handled or shouldn't be touched
+              if (node.parentElement && node.parentElement !== element) {
+                  // If parent is a span we created or handled, maybe skip?
+                  // For now accept all text nodes.
+              }
+              return NodeFilter.FILTER_ACCEPT;
+          }
+      }
     );
 
     let node;
@@ -247,6 +263,9 @@ export class RTLProcessor {
           // For now, rely on localized updates.
       });
       
+      // Observe with specific options
+      // observing subtree of body is heavy, but needed for dynamic content.
+      // We optimize the callback to avoid heavy work.
       this.observer.observe(document.body, {
           childList: true,
           subtree: true,

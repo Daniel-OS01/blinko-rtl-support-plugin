@@ -83,18 +83,18 @@ nav,
 }
 
 .card-masonry-grid .markdown-body > div {
-    margin-bottom: 0.3em !important;
+    margin-block-end: 0.3em !important;
 }
 
 .card-masonry-grid .markdown-body div p {
-    margin-bottom: 0.35em !important;
-    margin-top: 0.15em !important;
+    margin-block-end: 0.35em !important;
+    margin-block-start: 0.15em !important;
 }
 
 /* Compact spacing for nested content */
 .expand-container .markdown-body p {
-    margin-bottom: 0.4em !important;
-    margin-top: 0.2em !important;
+    margin-block-end: 0.4em !important;
+    margin-block-start: 0.2em !important;
 }
 
 
@@ -119,7 +119,7 @@ button *, .btn *, [role="button"] * {
 
 /* Additional spacing improvements for better readability */
 .markdown-body div {
-    margin-bottom: 0.3em !important;
+    margin-block-end: 0.3em !important;
     unicode-bidi: plaintext !important;
 }
 
@@ -308,7 +308,7 @@ pre > div > div:nth-child(2) {
     margin: 0 !important;
     padding: 0 !important;
 }
-/* Removed overly broad body styles that could break layout */
+/* Removed broad body styles that could break layout */
 body > div.flex > main > div.flex.w-full.max-w-\[59\.75rem\].flex-1.gap-0.sm\:gap-6.xl\:gap-\[4\.5rem\], body > div.flex > main > div.flex.w-full.max-w-\[59\.75rem\].flex-1.gap-0.sm\:gap-6.xl\:gap-\[4\.5rem\] > div.flex.w-full.flex-col.justify-between.gap-8.pb-8 > div > div > div > ul, body > div.flex > main > div.sticky.top-0.z-top-panel.self-stretch.bg-ash-100.dark\:bg-ash-900, body > div.flex > main > div.sticky.top-0.z-top-panel.self-stretch.bg-ash-100.dark\:bg-ash-900 > div > div.flex.w-full.flex-col.items-center.gap-1\.5, body > div.flex > main > div.sticky.top-0.z-top-panel.self-stretch.bg-ash-100.dark\:bg-ash-900 > div > div.flex.w-full.flex-col.items-center.gap-1\.5 > ul {
     direction: ltr;
 }
@@ -396,8 +396,8 @@ html[dir="rtl"] body, html[lang="he"] body {
     outline: none !important;
 }
 #task-menu-tag-view .select-list.antiscroll-inner.flex-auto > ul > li:not(:last-child), #task-menu-view ul li.rc-menu-item.menu-section:not(:last-child), #task-menu-view ul li.rc-menu-item.set-duedate.menu-section ul li:not(:last-child), #task-menu-view ul li.rc-menu-item.set-duedate.menu-section:not(:last-child), #task-menu-view ul li.rc-menu-item.set-priority.menu-section ul li:not(:last-child), #task-menu-view ul li.rc-menu-item.set-priority.menu-section:not(:last-child), #task-menu-view ul li.rc-menu-item:not(:last-child) {
-    margin-bottom: 0 !important;
-    margin-top: 0 !important;
+    margin-block-end: 0 !important;
+    margin-block-start: 0 !important;
 }
 #task-menu-tag-view .select-list.antiscroll-inner.flex-auto > ul, #task-menu-tag-view .select-list.antiscroll-inner.flex-auto > ul > li, #task-menu-tag-view .select-list.antiscroll-inner.flex-auto > ul > li > div {
     font-size: 13px !important;
@@ -782,8 +782,8 @@ nav:lang(he), nav:lang(iw), nav[dir="rtl"] {
 }
 .task-item .title-wrap .title {
     direction: rtl;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-block-start: 10px;
+    padding-block-end: 10px;
 }
 .task-item.active .l-task-bg, .task-item.selected .l-task-bg {
     background-color: rgba(0, 0, 0, 0.1);
@@ -1284,15 +1284,15 @@ svg.icon-chevron-right, use {
 .markdown-body p {
     unicode-bidi: plaintext !important;
     line-height: 1.4 !important;
-    margin-bottom: 0.5em !important;
-    margin-top: 0.25em !important;
+    margin-block-end: 0.5em !important;
+    margin-block-start: 0.25em !important;
 }
 
 /* Reduce spacing between markdown paragraphs in cards */
 .card-masonry-grid .markdown-body p {
     line-height: 1.3 !important;
-    margin-bottom: 0.4em !important;
-    margin-top: 0.2em !important;
+    margin-block-end: 0.4em !important;
+    margin-block-start: 0.2em !important;
 }
 
 /* Tags styling - smaller than regular text */
