@@ -41,7 +41,7 @@ System.register([], (exports) => ({
       async init() {
         // Initialize internationalization
         this.initI18n();
-        
+
         // Add toolbar icon with click handler
         window.Blinko.addToolBarIcon({
           name: "test",
@@ -60,7 +60,7 @@ System.register([], (exports) => ({
         window.Blinko.addRightClickMenu({
           name: 'custom-action',
           label: 'Custom Action',
-          icon: 'tabler:accessible',  
+          icon: 'tabler:accessible',
           onClick: (item) => {
             console.log('Custom action triggered', item)
           }
