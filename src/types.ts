@@ -8,29 +8,30 @@ export interface Preset {
 export interface RTLSettings {
   enabled: boolean;
   sensitivity: 'high' | 'medium' | 'low';
-  threshold?: number; // Added from HEAD
+  threshold?: number;
   forceDirection: 'auto' | 'rtl' | 'ltr';
   autoDetect: boolean;
   manualMode: boolean;
   manualToggle: boolean;
-  mobileView?: boolean; // Added from HEAD
+  mobileView?: boolean;
   darkMode: boolean;
   method: 'direct' | 'attributes' | 'css' | 'unicode' | 'all';
-  customCSS: string;
+  customCSS: string; // Kept for backward compatibility or other uses, but dynamicCSS is the new main one for this feature
+  dynamicCSS: string; // NEW
   permanentCSS: boolean;
-  visualStyles?: { // Added from HEAD
+  visualStyles?: {
     fontFamily: string;
     lineHeight: number;
     paragraphMargin: number;
   };
   targetSelectors: string[];
+  disabledSelectors: string[]; // NEW
   minRTLChars: number;
   processInterval: number;
   hebrewRegex: boolean;
   arabicRegex: boolean;
   mixedContent: boolean;
   savedPresets: Preset[];
-  // Additional settings from RTLProcessor that might be useful
   vditorSupport?: boolean;
   markdownSupport?: boolean;
   enhancedTextProcessing?: boolean;

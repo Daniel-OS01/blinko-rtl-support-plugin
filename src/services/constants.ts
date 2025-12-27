@@ -82,6 +82,7 @@ textarea, [contenteditable], input[type="text"] {
 .rtl-settings-dark {
     background: #1a1a1a !important;
     color: #000 !important;
+    border: 1px solid #555 !important;
 }
 
 .rtl-settings-dark input, .rtl-settings-dark select, .rtl-settings-dark textarea {
@@ -117,3 +118,76 @@ textarea, [contenteditable], input[type="text"] {
     unicode-bidi: isolate !important;
 }
 `;
+
+export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
+.blinko-detected-rtl {
+    direction: rtl !important;
+    text-align: start !important;
+    unicode-bidi: embed !important;
+}
+
+/* Visual Debugger Styles */
+.rtl-debug-mode .rtl-debug-rtl {
+    outline: 2px solid rgba(40, 167, 69, 0.5) !important; /* Green for RTL */
+    position: relative !important;
+}
+
+.rtl-debug-mode .rtl-debug-ltr {
+    outline: 2px solid rgba(220, 53, 69, 0.5) !important; /* Red for LTR */
+    position: relative !important;
+}
+
+.rtl-debug-mode .rtl-debug-rtl::after {
+    content: "RTL";
+    position: absolute;
+    top: -16px;
+    right: 0;
+    background: #28a745;
+    color: white;
+    font-size: 9px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 9999;
+}
+`;
+
+export const DEFAULT_SETTINGS = {
+  enabled: true,
+  sensitivity: 'medium',
+  forceDirection: 'auto',
+  autoDetect: true,
+  manualMode: false,
+  manualToggle: true,
+  darkMode: false,
+  method: 'all',
+  customCSS: `
+/* Default RTL Styles */
+[dir="rtl"] {
+  text-align: right;
+  direction: rtl;
+}
+`,
+  dynamicCSS: DEFAULT_DYNAMIC_CSS,
+  permanentCSS: false,
+  targetSelectors: [
+    'p', 'div', 'span',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'li', 'td', 'th',
+    'input', 'textarea', '[contenteditable="true"]',
+    'pre', 'code', '.code-block',
+    'button', 'a', '[role="button"]', 'label', '.checkbox-wrapper'
+  ],
+  disabledSelectors: [],
+  minRTLChars: 2,
+  processInterval: 1000,
+  hebrewRegex: true,
+  arabicRegex: true,
+  mixedContent: true,
+  savedPresets: [],
+  debugMode: false,
+  visualStyles: {
+    fontFamily: 'inherit',
+    lineHeight: 1.5,
+    paragraphMargin: 10
+  }
+};
