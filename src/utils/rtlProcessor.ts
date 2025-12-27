@@ -25,20 +25,13 @@ export class RTLProcessor {
     this.renderer = renderer;
     this.detector = detector;
     this.settings = settings;
-
-    // Debounce the full processing to avoid performance hits
-    this.debouncedProcessAll = debounce(() => {
-        if (this.isEnabled && this.settings.autoDetect) {
-            this.processAllElements();
-        }
-    }, 500);
+    this.debouncedProcessAll = debounce(() => this.processAllElements(), 200);
   }
 
   updateSettings(newSettings: any) {
     this.settings = { ...this.settings, ...newSettings };
-    // Re-process if settings changed
     if (this.isEnabled) {
-        this.debouncedProcessAll();
+      this.processAllElements();
     }
   }
 
@@ -48,8 +41,9 @@ export class RTLProcessor {
   processElement(element: HTMLElement) {
     if (!element || !this.shouldProcessElement(element)) return;
 
-    // Optimization: Check if already processed and direction is manually set or stable
-    if (element.hasAttribute('data-manual-dir')) return;
+    // Check if direction is already set to avoid re-processing
+    // (Optimization: only process if strictly necessary)
+    const currentDir = element.getAttribute('dir');
 
     const text = this.getElementText(element);
     if (!text.trim() || text.length < (this.settings.minRTLChars || 2)) {
@@ -62,21 +56,16 @@ export class RTLProcessor {
 
     const isRTL = this.determineDirection(text);
 
-    // Only apply if changed to avoid DOM thrashing
-    const currentDir = element.getAttribute('dir') || getComputedStyle(element).direction;
-    const targetDir = isRTL ? 'rtl' : 'ltr';
-
-    // We check classList because that's what our renderer uses primarily
-    const hasRTLClass = element.classList.contains('rtl-detected');
-    const hasLTRClass = element.classList.contains('ltr-detected');
-
-    if (isRTL && !hasRTLClass) {
-      this.renderer.applyRTL(element);
-    } else if (!isRTL && !hasLTRClass) {
-      this.renderer.applyLTR(element);
+    if (isRTL) {
+        if (currentDir !== 'rtl') {
+            this.renderer.applyRTL(element);
+        }
+    } else {
+        if (currentDir === 'rtl') {
+            this.renderer.applyLTR(element);
+        }
     }
 
-    // Process child text nodes if mixed content is enabled
     if (this.settings.mixedContent) {
         this.processChildTextNodes(element);
     }
@@ -112,7 +101,9 @@ export class RTLProcessor {
       if (text.trim() && this.detector.detectRTL(text)) {
         const parent = textNode.parentElement;
         if (parent && parent !== element && this.shouldProcessElement(parent)) {
-           this.renderer.applyRTL(parent);
+           if (parent.getAttribute('dir') !== 'rtl') {
+               this.renderer.applyRTL(parent);
+           }
         }
       }
     }
@@ -129,6 +120,7 @@ export class RTLProcessor {
           return false;
       }
 
+      // Use the injected detector which should have the improved Strategy
       return this.detector.detectRTL(text);
   }
 
@@ -137,25 +129,29 @@ export class RTLProcessor {
    * Check if element should be processed
    */
   private shouldProcessElement(element: HTMLElement): boolean {
-    // Check ignore selectors first (fastest)
-    if (this.config.selectors.ignore.some(selector => element.matches(selector))) {
-        return false;
-    }
+    if (!element.matches) return false;
 
-    // Check layout selectors (closest is slower, but necessary)
-    // Optimization: Cache results if possible or assume structure doesn't change much.
-    // For now, we keep it but ensure we don't do it for every mutation if not needed.
+    // Check skip layout classes
     const skipLayout = this.config.selectors.layout.some(selector => {
-        if (selector.startsWith('.')) {
-             return element.classList.contains(selector.substring(1)) || element.closest(selector);
-        }
-        if (selector.startsWith('#')) {
-             return element.id === selector.substring(1) || element.closest(selector);
-        }
-        return element.matches(selector) || element.closest(selector);
+        try {
+            if (selector.startsWith('.')) {
+                 return element.classList.contains(selector.substring(1)) || element.closest(selector);
+            }
+            if (selector.startsWith('#')) {
+                 return element.id === selector.substring(1) || element.closest(selector);
+            }
+            return element.matches(selector) || element.closest(selector);
+        } catch { return false; }
     });
 
     if (skipLayout) return false;
+
+    // Check ignore selectors
+    if (this.config.selectors.ignore.some(selector => {
+        try { return element.matches(selector); } catch { return false; }
+    })) {
+        return false;
+    }
 
     return true;
   }
@@ -176,7 +172,6 @@ export class RTLProcessor {
   processAllElements() {
     if (!this.isEnabled) return;
     
-    // Use selectors from config
     const allSelectors = this.config.selectors.target.join(', ');
     const elements = document.querySelectorAll(allSelectors);
     
@@ -184,7 +179,6 @@ export class RTLProcessor {
       this.processElement(element as HTMLElement);
     });
 
-    // Also handle custom selectors if any
     this.settings.customSelectors?.forEach((selector: string) => {
         try {
             document.querySelectorAll(selector).forEach(element => {
@@ -200,8 +194,7 @@ export class RTLProcessor {
       this.isEnabled = true;
       this.renderer.injectGlobalStyles();
       this.setupObserver();
-      // Remove polling, rely on observer + initial pass
-      // this.startAutoProcessing();
+      // Remove redundant polling - rely on observer
       setTimeout(() => this.processAllElements(), 100);
   }
 
@@ -213,7 +206,6 @@ export class RTLProcessor {
           this.observer = null;
       }
 
-      // Cleanup DOM
       const allSelectors = this.config.selectors.target.join(', ');
       document.querySelectorAll(allSelectors).forEach(el => {
           this.renderer.clear(el as HTMLElement);
@@ -227,49 +219,48 @@ export class RTLProcessor {
       this.observer = new MutationObserver((mutations) => {
           if (!this.isEnabled) return;
 
-          let shouldProcessAll = false;
+          let shouldProcess = false;
+          const candidates = new Set<HTMLElement>();
 
           mutations.forEach((mutation) => {
+             // Avoid loop: Ignore attribute mutations that we caused (e.g., 'dir' or 'style' changes if we didn't filter them)
+             // We configured the observer to only watch 'value' and 'placeholder' attributes.
+
              if (mutation.type === 'childList') {
-                 // Too many nodes? Use full scan
-                 if (mutation.addedNodes.length > 10) {
-                     shouldProcessAll = true;
-                 } else {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.nodeType === Node.ELEMENT_NODE) {
-                            const element = node as HTMLElement;
-                            // Check if the element itself needs processing
-                            if (this.config.selectors.target.some(s => element.matches(s))) {
-                                this.processElement(element);
-                            } else {
-                                // If it's a container, we might want to scan inside or just debounce a full scan
-                                // Scanning inside is better than full scan
-                                const allSelectors = this.config.selectors.target.join(', ');
-                                const children = element.querySelectorAll(allSelectors);
-                                if (children.length > 0) {
-                                    children.forEach(child => this.processElement(child as HTMLElement));
-                                }
-                            }
-                        }
-                    });
-                 }
+                 mutation.addedNodes.forEach(node => {
+                     if (node.nodeType === Node.ELEMENT_NODE) {
+                         const element = node as HTMLElement;
+                         if (this.config.selectors.target.some(s => element.matches(s))) {
+                             candidates.add(element);
+                         }
+                         const allSelectors = this.config.selectors.target.join(', ');
+                         element.querySelectorAll(allSelectors).forEach(child => {
+                             candidates.add(child as HTMLElement);
+                         });
+                         shouldProcess = true;
+                     }
+                 });
              } else if (mutation.type === 'characterData') {
-                  const target = mutation.target.parentElement;
-                  if (target && this.shouldProcessElement(target)) {
-                      // Only process this specific element
-                      this.processElement(target);
-                  }
+                 const target = mutation.target.parentElement;
+                 if (target && this.config.selectors.target.some(s => target.matches(s))) {
+                      candidates.add(target);
+                      shouldProcess = true;
+                 }
              } else if (mutation.type === 'attributes') {
-                  const target = mutation.target as HTMLElement;
-                  if (target && this.shouldProcessElement(target)) {
-                       this.processElement(target);
-                  }
+                 // Should be safe due to attributeFilter
+                 const target = mutation.target as HTMLElement;
+                 if (this.config.selectors.target.some(s => target.matches(s))) {
+                      candidates.add(target);
+                      shouldProcess = true;
+                 }
              }
           });
 
-          if (shouldProcessAll) {
-              this.debouncedProcessAll();
-          }
+          // Process localized candidates immediately
+          candidates.forEach(el => this.processElement(el));
+
+          // If massive changes, debounce a full scan?
+          // For now, rely on localized updates.
       });
       
       // Observe with specific options
@@ -278,9 +269,9 @@ export class RTLProcessor {
       this.observer.observe(document.body, {
           childList: true,
           subtree: true,
-          characterData: true,
+          characterData: true, // Watch text content changes
           attributes: true,
-          attributeFilter: ['value', 'placeholder', 'class']
+          attributeFilter: ['value', 'placeholder'] // EXCLUDE 'dir', 'class', 'style' to prevent loops
       });
   }
 }

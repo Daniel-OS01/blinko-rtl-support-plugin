@@ -158,7 +158,7 @@ pre > div > div:nth-child(2) {
     unicode-bidi: plaintext !important;
 }
 *:dir(rtl) .input-with-select .el-input__wrapper, [lang="he"] .input-with-select .el-input__wrapper {
-    padding-inline-end: unset !important;
+    padding-inline-end: auto !important;
     padding-inline-start: 0 !important;
 }
 *:dir(rtl) .markdown-body p, [lang="he"] .markdown-body p {
@@ -193,19 +193,19 @@ pre > div > div:nth-child(2) {
     float: inline-end !important;
 }
 /* Remove grid direction that breaks layout */
-*:lang(he) .margin-left, *:lang(iw) .margin-left, *[dir="rtl"] .margin-left, .rtl .margin-left {
+*:lang(he) .margin-inline-end, *:lang(iw) .margin-inline-end, *[dir="rtl"] .margin-inline-end, .rtl .margin-inline-end {
     margin-inline-start: inherit !important;
     margin-inline-end: 0 !important;
 }
-*:lang(he) .margin-right, *:lang(iw) .margin-right, *[dir="rtl"] .margin-right, .rtl .margin-right {
+*:lang(he) .margin-inline-start, *:lang(iw) .margin-inline-start, *[dir="rtl"] .margin-inline-start, .rtl .margin-inline-start {
     margin-inline-end: inherit !important;
     margin-inline-start: 0 !important;
 }
-*:lang(he) .padding-left, *:lang(iw) .padding-left, *[dir="rtl"] .padding-left, .rtl .padding-left {
+*:lang(he) .padding-inline-end, *:lang(iw) .padding-inline-end, *[dir="rtl"] .padding-inline-end, .rtl .padding-inline-end {
     padding-inline-end: 0 !important;
     padding-inline-start: inherit !important;
 }
-*:lang(he) .padding-right, *:lang(iw) .padding-right, *[dir="rtl"] .padding-right, .rtl .padding-right {
+*:lang(he) .padding-inline-start, *:lang(iw) .padding-inline-start, *[dir="rtl"] .padding-inline-start, .rtl .padding-inline-start {
     padding-inline-start: 0 !important;
     padding-inline-end: inherit !important;
 }
@@ -391,7 +391,7 @@ html[dir="rtl"] body, html[lang="he"] body {
     border-radius: 4px !important;
     box-sizing: border-box !important;
     margin: 0 !important;
-    background: var(--blinko-hover-bg, rgba(80, 80, 80, 0.10)) !important;
+    background: var(--bg-hover, rgba(80, 80, 80, 0.10)) !important;
     width: auto !important;
     outline: none !important;
 }
@@ -600,7 +600,7 @@ html[dir="rtl"] body, html[lang="he"] body {
 }
 .highlighted-time-box {
     font-size: 14px;
-    background-color: var(--blinko-bg-secondary, #f0f0f0);
+    background-color: var(--bg-secondary, #f0f0f0);
     line-height: 1.6;
 }
 .icon-thin-triangle-down, .l-task, .li.task, .section-header.open, .task-list-view, .task-ul-list, pin {
@@ -1336,7 +1336,7 @@ svg.icon-chevron-right, use {
 /* Smart RTL for blockquotes - only when explicitly Hebrew */
 .markdown-body blockquote:lang(he), .markdown-body blockquote[dir="rtl"] {
     border-inline-end: none !important;
-    border-inline-start: 0.25em solid #d1d5da !important;
+    border-inline-start: 0.25em solid var(--border-default, #d1d5da) !important;
     padding-inline-end: 0 !important;
     padding-inline-start: 1em !important;
     text-align: start !important;
@@ -1395,52 +1395,52 @@ pre > div, pre > div > div {
     unicode-bidi: plaintext !important;
 }
 .rounded-l-none {
-    border-top-right-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
-    border-top-left-radius: inherit !important;
-    border-bottom-left-radius: inherit !important;
+    border-start-start-radius: 0 !important;
+    border-end-start-radius: 0 !important;
+    border-start-end-radius: inherit !important;
+    border-end-end-radius: inherit !important;
 }
 
 .rounded-r-none {
-    border-top-left-radius: 0 !important;
-    border-bottom-left-radius: 0 !important;
-    border-top-right-radius: inherit !important;
-    border-bottom-right-radius: inherit !important;
+    border-start-end-radius: 0 !important;
+    border-end-end-radius: 0 !important;
+    border-start-start-radius: inherit !important;
+    border-end-start-radius: inherit !important;
 }
 
 .rounded-tl-2xl {
-    border-top-right-radius: var(--radius-2xl) !important;
-    border-top-left-radius: 0 !important;
+    border-start-start-radius: var(--radius-2xl) !important;
+    border-start-end-radius: 0 !important;
 }
 
 .rounded-tr-2xl {
-    border-top-left-radius: var(--radius-2xl) !important;
-    border-top-right-radius: 0 !important;
+    border-start-end-radius: var(--radius-2xl) !important;
+    border-start-start-radius: 0 !important;
 }
 
 /* --- Padding and Margin RTL Adjustments --- */
 .pl-1, .pl-2, .pl-3, .pl-4, .pl-5, .pl-6, .pl-7, .pl-8,
 .pl-9, .pl-10, .pl-11, .pl-12 {
     padding-inline-end: 0 !important;
-    padding-inline-start: var(--original-padding-left, 0) !important;
+    padding-inline-start: var(--original-padding-inline-end, 0) !important;
 }
 
 .pr-1, .pr-2, .pr-3, .pr-4, .pr-5, .pr-6, .pr-7, .pr-8,
 .pr-9, .pr-10, .pr-11, .pr-12 {
     padding-inline-start: 0 !important;
-    padding-inline-end: var(--original-padding-right, 0) !important;
+    padding-inline-end: var(--original-padding-inline-start, 0) !important;
 }
 
 .ml-1, .ml-2, .ml-3, .ml-4, .ml-5, .ml-6, .ml-7, .ml-8,
 .ml-9, .ml-10, .ml-11, .ml-12 {
     margin-inline-end: 0 !important;
-    margin-inline-start: var(--original-margin-left, 0) !important;
+    margin-inline-start: var(--original-margin-inline-end, 0) !important;
 }
 
 .mr-1, .mr-2, .mr-3, .mr-4, .mr-5, .mr-6, .mr-7, .mr-8,
 .mr-9, .mr-10, .mr-11, .mr-12 {
     margin-inline-start: 0 !important;
-    margin-inline-end: var(--original-margin-right, 0) !important;
+    margin-inline-end: var(--original-margin-inline-start, 0) !important;
 }
 
 /* --- Float RTL Adjustments --- */
@@ -1466,12 +1466,12 @@ pre > div, pre > div > div {
 /* --- Border RTL Adjustments --- */
 .border-l, .border-l-2, .border-l-4, .border-l-8 {
     border-inline-end: none !important;
-    border-inline-start: var(--original-border-left, 1px solid) !important;
+    border-inline-start: var(--original-border-inline-end, 1px solid) !important;
 }
 
 .border-r, .border-r-2, .border-r-4, .border-r-8 {
     border-inline-start: none !important;
-    border-inline-end: var(--original-border-right, 1px solid) !important;
+    border-inline-end: var(--original-border-inline-start, 1px solid) !important;
 }
 
 /* --- Text Alignment RTL Support --- */
@@ -1704,7 +1704,7 @@ input[type="email"], input[type="url"] {
 .markdown-body blockquote {
     /* Blockquote border on right for RTL */
     border-inline-end: none !important;
-    border-inline-start: .25em solid #EAB308 !important;
+    border-inline-start: .25em solid var(--yellow-500, #EAB308) !important;
     padding-inline-end: 0 !important;
     padding-inline-start: 1em !important;
 }
@@ -1943,7 +1943,7 @@ input[type="email"], input[type="url"] {
 
 .vditor-reset blockquote:lang(he), .vditor-reset blockquote[dir="rtl"] {
     border-inline-end: none !important;
-    border-inline-start: 0.25em solid #EAB308 !important;
+    border-inline-start: 0.25em solid var(--yellow-500, #EAB308) !important;
     padding-inline-end: 0 !important;
     padding-inline-start: 1em !important;
     text-align: start !important;
@@ -2067,12 +2067,12 @@ input[type="email"], input[type="url"] {
     --rtl-direction: rtl;
     --rtl-float-start: right;
     --rtl-float-end: left;
-    --rtl-margin-start: margin-right;
-    --rtl-margin-end: margin-left;
-    --rtl-padding-start: padding-right;
-    --rtl-padding-end: padding-left;
-    --rtl-border-start: border-right;
-    --rtl-border-end: border-left;
+    --rtl-margin-start: margin-inline-start;
+    --rtl-margin-end: margin-inline-end;
+    --rtl-padding-start: padding-inline-start;
+    --rtl-padding-end: padding-inline-end;
+    --rtl-border-start: border-inline-start;
+    --rtl-border-end: border-inline-end;
 }
 
 /* --- Layout Container RTL --- */
