@@ -10,6 +10,7 @@ export function RTLApp({ detector }: RTLAppProps): JSXInternal.Element {
   const [stats, setStats] = useState({ activeBlocks: 0 });
   const [sensitivity, setSensitivity] = useState(15); // Default 15%
   const [isFixing, setIsFixing] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
   const i18n = window.Blinko.i18n;
 
   // Poll for stats
@@ -40,8 +41,11 @@ export function RTLApp({ detector }: RTLAppProps): JSXInternal.Element {
 
             if (settings && settings.threshold !== undefined) {
                 setSensitivity(Math.round(settings.threshold * 100));
-                return true;
             }
+            if (settings && settings.debugMode !== undefined) {
+                setDebugMode(settings.debugMode);
+            }
+            if (settings) return true;
         }
         return false;
     };
@@ -70,6 +74,15 @@ export function RTLApp({ detector }: RTLAppProps): JSXInternal.Element {
     const value = parseInt(e.target.value);
     setSensitivity(value);
     (window as any).blinkoRTL?.setSensitivity(value / 100);
+  };
+
+  const handleDebugToggle = (e: any) => {
+      const newVal = e.target.checked;
+      setDebugMode(newVal);
+      const api = (window as any).blinkoRTL;
+      if (api && api.service && typeof api.service.toggleDebugMode === 'function') {
+          api.service.toggleDebugMode();
+      }
   };
 
   const toggleRTL = () => {
@@ -158,6 +171,22 @@ export function RTLApp({ detector }: RTLAppProps): JSXInternal.Element {
             </>
           )}
         </button>
+      </div>
+
+      {/* Debug Mode Toggle */}
+      <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '13px' }}>
+              <input
+                  type="checkbox"
+                  checked={debugMode}
+                  onChange={handleDebugToggle}
+                  style={{ marginInlineEnd: '8px' }}
+              />
+              Enable Visual Debugger
+          </label>
+          <div style={{ fontSize: '10px', color: '#888', marginInlineStart: '20px', marginTop: '2px' }}>
+              Highlights RTL (Red) and LTR (Blue) blocks
+          </div>
       </div>
 
       {/* Sensitivity Slider */}
