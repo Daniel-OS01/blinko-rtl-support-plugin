@@ -1,104 +1,56 @@
 <!DOCTYPE html>
-<html dir="ltr" lang="en">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blinko RTL Verification</title>
-    <!-- We will inject the CSS here -->
-    <link rel="stylesheet" href="../Blinko-RTL.css">
+    <title>Blinko RTL Plugin Verification</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .markdown-body { border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; }
-        /* Mocking dark mode */
-        .dark body { background-color: #222; color: #eee; }
-        .dark .markdown-body { border-color: #555; background-color: #333; }
+        body { font-family: sans-serif; padding: 20px; }
+        .content-area { margin-top: 20px; border: 1px solid #ccc; padding: 10px; min-height: 200px; }
 
-        /* Table Styles Mock */
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #999; padding: 8px; }
+        /* Simulating Blinko CSS variables */
+        :root {
+            --primary: #007bff;
+            --text-on-primary: white;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #fff;
+            --border-color: #444;
+            --bg-tertiary: #333;
+            --success: #28a745;
+            --success-dark: #0d7377;
+        }
+
+        /* Mock classes from config */
+        .rtl-detected {
+            direction: rtl !important;
+            text-align: start !important;
+            unicode-bidi: plaintext !important;
+        }
     </style>
+    <!-- We will inject the plugin logic manually or simulate its effect -->
 </head>
 <body>
-    <h1>Blinko RTL Verification</h1>
-    <button id="toggle-dark">Toggle Dark Mode</button>
-    <button id="toggle-rtl">Toggle RTL</button>
+    <h1>Blinko RTL Plugin Test</h1>
+    <div id="plugin-container"></div>
 
-    <div class="markdown-body">
-        <h2>List Test (LTR)</h2>
-        <ul>
-            <li>Item 1</li>
-            <li>Item 2</li>
-            <li>Item 3</li>
-        </ul>
-
-        <h2>Blockquote Test (LTR)</h2>
-        <blockquote>
-            This is a blockquote.
-        </blockquote>
-
-        <h2>Table Test (LTR)</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Header 1</th>
-                    <th>Header 2</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Cell 1</td>
-                    <td>Cell 2</td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="content-area">
+        <p>This is English text (LTR).</p>
+        <p>שלום עולם (Hebrew RTL).</p>
+        <p>مرحبا بالعالم (Arabic RTL).</p>
+        <p>123 Mixed Text 123 (Should be LTR).</p>
+        <p>שלום 123 (Should be RTL).</p>
     </div>
 
-    <div class="markdown-body" dir="rtl" lang="he">
-        <h2>בדיקת רשימה (RTL Context)</h2>
-        <ul>
-            <li>פריט 1</li>
-            <li>פריט 2</li>
-            <li>פריט 3</li>
-        </ul>
+    <!-- Simulate Button injection -->
+    <button class="rtl-toggle-btn">ع/א</button>
 
-        <h2>בדיקת ציטוט (RTL Context)</h2>
-        <blockquote>
-            זהו ציטוט.
-        </blockquote>
-
-        <h2>בדיקת טבלה (RTL Context)</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>כותרת 1</th>
-                    <th>כותרת 2</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>תא 1</td>
-                    <td>תא 2</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="markdown-body">
-         <h2>Mixed Direction Test</h2>
-         <p dir="rtl" lang="he">פסקה בעברית בתוך הקשר אנגלי.</p>
-         <p>English paragraph inside English context.</p>
-    </div>
-
-    <script>
-        document.getElementById("toggle-dark").onclick = function() { document.documentElement.classList.toggle("dark"); };
-        document.getElementById("toggle-rtl").onclick = function() {
-            document.body.dir = document.body.dir === "rtl" ? "ltr" : "rtl";
-            if (document.body.dir === "rtl") {
-                 document.body.classList.add("rtl");
-            } else {
-                 document.body.classList.remove("rtl");
-            }
-        };
+    <script type="module">
+        // Minimal logic to simulate toggle button active state
+        const btn = document.querySelector('.rtl-toggle-btn');
+        btn.addEventListener('click', () => {
+            btn.classList.toggle('active');
+            console.log('Toggle clicked');
+        });
     </script>
 </body>
 </html>

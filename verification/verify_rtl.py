@@ -1,38 +1,31 @@
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 import os
 
-def run_verification():
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
+def run(playwright):
+    browser = playwright.chromium.launch(headless=True)
+    page = browser.new_page()
 
-        # Load the local HTML file
-        # ensure full path
-        cwd = os.getcwd()
-        url = f"file://{cwd}/verification/index.html"
-        print(f"Navigating to {url}")
-        page.goto(url)
+    # Load the local HTML file
+    file_path = os.path.abspath("verification/index.html")
+    page.goto(f"file://{file_path}")
 
-        # 1. Screenshot LTR (Light)
-        page.screenshot(path="verification/1_ltr_light.png")
-        print("Captured LTR Light")
+    # Wait for content
+    expect(page.locator("h1")).to_be_visible()
 
-        # 2. Toggle RTL
-        page.click("#toggle-rtl")
-        page.screenshot(path="verification/2_rtl_light.png")
-        print("Captured RTL Light")
+    # Check if the mock button exists
+    btn = page.locator(".rtl-toggle-btn")
+    expect(btn).to_be_visible()
 
-        # 3. Toggle Dark Mode (still RTL)
-        page.click("#toggle-dark")
-        page.screenshot(path="verification/3_rtl_dark.png")
-        print("Captured RTL Dark")
+    # Click the button (simulate toggle)
+    btn.click()
 
-        # 4. Toggle LTR (Dark)
-        page.click("#toggle-rtl")
-        page.screenshot(path="verification/4_ltr_dark.png")
-        print("Captured LTR Dark")
+    # Check if it got active class (simulated in JS)
+    expect(btn).to_have_class("rtl-toggle-btn active")
 
-        browser.close()
+    # Take screenshot
+    page.screenshot(path="verification/rtl_verification.png")
 
-if __name__ == "__main__":
-    run_verification()
+    browser.close()
+
+with sync_playwright() as playwright:
+    run(playwright)

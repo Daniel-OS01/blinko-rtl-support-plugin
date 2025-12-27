@@ -28,7 +28,20 @@ window.blinkoRTL = {
   toggleManual: jest.fn(),
   isEnabled: jest.fn(),
   getStats: jest.fn(),
-  fixSelection: jest.fn()
+  fixSelection: jest.fn(),
+  settings: () => ({
+    threshold: 0.15,
+    sensitivity: 'medium',
+    targetSelectors: ['.test-selector'],
+    ignoreSelectors: ['.ignore-me']
+  }),
+  getSettings: () => ({
+    threshold: 0.15,
+    sensitivity: 'medium',
+    targetSelectors: ['.test-selector'],
+    ignoreSelectors: ['.ignore-me']
+  }),
+  setSensitivity: jest.fn()
 };
 
 describe("RTLSetting Component", () => {

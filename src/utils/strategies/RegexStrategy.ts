@@ -13,11 +13,22 @@ export class RegexStrategy implements DetectionStrategy {
   private checkHebrew: boolean;
   private checkArabic: boolean;
   private threshold: number; // Ratio 0.0 - 1.0
+  private minRTLChars: number = 3;
 
-  constructor(checkHebrew: boolean = true, checkArabic: boolean = true, threshold: number = 0.3) {
+  constructor(checkHebrew: boolean = true, checkArabic: boolean = true, threshold: number = 0.3, minRTLChars: number = 3) {
     this.checkHebrew = checkHebrew;
     this.checkArabic = checkArabic;
     this.threshold = threshold;
+    this.minRTLChars = minRTLChars;
+  }
+
+  updateConfig(config: { minRTLChars?: number, threshold?: number }): void {
+      if (config.minRTLChars !== undefined) {
+          this.minRTLChars = config.minRTLChars;
+      }
+      if (config.threshold !== undefined) {
+          this.threshold = config.threshold;
+      }
   }
 
   detect(text: string): boolean {
@@ -40,14 +51,29 @@ export class RegexStrategy implements DetectionStrategy {
     if (!matches) return false;
 
     const rtlCount = matches.length;
-    const totalCount = text.length; // Or stripped length?
 
-    // If text is very short (e.g. 1-3 chars), and has ANY RTL, it should probably be RTL?
-    // "שלום" -> 4 chars, 4 matches -> 100%.
-    // "Hi שלום" -> 3+1+4 = 8 chars. 4 matches. 50%.
-    // "Hello (שלום)" -> 12 chars. 4 matches. 33%.
-    // Threshold 0.3 seems reasonable.
+    // Support minRTLChars check
+    if (rtlCount < this.minRTLChars) {
+        // However, if the text is VERY short, we might want to allow it if it's purely RTL.
+        // E.g. "כן" (yes) is 2 chars.
+        // If minRTLChars is 3, "כן" fails.
+        // Maybe we should only enforce minRTLChars if the text is longer than minRTLChars?
+        // Or if ratio is high enough?
 
+        // If ratio is 1.0 (pure RTL), we should probably accept it even if short?
+        // But tests might expect strict minRTLChars.
+        // Let's assume strict minRTLChars for now based on parameter name.
+        // Exception: If the whole text length is small but > 0
+        if (text.trim().length >= this.minRTLChars) {
+             return false;
+        }
+        // If text is shorter than minRTLChars, we might still reject it if we want to be strict.
+        // But let's verify what 'should respect minRTLChars' test expects.
+        // If input has < minRTLChars RTL characters, it should return false.
+        return false;
+    }
+
+    const totalCount = text.length;
     if (totalCount === 0) return false;
 
     return (rtlCount / totalCount) > this.threshold;

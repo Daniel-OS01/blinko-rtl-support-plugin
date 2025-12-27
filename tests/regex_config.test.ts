@@ -23,13 +23,13 @@ describe("RTLDetector Configuration Respect", () => {
 
 describe("RegexStrategy Optimized", () => {
     it("counts matches correctly for minRTLChars > 1", () => {
-        const strategy = new RegexStrategy(true, true, 3);
+        const strategy = new RegexStrategy(true, true, 0.0, 3);
         expect(strategy.detect("אא")).toBe(false);
         expect(strategy.detect("אאא")).toBe(true);
     });
 
     it("handles updates via updateConfig", () => {
-        const strategy = new RegexStrategy(true, true, 3);
+        const strategy = new RegexStrategy(true, true, 0.0, 3);
         strategy.updateConfig({ minRTLChars: 1 });
         expect(strategy.detect("א")).toBe(true);
     });

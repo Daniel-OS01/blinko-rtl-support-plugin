@@ -22,7 +22,7 @@
     "build": "vite build --mode development",
     "build:prod": "vite build --mode production",
     "ngrok": "ngrok http 8080",
-    "release:publish": "vite build --mode production && blinko-cli release plugin"
+    "release:publish": "echo 'Use GitHub Actions for release' && exit 1"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.0.11",
