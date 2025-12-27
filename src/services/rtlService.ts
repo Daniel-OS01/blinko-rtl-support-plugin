@@ -2,6 +2,8 @@ import { RTLDetector } from '../utils/rtlDetector';
 import { RTLSettings } from '../types';
 import { advancedRTLCSS } from './constants';
 import { debounce } from '../utils/debounce';
+import { PasteInterceptor } from '../utils/pasteInterceptor';
+import { HoverContextManager } from '../utils/hoverManager';
 
 export class RTLService {
   private detector: RTLDetector;
@@ -10,6 +12,10 @@ export class RTLService {
   private permanentStyleElement: HTMLStyleElement | null = null;
   private observer: MutationObserver | null = null;
   private autoProcessInterval: any = null;
+
+  // Managers
+  private pasteInterceptor: PasteInterceptor;
+  private hoverManager: HoverContextManager | null = null;
 
   // Optimizations
   private pendingElements: Set<HTMLElement> = new Set();
@@ -62,6 +68,9 @@ export class RTLService {
     this.detector = detector;
     this.loadSettings();
     
+    // Initialize Managers
+    this.pasteInterceptor = new PasteInterceptor(detector);
+
     // Initialize optimization debouncers
     this.debouncedProcessAll = debounce(() => this.processAllElements(), 200);
     this.debouncedProcessQueue = debounce(() => {
@@ -118,6 +127,7 @@ export class RTLService {
         this.setupObserver();
         this.startAutoProcessing();
         this.debouncedProcessAll();
+        // Managers update implicitly via enabled check or settings usage
     }
 
     // Dispatch event for UI updates
@@ -283,10 +293,9 @@ export class RTLService {
         break;
     }
 
-    // Handle mixed content if enabled (from RTLProcessor logic)
+    // Handle mixed content if enabled
     if (this.settings.processMixedContent && this.settings.mixedContent) {
-        // Implementation from RTLProcessor's processChildTextNodes could go here
-        // For now, leaving it simple as per original index.tsx
+        // Implementation logic for mixed content could go here
     }
   }
 
@@ -326,6 +335,18 @@ export class RTLService {
     if (this.settings.permanentCSS) {
       this.injectPermanentCSS();
     }
+    
+    // Enable Managers
+    this.pasteInterceptor.enable();
+    if (!this.hoverManager) {
+        this.hoverManager = new HoverContextManager({
+            selectors: this.settings.targetSelectors,
+            processElement: (el) => this.processElement(el),
+            isEnabled: () => this.isRTLEnabled
+        });
+        this.hoverManager.init();
+    }
+
     this.setupObserver();
     this.startAutoProcessing();
     this.debouncedProcessAll();
@@ -334,6 +355,14 @@ export class RTLService {
   public disable() {
     this.isRTLEnabled = false;
     this.removeCSS();
+    
+    // Disable Managers
+    this.pasteInterceptor.disable();
+    if (this.hoverManager) {
+        this.hoverManager.destroy();
+        this.hoverManager = null;
+    }
+
     this.stopAutoProcessing();
     if (this.observer) {
       this.observer.disconnect();
