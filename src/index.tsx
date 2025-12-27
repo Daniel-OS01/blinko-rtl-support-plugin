@@ -8,6 +8,7 @@ import { RTLSetting } from './setting';
 import plugin from '../plugin.json';
 import { RTLDetector } from './utils/rtlDetector';
 import { RTLService } from './services/rtlService';
+import './assets/styles/Blinko-RTL.css';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
 import he from './locales/he.json';
@@ -170,7 +171,7 @@ System.register([], (exports) => ({
           name: "rtl-support",
           icon: "<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m5 8 6 6'/><path d='m4 14 6-6 2-3'/><path d='M2 5h12'/><path d='M7 2h1'/><path d='m22 18-6-6'/><path d='m17 12-6 6-2 3'/><path d='M14 22h1'/><path d='M22 14h-7'/></svg>",
           placement: 'top',
-          tooltip: 'RTL Language Support (ع/א)',
+          tooltip: `RTL Language Support (v${plugin.version}) (ع/א)`,
           content: () => {
             const container = document.createElement('div');
             container.setAttribute('data-plugin', 'rtl-support');

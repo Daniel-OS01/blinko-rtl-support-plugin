@@ -27,7 +27,12 @@ export class RTLDetector {
 
     // Initialize strategies
     this.charCodeStrategy = new CharacterCodeStrategy(this.config);
-    this.regexStrategy = new RegexStrategy(true, true, this.config.minRTLChars);
+    // RegexStrategy(checkHebrew, checkArabic, threshold, minRTLChars)
+    // We use a default threshold of 0.3 if not provided in config (config doesn't have threshold, it has sensitivity)
+    // CharacterCodeStrategy maps sensitivity to threshold internally. RegexStrategy uses raw threshold.
+    // Let's assume medium sensitivity ~ 0.3 threshold for RegexStrategy for now, or map it.
+    // However, the bug was passing minRTLChars as threshold.
+    this.regexStrategy = new RegexStrategy(true, true, 0.3, this.config.minRTLChars);
 
     // Default to combined strategy
     this.strategy = new CombinedStrategy([

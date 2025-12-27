@@ -7,17 +7,19 @@ import { RTLDetector } from "../src/utils/rtlDetector";
 describe("RTL Detection", () => {
     describe("RegexStrategy", () => {
         test("should detect Hebrew text", () => {
-            const strategy = new RegexStrategy(true, false, 1);
+            // (hebrew, arabic, threshold, minRTLChars)
+            const strategy = new RegexStrategy(true, false, 0.3, 1);
             expect(strategy.detect("שלום")).toBe(true);
         });
 
         test("should detect Arabic text", () => {
-            const strategy = new RegexStrategy(false, true, 1);
+            const strategy = new RegexStrategy(false, true, 0.3, 1);
             expect(strategy.detect("مرحبا")).toBe(true);
         });
 
         test("should respect minRTLChars", () => {
-            const strategy = new RegexStrategy(true, true, 3);
+            // threshold 0.0 to focus on char count (or keep it low)
+            const strategy = new RegexStrategy(true, true, 0.0, 3);
             expect(strategy.detect("hi")).toBe(false);
             expect(strategy.detect("hi ש")).toBe(false); // 1 hebrew char
             expect(strategy.detect("hi של")).toBe(false); // 2 hebrew chars
@@ -25,7 +27,7 @@ describe("RTL Detection", () => {
         });
 
         test("should handle mixed content", () => {
-            const strategy = new RegexStrategy(true, true, 2);
+            const strategy = new RegexStrategy(true, true, 0.0, 2);
             expect(strategy.detect("Version 1.0 (בטא)")).toBe(true); // 3 hebrew chars
         });
     });
