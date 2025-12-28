@@ -139,7 +139,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
 
 /* Visual Debugger - RTL Detected */
 .rtl-debug-rtl {
-    outline: 2px solid rgba(255, 0, 0, 0.5) !important;
+    outline: 2px solid rgba(0, 255, 0, 0.5) !important;
     position: relative !important;
 }
 .rtl-debug-rtl::after {
@@ -147,7 +147,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
     position: absolute;
     top: -15px;
     right: 0;
-    background: red;
+    background: green;
     color: white;
     font-size: 10px;
     padding: 1px 3px;
@@ -158,7 +158,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
 
 /* Visual Debugger - LTR Detected */
 .rtl-debug-ltr {
-    outline: 2px solid rgba(0, 0, 255, 0.3) !important;
+    outline: 2px solid rgba(255, 0, 0, 0.5) !important;
     position: relative !important;
 }
 .rtl-debug-ltr::after {
@@ -166,7 +166,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
     position: absolute;
     top: -15px;
     left: 0;
-    background: blue;
+    background: red;
     color: white;
     font-size: 10px;
     padding: 1px 3px;

@@ -261,10 +261,10 @@ export class RTLService {
     // Previous code explicitly returned for 'pre', 'code', .code-block. Removed as per request.
 
     // Skip layout elements
-    if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar, button, .btn')) {
-      // Re-evaluate if this blanket skip is too aggressive given the user wants "all possible elements"
-      // But keeping it for now to avoid breaking the app layout
-    }
+    // Note: We used to skip .flex, .grid, header, nav, .sidebar, .toolbar, button, .btn here
+    // But since the user requested "ALL text elements" including buttons, and we have
+    // specific target selectors, we rely on the disabledSelectors logic to filter out unwanted elements.
+    // If layout breaks, user should use disabledSelectors to exclude specific classes.
 
     const text = element.textContent || (element as HTMLInputElement).value || '';
     if (!text.trim() || text.length < this.settings.minRTLChars) return;
@@ -319,10 +319,10 @@ export class RTLService {
         this.applyCSSClassRTL(element, isRTL);
         this.applyAttributeRTL(element, isRTL);
 
-        // Direct styles are still useful as fallback, but we should be careful not to override CSS classes
-        // However, element.style usually overrides classes.
-        // We will keep it for now but user can edit dynamic CSS to use !important.
-        this.applyDirectRTL(element, isRTL);
+        // We DO NOT apply direct styles in 'all' mode anymore to ensure Dynamic CSS takes precedence.
+        // Direct styles (inline) override CSS classes unless !important is used, which limits flexibility.
+        // Users who want inline styles can choose 'direct' method explicitly.
+        // this.applyDirectRTL(element, isRTL);
         break;
     }
 

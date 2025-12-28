@@ -732,7 +732,8 @@ export function RTLSetting(): JSXInternal.Element {
 
         <div style={{ marginBottom: '15px', maxHeight: '300px', overflowY: 'auto' }}>
           {settings.targetSelectors.map((selector, index) => {
-             const isDisabled = settings.disabledSelectors.includes(selector);
+             // Ensure disabledSelectors is defined to avoid crashes
+             const isDisabled = (settings.disabledSelectors || []).includes(selector);
              return (
             <div key={index} style={{
               display: 'flex',
