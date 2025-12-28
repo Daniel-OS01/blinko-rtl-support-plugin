@@ -92,6 +92,11 @@ export class RTLService {
              this.settings.targetSelectors = combined;
         }
 
+        // Backwards compatibility for dynamic CSS
+        if (!this.settings.dynamicCSS) {
+            this.settings.dynamicCSS = DEFAULT_DYNAMIC_CSS;
+        }
+
         this.detector.updateConfig({
           sensitivity: this.settings.sensitivity,
           minRTLChars: this.settings.minRTLChars
@@ -196,6 +201,8 @@ export class RTLService {
   }
 
   // Method 1: Direct style application
+  // DEPRECATED: Moving to class-based application only, but kept for legacy method 'direct' if user specifically requests it
+  // However, we align it to avoid inline conflict with dynamic CSS
   private applyDirectRTL(element: HTMLElement, isRTL: boolean) {
     if (isRTL) {
       element.style.direction = 'rtl';
@@ -221,7 +228,7 @@ export class RTLService {
     this.applyDebugVisuals(element, isRTL);
   }
 
-  // Method 3: CSS class-based RTL
+  // Method 3: CSS class-based RTL (Primary Method)
   private applyCSSClassRTL(element: HTMLElement, isRTL: boolean) {
     element.classList.remove('rtl-force', 'ltr-force', 'rtl-auto');
     if (isRTL) {
@@ -254,22 +261,25 @@ export class RTLService {
         return;
     }
 
-    // Explicitly enforce LTR for code blocks if not detected otherwise?
-    // User requested code blocks to be CHECKED for RTL. So we remove the forceful LTR.
-    // However, if the user explicitly disables the selector for code blocks, we should probably respect that.
-
-    // Previous code explicitly returned for 'pre', 'code', .code-block. Removed as per request.
-
     // Skip layout elements
-    if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar, button, .btn')) {
-      // Re-evaluate if this blanket skip is too aggressive given the user wants "all possible elements"
-      // But keeping it for now to avoid breaking the app layout
+    if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar')) {
+       // Allow buttons inside toolbars if explicitly targeted?
+       // For now, keep as safety
     }
 
-    const text = element.textContent || (element as HTMLInputElement).value || '';
-    if (!text.trim() || text.length < this.settings.minRTLChars) return;
+    const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
+    if (!text.trim() || text.length < this.settings.minRTLChars) {
+        // Even if empty, for inputs we might want to default to LTR if previously set to RTL?
+        // But let's avoid flickering.
+        return;
+    }
 
     let isRTL = false;
+
+    // We intentionally removed the explicit forceLTR variable to avoid confusion.
+    // The default state is isRTL = false, which will result in .ltr-force being applied
+    // via applyCSSClassRTL if 'all' or 'css' method is used.
+    // This effectively enforces LTR for anything that doesn't match RTL criteria.
 
     // Manual toggle - force RTL on all
     if (this.settings.manualToggle) {
@@ -298,6 +308,11 @@ export class RTLService {
       }
     }
 
+    // Special handling for code blocks:
+    // If it's a code block (isCodeBlock) and we found RTL (isRTL=true), we allow it.
+    // If we didn't find RTL (isRTL=false), it stays false, effectively forcing LTR via .ltr-force.
+    // This logic works without a separate forceLTR variable because .ltr-force is applied when isRTL is false.
+
     // Apply RTL using selected method
     switch (this.settings.method) {
       case 'direct':
@@ -314,15 +329,13 @@ export class RTLService {
         break;
       case 'all':
       default:
-        // Apply all methods for maximum compatibility
         // Prioritize CSS Class method as it uses the dynamic CSS
         this.applyCSSClassRTL(element, isRTL);
         this.applyAttributeRTL(element, isRTL);
 
-        // Direct styles are still useful as fallback, but we should be careful not to override CSS classes
-        // However, element.style usually overrides classes.
-        // We will keep it for now but user can edit dynamic CSS to use !important.
-        this.applyDirectRTL(element, isRTL);
+        // We avoid applying direct inline styles for 'all' mode to let Dynamic CSS rules take precedence
+        // unless they are explicitly needed.
+        // We only apply direct styles if 'direct' method is strictly chosen.
         break;
     }
 
@@ -344,8 +357,6 @@ export class RTLService {
             this.processElement(element as HTMLElement);
         });
     }
-
-    // REMOVED: Explicit reset of code blocks to LTR.
   }
 
   private processPendingElements() {
@@ -430,10 +441,11 @@ export class RTLService {
           // Clear debug styles
           document.querySelectorAll('.rtl-debug-rtl, .rtl-debug-ltr').forEach(el => {
               el.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
+              el.removeAttribute('data-rtl-debug');
           });
       }
       return newVal;
-  }
+    }
 
   private applyDebugVisuals(element: HTMLElement, isRTL: boolean) {
       if (this.settings.debugMode) {
@@ -445,6 +457,10 @@ export class RTLService {
               element.classList.add('rtl-debug-ltr');
               element.setAttribute('data-rtl-debug', 'LTR Detected');
           }
+      } else {
+          // Cleanup if debug mode was disabled but we are processing
+           element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
+           element.removeAttribute('data-rtl-debug');
       }
   }
 

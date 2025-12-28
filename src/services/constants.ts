@@ -137,42 +137,92 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
     unicode-bidi: embed !important;
 }
 
+/* Code Blocks: Default to LTR usually, but respect RTL if detected */
+pre.rtl-force, code.rtl-force, .code-block.rtl-force {
+    direction: rtl !important;
+    text-align: right !important;
+}
+pre.ltr-force, code.ltr-force, .code-block.ltr-force {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+/* Checkboxes and Labels */
+.checkbox-label.rtl-force, label.rtl-force {
+    direction: rtl !important;
+    text-align: right !important;
+    margin-right: 5px; /* Adjust spacing */
+}
+input[type="checkbox"] + label.rtl-force {
+    margin-left: 0;
+    margin-right: 0.5em;
+}
+
+/* Inputs and Textareas */
+input.rtl-force, textarea.rtl-force {
+    direction: rtl !important;
+    text-align: right !important;
+}
+input.ltr-force, textarea.ltr-force {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+/* Buttons and Role Button */
+button.rtl-force, .btn.rtl-force, [role="button"].rtl-force {
+    direction: rtl !important;
+    text-align: center !important; /* Buttons usually center text */
+}
+
 /* Visual Debugger - RTL Detected */
 .rtl-debug-rtl {
-    outline: 2px solid rgba(255, 0, 0, 0.5) !important;
+    outline: 2px solid rgba(220, 53, 69, 0.8) !important; /* Red-ish for visibility */
+    box-shadow: 0 0 5px rgba(220, 53, 69, 0.5) !important;
     position: relative !important;
 }
 .rtl-debug-rtl::after {
     content: "RTL";
     position: absolute;
-    top: -15px;
+    top: -18px;
     right: 0;
-    background: red;
+    background: #dc3545;
     color: white;
     font-size: 10px;
-    padding: 1px 3px;
-    border-radius: 2px;
-    z-index: 10000;
+    font-weight: bold;
+    padding: 2px 4px;
+    border-radius: 3px;
+    z-index: 2147483647; /* Max Z-Index */
     pointer-events: none;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 /* Visual Debugger - LTR Detected */
 .rtl-debug-ltr {
-    outline: 2px solid rgba(0, 0, 255, 0.3) !important;
+    outline: 2px solid rgba(0, 123, 255, 0.8) !important; /* Blue-ish */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5) !important;
     position: relative !important;
 }
 .rtl-debug-ltr::after {
     content: "LTR";
     position: absolute;
-    top: -15px;
+    top: -18px;
     left: 0;
-    background: blue;
+    background: #007bff;
     color: white;
     font-size: 10px;
-    padding: 1px 3px;
-    border-radius: 2px;
-    z-index: 10000;
+    font-weight: bold;
+    padding: 2px 4px;
+    border-radius: 3px;
+    z-index: 2147483647; /* Max Z-Index */
     pointer-events: none;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* Prevent Debug Tooltip Clipping (Best Effort) */
+.rtl-debug-rtl, .rtl-debug-ltr {
+    overflow: visible !important;
 }
 `;
 
@@ -199,11 +249,14 @@ export const DEFAULT_TARGET_SELECTORS = [
     '.code-block',
     '.CodeMirror-line',
     '.notion-code-block',
+    '.cm-line',
 
     // Inputs and Editable
     'textarea',
     'input[type="text"]',
     'input[type="search"]',
+    'input[type="email"]',
+    'input[type="url"]',
     '[contenteditable="true"]',
     '[contenteditable]',
 
@@ -216,5 +269,15 @@ export const DEFAULT_TARGET_SELECTORS = [
     '.tooltip',
     '.popover',
     '.card-masonry-grid .markdown-body p',
-    '.card-masonry-grid .markdown-body div'
+    '.card-masonry-grid .markdown-body div',
+
+    // Lists
+    'li',
+    'ul',
+    'ol',
+
+    // Tables
+    'td',
+    'th',
+    'caption'
 ];
