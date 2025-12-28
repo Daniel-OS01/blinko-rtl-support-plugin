@@ -13,6 +13,7 @@ export class RTLService {
   private dynamicStyleElement: HTMLStyleElement | null = null;
   private observer: MutationObserver | null = null;
   private autoProcessInterval: any = null;
+  private actionLog: { timestamp: string; element: string; direction: string; textPreview: string }[] = [];
 
   // Managers
   private pasteInterceptor: PasteInterceptor;
@@ -261,7 +262,8 @@ export class RTLService {
     // Previous code explicitly returned for 'pre', 'code', .code-block. Removed as per request.
 
     // Skip layout elements
-    if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar, button, .btn')) {
+    // Removed button and .btn from skip list to allow processing if selected
+    if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar')) {
       // Re-evaluate if this blanket skip is too aggressive given the user wants "all possible elements"
       // But keeping it for now to avoid breaking the app layout
     }
@@ -297,6 +299,9 @@ export class RTLService {
         isRTL = this.detector.detectRTL(text);
       }
     }
+
+    // Log the action for transparency
+    this.logAction(element, isRTL);
 
     // Apply RTL using selected method
     switch (this.settings.method) {
@@ -430,9 +435,29 @@ export class RTLService {
           // Clear debug styles
           document.querySelectorAll('.rtl-debug-rtl, .rtl-debug-ltr').forEach(el => {
               el.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
+              el.removeAttribute('data-rtl-debug');
           });
       }
       return newVal;
+  }
+
+  public getActionLog() {
+      return this.actionLog;
+  }
+
+  private logAction(element: HTMLElement, isRTL: boolean) {
+      const logEntry = {
+          timestamp: new Date().toLocaleTimeString(),
+          element: element.tagName.toLowerCase() + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
+          direction: isRTL ? 'RTL' : 'LTR',
+          textPreview: (element.textContent || '').substring(0, 20) + '...'
+      };
+
+      this.actionLog.unshift(logEntry);
+      if (this.actionLog.length > 50) this.actionLog.pop(); // Keep last 50 entries
+
+      // Dispatch event for UI updates
+      window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
   }
 
   private applyDebugVisuals(element: HTMLElement, isRTL: boolean) {

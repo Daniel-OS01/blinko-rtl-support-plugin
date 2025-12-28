@@ -108,12 +108,13 @@ input[type="button"], input[type="submit"], input[type="reset"] {
 
 /* Relaxed rule for [role="button"] to avoid centering generic clickable content */
 [role="button"] {
-    direction: ltr !important;
     unicode-bidi: isolate !important;
 }
 
-/* Button text should not be affected by RTL rules */
-button *, .btn *, [role="button"] * {
+/* Button text should not be affected by RTL rules unless explicitly detected */
+button *:not([dir="rtl"]):not(.rtl-force),
+.btn *:not([dir="rtl"]):not(.rtl-force),
+[role="button"] *:not([dir="rtl"]):not(.rtl-force) {
     direction: ltr !important;
     unicode-bidi: isolate !important;
 }
@@ -2170,10 +2171,10 @@ header {
 }
 
 [dir="rtl"] code, [dir="rtl"] pre {
-    /* RTL code elements remain LTR for readability */
-    direction: ltr !important;
-    text-align: start !important;
-    unicode-bidi: embed !important;
+    /* RTL code elements should support RTL */
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: plaintext !important;
 }
 
 /* Float Logic */
@@ -2194,39 +2195,45 @@ header {
 
 /* === VISUAL DEBUGGER STYLES === */
 .rtl-debug-mode .rtl-debug-rtl {
-    outline: 2px solid rgba(255, 0, 0, 0.5) !important;
+    outline: 2px solid rgba(255, 0, 0, 0.8) !important;
+    outline-offset: -2px !important;
     position: relative !important;
 }
 
 .rtl-debug-mode .rtl-debug-ltr {
-    outline: 2px solid rgba(0, 0, 255, 0.3) !important;
+    outline: 2px solid rgba(0, 0, 255, 0.6) !important;
+    outline-offset: -2px !important;
     position: relative !important;
 }
 
 .rtl-debug-mode .rtl-debug-rtl::after {
-    content: "RTL Detected";
+    content: attr(data-rtl-debug) !important;
     position: absolute;
-    top: -20px;
-    inset-inline-end: 0;
-    background: red;
+    top: 0;
+    right: 0;
+    background: rgba(255, 0, 0, 0.9);
     color: white;
     font-size: 10px;
-    padding: 2px 4px;
-    border-radius: 2px;
-    z-index: 10000;
+    padding: 1px 4px;
+    border-bottom-left-radius: 4px;
+    z-index: 2147483647;
     pointer-events: none;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
 .rtl-debug-mode .rtl-debug-ltr::after {
-    content: "LTR Detected";
+    content: attr(data-rtl-debug) !important;
     position: absolute;
-    top: -20px;
-    inset-inline-start: 0;
-    background: blue;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 255, 0.9);
     color: white;
     font-size: 10px;
-    padding: 2px 4px;
-    border-radius: 2px;
-    z-index: 10000;
+    padding: 1px 4px;
+    border-bottom-right-radius: 4px;
+    z-index: 2147483647;
     pointer-events: none;
+    line-height: 1.2;
+    white-space: nowrap;
 }
