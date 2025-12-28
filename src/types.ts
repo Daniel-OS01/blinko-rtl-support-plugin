@@ -2,35 +2,37 @@ export interface Preset {
   id: string;
   name: string;
   css: string;
+  dynamicCSS?: string; // Added dynamicCSS to presets
   isBuiltIn?: boolean;
 }
 
 export interface RTLSettings {
   enabled: boolean;
   sensitivity: 'high' | 'medium' | 'low';
-  threshold?: number; // Added from HEAD
+  threshold?: number;
   forceDirection: 'auto' | 'rtl' | 'ltr';
   autoDetect: boolean;
   manualMode: boolean;
   manualToggle: boolean;
-  mobileView?: boolean; // Added from HEAD
+  mobileView?: boolean;
   darkMode: boolean;
   method: 'direct' | 'attributes' | 'css' | 'unicode' | 'all';
   customCSS: string;
   permanentCSS: boolean;
-  visualStyles?: { // Added from HEAD
+  dynamicCSS: string; // New field for user-editable dynamic rules
+  visualStyles?: {
     fontFamily: string;
     lineHeight: number;
     paragraphMargin: number;
   };
   targetSelectors: string[];
+  disabledSelectors: string[]; // New field for toggling selectors
   minRTLChars: number;
   processInterval: number;
   hebrewRegex: boolean;
   arabicRegex: boolean;
   mixedContent: boolean;
   savedPresets: Preset[];
-  // Additional settings from RTLProcessor that might be useful
   vditorSupport?: boolean;
   markdownSupport?: boolean;
   enhancedTextProcessing?: boolean;
