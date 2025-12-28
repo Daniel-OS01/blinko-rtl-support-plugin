@@ -126,14 +126,31 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
 /* Applied when RTL is detected */
 .rtl-force {
     direction: rtl !important;
-    text-align: start !important;
+    text-align: right !important;
     unicode-bidi: embed !important;
+}
+
+/* Specific overrides for Inputs and Textareas */
+input.rtl-force,
+textarea.rtl-force,
+.rtl-force input,
+.rtl-force textarea {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+/* Specific overrides for Buttons */
+[role="button"].rtl-force,
+button.rtl-force,
+.btn.rtl-force {
+    direction: rtl !important;
+    text-align: right !important;
 }
 
 /* Applied when LTR is detected */
 .ltr-force {
     direction: ltr !important;
-    text-align: start !important;
+    text-align: left !important;
     unicode-bidi: embed !important;
 }
 
@@ -142,6 +159,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
     outline: 2px solid rgba(255, 0, 0, 0.5) !important;
     position: relative !important;
 }
+
 .rtl-debug-rtl::after {
     content: "RTL";
     position: absolute;
@@ -154,6 +172,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
     border-radius: 2px;
     z-index: 10000;
     pointer-events: none;
+    white-space: nowrap;
 }
 
 /* Visual Debugger - LTR Detected */
@@ -161,6 +180,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
     outline: 2px solid rgba(0, 0, 255, 0.3) !important;
     position: relative !important;
 }
+
 .rtl-debug-ltr::after {
     content: "LTR";
     position: absolute;
@@ -173,6 +193,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
     border-radius: 2px;
     z-index: 10000;
     pointer-events: none;
+    white-space: nowrap;
 }
 `;
 

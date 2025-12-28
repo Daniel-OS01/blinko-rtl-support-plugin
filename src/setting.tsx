@@ -241,6 +241,7 @@ export function RTLSetting(): JSXInternal.Element {
   const [testResult, setTestResult] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState('');
   const [dynamicCSSPresetId, setDynamicCSSPresetId] = useState('');
+  const [cssError, setCssError] = useState('');
   const i18n = window.Blinko.i18n;
 
   useEffect(() => {
@@ -261,7 +262,28 @@ export function RTLSetting(): JSXInternal.Element {
     }
   }, []);
 
+  const validateCSS = (css: string): boolean => {
+      // Basic validation: Check for balanced curly braces
+      let openBraces = 0;
+      for (let i = 0; i < css.length; i++) {
+          if (css[i] === '{') openBraces++;
+          if (css[i] === '}') openBraces--;
+          if (openBraces < 0) return false;
+      }
+      return openBraces === 0;
+  };
+
   const saveSettings = (newSettings: Partial<RTLSettings>) => {
+    // Validate CSS if it's being updated
+    if (newSettings.dynamicCSS !== undefined) {
+        if (!validateCSS(newSettings.dynamicCSS)) {
+            setCssError('Invalid CSS: Unbalanced curly braces');
+            // We still update state to allow typing, but maybe warn
+        } else {
+            setCssError('');
+        }
+    }
+
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
     
@@ -513,13 +535,14 @@ export function RTLSetting(): JSXInternal.Element {
               width: '100%',
               height: '250px',
               padding: '10px',
-              border: '1px solid #ccc',
+              border: cssError ? '2px solid red' : '1px solid #ccc',
               borderRadius: '4px',
               fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
               fontSize: '13px',
               resize: 'vertical'
             }}
           />
+          {cssError && <div style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{cssError}</div>}
         </div>
 
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -538,7 +561,13 @@ export function RTLSetting(): JSXInternal.Element {
             🔄 Reset Dynamic CSS
           </button>
           <button
-            onClick={() => window.Blinko.toast.success('Dynamic CSS Settings Saved')}
+            onClick={() => {
+                if (cssError) {
+                    window.Blinko.toast.error('Please fix CSS errors before saving.');
+                    return;
+                }
+                window.Blinko.toast.success('Dynamic CSS Settings Saved');
+            }}
             disabled={!settings.enabled}
              style={{
               background: '#28a745',
