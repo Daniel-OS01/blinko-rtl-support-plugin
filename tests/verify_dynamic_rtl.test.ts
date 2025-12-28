@@ -48,23 +48,18 @@ describe("RTLService Dynamic CSS and Selectors", () => {
     });
 
     it("should handle disabled selectors", () => {
-        // Setup a DOM with elements
         document.body.innerHTML = `
             <div id="wrapper">
                 <p id="p1">שלום</p>
-                <div id="d1" class="markdown-body">
-                    <p id="p2">שלום</p>
-                </div>
                 <code id="code1">console.log('hello')</code>
             </div>
         `;
 
-        // Default: Code blocks are targeted (part of DEFAULT_TARGET_SELECTORS)
-
         // Update settings to target generic 'p' and 'code'
-        service.updateSettings({ targetSelectors: ['p', 'code'] });
+        // Using 'css' method by default now, so styles won't be inline unless we check classes
+        service.updateSettings({ targetSelectors: ['p', 'code'], method: 'css' });
 
-        // Force process immediately (updateSettings uses debounce)
+        // Force process
         service.processAllElements();
 
         const p1 = document.getElementById('p1') as HTMLElement;
@@ -72,7 +67,6 @@ describe("RTLService Dynamic CSS and Selectors", () => {
 
         // Should be processed
         expect(p1.classList.contains('rtl-force')).toBe(true);
-        // Code is LTR text, so it should get ltr-force (since we are checking it now)
         expect(code1.classList.contains('ltr-force')).toBe(true);
 
         // Now disable selector 'code'
@@ -90,7 +84,6 @@ describe("RTLService Dynamic CSS and Selectors", () => {
     });
 
     it("should process code blocks for RTL if they contain RTL text", () => {
-        // This is a specific requirement: "code blocks... should be checked for RTL language"
         document.body.innerHTML = `
             <code id="hebrew-code">שלום עולם</code>
         `;
@@ -100,6 +93,34 @@ describe("RTLService Dynamic CSS and Selectors", () => {
         const codeEl = document.getElementById('hebrew-code') as HTMLElement;
 
         expect(codeEl.classList.contains('rtl-force')).toBe(true);
+    });
+
+    it("should prioritize CSS classes and not set inline styles when method is 'css'", () => {
+        document.body.innerHTML = `
+            <p id="rtl-text">שלום</p>
+        `;
+        service.updateSettings({ targetSelectors: ['p'], method: 'css' });
+        service.processAllElements();
+
+        const p = document.getElementById('rtl-text') as HTMLElement;
+
+        expect(p.classList.contains('rtl-force')).toBe(true);
+        // Inline style should NOT be set
+        expect(p.style.direction).toBe('');
+    });
+
+    it("should set inline styles when method is 'direct'", () => {
+        document.body.innerHTML = `
+            <p id="rtl-text-direct">שלום</p>
+        `;
+        service.updateSettings({ targetSelectors: ['p'], method: 'direct' });
+        service.processAllElements();
+
+        const p = document.getElementById('rtl-text-direct') as HTMLElement;
+
+        expect(p.style.direction).toBe('rtl');
+        // Class should NOT be set (technically applyCSSClassRTL isn't called in direct switch case)
+        expect(p.classList.contains('rtl-force')).toBe(false);
     });
 
     it("should have comprehensive default target selectors", () => {

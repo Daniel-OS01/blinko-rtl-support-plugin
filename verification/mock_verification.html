@@ -16,10 +16,11 @@
         body { font-family: sans-serif; padding: 20px; }
         .box { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
         .markdown-body p { border: 1px dashed #aaa; padding: 5px; }
+        .nested-box { margin-left: 20px; border-left: 2px solid #eee; padding-left: 10px; }
     </style>
 </head>
 <body class="rtl-debug-mode">
-    <h1>RTL Verification</h1>
+    <h1>RTL Verification (Enhanced)</h1>
 
     <div class="box">
         <h3>Hebrew Paragraph</h3>
@@ -32,13 +33,24 @@
     </div>
 
     <div class="box">
-        <h3>Code Block (Should be LTR but processed)</h3>
-        <code id="code-block" class="ltr-force rtl-debug-ltr">console.log('hello');</code>
+        <h3>Code Block (Mixed Content)</h3>
+        <!-- Detected as RTL because the main content is Hebrew or config allows checking it -->
+        <code id="code-block" class="rtl-force rtl-debug-rtl">
+            // This is a comment
+            let x = "שלום";
+        </code>
     </div>
 
     <div class="box">
         <h3>Input (Hebrew)</h3>
         <input type="text" value="שלום" class="rtl-force rtl-debug-rtl">
+    </div>
+
+    <div class="box">
+        <h3>Nested Structure</h3>
+        <div class="nested-box">
+             <p class="rtl-force rtl-debug-rtl">פסקה מקוננת (Nested Paragraph)</p>
+        </div>
     </div>
 </body>
 </html>

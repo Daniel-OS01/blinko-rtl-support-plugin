@@ -19,8 +19,9 @@ def run():
         expect(p_ltr).to_have_class("ltr-force rtl-debug-ltr")
 
         # Verify Code Block
+        # In the updated mock, code block contains Hebrew so it should be RTL
         code_block = page.locator("#code-block")
-        expect(code_block).to_have_class("ltr-force rtl-debug-ltr")
+        expect(code_block).to_have_class("rtl-force rtl-debug-rtl")
 
         # Take screenshot
         page.screenshot(path="verification/verification.png", full_page=True)

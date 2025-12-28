@@ -35,7 +35,7 @@ export class RTLService {
     manualMode: false,
     manualToggle: false,
     darkMode: false,
-    method: 'all',
+    method: 'css', // Changed from 'all' to 'css' to prefer dynamic CSS
     customCSS: '',
     permanentCSS: false,
     dynamicCSS: DEFAULT_DYNAMIC_CSS,
@@ -313,16 +313,15 @@ export class RTLService {
         this.applyUnicodeBidiRTL(element);
         break;
       case 'all':
-      default:
         // Apply all methods for maximum compatibility
         // Prioritize CSS Class method as it uses the dynamic CSS
         this.applyCSSClassRTL(element, isRTL);
         this.applyAttributeRTL(element, isRTL);
-
-        // Direct styles are still useful as fallback, but we should be careful not to override CSS classes
-        // However, element.style usually overrides classes.
-        // We will keep it for now but user can edit dynamic CSS to use !important.
         this.applyDirectRTL(element, isRTL);
+        break;
+      default:
+        // Default fallthrough to CSS class if something unknown is selected, but 'css' is default in settings now.
+        this.applyCSSClassRTL(element, isRTL);
         break;
     }
 
