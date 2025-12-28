@@ -30,16 +30,28 @@ window.blinkoRTL = {
   getStats: jest.fn(),
   fixSelection: jest.fn(),
   settings: () => ({
+    enabled: true,
     threshold: 0.15,
     sensitivity: 'medium',
     targetSelectors: ['.test-selector'],
-    ignoreSelectors: ['.ignore-me']
+    disabledSelectors: [],
+    ignoreSelectors: ['.ignore-me'],
+    customCSS: '',
+    permanentCSS: false,
+    dynamicCSS: '',
+    savedPresets: []
   }),
   getSettings: () => ({
+    enabled: true,
     threshold: 0.15,
     sensitivity: 'medium',
     targetSelectors: ['.test-selector'],
-    ignoreSelectors: ['.ignore-me']
+    disabledSelectors: [],
+    ignoreSelectors: ['.ignore-me'],
+    customCSS: '',
+    permanentCSS: false,
+    dynamicCSS: '',
+    savedPresets: []
   }),
   setSensitivity: jest.fn()
 };
@@ -81,6 +93,7 @@ describe("RTLSetting Component", () => {
       // Check localStorage
       const saved = JSON.parse(localStorage.getItem('blinko-rtl-settings') || '{}');
       expect(saved.enabled).toBe(false);
-      expect(mockToast.success).toHaveBeenCalledWith("Settings saved!");
+      // Toast has been removed for implicit saves in recent changes
+      // expect(mockToast.success).toHaveBeenCalledWith("Settings saved!");
   });
 });

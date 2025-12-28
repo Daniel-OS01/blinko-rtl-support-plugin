@@ -112,7 +112,7 @@ textarea, [contenteditable], input[type="text"] {
 
 /* Layout preservation */
 #page-wrap, #page-wrap > div, #page-wrap > header,
-.flex, .grid, header, nav, .sidebar, .toolbar, button, .btn {
+.flex, .grid, header, nav, .sidebar, .toolbar {
     direction: ltr !important;
     unicode-bidi: isolate !important;
 }
@@ -139,40 +139,46 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
 
 /* Visual Debugger - RTL Detected */
 .rtl-debug-rtl {
-    outline: 2px solid rgba(255, 0, 0, 0.5) !important;
+    outline: 2px solid rgba(255, 0, 0, 0.8) !important;
+    outline-offset: -2px !important;
     position: relative !important;
 }
 .rtl-debug-rtl::after {
-    content: "RTL";
+    content: attr(data-rtl-debug) !important;
     position: absolute;
-    top: -15px;
+    top: 0;
     right: 0;
-    background: red;
+    background: rgba(255, 0, 0, 0.9);
     color: white;
     font-size: 10px;
-    padding: 1px 3px;
-    border-radius: 2px;
-    z-index: 10000;
+    padding: 1px 4px;
+    border-bottom-left-radius: 4px;
+    z-index: 2147483647;
     pointer-events: none;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
 /* Visual Debugger - LTR Detected */
 .rtl-debug-ltr {
-    outline: 2px solid rgba(0, 0, 255, 0.3) !important;
+    outline: 2px solid rgba(0, 0, 255, 0.6) !important;
+    outline-offset: -2px !important;
     position: relative !important;
 }
 .rtl-debug-ltr::after {
-    content: "LTR";
+    content: attr(data-rtl-debug) !important;
     position: absolute;
-    top: -15px;
+    top: 0;
     left: 0;
-    background: blue;
+    background: rgba(0, 0, 255, 0.9);
     color: white;
     font-size: 10px;
-    padding: 1px 3px;
-    border-radius: 2px;
-    z-index: 10000;
+    padding: 1px 4px;
+    border-bottom-right-radius: 4px;
+    z-index: 2147483647;
     pointer-events: none;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 `;
 
@@ -185,6 +191,7 @@ export const DEFAULT_TARGET_SELECTORS = [
     '.markdown-body li',
     '.markdown-body blockquote',
     '.markdown-body td', '.markdown-body th',
+    '.markdown-body figcaption',
 
     // Editor elements
     '.vditor-reset p',
