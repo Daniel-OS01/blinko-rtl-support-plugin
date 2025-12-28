@@ -23,6 +23,10 @@ export class RTLService {
   private debouncedProcessQueue: () => void;
   private debouncedProcessAll: () => void;
 
+  // Action Log
+  private actionLog: { element: string; action: string; details: string; timestamp: string }[] = [];
+  private readonly MAX_LOG_SIZE = 50;
+
   // Hebrew regex from userscript
   private readonly hebrewRegex = /\p{Script=Hebrew}/u;
   private readonly arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
@@ -71,6 +75,23 @@ export class RTLService {
 
   public getSettings(): RTLSettings {
     return { ...this.settings };
+  }
+
+  public getActionLog() {
+    return [...this.actionLog].reverse(); // Newest first
+  }
+
+  private logAction(element: HTMLElement, action: string, details: string) {
+      const entry = {
+          element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
+          action,
+          details,
+          timestamp: new Date().toLocaleTimeString()
+      };
+      this.actionLog.push(entry);
+      if (this.actionLog.length > this.MAX_LOG_SIZE) {
+          this.actionLog.shift();
+      }
   }
 
   public isEnabled(): boolean {
@@ -296,6 +317,15 @@ export class RTLService {
       else {
         isRTL = this.detector.detectRTL(text);
       }
+    }
+
+    // Log the decision if debug mode is on or we just want visibility
+    // We log only significant changes to avoid spam, or everything if requested
+    // For now, log everything to support the 'Real-time Action Log' requirement
+    if (this.settings.debugMode || Math.random() < 0.1) { // Throttle logging if needed, but let's log changes
+       // Check if direction actually changed to reduce noise?
+       // For now, log decision
+       this.logAction(element, isRTL ? 'RTL Applied' : 'LTR Applied', `Method: ${this.settings.method}`);
     }
 
     // Apply RTL using selected method

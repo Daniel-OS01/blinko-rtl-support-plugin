@@ -241,6 +241,7 @@ export function RTLSetting(): JSXInternal.Element {
   const [testResult, setTestResult] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState('');
   const [dynamicCSSPresetId, setDynamicCSSPresetId] = useState('');
+  const [actionLog, setActionLog] = useState<{ element: string; action: string; details: string; timestamp: string }[]>([]);
   const i18n = window.Blinko.i18n;
 
   useEffect(() => {
@@ -259,6 +260,20 @@ export function RTLSetting(): JSXInternal.Element {
         }
         }
     }
+
+    // Initial fetch of logs
+    if ((window as any).blinkoRTL?.getActionLog) {
+        setActionLog((window as any).blinkoRTL.getActionLog());
+    }
+
+    // Refresh log periodically or when settings change
+    const interval = setInterval(() => {
+         if ((window as any).blinkoRTL?.getActionLog) {
+            setActionLog((window as any).blinkoRTL.getActionLog());
+        }
+    }, 2000);
+    return () => clearInterval(interval);
+
   }, []);
 
   const saveSettings = (newSettings: Partial<RTLSettings>) => {
@@ -433,7 +448,7 @@ export function RTLSetting(): JSXInternal.Element {
       }}>
         <h3 style={{ margin: '0 0 15px 0', color: '#007bff' }}>⚡ Quick Actions</h3>
         
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
           <button
             onClick={processAllContent}
             disabled={!settings.enabled}
@@ -486,7 +501,70 @@ export function RTLSetting(): JSXInternal.Element {
           >
             🔄 Manual Toggle {settings.manualToggle ? 'ON' : 'OFF'}
           </button>
+
+          <button
+            onClick={() => {
+              const result = (window as any).blinkoRTL?.toggleDebugMode();
+              setSettings(prev => ({ ...prev, debugMode: result }));
+              window.Blinko.toast.success(`Debug Mode ${result ? 'ON' : 'OFF'}`);
+            }}
+            style={{
+              background: settings.debugMode ? '#6610f2' : '#6c757d',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            🐞 Debug Mode {settings.debugMode ? 'ON' : 'OFF'}
+          </button>
         </div>
+
+        {settings.debugMode && (
+             <div style={{ fontSize: '12px', color: '#6610f2', background: 'rgba(102, 16, 242, 0.1)', padding: '10px', borderRadius: '4px' }}>
+                 <strong>Debug Mode Active:</strong> RTL/LTR elements are highlighted with colored outlines. <br/>
+                 Red = RTL Detected, Blue = LTR Detected.
+             </div>
+        )}
+      </div>
+
+      {/* Real-time Action Log */}
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        background: '#fafafa',
+        maxHeight: '300px',
+        overflowY: 'auto'
+      }}>
+          <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>📜 Real-time Action Log</h3>
+          {actionLog.length === 0 ? (
+              <p style={{ color: '#666', fontStyle: 'italic' }}>No actions recorded yet...</p>
+          ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                  <thead>
+                      <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
+                          <th style={{ padding: '5px' }}>Time</th>
+                          <th style={{ padding: '5px' }}>Element</th>
+                          <th style={{ padding: '5px' }}>Action</th>
+                          <th style={{ padding: '5px' }}>Details</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {actionLog.map((log, i) => (
+                          <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                              <td style={{ padding: '5px', whiteSpace: 'nowrap' }}>{log.timestamp}</td>
+                              <td style={{ padding: '5px', fontFamily: 'monospace' }} title={log.element}>{log.element.length > 20 ? log.element.substring(0, 20) + '...' : log.element}</td>
+                              <td style={{ padding: '5px', color: log.action.includes('RTL') ? 'green' : 'blue' }}>{log.action}</td>
+                              <td style={{ padding: '5px', color: '#666' }}>{log.details}</td>
+                          </tr>
+                      ))}
+                  </tbody>
+              </table>
+          )}
       </div>
 
       {/* Dynamic CSS Rules Section */}

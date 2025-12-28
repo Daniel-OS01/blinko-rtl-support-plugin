@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Visual Debugger Test</title>
+    <link rel="stylesheet" href="Blinko-RTL.css">
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .box { padding: 10px; margin: 10px 0; border: 1px solid #ccc; }
+        /* Simulation classes from dynamic CSS */
+        .rtl-force { direction: rtl; text-align: start; }
+        .ltr-force { direction: ltr; text-align: start; }
+    </style>
+</head>
+<body class="rtl-debug-mode">
+    <h1>Visual Debugger Verification</h1>
+
+    <div class="box rtl-force rtl-debug-rtl" data-rtl-debug="RTL Detected">
+        <p>This box simulates RTL detection (Red Outline + Label).</p>
+        <p>שלום עולם</p>
+    </div>
+
+    <div class="box ltr-force rtl-debug-ltr" data-rtl-debug="LTR Detected">
+        <p>This box simulates LTR detection (Blue Outline + Label).</p>
+        <p>Hello World</p>
+    </div>
+
+    <div class="box rtl-force rtl-debug-rtl" style="margin-top: 50px;" data-rtl-debug="RTL Detected">
+        <p>Testing Hover visibility (should be visible on hover if configured that way).</p>
+    </div>
+</body>
+</html>
