@@ -168,7 +168,60 @@ export class RTLService {
           this.dynamicStyleElement.id = 'blinko-rtl-dynamic-css';
           document.head.appendChild(this.dynamicStyleElement);
       }
-      this.dynamicStyleElement.textContent = this.settings.dynamicCSS || DEFAULT_DYNAMIC_CSS;
+
+      let cssContent = this.settings.dynamicCSS || DEFAULT_DYNAMIC_CSS;
+
+      // Safety Mechanism: Append Debug CSS if Debug Mode is ON and missing from user CSS
+      if (this.settings.debugMode) {
+          // Check if user CSS has debug definitions. If not, append them.
+          // Simple check for class existence
+          if (!cssContent.includes('.rtl-debug-rtl')) {
+             cssContent += `
+/* Visual Debugger - RTL Detected */
+.rtl-debug-rtl {
+    outline: 2px solid rgba(255, 0, 0, 0.5) !important;
+    position: relative !important;
+}
+.rtl-debug-rtl::after {
+    content: "RTL";
+    position: absolute;
+    top: -15px;
+    right: 0;
+    background: red;
+    color: white;
+    font-size: 10px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 10000;
+    pointer-events: none;
+    white-space: nowrap;
+}`;
+          }
+          if (!cssContent.includes('.rtl-debug-ltr')) {
+              cssContent += `
+/* Visual Debugger - LTR Detected */
+.rtl-debug-ltr {
+    outline: 2px solid rgba(0, 0, 255, 0.3) !important;
+    position: relative !important;
+}
+.rtl-debug-ltr::after {
+    content: "LTR";
+    position: absolute;
+    top: -15px;
+    left: 0;
+    background: blue;
+    color: white;
+    font-size: 10px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 10000;
+    pointer-events: none;
+    white-space: nowrap;
+}`;
+          }
+      }
+
+      this.dynamicStyleElement.textContent = cssContent;
   }
 
   private removeDynamicCSS() {
@@ -272,10 +325,11 @@ export class RTLService {
         return;
     }
 
-    // Skip layout elements
+    // Skip layout elements, BUT exclude explicit target selectors like 'button' or '.btn' from being skipped
     if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar')) {
-       // Allow buttons inside toolbars if explicitly targeted?
-       // For now, keep as safety
+       // We still want to process the element if it matches a target selector, even if it's inside a layout container.
+       // The previous exclusion of 'button' and '.btn' here prevented buttons from being processed even if they were in targetSelectors.
+    }
     }
 
     const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
@@ -305,17 +359,44 @@ export class RTLService {
     }
     // Auto-detection with multiple methods
     else {
-      // Hebrew regex detection
-      if (this.settings.hebrewRegex && this.detectHebrewRegex(text)) {
-        isRTL = true;
-      }
-      // Arabic regex detection
-      else if (this.settings.arabicRegex && this.detectArabicRegex(text)) {
-        isRTL = true;
-      }
-      // Original detector
-      else {
-        isRTL = this.detector.detectRTL(text);
+      // SPECIAL HANDLING FOR CODE BLOCKS
+      // If element is a code block, use stricter threshold to prevent mixed content from flipping entire block
+      const isCodeBlock = element.matches('pre, code, .code-block, .CodeMirror-line, .notion-code-block');
+
+      if (isCodeBlock) {
+          // Stricter detection for code blocks
+          // We need a higher ratio of RTL characters to flip a code block
+          // Or we rely solely on detector with a higher threshold temporarily
+
+          // Count RTL chars manually for stricter check
+          const hebrewChars = (text.match(/[\u0590-\u05FF]/g) || []).length;
+          const arabicChars = (text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g) || []).length;
+          const totalRTL = hebrewChars + arabicChars;
+
+          // Use non-whitespace length for more accurate ratio in code blocks
+          // (Code blocks often have significant indentation/whitespace)
+          const nonWhitespaceLength = text.replace(/\s/g, '').length || text.length;
+          const ratio = totalRTL / nonWhitespaceLength;
+
+          // Require at least 60% RTL (of visible characters) to flip a code block
+          if (ratio > 0.6) {
+              isRTL = true;
+          }
+      } else {
+          // Normal detection
+
+          // Hebrew regex detection
+          if (this.settings.hebrewRegex && this.detectHebrewRegex(text)) {
+            isRTL = true;
+          }
+          // Arabic regex detection
+          else if (this.settings.arabicRegex && this.detectArabicRegex(text)) {
+            isRTL = true;
+          }
+          // Original detector
+          else {
+            isRTL = this.detector.detectRTL(text);
+          }
       }
     }
 
@@ -347,9 +428,8 @@ export class RTLService {
         this.applyCSSClassRTL(element, isRTL);
         this.applyAttributeRTL(element, isRTL);
 
-        // We avoid applying direct inline styles for 'all' mode to let Dynamic CSS rules take precedence
-        // unless they are explicitly needed.
-        // We only apply direct styles if 'direct' method is strictly chosen.
+        // Direct styles are still useful as fallback
+        this.applyDirectRTL(element, isRTL);
         break;
     }
 
@@ -372,7 +452,7 @@ export class RTLService {
             this.processElement(element as HTMLElement);
         });
     }
-    // Removed legacy code block LTR enforcement
+
   }
 
   private processPendingElements() {
@@ -451,10 +531,11 @@ export class RTLService {
       this.updateSettings({ debugMode: newVal });
       if (newVal) {
           document.body.classList.add('rtl-debug-mode');
+          this.injectDynamicCSS(); // Re-inject to ensure debug styles are present
           this.processAllElements(); // Re-process to apply visuals
       } else {
           document.body.classList.remove('rtl-debug-mode');
-          // Clear debug styles
+          // Clear debug styles classes
           document.querySelectorAll('.rtl-debug-rtl, .rtl-debug-ltr').forEach(el => {
               el.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
               el.removeAttribute('data-rtl-debug');
