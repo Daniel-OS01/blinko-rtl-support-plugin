@@ -31,6 +31,7 @@ describe("RTLService Dynamic CSS and Selectors", () => {
 
     afterEach(() => {
         service.disable();
+        jest.restoreAllMocks();
     });
 
     it("should inject default dynamic CSS on enable", () => {
@@ -59,7 +60,7 @@ describe("RTLService Dynamic CSS and Selectors", () => {
         // Using 'css' method by default now, so styles won't be inline unless we check classes
         service.updateSettings({ targetSelectors: ['p', 'code'], method: 'css' });
 
-        // Force process
+        // Force process immediately
         service.processAllElements();
 
         const p1 = document.getElementById('p1') as HTMLElement;
@@ -67,6 +68,7 @@ describe("RTLService Dynamic CSS and Selectors", () => {
 
         // Should be processed
         expect(p1.classList.contains('rtl-force')).toBe(true);
+        // Code is LTR text, so it should get ltr-force
         expect(code1.classList.contains('ltr-force')).toBe(true);
 
         // Now disable selector 'code'
@@ -123,11 +125,42 @@ describe("RTLService Dynamic CSS and Selectors", () => {
         expect(p.classList.contains('rtl-force')).toBe(false);
     });
 
-    it("should have comprehensive default target selectors", () => {
+    it("should have comprehensive default target selectors including figcaption", () => {
         const settings = service.getSettings();
         expect(settings.targetSelectors).toContain('pre');
         expect(settings.targetSelectors).toContain('code');
         expect(settings.targetSelectors).toContain('[role="button"]');
         expect(settings.targetSelectors).toContain('input[type="text"]');
+        expect(settings.targetSelectors).toContain('figcaption');
+    });
+
+    it("should log actions", () => {
+         // Use valid selector
+         document.body.innerHTML = `<input type="text" id="log-test" value="שלום">`;
+         service.updateSettings({ debugMode: true }); // Enable debug mode to force logging if conditional
+         service.processAllElements();
+
+         const logs = service.getActionLog();
+         expect(logs.length).toBeGreaterThan(0);
+         // element format: tagName + id + classes
+         // input#log-test
+         const log = logs.find(l => l.element.includes('input#log-test'));
+         expect(log).toBeTruthy();
+         expect(log?.action).toContain('RTL Applied');
+    });
+
+    it("should apply debug visuals in debug mode", () => {
+        // Use an element that is in DEFAULT_TARGET_SELECTORS, e.g. input[type="text"]
+        document.body.innerHTML = `<input type="text" id="debug-test" value="שלום">`;
+
+        // toggleDebugMode updates settings and calls updateSettings which calls debounceProcessAll.
+        // AND it calls processAllElements directly in toggleDebugMode.
+        service.toggleDebugMode(); // Enable debug mode
+
+        const el = document.getElementById('debug-test') as HTMLElement;
+
+        expect(document.body.classList.contains('rtl-debug-mode')).toBe(true);
+        expect(el.classList.contains('rtl-debug-rtl')).toBe(true);
+        expect(el.getAttribute('data-rtl-debug')).toBe('RTL Detected');
     });
 });

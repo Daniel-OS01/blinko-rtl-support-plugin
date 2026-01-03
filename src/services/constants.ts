@@ -139,7 +139,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
 
 /* Visual Debugger - RTL Detected */
 .rtl-debug-rtl {
-    outline: 2px solid rgba(255, 0, 0, 0.5) !important;
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.5) !important;
     position: relative !important;
 }
 .rtl-debug-rtl::after {
@@ -154,11 +154,12 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
     border-radius: 2px;
     z-index: 10000;
     pointer-events: none;
+    white-space: nowrap;
 }
 
 /* Visual Debugger - LTR Detected */
 .rtl-debug-ltr {
-    outline: 2px solid rgba(0, 0, 255, 0.3) !important;
+    box-shadow: 0 0 0 2px rgba(0, 0, 255, 0.3) !important;
     position: relative !important;
 }
 .rtl-debug-ltr::after {
@@ -173,6 +174,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
     border-radius: 2px;
     z-index: 10000;
     pointer-events: none;
+    white-space: nowrap;
 }
 `;
 
@@ -185,6 +187,7 @@ export const DEFAULT_TARGET_SELECTORS = [
     '.markdown-body li',
     '.markdown-body blockquote',
     '.markdown-body td', '.markdown-body th',
+    '.markdown-body figcaption',
 
     // Editor elements
     '.vditor-reset p',
@@ -192,6 +195,7 @@ export const DEFAULT_TARGET_SELECTORS = [
     '.vditor-reset span',
     '.vditor-reset h1', '.vditor-reset h2', '.vditor-reset h3', '.vditor-reset h4', '.vditor-reset h5', '.vditor-reset h6',
     '.vditor-reset li',
+    '.vditor-reset blockquote',
 
     // Code blocks (Explicitly requested to be checked)
     'pre',
@@ -216,5 +220,6 @@ export const DEFAULT_TARGET_SELECTORS = [
     '.tooltip',
     '.popover',
     '.card-masonry-grid .markdown-body p',
-    '.card-masonry-grid .markdown-body div'
+    '.card-masonry-grid .markdown-body div',
+    'figcaption'
 ];
