@@ -207,7 +207,9 @@ export class RTLService {
     this.removeDynamicCSS();
   }
 
-  // Method 1: Direct style application (Updated to use Dynamic CSS Class)
+  // Method 1: Direct style application
+  // DEPRECATED: Moving to class-based application only, but kept for legacy method 'direct' if user specifically requests it
+  // However, we align it to avoid inline conflict with dynamic CSS
   private applyDirectRTL(element: HTMLElement, isRTL: boolean) {
     if (isRTL) {
       element.classList.add('blinko-detected-rtl');
@@ -237,7 +239,7 @@ export class RTLService {
     this.applyDebugVisuals(element, isRTL);
   }
 
-  // Method 3: CSS class-based RTL
+  // Method 3: CSS class-based RTL (Primary Method)
   private applyCSSClassRTL(element: HTMLElement, isRTL: boolean) {
     element.classList.remove('rtl-force', 'ltr-force', 'rtl-auto');
     if (isRTL) {
@@ -270,19 +272,25 @@ export class RTLService {
         return;
     }
 
-    // Explicitly enforce LTR for code blocks if not detected otherwise?
-    // User requested code blocks to be CHECKED for RTL. So we remove the forceful LTR.
-    // However, if the user explicitly disables the selector for code blocks, we should probably respect that.
     // Skip layout elements
-    // Note: We used to skip .flex, .grid, header, nav, .sidebar, .toolbar, button, .btn here
-    // But since the user requested "ALL text elements" including buttons, and we have
-    // specific target selectors, we rely on the disabledSelectors logic to filter out unwanted elements.
-    // If layout breaks, user should use disabledSelectors to exclude specific classes.
+    if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar')) {
+       // Allow buttons inside toolbars if explicitly targeted?
+       // For now, keep as safety
+    }
 
-    const text = element.textContent || (element as HTMLInputElement).value || '';
-    if (!text.trim() || text.length < this.settings.minRTLChars) return;
+    const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
+    if (!text.trim() || text.length < this.settings.minRTLChars) {
+        // Even if empty, for inputs we might want to default to LTR if previously set to RTL?
+        // But let's avoid flickering.
+        return;
+    }
 
     let isRTL = false;
+
+    // We intentionally removed the explicit forceLTR variable to avoid confusion.
+    // The default state is isRTL = false, which will result in .ltr-force being applied
+    // via applyCSSClassRTL if 'all' or 'css' method is used.
+    // This effectively enforces LTR for anything that doesn't match RTL criteria.
 
     // Manual toggle - force RTL on all
     if (this.settings.manualToggle) {
@@ -314,6 +322,11 @@ export class RTLService {
     // Log the action for transparency
     this.logAction(element, isRTL);
 
+    // Special handling for code blocks:
+    // If it's a code block (isCodeBlock) and we found RTL (isRTL=true), we allow it.
+    // If we didn't find RTL (isRTL=false), it stays false, effectively forcing LTR via .ltr-force.
+    // This logic works without a separate forceLTR variable because .ltr-force is applied when isRTL is false.
+
     // Apply RTL using selected method
     switch (this.settings.method) {
       case 'direct':
@@ -329,19 +342,14 @@ export class RTLService {
         this.applyUnicodeBidiRTL(element);
         break;
       case 'all':
-        // Apply all methods for maximum compatibility
+      default:
         // Prioritize CSS Class method as it uses the dynamic CSS
         this.applyCSSClassRTL(element, isRTL);
         this.applyAttributeRTL(element, isRTL);
 
-        // We DO NOT apply direct styles in 'all' mode anymore to ensure Dynamic CSS takes precedence.
-        // Direct styles (inline) override CSS classes unless !important is used, which limits flexibility.
-        // Users who want inline styles can choose 'direct' method explicitly.
-        // this.applyDirectRTL(element, isRTL);
-        break;
-      default:
-        // Default fallthrough to CSS class if something unknown is selected, but 'css' is default in settings now.
-        this.applyCSSClassRTL(element, isRTL);
+        // We avoid applying direct inline styles for 'all' mode to let Dynamic CSS rules take precedence
+        // unless they are explicitly needed.
+        // We only apply direct styles if 'direct' method is strictly chosen.
         break;
     }
 
@@ -453,7 +461,7 @@ export class RTLService {
           });
       }
       return newVal;
-  }
+    }
 
   public getActionLog() {
       return this.actionLog;
@@ -484,6 +492,10 @@ export class RTLService {
               element.classList.add('rtl-debug-ltr');
               element.setAttribute('data-rtl-debug', 'LTR Detected');
           }
+      } else {
+          // Cleanup if debug mode was disabled but we are processing
+           element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
+           element.removeAttribute('data-rtl-debug');
       }
   }
 

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RTL Support Verification</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .test-section { margin-bottom: 30px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; }
+        .test-section h3 { margin-top: 0; }
+        .code-block { background: #f4f4f4; padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre; }
+        pre { background: #f4f4f4; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>RTL Support Verification</h1>
+
+    <div class="test-section">
+        <h3>1. Code Blocks (Should stay LTR unless content is RTL)</h3>
+        <p>Pure English Code:</p>
+        <pre>
+function hello() {
+    console.log("Hello World");
+}
+        </pre>
+        <p>Mixed Code (Comment is RTL):</p>
+        <pre>
+function hello() {
+    // שלום עולם
+    console.log("Hello World");
+}
+        </pre>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Inputs & Textareas</h3>
+        <input type="text" placeholder="English Placeholder" value="English Value">
+        <br><br>
+        <input type="text" placeholder="Hebrew Placeholder" value="שלום עולם">
+        <br><br>
+        <textarea>English Text Area</textarea>
+        <br><br>
+        <textarea>טקסט בעברית</textarea>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Checkboxes & Labels</h3>
+        <div>
+            <input type="checkbox" id="chk1">
+            <label for="chk1" class="checkbox-label">English Label</label>
+        </div>
+        <div>
+            <input type="checkbox" id="chk2">
+            <label for="chk2" class="checkbox-label">תווית בעברית</label>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Buttons</h3>
+        <button>English Button</button>
+        <button>כפתור בעברית</button>
+        <div role="button" class="btn">Role Button English</div>
+        <div role="button" class="btn">כפתור Role בעברית</div>
+    </div>
+
+    <div class="test-section">
+        <h3>5. Mixed Content</h3>
+        <p>This is English text with some Hebrew: שלום inside.</p>
+        <p>זהו טקסט בעברית עם English text בתוכו.</p>
+    </div>
+
+</body>
+</html>

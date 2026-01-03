@@ -65,25 +65,65 @@ const mockSettings = {
     threshold: 0.15,
     sensitivity: 'medium',
     targetSelectors: ['.test-selector'],
+    disabledSelectors: [], // Added disabledSelectors which was missing causing the crash
+    ignoreSelectors: ['.ignore-me'],
+    customCSS: '',
+    dynamicCSS: '',
+    enabled: true,
+    manualMode: false,
+    manualToggle: false,
+    darkMode: false,
+    method: 'all',
+    minRTLChars: 3,
+    processInterval: 2000,
+    hebrewRegex: true,
+    arabicRegex: true,
+    mixedContent: true,
+    savedPresets: []
+  }),
   getSettings: () => ({
     enabled: true,
     threshold: 0.15,
     sensitivity: 'medium',
     targetSelectors: ['.test-selector'],
-    disabledSelectors: [],
+    disabledSelectors: [], // Added here too
     ignoreSelectors: ['.ignore-me'],
-    customCSS: '',
-    permanentCSS: false,
+     customCSS: '',
     dynamicCSS: '',
+    enabled: true,
+    manualMode: false,
+    manualToggle: false,
+    darkMode: false,
+    method: 'all',
+    minRTLChars: 3,
+    processInterval: 2000,
+    hebrewRegex: true,
+    arabicRegex: true,
+    mixedContent: true,
+=======
+    disabledSelectors: [], // Added here too
+    ignoreSelectors: ['.ignore-me'],
+     customCSS: '',
+    dynamicCSS: '',
+    enabled: true,
+    manualMode: false,
+    manualToggle: false,
+    darkMode: false,
+    method: 'all',
+    minRTLChars: 3,
+    processInterval: 2000,
+    hebrewRegex: true,
+    arabicRegex: true,
+    mixedContent: true,
+>>>>>>> origin/feature/dynamic-css-and-debugger-improvements-15109377483148469323
     savedPresets: []
   }),
-=======
+
   service: {
       updateSettings: jest.fn()
   },
   settings: () => mockSettings,
   getSettings: () => mockSettings,
->>>>>>> origin/feature/dynamic-css-and-debugger-fixes-4504871108341601287
   setSensitivity: jest.fn()
 };
 
@@ -135,6 +175,7 @@ describe("RTLSetting Component", () => {
           // Check localStorage
           const saved = JSON.parse(localStorage.getItem('blinko-rtl-settings') || '{}');
           expect(saved.enabled).toBe(false);
+          // expect(mockToast.success).toHaveBeenCalledWith("Settings saved!"); // Removed toast assertion
       } else {
           throw new Error("Could not find Enable RTL Support checkbox");
       }

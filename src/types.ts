@@ -3,6 +3,8 @@ export interface Preset {
   name: string;
   css: string;
   dynamicCSS?: string; // Added dynamicCSS to presets
+  targetSelectors?: string[]; // Added targetSelectors to presets
+  disabledSelectors?: string[]; // Added disabledSelectors to presets
   isBuiltIn?: boolean;
 }
 

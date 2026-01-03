@@ -186,6 +186,9 @@ const BUILT_IN_PRESETS: Preset[] = [
     id: 'default',
     name: 'Default CSS',
     css: DEFAULT_CSS,
+    dynamicCSS: DEFAULT_DYNAMIC_CSS,
+    targetSelectors: DEFAULT_TARGET_SELECTORS,
+    disabledSelectors: [],
     isBuiltIn: true
   },
   {
@@ -241,7 +244,7 @@ export function RTLSetting(): JSXInternal.Element {
   const [testText, setTestText] = useState('');
   const [testResult, setTestResult] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState('');
-  const [dynamicCSSPresetId, setDynamicCSSPresetId] = useState('');
+  // const [dynamicCSSPresetId, setDynamicCSSPresetId] = useState(''); // Removed unused state
   const [actionLog, setActionLog] = useState<{ timestamp: string; element: string; direction: string; textPreview: string }[]>([]);
   const i18n = window.Blinko.i18n;
 
@@ -293,10 +296,6 @@ export function RTLSetting(): JSXInternal.Element {
             })
         );
     }
-    
-    // Toast only for manual actions, not implicit state updates if needed
-    // But keeping it simple for now
-    // window.Blinko.toast.success('Settings saved!');
   };
 
   const testRTL = () => {
@@ -360,19 +359,27 @@ export function RTLSetting(): JSXInternal.Element {
     const preset = allPresets.find(p => p.id === selectedPresetId);
 
     if (preset) {
-      saveSettings({ customCSS: preset.css });
+      saveSettings({
+          customCSS: preset.css,
+          dynamicCSS: preset.dynamicCSS || settings.dynamicCSS,
+          targetSelectors: preset.targetSelectors || settings.targetSelectors,
+          disabledSelectors: preset.disabledSelectors || settings.disabledSelectors
+      });
       window.Blinko.toast.success(`Preset "${preset.name}" loaded!`);
     }
   };
 
   const saveAsPreset = () => {
-    const name = prompt('Enter a name for this CSS preset:');
+    const name = prompt('Enter a name for this Full Preset (CSS, Dynamic Rules, Selectors):');
     if (!name) return;
 
     const newPreset: Preset = {
       id: `custom-${Date.now()}`,
       name: name,
       css: settings.customCSS,
+      dynamicCSS: settings.dynamicCSS,
+      targetSelectors: settings.targetSelectors,
+      disabledSelectors: settings.disabledSelectors,
       isBuiltIn: false
     };
 
@@ -523,7 +530,7 @@ export function RTLSetting(): JSXInternal.Element {
             🔄 Manual Toggle {settings.manualToggle ? 'ON' : 'OFF'}
           </button>
 
-          <button
+            <button
             onClick={() => {
               const result = (window as any).blinkoRTL?.toggleDebugMode();
               setSettings(prev => ({ ...prev, debugMode: result }));
@@ -539,7 +546,7 @@ export function RTLSetting(): JSXInternal.Element {
               fontWeight: '500'
             }}
           >
-            🐞 Debug Mode {settings.debugMode ? 'ON' : 'OFF'}
+            🐞 Visual Debugger {settings.debugMode ? 'ON' : 'OFF'}
           </button>
         </div>
 
@@ -600,6 +607,7 @@ export function RTLSetting(): JSXInternal.Element {
         <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: settings.darkMode ? '#333' : '#666' }}>
             These CSS rules are applied dynamically when RTL or LTR content is detected.
             Customize the class definitions below to control how detected elements are styled.
+            This single source of truth controls all detected element styling.
         </p>
 
         <div style={{ marginBottom: '15px' }}>
@@ -610,7 +618,7 @@ export function RTLSetting(): JSXInternal.Element {
             disabled={!settings.enabled}
             style={{
               width: '100%',
-              height: '250px',
+              height: '350px',
               padding: '10px',
               border: '1px solid #ccc',
               borderRadius: '4px',
@@ -650,6 +658,23 @@ export function RTLSetting(): JSXInternal.Element {
           >
              💾 Save Settings
           </button>
+        </div>
+
+        {/* Read-only view of active stylesheet */}
+        <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #ddd' }}>
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#6610f2' }}>Active Injected Stylesheet (Read-only Verification):</h4>
+            <div style={{
+                background: '#eee',
+                padding: '10px',
+                borderRadius: '4px',
+                maxHeight: '150px',
+                overflowY: 'auto',
+                fontSize: '11px',
+                fontFamily: 'monospace',
+                whiteSpace: 'pre-wrap'
+            }}>
+                {settings.dynamicCSS}
+            </div>
         </div>
       </div>
 
