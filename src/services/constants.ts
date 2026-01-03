@@ -82,6 +82,7 @@ textarea, [contenteditable], input[type="text"] {
 .rtl-settings-dark {
     background: #1a1a1a !important;
     color: #000 !important;
+    border: 1px solid #555 !important;
 }
 
 .rtl-settings-dark input, .rtl-settings-dark select, .rtl-settings-dark textarea {
@@ -118,17 +119,122 @@ textarea, [contenteditable], input[type="text"] {
 }
 `;
 
-export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules
-   These rules are applied via the 'css' method when RTL/LTR is detected.
-   You can modify these rules to customize the appearance of detected elements.
-*/
-
-/* Applied when RTL is detected */
-.rtl-force {
+export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
+.blinko-detected-rtl {
     direction: rtl !important;
     text-align: start !important;
     unicode-bidi: embed !important;
 }
+
+/* Visual Debugger Styles */
+.rtl-debug-mode .rtl-debug-rtl {
+    outline: 2px solid rgba(40, 167, 69, 0.5) !important; /* Green for RTL */
+    position: relative !important;
+}
+
+.rtl-debug-mode .rtl-debug-ltr {
+    outline: 2px solid rgba(220, 53, 69, 0.5) !important; /* Red for LTR */
+    position: relative !important;
+}
+
+.rtl-debug-mode .rtl-debug-rtl::after {
+    content: "RTL";
+    position: absolute;
+    top: -16px;
+    right: 0;
+    background: #28a745;
+    color: white;
+    font-size: 9px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 9999;
+}
+`;
+
+export const DEFAULT_TARGET_SELECTORS = [
+    // Content containers
+    '.markdown-body p',
+    '.markdown-body div',
+    '.markdown-body span',
+    '.markdown-body h1', '.markdown-body h2', '.markdown-body h3', '.markdown-body h4', '.markdown-body h5', '.markdown-body h6',
+    '.markdown-body li',
+    '.markdown-body blockquote',
+    '.markdown-body td', '.markdown-body th',
+    '.markdown-body figcaption',
+
+    // Editor elements
+    '.vditor-reset p',
+    '.vditor-reset div',
+    '.vditor-reset span',
+    '.vditor-reset h1', '.vditor-reset h2', '.vditor-reset h3', '.vditor-reset h4', '.vditor-reset h5', '.vditor-reset h6',
+    '.vditor-reset li',
+    '.vditor-reset blockquote',
+
+    // Code blocks (Explicitly requested to be checked)
+    'pre',
+    'code',
+    '.code-block',
+    '.CodeMirror-line',
+    '.notion-code-block',
+
+    // Inputs and Editable
+    'textarea',
+    'input[type="text"]',
+    'input[type="search"]',
+    '[contenteditable="true"]',
+    '[contenteditable]',
+
+    // UI Elements that might contain text
+    '[role="button"]',
+    '.btn',
+    'button',
+    '.checkbox-label',
+    'label',
+    '.tooltip',
+    '.popover',
+    '.card-masonry-grid .markdown-body p',
+    '.card-masonry-grid .markdown-body div',
+    'figcaption'
+];
+
+export const DEFAULT_SETTINGS = {
+  enabled: true,
+  sensitivity: 'medium',
+  forceDirection: 'auto',
+  autoDetect: true,
+  manualMode: false,
+  manualToggle: true,
+  darkMode: false,
+  method: 'all',
+  customCSS: `
+/* Default RTL Styles */
+[dir="rtl"] {
+  text-align: right;
+  direction: rtl;
+}
+`,
+  dynamicCSS: DEFAULT_DYNAMIC_CSS,
+  permanentCSS: false,
+  targetSelectors: DEFAULT_TARGET_SELECTORS,
+  disabledSelectors: [],
+  minRTLChars: 2,
+  processInterval: 1000,
+  hebrewRegex: true,
+  arabicRegex: true,
+  mixedContent: true,
+  savedPresets: [],
+  debugMode: false,
+  visualStyles: {
+    fontFamily: 'inherit',
+    lineHeight: 1.5,
+    paragraphMargin: 10
+  }
+};
+    direction: rtl !important;
+    text-align: start !important;
+    unicode-bidi: embed !important;
+}
+
 
 /* Applied when LTR is detected */
 .ltr-force {
@@ -223,3 +329,70 @@ export const DEFAULT_TARGET_SELECTORS = [
     '.card-masonry-grid .markdown-body div',
     'figcaption'
 ];
+=======
+/* Visual Debugger Styles */
+.rtl-debug-mode .rtl-debug-rtl {
+    outline: 2px solid rgba(40, 167, 69, 0.5) !important; /* Green for RTL */
+    position: relative !important;
+}
+
+.rtl-debug-mode .rtl-debug-ltr {
+    outline: 2px solid rgba(220, 53, 69, 0.5) !important; /* Red for LTR */
+    position: relative !important;
+}
+
+.rtl-debug-mode .rtl-debug-rtl::after {
+    content: "RTL";
+    position: absolute;
+    top: -16px;
+    right: 0;
+    background: #28a745;
+    color: white;
+    font-size: 9px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 9999;
+}
+`;
+
+export const DEFAULT_SETTINGS = {
+  enabled: true,
+  sensitivity: 'medium',
+  forceDirection: 'auto',
+  autoDetect: true,
+  manualMode: false,
+  manualToggle: true,
+  darkMode: false,
+  method: 'all',
+  customCSS: `
+/* Default RTL Styles */
+[dir="rtl"] {
+  text-align: right;
+  direction: rtl;
+}
+`,
+  dynamicCSS: DEFAULT_DYNAMIC_CSS,
+  permanentCSS: false,
+  targetSelectors: [
+    'p', 'div', 'span',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'li', 'td', 'th',
+    'input', 'textarea', '[contenteditable="true"]',
+    'pre', 'code', '.code-block',
+    'button', 'a', '[role="button"]', 'label', '.checkbox-wrapper'
+  ],
+  disabledSelectors: [],
+  minRTLChars: 2,
+  processInterval: 1000,
+  hebrewRegex: true,
+  arabicRegex: true,
+  mixedContent: true,
+  savedPresets: [],
+  debugMode: false,
+  visualStyles: {
+    fontFamily: 'inherit',
+    lineHeight: 1.5,
+    paragraphMargin: 10
+  }
+};
+>>>>>>> origin/feature/dynamic-css-and-selectors-4273263788362240749

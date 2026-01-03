@@ -1,6 +1,6 @@
 import { RTLDetector } from '../utils/rtlDetector';
 import { RTLSettings } from '../types';
-import { advancedRTLCSS, DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS } from './constants';
+import { advancedRTLCSS, DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './constants';
 import { debounce } from '../utils/debounce';
 import { PasteInterceptor } from '../utils/pasteInterceptor';
 import { HoverContextManager } from '../utils/hoverManager';
@@ -31,33 +31,7 @@ export class RTLService {
   private readonly hebrewRegex = /\p{Script=Hebrew}/u;
   private readonly arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
 
-  private settings: RTLSettings = {
-    enabled: false,
-    sensitivity: 'medium',
-    forceDirection: 'auto',
-    autoDetect: true,
-    manualMode: false,
-    manualToggle: false,
-    darkMode: false,
-    method: 'css', // Changed from 'all' to 'css' to prefer dynamic CSS
-    customCSS: '',
-    permanentCSS: false,
-    dynamicCSS: DEFAULT_DYNAMIC_CSS,
-    targetSelectors: DEFAULT_TARGET_SELECTORS,
-    disabledSelectors: [],
-    minRTLChars: 2,
-    processInterval: 2000,
-    hebrewRegex: true,
-    arabicRegex: true,
-    mixedContent: true,
-    savedPresets: [],
-    // Defaults for extended properties
-    vditorSupport: true,
-    markdownSupport: true,
-    enhancedTextProcessing: true,
-    processMixedContent: false,
-    debugMode: false
-  };
+  private settings: RTLSettings = { ...DEFAULT_SETTINGS, targetSelectors: DEFAULT_TARGET_SELECTORS };
 
   constructor(detector: RTLDetector) {
     this.detector = detector;
@@ -103,6 +77,7 @@ export class RTLService {
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
+        // Merge with default settings to ensure new fields are present
         this.settings = { ...this.settings, ...parsed };
 
         // Backwards compatibility for target selectors
@@ -111,6 +86,15 @@ export class RTLService {
              const oldDefaults = new Set(parsed.targetSelectors || []);
              const combined = [...new Set([...DEFAULT_TARGET_SELECTORS, ...Array.from(oldDefaults)])] as string[];
              this.settings.targetSelectors = combined;
+        }
+
+        // Ensure dynamicCSS has a default if missing (migration)
+        if (!this.settings.dynamicCSS) {
+            this.settings.dynamicCSS = DEFAULT_DYNAMIC_CSS;
+        }
+        // Ensure disabledSelectors is initialized
+        if (!this.settings.disabledSelectors) {
+            this.settings.disabledSelectors = [];
         }
 
         this.detector.updateConfig({
@@ -135,6 +119,9 @@ export class RTLService {
       sensitivity: this.settings.sensitivity,
       minRTLChars: this.settings.minRTLChars
     });
+
+    // Update injected CSS
+    this.injectCSS();
 
     if (this.settings.permanentCSS && this.settings.customCSS) {
       this.injectPermanentCSS();
@@ -165,10 +152,10 @@ export class RTLService {
   private injectCSS() {
     if (!this.styleElement) {
       this.styleElement = document.createElement('style');
-      this.styleElement.id = 'blinko-rtl-advanced-styles';
-      this.styleElement.textContent = advancedRTLCSS;
+      this.styleElement.id = 'blinko-dynamic-css';
       document.head.appendChild(this.styleElement);
     }
+    this.styleElement.textContent = this.settings.dynamicCSS;
   }
 
   private injectDynamicCSS() {
@@ -216,16 +203,20 @@ export class RTLService {
     this.removeDynamicCSS();
   }
 
-  // Method 1: Direct style application
+  // Method 1: Direct style application (Updated to use Dynamic CSS Class)
   private applyDirectRTL(element: HTMLElement, isRTL: boolean) {
     if (isRTL) {
-      element.style.direction = 'rtl';
-      element.style.textAlign = 'start';
-      element.style.unicodeBidi = 'embed';
+      element.classList.add('blinko-detected-rtl');
+      // Clean up legacy inline styles
+      element.style.removeProperty('direction');
+      element.style.removeProperty('text-align');
+      element.style.removeProperty('unicode-bidi');
     } else {
-      element.style.direction = 'ltr';
-      element.style.textAlign = 'start';
-      element.style.unicodeBidi = 'normal';
+      element.classList.remove('blinko-detected-rtl');
+      // Clean up legacy inline styles
+      element.style.removeProperty('direction');
+      element.style.removeProperty('text-align');
+      element.style.removeProperty('unicode-bidi');
     }
     this.applyDebugVisuals(element, isRTL);
   }
@@ -278,9 +269,6 @@ export class RTLService {
     // Explicitly enforce LTR for code blocks if not detected otherwise?
     // User requested code blocks to be CHECKED for RTL. So we remove the forceful LTR.
     // However, if the user explicitly disables the selector for code blocks, we should probably respect that.
-
-    // Previous code explicitly returned for 'pre', 'code', .code-block. Removed as per request.
-
     // Skip layout elements
     if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar, button, .btn')) {
       // Re-evaluate if this blanket skip is too aggressive given the user wants "all possible elements"
@@ -365,16 +353,16 @@ export class RTLService {
     if (!this.isRTLEnabled) return;
     
     // Process active target selectors
-    const activeSelectors = this.settings.targetSelectors.filter(s => !this.settings.disabledSelectors.includes(s));
-
+    const activeSelectors = this.settings.targetSelectors.filter(
+        s => !this.settings.disabledSelectors.includes(s)
+    );
     const selectors = activeSelectors.join(', ');
     if (selectors) {
         document.querySelectorAll(selectors).forEach(element => {
             this.processElement(element as HTMLElement);
         });
     }
-
-    // REMOVED: Explicit reset of code blocks to LTR.
+    // Removed legacy code block LTR enforcement
   }
 
   private processPendingElements() {
@@ -486,7 +474,11 @@ export class RTLService {
 
           let hasRelevantMutation = false;
 
-          const activeSelectors = this.settings.targetSelectors.filter(s => !this.settings.disabledSelectors.includes(s));
+          // Compute active selectors for matching
+          const activeSelectors = this.settings.targetSelectors.filter(
+            s => !this.settings.disabledSelectors.includes(s)
+          );
+          const selectors = activeSelectors.join(', ');
 
           mutations.forEach((mutation) => {
              if (mutation.type === 'childList') {
@@ -497,7 +489,7 @@ export class RTLService {
                              this.pendingElements.add(element);
                              hasRelevantMutation = true;
                          }
-                         const selectors = activeSelectors.join(', ');
+
                          if (selectors && element.querySelector(selectors)) {
                              element.querySelectorAll(selectors).forEach(child => {
                                  this.pendingElements.add(child as HTMLElement);

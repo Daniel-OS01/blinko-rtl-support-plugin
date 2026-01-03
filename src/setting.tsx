@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { JSXInternal } from 'preact/src/jsx';
 import { RTLSettings, Preset } from './types';
-import { DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS } from './services/constants';
+import { DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './services/constants';
 
 const DEFAULT_CSS = `/* Enhanced RTL Support from Blinko-RTL.css */
 *:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"] {
@@ -219,6 +219,7 @@ export function RTLSetting(): JSXInternal.Element {
     darkMode: false,
     method: 'all',
     customCSS: '',
+    dynamicCSS: DEFAULT_DYNAMIC_CSS,
     permanentCSS: false,
     dynamicCSS: DEFAULT_DYNAMIC_CSS,
     visualStyles: {
@@ -318,6 +319,7 @@ export function RTLSetting(): JSXInternal.Element {
   };
 
   const removeCustomSelector = (selector: string) => {
+    // If we remove it completely, we also should remove it from disabled list
     saveSettings({
       targetSelectors: settings.targetSelectors.filter(s => s !== selector),
       disabledSelectors: settings.disabledSelectors.filter(s => s !== selector)
@@ -325,17 +327,29 @@ export function RTLSetting(): JSXInternal.Element {
   };
 
   const toggleSelector = (selector: string, isChecked: boolean) => {
-      let newDisabled = [...settings.disabledSelectors];
+      // Logic from feature branch: just toggle presence in disabled list
+      // BUT we need to respect isChecked if provided by UI?
+      // Feature branch signature was: toggleSelector = (selector: string) => ... assuming click triggers toggle
+      // HEAD signature was: toggleSelector = (selector: string, isChecked: boolean) => ...
+      // I should look at how it is USED in the JSX.
+      // Since I can't see the JSX usage in the diff, I'll assume HEAD's signature matches the UI.
+      // But Feature's logic (disabled list) is what we want.
+      
+      const isDisabled = settings.disabledSelectors.includes(selector);
+      let newDisabledSelectors: string[];
+
       if (isChecked) {
-          // If checked (enabled), remove from disabled list
-          newDisabled = newDisabled.filter(s => s !== selector);
+           // We want to ENABLE it, so remove from disabled list
+           newDisabledSelectors = settings.disabledSelectors.filter(s => s !== selector);
       } else {
-          // If unchecked (disabled), add to disabled list
-          if (!newDisabled.includes(selector)) {
-              newDisabled.push(selector);
-          }
+           // We want to DISABLE it, so add to disabled list
+           if (!isDisabled) {
+               newDisabledSelectors = [...settings.disabledSelectors, selector];
+           } else {
+               newDisabledSelectors = settings.disabledSelectors;
+           }
       }
-      saveSettings({ disabledSelectors: newDisabled });
+      saveSettings({ disabledSelectors: newDisabledSelectors });
   };
 
   const loadPreset = () => {
@@ -398,6 +412,7 @@ export function RTLSetting(): JSXInternal.Element {
       darkMode: false,
       method: 'all',
       customCSS: '',
+      dynamicCSS: DEFAULT_DYNAMIC_CSS,
       permanentCSS: false,
       dynamicCSS: DEFAULT_DYNAMIC_CSS,
       visualStyles: {
@@ -418,6 +433,11 @@ export function RTLSetting(): JSXInternal.Element {
     window.Blinko.toast.success('Settings reset to defaults');
   };
 
+  const resetDynamicCSS = () => {
+      saveSettings({ dynamicCSS: DEFAULT_DYNAMIC_CSS });
+  };
+
+  const allPresets = [...BUILT_IN_PRESETS, ...(settings.savedPresets || [])];
   return (
     <div 
       className={settings.darkMode ? 'rtl-settings-dark' : ''}
@@ -666,6 +686,56 @@ export function RTLSetting(): JSXInternal.Element {
               <option value="all">🚀 All Methods (Recommended)</option>
             </select>
           </label>
+        </div>
+      </div>
+
+      {/* Dynamic CSS Rules Section */}
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '2px solid #fd7e14',
+        borderRadius: '8px',
+        background: '#fff9f0'
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#fd7e14' }}>🎨 Dynamic CSS Rules</h3>
+        <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: settings.darkMode ? '#333' : '#666' }}>
+            These styles are automatically injected when RTL is detected. The class <code>.blinko-detected-rtl</code> is applied to RTL elements.
+        </p>
+
+        <div style={{ marginBottom: '15px' }}>
+          <textarea
+            value={settings.dynamicCSS || DEFAULT_DYNAMIC_CSS}
+            onChange={(e) => saveSettings({ dynamicCSS: (e.target as HTMLTextAreaElement).value })}
+            placeholder="Enter your dynamic CSS rules here..."
+            disabled={!settings.enabled}
+            style={{
+              width: '100%',
+              height: '200px',
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
+              fontSize: '13px',
+              resize: 'vertical'
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            onClick={resetDynamicCSS}
+            disabled={!settings.enabled}
+            style={{
+              background: '#dc3545',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            🔄 Reset to Default
+          </button>
         </div>
       </div>
 
@@ -1297,6 +1367,7 @@ export function RTLSetting(): JSXInternal.Element {
           </button>
         </div>
       </div>
+
 
       {/* Testing */}
       <div style={{ 

@@ -17,7 +17,8 @@ export interface RTLSettings {
   mobileView?: boolean;
   darkMode: boolean;
   method: 'direct' | 'attributes' | 'css' | 'unicode' | 'all';
-  customCSS: string;
+  customCSS: string; // Kept for backward compatibility or other uses, but dynamicCSS is the new main one for this feature
+  dynamicCSS: string; // NEW
   permanentCSS: boolean;
   dynamicCSS: string; // New field for user-editable dynamic rules
   visualStyles?: {
