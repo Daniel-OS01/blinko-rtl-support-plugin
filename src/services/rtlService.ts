@@ -13,8 +13,6 @@ export class RTLService {
   private dynamicStyleElement: HTMLStyleElement | null = null;
   private observer: MutationObserver | null = null;
   private autoProcessInterval: any = null;
-  private actionLog: { timestamp: string; element: string; direction: string; textPreview: string }[] = [];
-
   // Managers
   private pasteInterceptor: PasteInterceptor;
   private hoverManager: HoverContextManager | null = null;
@@ -53,23 +51,24 @@ export class RTLService {
   }
 
   public getActionLog() {
-    return [...this.actionLog].reverse(); // Newest first
+    return [...this.actionLog];
   }
 
   private logAction(element: HTMLElement, isRTL: boolean) {
-      const entry = {
+      const logEntry = {
           timestamp: new Date().toLocaleTimeString(),
           element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
           direction: isRTL ? 'RTL' : 'LTR',
-          textPreview: (element.textContent || '').substring(0, 30).trim()
+          textPreview: (element.textContent || '').substring(0, 20) + '...'
       };
-      this.actionLog.push(entry);
+
+      this.actionLog.unshift(logEntry);
       if (this.actionLog.length > this.MAX_LOG_SIZE) {
-          this.actionLog.shift();
+          this.actionLog.pop();
       }
-      
-      // Dispatch event for UI
-      window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: entry }));
+
+      // Dispatch event for UI updates
+      window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
   }
 
   public isEnabled(): boolean {
@@ -266,13 +265,11 @@ export class RTLService {
   private applyDirectRTL(element: HTMLElement, isRTL: boolean) {
     if (isRTL) {
       element.classList.add('blinko-detected-rtl');
-      // Clean up legacy inline styles
-      element.style.removeProperty('direction');
-      element.style.removeProperty('text-align');
-      element.style.removeProperty('unicode-bidi');
+      element.style.direction = 'rtl';
+      element.style.textAlign = 'right';
+      element.style.unicodeBidi = 'embed';
     } else {
       element.classList.remove('blinko-detected-rtl');
-      // Clean up legacy inline styles
       element.style.removeProperty('direction');
       element.style.removeProperty('text-align');
       element.style.removeProperty('unicode-bidi');
@@ -322,6 +319,7 @@ export class RTLService {
 
     // Skip disabled selectors
     if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => element.matches(selector))) {
+        console.log('Skipping disabled element:', element.tagName);
         return;
     }
 
@@ -330,10 +328,11 @@ export class RTLService {
        // We still want to process the element if it matches a target selector, even if it's inside a layout container.
        // The previous exclusion of 'button' and '.btn' here prevented buttons from being processed even if they were in targetSelectors.
     }
-    }
 
     const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
+    console.log('Processing element:', element.tagName, 'Text:', text.substring(0, 10));
     if (!text.trim() || text.length < this.settings.minRTLChars) {
+        console.log('Skipping short text');
         // Even if empty, for inputs we might want to default to LTR if previously set to RTL?
         // But let's avoid flickering.
         return;
@@ -447,8 +446,11 @@ export class RTLService {
         s => !this.settings.disabledSelectors.includes(s)
     );
     const selectors = activeSelectors.join(', ');
+    console.log('processAllElements selectors:', selectors);
     if (selectors) {
-        document.querySelectorAll(selectors).forEach(element => {
+        const elements = document.querySelectorAll(selectors);
+        console.log('processAllElements found elements:', elements.length);
+        elements.forEach(element => {
             this.processElement(element as HTMLElement);
         });
     }
@@ -543,25 +545,6 @@ export class RTLService {
       }
       return newVal;
     }
-
-  public getActionLog() {
-      return this.actionLog;
-  }
-
-  private logAction(element: HTMLElement, isRTL: boolean) {
-      const logEntry = {
-          timestamp: new Date().toLocaleTimeString(),
-          element: element.tagName.toLowerCase() + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
-          direction: isRTL ? 'RTL' : 'LTR',
-          textPreview: (element.textContent || '').substring(0, 20) + '...'
-      };
-
-      this.actionLog.unshift(logEntry);
-      if (this.actionLog.length > 50) this.actionLog.pop(); // Keep last 50 entries
-
-      // Dispatch event for UI updates
-      window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
-  }
 
   private applyDebugVisuals(element: HTMLElement, isRTL: boolean) {
       if (this.settings.debugMode) {

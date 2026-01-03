@@ -65,11 +65,10 @@ const mockSettings = {
     threshold: 0.15,
     sensitivity: 'medium',
     targetSelectors: ['.test-selector'],
-    disabledSelectors: [], // Added disabledSelectors which was missing causing the crash
+    disabledSelectors: [],
     ignoreSelectors: ['.ignore-me'],
     customCSS: '',
     dynamicCSS: '',
-    enabled: true,
     manualMode: false,
     manualToggle: false,
     darkMode: false,
@@ -86,11 +85,10 @@ const mockSettings = {
     threshold: 0.15,
     sensitivity: 'medium',
     targetSelectors: ['.test-selector'],
-    disabledSelectors: [], // Added here too
+    disabledSelectors: [],
     ignoreSelectors: ['.ignore-me'],
-     customCSS: '',
+    customCSS: '',
     dynamicCSS: '',
-    enabled: true,
     manualMode: false,
     manualToggle: false,
     darkMode: false,
@@ -100,22 +98,6 @@ const mockSettings = {
     hebrewRegex: true,
     arabicRegex: true,
     mixedContent: true,
-=======
-    disabledSelectors: [], // Added here too
-    ignoreSelectors: ['.ignore-me'],
-     customCSS: '',
-    dynamicCSS: '',
-    enabled: true,
-    manualMode: false,
-    manualToggle: false,
-    darkMode: false,
-    method: 'all',
-    minRTLChars: 3,
-    processInterval: 2000,
-    hebrewRegex: true,
-    arabicRegex: true,
-    mixedContent: true,
->>>>>>> origin/feature/dynamic-css-and-debugger-improvements-15109377483148469323
     savedPresets: []
   }),
 

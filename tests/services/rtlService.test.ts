@@ -15,6 +15,7 @@ describe("RTLService", () => {
   let detector: RTLDetector;
 
   beforeEach(() => {
+    localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
     detector = new RTLDetector();

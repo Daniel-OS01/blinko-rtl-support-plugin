@@ -261,7 +261,7 @@ export const DEFAULT_SETTINGS = {
   forceDirection: 'auto',
   autoDetect: true,
   manualMode: false,
-  manualToggle: true,
+  manualToggle: false,
   darkMode: false,
   method: 'all',
   customCSS: `
