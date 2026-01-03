@@ -113,7 +113,7 @@ textarea, [contenteditable], input[type="text"] {
 
 /* Layout preservation */
 #page-wrap, #page-wrap > div, #page-wrap > header,
-.flex, .grid, header, nav, .sidebar, .toolbar, button, .btn {
+.flex, .grid, header, nav, .sidebar, .toolbar {
     direction: ltr !important;
     unicode-bidi: isolate !important;
 }
@@ -148,6 +148,53 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
     padding: 1px 3px;
     border-radius: 2px;
     z-index: 9999;
+}
+
+/* Applied when LTR is detected */
+.ltr-force {
+    direction: ltr !important;
+    text-align: start !important;
+    unicode-bidi: embed !important;
+}
+
+/* Visual Debugger - RTL Detected */
+.rtl-debug-rtl {
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.5) !important;
+    position: relative !important;
+}
+.rtl-debug-rtl::after {
+    content: "RTL";
+    position: absolute;
+    top: -15px;
+    right: 0;
+    background: red;
+    color: white;
+    font-size: 10px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 10000;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* Visual Debugger - LTR Detected */
+.rtl-debug-ltr {
+    box-shadow: 0 0 0 2px rgba(0, 0, 255, 0.3) !important;
+    position: relative !important;
+}
+.rtl-debug-ltr::after {
+    content: "LTR";
+    position: absolute;
+    top: -15px;
+    left: 0;
+    background: blue;
+    color: white;
+    font-size: 10px;
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 10000;
+    pointer-events: none;
+    white-space: nowrap;
 }
 `;
 

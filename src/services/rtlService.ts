@@ -13,6 +13,7 @@ export class RTLService {
   private dynamicStyleElement: HTMLStyleElement | null = null;
   private observer: MutationObserver | null = null;
   private autoProcessInterval: any = null;
+  private actionLog: { timestamp: string; element: string; direction: string; textPreview: string }[] = [];
 
   // Managers
   private pasteInterceptor: PasteInterceptor;
@@ -24,7 +25,7 @@ export class RTLService {
   private debouncedProcessAll: () => void;
 
   // Action Log
-  private actionLog: { element: string; action: string; details: string; timestamp: string }[] = [];
+  private actionLog: { timestamp: string; element: string; direction: string; textPreview: string }[] = [];
   private readonly MAX_LOG_SIZE = 50;
 
   // Hebrew regex from userscript
@@ -55,17 +56,20 @@ export class RTLService {
     return [...this.actionLog].reverse(); // Newest first
   }
 
-  private logAction(element: HTMLElement, action: string, details: string) {
+  private logAction(element: HTMLElement, isRTL: boolean) {
       const entry = {
+          timestamp: new Date().toLocaleTimeString(),
           element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
-          action,
-          details,
-          timestamp: new Date().toLocaleTimeString()
+          direction: isRTL ? 'RTL' : 'LTR',
+          textPreview: (element.textContent || '').substring(0, 30).trim()
       };
       this.actionLog.push(entry);
       if (this.actionLog.length > this.MAX_LOG_SIZE) {
           this.actionLog.shift();
       }
+      
+      // Dispatch event for UI
+      window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: entry }));
   }
 
   public isEnabled(): boolean {
@@ -270,7 +274,8 @@ export class RTLService {
     // User requested code blocks to be CHECKED for RTL. So we remove the forceful LTR.
     // However, if the user explicitly disables the selector for code blocks, we should probably respect that.
     // Skip layout elements
-    if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar, button, .btn')) {
+    // Removed button and .btn from skip list to allow processing if selected
+    if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar')) {
       // Re-evaluate if this blanket skip is too aggressive given the user wants "all possible elements"
       // But keeping it for now to avoid breaking the app layout
     }
@@ -307,14 +312,8 @@ export class RTLService {
       }
     }
 
-    // Log the decision if debug mode is on or we just want visibility
-    // We log only significant changes to avoid spam, or everything if requested
-    // For now, log everything to support the 'Real-time Action Log' requirement
-    if (this.settings.debugMode || Math.random() < 0.1) { // Throttle logging if needed, but let's log changes
-       // Check if direction actually changed to reduce noise?
-       // For now, log decision
-       this.logAction(element, isRTL ? 'RTL Applied' : 'LTR Applied', `Method: ${this.settings.method}`);
-    }
+    // Log the action for transparency
+    this.logAction(element, isRTL);
 
     // Apply RTL using selected method
     switch (this.settings.method) {
@@ -447,9 +446,29 @@ export class RTLService {
           // Clear debug styles
           document.querySelectorAll('.rtl-debug-rtl, .rtl-debug-ltr').forEach(el => {
               el.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
+              el.removeAttribute('data-rtl-debug');
           });
       }
       return newVal;
+  }
+
+  public getActionLog() {
+      return this.actionLog;
+  }
+
+  private logAction(element: HTMLElement, isRTL: boolean) {
+      const logEntry = {
+          timestamp: new Date().toLocaleTimeString(),
+          element: element.tagName.toLowerCase() + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
+          direction: isRTL ? 'RTL' : 'LTR',
+          textPreview: (element.textContent || '').substring(0, 20) + '...'
+      };
+
+      this.actionLog.unshift(logEntry);
+      if (this.actionLog.length > 50) this.actionLog.pop(); // Keep last 50 entries
+
+      // Dispatch event for UI updates
+      window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
   }
 
   private applyDebugVisuals(element: HTMLElement, isRTL: boolean) {

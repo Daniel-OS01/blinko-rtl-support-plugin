@@ -242,7 +242,7 @@ export function RTLSetting(): JSXInternal.Element {
   const [testResult, setTestResult] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState('');
   const [dynamicCSSPresetId, setDynamicCSSPresetId] = useState('');
-  const [actionLog, setActionLog] = useState<{ element: string; action: string; details: string; timestamp: string }[]>([]);
+  const [actionLog, setActionLog] = useState<{ timestamp: string; element: string; direction: string; textPreview: string }[]>([]);
   const i18n = window.Blinko.i18n;
 
   useEffect(() => {
@@ -262,19 +262,20 @@ export function RTLSetting(): JSXInternal.Element {
         }
     }
 
-    // Initial fetch of logs
-    if ((window as any).blinkoRTL?.getActionLog) {
-        setActionLog((window as any).blinkoRTL.getActionLog());
+    // Load initial logs if available
+    if ((window as any).blinkoRTL?.service?.getActionLog) {
+        setActionLog((window as any).blinkoRTL.service.getActionLog());
     }
 
-    // Refresh log periodically or when settings change
-    const interval = setInterval(() => {
-         if ((window as any).blinkoRTL?.getActionLog) {
-            setActionLog((window as any).blinkoRTL.getActionLog());
-        }
-    }, 2000);
-    return () => clearInterval(interval);
+    // Listen for log updates
+    const handleLogUpdate = (e: CustomEvent) => {
+        setActionLog(prev => [e.detail, ...prev].slice(0, 50));
+    };
 
+    window.addEventListener('rtl-action-logged', handleLogUpdate as EventListener);
+    return () => {
+        window.removeEventListener('rtl-action-logged', handleLogUpdate as EventListener);
+    };
   }, []);
 
   const saveSettings = (newSettings: Partial<RTLSettings>) => {
@@ -787,6 +788,23 @@ export function RTLSetting(): JSXInternal.Element {
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
               type="checkbox"
+              checked={settings.debugMode}
+              onChange={(e) => {
+                  const debugMode = (e.target as HTMLInputElement).checked;
+                  saveSettings({ debugMode });
+                  (window as any).blinkoRTL?.service?.toggleDebugMode();
+              }}
+              disabled={!settings.enabled}
+            />
+            <span>🐞 Visual Debugger</span>
+          </label>
+          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: '#666' }}>
+            Highlights detected RTL (Red) and LTR (Blue) elements with tooltips
+          </p>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
               checked={settings.autoDetect}
               onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked })}
               disabled={!settings.enabled}
@@ -862,6 +880,56 @@ export function RTLSetting(): JSXInternal.Element {
           <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: '#666' }}>
             Applies dark styling to RTL plugin components only
           </p>
+        </div>
+      </div>
+
+      {/* Real-time Transparency Log */}
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '1px solid #17a2b8',
+        borderRadius: '8px',
+        background: '#f0faff'
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#17a2b8' }}>📊 Real-time Action Log</h3>
+        <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: settings.darkMode ? '#333' : '#666' }}>
+            Shows real-time detection and application updates for transparency.
+        </p>
+
+        <div style={{
+            maxHeight: '200px',
+            overflowY: 'auto',
+            background: 'white',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            padding: '10px',
+            fontSize: '12px',
+            fontFamily: 'Monaco, monospace'
+        }}>
+            {actionLog.length === 0 ? (
+                <div style={{ color: '#999', textAlign: 'center', padding: '20px' }}>No actions logged yet...</div>
+            ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ borderBottom: '1px solid #eee', textAlign: 'left' }}>
+                            <th style={{ padding: '5px' }}>Time</th>
+                            <th style={{ padding: '5px' }}>Element</th>
+                            <th style={{ padding: '5px' }}>Dir</th>
+                            <th style={{ padding: '5px' }}>Content</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {actionLog.map((log, i) => (
+                            <tr key={i} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                                <td style={{ padding: '5px', color: '#666' }}>{log.timestamp}</td>
+                                <td style={{ padding: '5px', color: '#007bff' }}>{log.element}</td>
+                                <td style={{ padding: '5px', fontWeight: 'bold', color: log.direction === 'RTL' ? '#28a745' : '#dc3545' }}>{log.direction}</td>
+                                <td style={{ padding: '5px', color: '#333' }}>{log.textPreview}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
         </div>
       </div>
 
