@@ -81,6 +81,9 @@ describe("RTLService Dynamic CSS and Selectors", () => {
         // Force process
         service.processAllElements();
 
+        console.log('Test Debug - p1 has rtl-force:', p1.classList.contains('rtl-force'));
+        console.log('Test Debug - code1 has ltr-force:', code1.classList.contains('ltr-force'));
+
         expect(p1.classList.contains('rtl-force')).toBe(true);
         expect(code1.classList.contains('ltr-force')).toBe(false); // Should be skipped
     });
@@ -146,7 +149,7 @@ describe("RTLService Dynamic CSS and Selectors", () => {
          // input#log-test
          const log = logs.find(l => l.element.includes('input#log-test'));
          expect(log).toBeTruthy();
-         expect(log?.action).toContain('RTL Applied');
+         expect(log?.direction).toBe('RTL');
     });
 
     it("should apply debug visuals in debug mode", () => {
