@@ -274,11 +274,10 @@ export class RTLService {
     // User requested code blocks to be CHECKED for RTL. So we remove the forceful LTR.
     // However, if the user explicitly disables the selector for code blocks, we should probably respect that.
     // Skip layout elements
-    // Removed button and .btn from skip list to allow processing if selected
-    if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar')) {
-      // Re-evaluate if this blanket skip is too aggressive given the user wants "all possible elements"
-      // But keeping it for now to avoid breaking the app layout
-    }
+    // Note: We used to skip .flex, .grid, header, nav, .sidebar, .toolbar, button, .btn here
+    // But since the user requested "ALL text elements" including buttons, and we have
+    // specific target selectors, we rely on the disabledSelectors logic to filter out unwanted elements.
+    // If layout breaks, user should use disabledSelectors to exclude specific classes.
 
     const text = element.textContent || (element as HTMLInputElement).value || '';
     if (!text.trim() || text.length < this.settings.minRTLChars) return;
@@ -334,7 +333,11 @@ export class RTLService {
         // Prioritize CSS Class method as it uses the dynamic CSS
         this.applyCSSClassRTL(element, isRTL);
         this.applyAttributeRTL(element, isRTL);
-        this.applyDirectRTL(element, isRTL);
+
+        // We DO NOT apply direct styles in 'all' mode anymore to ensure Dynamic CSS takes precedence.
+        // Direct styles (inline) override CSS classes unless !important is used, which limits flexibility.
+        // Users who want inline styles can choose 'direct' method explicitly.
+        // this.applyDirectRTL(element, isRTL);
         break;
       default:
         // Default fallthrough to CSS class if something unknown is selected, but 'css' is default in settings now.
