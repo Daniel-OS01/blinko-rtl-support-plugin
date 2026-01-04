@@ -67,12 +67,8 @@ System.register([], (exports) => ({
       
       createToggleButton();
       
-      // Check if previously enabled
-      const savedState = localStorage.getItem('blinko-rtl-enabled');
-      if (savedState === 'true') {
-        rtlService.enable();
-        updateToggleButtonState();
-      }
+      // Sync toggle button with service state (which is auto-enabled via settings now)
+      updateToggleButtonState();
 
       // Listen for settings changes to update UI
       window.addEventListener('rtl-settings-changed', (event: any) => {

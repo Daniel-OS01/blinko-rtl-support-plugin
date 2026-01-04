@@ -224,7 +224,6 @@ export function RTLSetting(): JSXInternal.Element {
     customCSS: '',
     dynamicCSS: DEFAULT_DYNAMIC_CSS,
     permanentCSS: false,
-    dynamicCSS: DEFAULT_DYNAMIC_CSS,
     visualStyles: {
       fontFamily: 'inherit',
       lineHeight: 1.5,
@@ -277,8 +276,16 @@ export function RTLSetting(): JSXInternal.Element {
     };
 
     window.addEventListener('rtl-action-logged', handleLogUpdate as EventListener);
+
+    // Listen for settings changes to stay in sync
+    const handleSettingsChange = (e: CustomEvent) => {
+        setSettings(prev => ({ ...prev, ...e.detail }));
+    };
+    window.addEventListener('rtl-settings-changed', handleSettingsChange as EventListener);
+
     return () => {
         window.removeEventListener('rtl-action-logged', handleLogUpdate as EventListener);
+        window.removeEventListener('rtl-settings-changed', handleSettingsChange as EventListener);
     };
   }, []);
 
@@ -444,7 +451,6 @@ export function RTLSetting(): JSXInternal.Element {
       customCSS: '',
       dynamicCSS: DEFAULT_DYNAMIC_CSS,
       permanentCSS: false,
-      dynamicCSS: DEFAULT_DYNAMIC_CSS,
       visualStyles: {
         fontFamily: 'inherit',
         lineHeight: 1.5,
@@ -1487,119 +1493,6 @@ export function RTLSetting(): JSXInternal.Element {
             }}
           >
             🗑️ Clear CSS
-          </button>
-        </div>
-      </div>
-
-
-      {/* Testing */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #ddd', 
-        borderRadius: '8px', 
-        background: '#fafafa' 
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🧪 Test RTL Detection</h3>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <textarea
-            value={testText}
-            onChange={(e) => setTestText((e.target as HTMLTextAreaElement).value)}
-            placeholder="Enter text to test RTL detection..."
-            style={{ 
-              width: '100%', 
-              height: '80px', 
-              padding: '10px', 
-              border: '1px solid #ccc', 
-              borderRadius: '4px',
-              resize: 'vertical',
-              fontFamily: 'inherit'
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-          <button 
-            onClick={testRTL}
-            style={{ 
-              background: '#28a745', 
-              color: 'white', 
-              border: 'none', 
-              padding: '8px 16px', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
-            }}
-          >
-            🧪 Test Detection
-          </button>
-        </div>
-
-        {testResult && (
-          <div style={{ 
-            padding: '10px', 
-            background: testResult === 'RTL' ? '#d4edda' : '#f8d7da', 
-            borderRadius: '4px',
-            borderLeft: `4px solid ${testResult === 'RTL' ? '#28a745' : '#dc3545'}`,
-            marginBottom: '15px'
-          }}>
-            Detection Result: <strong>{testResult === 'RTL' ? '➡️ RTL' : '⬅️ LTR'}</strong>
-          </div>
-        )}
-
-        <div style={{ fontSize: '14px', color: settings.darkMode ? '#333' : '#666', lineHeight: '1.6' }}>
-          <strong>🧪 Test Examples:</strong><br/>
-          <strong>Hebrew:</strong> שלום עולם - זהו טקסט בעברית<br/>
-          <strong>Arabic:</strong> مرحبا بالعالم - هذا نص باللغة العربية<br/>
-          <strong>English:</strong> Hello world - this is English text
-        </div>
-      </div>
-
-      {/* Advanced Actions */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #ddd', 
-        borderRadius: '8px', 
-        background: '#fafafa' 
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>🔧 Advanced Actions</h3>
-        
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={resetToDefaults}
-            style={{ 
-              padding: '10px 20px', 
-              background: '#dc3545', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: 'pointer', 
-              fontWeight: '500' 
-            }}
-          >
-            🔄 Reset to Defaults
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              const settingsData = JSON.stringify(settings, null, 2);
-              navigator.clipboard.writeText(settingsData);
-              window.Blinko.toast.success('Settings copied to clipboard');
-            }}
-            style={{ 
-              padding: '10px 20px', 
-              background: '#28a745', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: 'pointer', 
-              fontWeight: '500' 
-            }}
-          >
-            📋 Export Settings
           </button>
         </div>
       </div>
