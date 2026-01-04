@@ -34,8 +34,6 @@ export class RTLService {
 
   constructor(detector: RTLDetector) {
     this.detector = detector;
-    this.loadSettings();
-    
     // Initialize Managers
     this.pasteInterceptor = new PasteInterceptor(detector);
 
@@ -44,6 +42,8 @@ export class RTLService {
     this.debouncedProcessQueue = debounce(() => {
        this.processPendingElements();
     }, 50);
+
+    this.loadSettings();
   }
 
   public getSettings(): RTLSettings {
@@ -108,15 +108,45 @@ export class RTLService {
         if (this.settings.permanentCSS && this.settings.customCSS) {
           this.injectPermanentCSS();
         }
+
+        // Auto-enable if settings say so
+        if (this.settings.enabled) {
+            // Defer enabling to ensure DOM is ready if called from constructor
+            if (document.body) {
+                this.enable();
+            } else {
+                // If body not ready, index.tsx will likely call enable if we set a flag or rely on settings
+                // For now, we rely on index.tsx calling enable() based on localStorage('blinko-rtl-enabled')
+                // But we should sync them.
+                // If index.tsx fails to enable, we might have an issue.
+                // However, we are in loadSettings.
+            }
+        }
+
       } catch (error) {
         console.error('Failed to load RTL plugin settings:', error);
       }
+    } else {
+        // No saved settings, use defaults. Default is enabled=true.
+        if (this.settings.enabled && document.body) {
+            this.enable();
+        }
     }
   }
 
   public updateSettings(newSettings: Partial<RTLSettings>) {
+    const wasEnabled = this.isRTLEnabled;
     this.settings = { ...this.settings, ...newSettings };
     localStorage.setItem('blinko-rtl-settings', JSON.stringify(this.settings));
+
+    // Handle Enable/Disable based on settings change
+    if (newSettings.enabled !== undefined) {
+        if (newSettings.enabled && !wasEnabled) {
+            this.enable();
+        } else if (!newSettings.enabled && wasEnabled) {
+            this.disable();
+        }
+    }
 
     this.detector.updateConfig({
       sensitivity: this.settings.sensitivity,
@@ -473,6 +503,9 @@ export class RTLService {
 
   public enable() {
     this.isRTLEnabled = true;
+    this.settings.enabled = true;
+    localStorage.setItem('blinko-rtl-enabled', 'true');
+
     this.injectCSS();
     this.injectDynamicCSS(); // Inject dynamic CSS
     if (this.settings.permanentCSS) {
@@ -497,6 +530,9 @@ export class RTLService {
 
   public disable() {
     this.isRTLEnabled = false;
+    this.settings.enabled = false;
+    localStorage.setItem('blinko-rtl-enabled', 'false');
+
     this.removeCSS();
     
     // Disable Managers
@@ -566,6 +602,7 @@ export class RTLService {
   private setupObserver() {
       if (this.observer) this.observer.disconnect();
       if (!this.settings.autoDetect) return;
+      if (!document.body) return;
 
       this.observer = new MutationObserver((mutations) => {
           if (!this.isRTLEnabled) return;
