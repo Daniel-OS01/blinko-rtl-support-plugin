@@ -599,8 +599,8 @@ export function RTLSetting(): JSXInternal.Element {
                       <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
                           <th style={{ padding: '5px' }}>Time</th>
                           <th style={{ padding: '5px' }}>Element</th>
-                          <th style={{ padding: '5px' }}>Action</th>
-                          <th style={{ padding: '5px' }}>Details</th>
+                          <th style={{ padding: '5px' }}>Dir</th>
+                          <th style={{ padding: '5px' }}>Content</th>
                       </tr>
                   </thead>
                   <tbody>
@@ -608,8 +608,8 @@ export function RTLSetting(): JSXInternal.Element {
                           <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
                               <td style={{ padding: '5px', whiteSpace: 'nowrap' }}>{log.timestamp}</td>
                               <td style={{ padding: '5px', fontFamily: 'monospace' }} title={log.element}>{log.element.length > 20 ? log.element.substring(0, 20) + '...' : log.element}</td>
-                              <td style={{ padding: '5px', color: log.action.includes('RTL') ? 'green' : 'blue' }}>{log.action}</td>
-                              <td style={{ padding: '5px', color: '#666' }}>{log.details}</td>
+                              <td style={{ padding: '5px', color: log.direction === 'RTL' ? 'green' : 'blue' }}>{log.direction}</td>
+                              <td style={{ padding: '5px', color: '#666' }}>{log.textPreview}</td>
                           </tr>
                       ))}
                   </tbody>

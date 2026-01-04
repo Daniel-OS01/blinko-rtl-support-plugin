@@ -1441,14 +1441,14 @@ ul {
               /* @__PURE__ */ o("thead", { children: /* @__PURE__ */ o("tr", { style: { textAlign: "left", borderBottom: "1px solid #ccc" }, children: [
                 /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Time" }),
                 /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Element" }),
-                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Action" }),
-                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Details" })
+                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Dir" }),
+                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Content" })
               ] }) }),
               /* @__PURE__ */ o("tbody", { children: f.map((l, g) => /* @__PURE__ */ o("tr", { style: { borderBottom: "1px solid #eee" }, children: [
                 /* @__PURE__ */ o("td", { style: { padding: "5px", whiteSpace: "nowrap" }, children: l.timestamp }),
                 /* @__PURE__ */ o("td", { style: { padding: "5px", fontFamily: "monospace" }, title: l.element, children: l.element.length > 20 ? l.element.substring(0, 20) + "..." : l.element }),
-                /* @__PURE__ */ o("td", { style: { padding: "5px", color: l.action.includes("RTL") ? "green" : "blue" }, children: l.action }),
-                /* @__PURE__ */ o("td", { style: { padding: "5px", color: "#666" }, children: l.details })
+                /* @__PURE__ */ o("td", { style: { padding: "5px", color: l.direction === "RTL" ? "green" : "blue" }, children: l.direction }),
+                /* @__PURE__ */ o("td", { style: { padding: "5px", color: "#666" }, children: l.textPreview })
               ] }, g)) })
             ] })
           ] }),
