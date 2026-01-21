@@ -98,11 +98,11 @@ nav,
 }
 
 /* Button elements maintain original layout and styling */
-button,
-.btn,
-input[type="button"],
-input[type="submit"],
-input[type="reset"] {
+button:not(.rtl-force),
+.btn:not(.rtl-force),
+input[type="button"]:not(.rtl-force),
+input[type="submit"]:not(.rtl-force),
+input[type="reset"]:not(.rtl-force) {
   direction: ltr !important;
   unicode-bidi: isolate !important;
   text-align: center !important;
@@ -2595,28 +2595,49 @@ header {
   text-align: start !important;
 }
 
-/* Ensure toggle button looks good in dark mode */
+/* RTL Toggle Button - Global Floating Action Button */
 .rtl-toggle-btn {
   position: fixed;
   bottom: 20px;
-  right: 20px; /* Default to right, but might flip in RTL interface? No, let's keep it right */
+  right: 20px;
   z-index: 9999;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  background-color: var(--primary, #007bff);
+  color: var(--text-on-primary, #ffffff);
   border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
   cursor: pointer;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s, background-color 0.2s;
+}
 
-  /* Using variables if available, else standard fallback */
-  background-color: var(--primary, #007bff);
-  color: var(--text-on-primary, #ffffff);
+.rtl-toggle-btn:hover {
+  background-color: var(--primary-hover, #0056b3);
+  transform: scale(1.1) translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+.rtl-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.rtl-toggle-btn.active {
+  background-color: var(--success, #28a745);
+  box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.3);
+}
+
+.rtl-toggle-btn:hover {
+  transform: scale(1.1);
+  filter: brightness(0.9);
+}
+
+.rtl-toggle-btn.active {
+  background-color: var(--success, #28a745);
 }
 
 .rtl-toggle-btn:hover {
@@ -2641,6 +2662,15 @@ header {
 .dark .rtl-toggle-btn.active {
   background-color: var(--green-dark, #1e7e34);
   color: white;
+}
+
+.dark .rtl-toggle-btn:hover {
+  background-color: var(--primary-dark-hover, #004494);
+}
+
+.dark .rtl-toggle-btn.active {
+  background-color: var(--success-dark, #1e7e34);
+  box-shadow: 0 0 0 4px rgba(30, 126, 52, 0.3);
 }
 
 /* Context menu item - only RTL when content is Hebrew */

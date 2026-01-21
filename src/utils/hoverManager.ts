@@ -53,7 +53,7 @@ export class HoverContextManager {
     this.styleElement.textContent = `
       .rtl-hover-action-btn {
         position: fixed;
-        z-index: 10000;
+        z-index: 9998;
         background: var(--bg-card, #fff);
         border: 1px solid var(--border-color, #ddd);
         border-radius: 4px;
@@ -166,9 +166,11 @@ export class HoverContextManager {
     // }
 
     // Let's make it overlay top-right corner, subtle
+    // Ensure it doesn't go off-screen horizontally
+    const leftPos = Math.min(rect.right - 30, window.innerWidth - 40);
+
     this.button.style.top = (rect.top + 2) + 'px'; // +2 offset
-    // Align right
-    this.button.style.left = (rect.right - 30) + 'px'; // Inside right corner
+    this.button.style.left = leftPos + 'px';
 
     // Handle RTL pages where "right" might be "start".
     // But getBoundingClientRect returns viewport coordinates.
