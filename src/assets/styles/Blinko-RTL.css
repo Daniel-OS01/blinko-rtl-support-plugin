@@ -2631,6 +2631,15 @@ header {
   box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.3);
 }
 
+.rtl-toggle-btn:hover {
+  transform: scale(1.1);
+  filter: brightness(0.9);
+}
+
+.rtl-toggle-btn.active {
+  background-color: var(--success, #28a745);
+}
+
 .dark .rtl-toggle-btn {
   background-color: var(--primary-dark, #0056b3);
   color: var(--text-on-primary, #e0e0e0);
