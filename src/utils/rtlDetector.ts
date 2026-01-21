@@ -19,26 +19,27 @@ export class RTLDetector {
       ...config
     } as RTLDetectionConfig;
 
-     // If sensitivity is provided but threshold isn't, map it
-    // Note: RTLDetectionConfig in CharacterCodeStrategy doesn't have 'threshold',
-    // but the one defined in the original file did.
-    // The previous implementation had a local interface extension.
-    // We should respect the config passed.
-
     // Initialize strategies
     this.charCodeStrategy = new CharacterCodeStrategy(this.config);
-    // RegexStrategy(checkHebrew, checkArabic, threshold, minRTLChars)
-    // We use a default threshold of 0.3 if not provided in config (config doesn't have threshold, it has sensitivity)
-    // CharacterCodeStrategy maps sensitivity to threshold internally. RegexStrategy uses raw threshold.
-    // Let's assume medium sensitivity ~ 0.3 threshold for RegexStrategy for now, or map it.
-    // However, the bug was passing minRTLChars as threshold.
-    this.regexStrategy = new RegexStrategy(true, true, 0.3, this.config.minRTLChars);
+
+    // Map sensitivity to threshold for RegexStrategy
+    const threshold = this.getThresholdFromSensitivity(this.config.sensitivity);
+    this.regexStrategy = new RegexStrategy(true, true, threshold, this.config.minRTLChars);
 
     // Default to combined strategy
     this.strategy = new CombinedStrategy([
         this.charCodeStrategy,
         this.regexStrategy
     ]);
+  }
+
+  private getThresholdFromSensitivity(sensitivity: 'high' | 'medium' | 'low'): number {
+      switch (sensitivity) {
+          case 'high': return 0.1;
+          case 'medium': return 0.15;
+          case 'low': return 0.4;
+          default: return 0.15;
+      }
   }
 
   public setStrategy(strategyName: 'CharacterCode' | 'Regex' | 'Combined') {
@@ -76,8 +77,15 @@ export class RTLDetector {
    * Update detection configuration
    */
   public updateConfig(config: Partial<RTLDetectionConfig>): void {
-    this.charCodeStrategy.updateConfig(config);
-    this.regexStrategy.updateConfig({ minRTLChars: config.minRTLChars });
     this.config = { ...this.config, ...config };
+
+    this.charCodeStrategy.updateConfig(config);
+
+    // Update RegexStrategy threshold if sensitivity changed
+    const threshold = this.getThresholdFromSensitivity(this.config.sensitivity);
+    this.regexStrategy.updateConfig({
+        minRTLChars: config.minRTLChars,
+        threshold: threshold
+    });
   }
 }

@@ -2640,10 +2640,28 @@ header {
   background-color: var(--success, #28a745);
 }
 
+.rtl-toggle-btn:hover {
+  transform: scale(1.1);
+}
+
+.rtl-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.rtl-toggle-btn.active {
+  background-color: var(--green, #28a745);
+}
+
 .dark .rtl-toggle-btn {
   background-color: var(--primary-dark, #0056b3);
   color: var(--text-on-primary, #e0e0e0);
   border: 1px solid var(--border-color, #444);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dark .rtl-toggle-btn.active {
+  background-color: var(--green-dark, #1e7e34);
+  color: white;
 }
 
 .dark .rtl-toggle-btn:hover {
