@@ -171,6 +171,16 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
     white-space: nowrap;
 }
 
+/* Generic RTL Force - High Specificity */
+.rtl-force,
+[dir="rtl"].rtl-force,
+.markdown-body .rtl-force,
+.vditor-reset .rtl-force {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: embed !important;
+}
+
 /* Specific overrides for Inputs and Textareas */
 input.rtl-force,
 textarea.rtl-force,

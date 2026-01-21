@@ -382,20 +382,9 @@ export class RTLService {
               isRTL = true;
           }
       } else {
-          // Normal detection
-
-          // Hebrew regex detection
-          if (this.settings.hebrewRegex && this.detectHebrewRegex(text)) {
-            isRTL = true;
-          }
-          // Arabic regex detection
-          else if (this.settings.arabicRegex && this.detectArabicRegex(text)) {
-            isRTL = true;
-          }
-          // Original detector
-          else {
-            isRTL = this.detector.detectRTL(text);
-          }
+          // Normal detection using configured strategy (Strategy Pattern)
+          // This supports sensitivity settings and proper mixed content handling
+          isRTL = this.detector.detectRTL(text);
       }
     }
 
