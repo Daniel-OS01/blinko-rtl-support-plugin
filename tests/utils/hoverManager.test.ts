@@ -115,7 +115,7 @@ describe('HoverContextManager', () => {
        // @ts-ignore
        hoverManager.currentTarget = wrapper;
        // @ts-ignore
-       hoverManager.onButtonClick({ stopPropagation: () => {} } as MouseEvent);
+       hoverManager.onButtonClick({ stopPropagation: () => {}, preventDefault: () => {} } as MouseEvent);
     }
 
     expect(wrapper.getAttribute('data-manual-dir')).toBe('rtl');
@@ -123,7 +123,7 @@ describe('HoverContextManager', () => {
 
     // Click again to flip back
     // @ts-ignore
-    hoverManager.onButtonClick({ stopPropagation: () => {} } as MouseEvent);
+    hoverManager.onButtonClick({ stopPropagation: () => {}, preventDefault: () => {} } as MouseEvent);
     expect(wrapper.getAttribute('data-manual-dir')).toBe('ltr');
   });
 
@@ -145,7 +145,7 @@ describe('HoverContextManager', () => {
     hoverManager.currentTarget = wrapper;
 
     // @ts-ignore
-    hoverManager.onButtonClick({ stopPropagation: () => {} } as MouseEvent);
+    hoverManager.onButtonClick({ stopPropagation: () => {}, preventDefault: () => {} } as MouseEvent);
 
     // Was RTL, should become LTR
     expect(wrapper.getAttribute('data-manual-dir')).toBe('ltr');

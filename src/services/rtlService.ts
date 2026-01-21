@@ -100,6 +100,11 @@ export class RTLService {
             this.settings.disabledSelectors = [];
         }
 
+        // Ensure autoDetect defaults to true if undefined (fix for existing users)
+        if (this.settings.autoDetect === undefined) {
+            this.settings.autoDetect = true;
+        }
+
         this.detector.updateConfig({
           sensitivity: this.settings.sensitivity,
           minRTLChars: this.settings.minRTLChars
@@ -111,6 +116,9 @@ export class RTLService {
       } catch (error) {
         console.error('Failed to load RTL plugin settings:', error);
       }
+    } else {
+        // No saved settings, ensure we start with defaults (autoDetect: true)
+        this.settings.autoDetect = true;
     }
   }
 
@@ -345,15 +353,8 @@ export class RTLService {
     // via applyCSSClassRTL if 'all' or 'css' method is used.
     // This effectively enforces LTR for anything that doesn't match RTL criteria.
 
-    // Check for element-specific manual override (Highest Priority)
-    const manualDir = element.getAttribute('data-manual-dir');
-    if (manualDir === 'rtl') {
-      isRTL = true;
-    } else if (manualDir === 'ltr') {
-      isRTL = false;
-    }
     // Manual toggle - force RTL on all
-    else if (this.settings.manualToggle) {
+    if (this.settings.manualToggle) {
       isRTL = true;
     }
     // Force direction override
@@ -486,12 +487,12 @@ export class RTLService {
         this.hoverManager.init();
     }
 
-    // Add input listener for immediate response to typing
-    document.addEventListener('input', this.handleInput, { capture: true, passive: true });
-
     this.setupObserver();
     this.startAutoProcessing();
-    this.debouncedProcessAll();
+
+    // Immediate process followed by debounced to catch initial load
+    this.processAllElements();
+    setTimeout(() => this.processAllElements(), 500); // Retry shortly after for late loaders
   }
 
   public disable() {
@@ -505,23 +506,12 @@ export class RTLService {
         this.hoverManager = null;
     }
 
-    document.removeEventListener('input', this.handleInput);
-
     this.stopAutoProcessing();
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
     }
     this.pendingElements.clear();
-  }
-
-  private handleInput = (event: Event) => {
-      const target = event.target as HTMLElement;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
-          // Process immediately (debounced)
-          this.pendingElements.add(target);
-          this.debouncedProcessQueue();
-      }
   }
 
   public toggle() {
