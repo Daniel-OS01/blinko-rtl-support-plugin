@@ -2760,7 +2760,7 @@ ${r}
     `, this.button.title = "Flip Direction", this.styleElement = document.createElement("style"), this.styleElement.textContent = `
       .rtl-hover-action-btn {
         position: fixed;
-        z-index: 9998;
+        z-index: 10000;
         background: var(--bg-card, #fff);
         border: 1px solid var(--border-color, #ddd);
         border-radius: 4px;
@@ -2835,7 +2835,7 @@ ${r}
       _(this, "processElement", (e) => {
         if (!e)
           return;
-        if (this.settings.disabledSelectors && this.settings.disabledSelectors.some((s) => e.matches(s))) {
+        if (this.settings.disabledSelectors && this.settings.disabledSelectors.some((r) => e.matches(r))) {
           console.log("Skipping disabled element:", e.tagName);
           return;
         }
@@ -3044,10 +3044,10 @@ ${r}
         selectors: this.settings.targetSelectors,
         processElement: (e) => this.processElement(e),
         isEnabled: () => this.isRTLEnabled
-      }), this.hoverManager.init()), document.addEventListener("input", this.handleInput, { capture: !0, passive: !0 }), this.setupObserver(), this.startAutoProcessing(), this.debouncedProcessAll();
+      }), this.hoverManager.init()), this.setupObserver(), this.startAutoProcessing(), this.debouncedProcessAll();
     }
     disable() {
-      this.isRTLEnabled = !1, this.removeCSS(), this.pasteInterceptor.disable(), this.hoverManager && (this.hoverManager.destroy(), this.hoverManager = null), document.removeEventListener("input", this.handleInput), this.stopAutoProcessing(), this.observer && (this.observer.disconnect(), this.observer = null), this.pendingElements.clear();
+      this.isRTLEnabled = !1, this.removeCSS(), this.pasteInterceptor.disable(), this.hoverManager && (this.hoverManager.destroy(), this.hoverManager = null), this.stopAutoProcessing(), this.observer && (this.observer.disconnect(), this.observer = null), this.pendingElements.clear();
     }
     toggle() {
       this.isRTLEnabled ? this.disable() : this.enable();
