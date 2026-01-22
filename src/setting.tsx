@@ -200,16 +200,6 @@ const BUILT_IN_PRESETS: Preset[] = [
   }
 ];
 
-const STANDARD_FONTS = [
-  'inherit',
-  'Arial',
-  'Arial Hebrew',
-  'David',
-  'Miriam',
-  'Segoe UI',
-  'Tahoma'
-];
-
 export function RTLSetting(): JSXInternal.Element {
   const [settings, setSettings] = useState<RTLSettings>({
     enabled: true,
@@ -255,15 +245,12 @@ export function RTLSetting(): JSXInternal.Element {
         if (currentSettings) {
             setSettings(currentSettings);
         } else {
-            const savedSettings = localStorage.getItem('blinko-rtl-settings');
-            if (savedSettings) {
-                try {
-                    const parsed = JSON.parse(savedSettings);
-                    setSettings(prev => ({ ...prev, ...parsed }));
-                } catch (error) {
-                    console.error('Failed to load RTL plugin settings:', error);
-                }
-            }
+            // Fallback if global API isn't ready immediately
+            // But we should try to avoid direct localStorage access here if possible
+            // to respect the StorageManager abstraction.
+            // However, RTLService updates the global object.
+            // If the global object isn't ready, we might just wait or use defaults.
+            // Let's rely on RTLService to have initialized correctly.
         }
     };
 
@@ -319,6 +306,9 @@ export function RTLSetting(): JSXInternal.Element {
     if ((window as any).blinkoRTL?.service) {
         (window as any).blinkoRTL.service.updateSettings(newSettings);
     } else {
+        // Fallback or error logging if service is missing
+        console.warn('RTL Service not found, settings might not persist correctly via StorageManager');
+        // We could write to localStorage as a desperate fallback but let's trust the service
         localStorage.setItem('blinko-rtl-settings', JSON.stringify(updatedSettings));
         window.dispatchEvent(
             new CustomEvent('rtl-settings-changed', {
@@ -459,13 +449,18 @@ export function RTLSetting(): JSXInternal.Element {
   };
 
   const exportSettings = () => {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(settings, null, 2));
-      const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", "blinko-rtl-settings.json");
-      document.body.appendChild(downloadAnchorNode); // required for firefox
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
+      const service = (window as any).blinkoRTL?.service;
+      if (service) {
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(service.exportSettings());
+          const downloadAnchorNode = document.createElement('a');
+          downloadAnchorNode.setAttribute("href", dataStr);
+          downloadAnchorNode.setAttribute("download", `blinko-rtl-settings-v1.json`); // Versioned filename
+          document.body.appendChild(downloadAnchorNode);
+          downloadAnchorNode.click();
+          downloadAnchorNode.remove();
+      } else {
+          window.Blinko.toast.error('Export failed: Service not available');
+      }
   };
 
   const importSettings = (event: Event) => {
@@ -476,31 +471,15 @@ export function RTLSetting(): JSXInternal.Element {
       reader.onload = (e) => {
           try {
               const content = e.target?.result as string;
-              const imported = JSON.parse(content);
+              const service = (window as any).blinkoRTL?.service;
 
-              // Validate minimal structure
-              if (typeof imported !== 'object' || imported === null) {
-                  throw new Error('Invalid JSON format: Not an object');
+              if (service) {
+                  service.importSettings(content);
+                  setImportError('');
+                  window.Blinko.toast.success('Settings imported successfully!');
+              } else {
+                  throw new Error('Service not available');
               }
-
-              // Basic validation of fields
-              if (imported.targetSelectors && !Array.isArray(imported.targetSelectors)) {
-                   throw new Error('Invalid JSON format: targetSelectors must be an array');
-              }
-
-              // Merge with current settings to ensure we don't lose structure
-              // But imported values override current
-              const merged = { ...settings, ...imported };
-
-              // Ensure savedPresets is an array if present
-              if (imported.savedPresets && !Array.isArray(imported.savedPresets)) {
-                  merged.savedPresets = settings.savedPresets || [];
-              }
-
-              // Restore functions/defaults if missing from import (though merging handles this mostly)
-              saveSettings(merged);
-              setImportError('');
-              window.Blinko.toast.success('Settings imported successfully!');
 
           } catch (err) {
               console.error('Import failed', err);

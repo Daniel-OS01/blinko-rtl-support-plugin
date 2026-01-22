@@ -4,6 +4,7 @@ import { advancedRTLCSS, DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_
 import { debounce } from '../utils/debounce';
 import { PasteInterceptor } from '../utils/pasteInterceptor';
 import { HoverContextManager } from '../utils/hoverManager';
+import { StorageManager } from './storageManager';
 
 type Direction = 'rtl' | 'ltr' | 'neutral';
 
@@ -18,6 +19,7 @@ export class RTLService {
   // Managers
   private pasteInterceptor: PasteInterceptor;
   private hoverManager: HoverContextManager | null = null;
+  private storageManager: StorageManager;
 
   // Optimizations
   private pendingElements: Set<HTMLElement> = new Set();
@@ -36,6 +38,7 @@ export class RTLService {
 
   constructor(detector: RTLDetector) {
     this.detector = detector;
+    this.storageManager = new StorageManager();
     this.loadSettings();
     
     // Initialize Managers
@@ -78,55 +81,41 @@ export class RTLService {
   }
 
   public loadSettings() {
-    const savedSettings = localStorage.getItem('blinko-rtl-settings');
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        // Merge with default settings to ensure new fields are present
-        this.settings = { ...this.settings, ...parsed };
+    const loadedSettings = this.storageManager.load();
+    if (loadedSettings) {
+        // Merge with default settings
+        this.settings = { ...this.settings, ...loadedSettings };
 
-        // Backwards compatibility for target selectors
-        if (!parsed.targetSelectors || parsed.targetSelectors.length < 5) {
-             // If selectors look like the old default list, merge with new defaults
-             const oldDefaults = new Set(parsed.targetSelectors || []);
-             const combined = [...new Set([...DEFAULT_TARGET_SELECTORS, ...Array.from(oldDefaults)])] as string[];
-             this.settings.targetSelectors = combined;
-        }
-
-        // Ensure dynamicCSS has a default if missing (migration)
+        // Ensure critical fields are initialized
         if (!this.settings.dynamicCSS) {
             this.settings.dynamicCSS = DEFAULT_DYNAMIC_CSS;
         }
-        // Ensure disabledSelectors is initialized
         if (!this.settings.disabledSelectors) {
             this.settings.disabledSelectors = [];
         }
-
-        // Ensure autoDetect defaults to true if undefined (fix for existing users)
         if (this.settings.autoDetect === undefined) {
             this.settings.autoDetect = true;
         }
 
+        // Apply config to detector
         this.detector.updateConfig({
           sensitivity: this.settings.sensitivity,
           minRTLChars: this.settings.minRTLChars
         });
 
+        // Inject persistent CSS if enabled
         if (this.settings.permanentCSS && this.settings.customCSS) {
           this.injectPermanentCSS();
         }
-      } catch (error) {
-        console.error('Failed to load RTL plugin settings:', error);
-      }
     } else {
-        // No saved settings, ensure we start with defaults (autoDetect: true)
+        // No saved settings, default to autoDetect
         this.settings.autoDetect = true;
     }
   }
 
   public updateSettings(newSettings: Partial<RTLSettings>) {
     this.settings = { ...this.settings, ...newSettings };
-    localStorage.setItem('blinko-rtl-settings', JSON.stringify(this.settings));
+    this.storageManager.save(this.settings);
 
     this.detector.updateConfig({
       sensitivity: this.settings.sensitivity,
@@ -160,6 +149,23 @@ export class RTLService {
           detail: this.settings
         })
     );
+  }
+
+  // Import/Export Proxy Methods
+  public exportSettings(): string {
+      return this.storageManager.export(this.settings);
+  }
+
+  public importSettings(jsonString: string) {
+      try {
+          const importedSettings = this.storageManager.import(jsonString);
+          // Apply imported settings (merge with current defaults to be safe)
+          this.updateSettings(importedSettings);
+          return true;
+      } catch (e) {
+          console.error('Import failed:', e);
+          throw e; // Re-throw for UI handling
+      }
   }
 
   private injectCSS() {
