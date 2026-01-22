@@ -1,673 +1,673 @@
-var Qt = Object.defineProperty;
-var Yt = (A, m, I) => m in A ? Qt(A, m, { enumerable: !0, configurable: !0, writable: !0, value: I }) : A[m] = I;
-var _ = (A, m, I) => (Yt(A, typeof m != "symbol" ? m + "" : m, I), I);
+var Wt = Object.defineProperty;
+var Ut = (E, f, F) => f in E ? Wt(E, f, { enumerable: !0, configurable: !0, writable: !0, value: F }) : E[f] = F;
+var g = (E, f, F) => (Ut(E, typeof f != "symbol" ? f + "" : f, F), F);
 (function() {
-  var A, m, I, H, xe, Se, we, ke, ae, de, ce, X = {}, Te = [], ht = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, J = Array.isArray;
-  function D(t, e) {
-    for (var i in e)
-      t[i] = e[i];
+  var E, f, F, I, be, ve, ye, xe, re, se, le, V = {}, Se = [], st = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, q = Array.isArray;
+  function B(t, e) {
+    for (var n in e)
+      t[n] = e[n];
     return t;
   }
-  function pe(t) {
+  function ae(t) {
     t && t.parentNode && t.parentNode.removeChild(t);
   }
-  function ue(t, e, i) {
-    var n, r, s, a = {};
-    for (s in e)
-      s == "key" ? n = e[s] : s == "ref" ? r = e[s] : a[s] = e[s];
-    if (arguments.length > 2 && (a.children = arguments.length > 3 ? A.call(arguments, 2) : i), typeof t == "function" && t.defaultProps != null)
-      for (s in t.defaultProps)
-        a[s] === void 0 && (a[s] = t.defaultProps[s]);
-    return Y(t, a, n, r, null);
+  function de(t, e, n) {
+    var i, o, r, l = {};
+    for (r in e)
+      r == "key" ? i = e[r] : r == "ref" ? o = e[r] : l[r] = e[r];
+    if (arguments.length > 2 && (l.children = arguments.length > 3 ? E.call(arguments, 2) : n), typeof t == "function" && t.defaultProps != null)
+      for (r in t.defaultProps)
+        l[r] === void 0 && (l[r] = t.defaultProps[r]);
+    return Q(t, l, i, o, null);
   }
-  function Y(t, e, i, n, r) {
-    var s = { type: t, props: e, key: i, ref: n, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: r ?? ++I, __i: -1, __u: 0 };
-    return r == null && m.vnode != null && m.vnode(s), s;
+  function Q(t, e, n, i, o) {
+    var r = { type: t, props: e, key: n, ref: i, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: o ?? ++F, __i: -1, __u: 0 };
+    return o == null && f.vnode != null && f.vnode(r), r;
   }
   function N(t) {
     return t.children;
   }
-  function F(t, e) {
+  function $(t, e) {
     this.props = t, this.context = e;
   }
-  function O(t, e) {
+  function z(t, e) {
     if (e == null)
-      return t.__ ? O(t.__, t.__i + 1) : null;
-    for (var i; e < t.__k.length; e++)
-      if ((i = t.__k[e]) != null && i.__e != null)
-        return i.__e;
-    return typeof t.type == "function" ? O(t) : null;
+      return t.__ ? z(t.__, t.__i + 1) : null;
+    for (var n; e < t.__k.length; e++)
+      if ((n = t.__k[e]) != null && n.__e != null)
+        return n.__e;
+    return typeof t.type == "function" ? z(t) : null;
   }
-  function Re(t) {
-    var e, i;
+  function ke(t) {
+    var e, n;
     if ((t = t.__) != null && t.__c != null) {
       for (t.__e = t.__c.base = null, e = 0; e < t.__k.length; e++)
-        if ((i = t.__k[e]) != null && i.__e != null) {
-          t.__e = t.__c.base = i.__e;
+        if ((n = t.__k[e]) != null && n.__e != null) {
+          t.__e = t.__c.base = n.__e;
           break;
         }
-      return Re(t);
+      return ke(t);
     }
   }
-  function Ce(t) {
-    (!t.__d && (t.__d = !0) && H.push(t) && !Z.__r++ || xe != m.debounceRendering) && ((xe = m.debounceRendering) || Se)(Z);
+  function we(t) {
+    (!t.__d && (t.__d = !0) && I.push(t) && !Z.__r++ || be != f.debounceRendering) && ((be = f.debounceRendering) || ve)(Z);
   }
   function Z() {
-    for (var t, e, i, n, r, s, a, p = 1; H.length; )
-      H.length > p && H.sort(we), t = H.shift(), p = H.length, t.__d && (i = void 0, r = (n = (e = t).__v).__e, s = [], a = [], e.__P && ((i = D({}, n)).__v = n.__v + 1, m.vnode && m.vnode(i), he(e.__P, i, n, e.__n, e.__P.namespaceURI, 32 & n.__u ? [r] : null, s, r ?? O(n), !!(32 & n.__u), a), i.__v = n.__v, i.__.__k[i.__i] = i, Pe(s, i, a), i.__e != r && Re(i)));
+    for (var t, e, n, i, o, r, l, c = 1; I.length; )
+      I.length > c && I.sort(ye), t = I.shift(), c = I.length, t.__d && (n = void 0, o = (i = (e = t).__v).__e, r = [], l = [], e.__P && ((n = B({}, i)).__v = i.__v + 1, f.vnode && f.vnode(n), ce(e.__P, n, i, e.__n, e.__P.namespaceURI, 32 & i.__u ? [o] : null, r, o ?? z(i), !!(32 & i.__u), l), n.__v = i.__v, n.__.__k[n.__i] = n, Ee(r, n, l), n.__e != o && ke(n)));
     Z.__r = 0;
   }
-  function Le(t, e, i, n, r, s, a, p, u, d, f) {
-    var c, y, b, S, h, v, w, k = n && n.__k || Te, P = e.length;
-    for (u = gt(i, e, k, u, P), c = 0; c < P; c++)
-      (b = i.__k[c]) != null && (y = b.__i == -1 ? X : k[b.__i] || X, b.__i = c, v = he(t, b, y, r, s, a, p, u, d, f), S = b.__e, b.ref && y.ref != b.ref && (y.ref && fe(y.ref, null, b), f.push(b.ref, b.__c || S, b)), h == null && S != null && (h = S), (w = !!(4 & b.__u)) || y.__k === b.__k ? u = Ee(b, u, t, w) : typeof b.type == "function" && v !== void 0 ? u = v : S && (u = S.nextSibling), b.__u &= -7);
-    return i.__e = h, u;
+  function Te(t, e, n, i, o, r, l, c, p, a, h) {
+    var d, v, b, x, m, y, k, w = i && i.__k || Se, M = e.length;
+    for (p = lt(n, e, w, p, M), d = 0; d < M; d++)
+      (b = n.__k[d]) != null && (v = b.__i == -1 ? V : w[b.__i] || V, b.__i = d, y = ce(t, b, v, o, r, l, c, p, a, h), x = b.__e, b.ref && v.ref != b.ref && (v.ref && pe(v.ref, null, b), h.push(b.ref, b.__c || x, b)), m == null && x != null && (m = x), (k = !!(4 & b.__u)) || v.__k === b.__k ? p = Le(b, p, t, k) : typeof b.type == "function" && y !== void 0 ? p = y : x && (p = x.nextSibling), b.__u &= -7);
+    return n.__e = m, p;
   }
-  function gt(t, e, i, n, r) {
-    var s, a, p, u, d, f = i.length, c = f, y = 0;
-    for (t.__k = new Array(r), s = 0; s < r; s++)
-      (a = e[s]) != null && typeof a != "boolean" && typeof a != "function" ? (u = s + y, (a = t.__k[s] = typeof a == "string" || typeof a == "number" || typeof a == "bigint" || a.constructor == String ? Y(null, a, null, null, null) : J(a) ? Y(N, { children: a }, null, null, null) : a.constructor == null && a.__b > 0 ? Y(a.type, a.props, a.key, a.ref ? a.ref : null, a.__v) : a).__ = t, a.__b = t.__b + 1, p = null, (d = a.__i = ft(a, i, u, c)) != -1 && (c--, (p = i[d]) && (p.__u |= 2)), p == null || p.__v == null ? (d == -1 && (r > f ? y-- : r < f && y++), typeof a.type != "function" && (a.__u |= 4)) : d != u && (d == u - 1 ? y-- : d == u + 1 ? y++ : (d > u ? y-- : y++, a.__u |= 4))) : t.__k[s] = null;
-    if (c)
-      for (s = 0; s < f; s++)
-        (p = i[s]) != null && !(2 & p.__u) && (p.__e == n && (n = O(p)), De(p, p));
-    return n;
+  function lt(t, e, n, i, o) {
+    var r, l, c, p, a, h = n.length, d = h, v = 0;
+    for (t.__k = new Array(o), r = 0; r < o; r++)
+      (l = e[r]) != null && typeof l != "boolean" && typeof l != "function" ? (p = r + v, (l = t.__k[r] = typeof l == "string" || typeof l == "number" || typeof l == "bigint" || l.constructor == String ? Q(null, l, null, null, null) : q(l) ? Q(N, { children: l }, null, null, null) : l.constructor == null && l.__b > 0 ? Q(l.type, l.props, l.key, l.ref ? l.ref : null, l.__v) : l).__ = t, l.__b = t.__b + 1, c = null, (a = l.__i = at(l, n, p, d)) != -1 && (d--, (c = n[a]) && (c.__u |= 2)), c == null || c.__v == null ? (a == -1 && (o > h ? v-- : o < h && v++), typeof l.type != "function" && (l.__u |= 4)) : a != p && (a == p - 1 ? v-- : a == p + 1 ? v++ : (a > p ? v-- : v++, l.__u |= 4))) : t.__k[r] = null;
+    if (d)
+      for (r = 0; r < h; r++)
+        (c = n[r]) != null && !(2 & c.__u) && (c.__e == i && (i = z(c)), Ae(c, c));
+    return i;
   }
-  function Ee(t, e, i, n) {
-    var r, s;
+  function Le(t, e, n, i) {
+    var o, r;
     if (typeof t.type == "function") {
-      for (r = t.__k, s = 0; r && s < r.length; s++)
-        r[s] && (r[s].__ = t, e = Ee(r[s], e, i, n));
+      for (o = t.__k, r = 0; o && r < o.length; r++)
+        o[r] && (o[r].__ = t, e = Le(o[r], e, n, i));
       return e;
     }
-    t.__e != e && (n && (e && t.type && !e.parentNode && (e = O(t)), i.insertBefore(t.__e, e || null)), e = t.__e);
+    t.__e != e && (i && (e && t.type && !e.parentNode && (e = z(t)), n.insertBefore(t.__e, e || null)), e = t.__e);
     do
       e = e && e.nextSibling;
     while (e != null && e.nodeType == 8);
     return e;
   }
-  function K(t, e) {
-    return e = e || [], t == null || typeof t == "boolean" || (J(t) ? t.some(function(i) {
-      K(i, e);
+  function Y(t, e) {
+    return e = e || [], t == null || typeof t == "boolean" || (q(t) ? t.some(function(n) {
+      Y(n, e);
     }) : e.push(t)), e;
   }
-  function ft(t, e, i, n) {
-    var r, s, a, p = t.key, u = t.type, d = e[i], f = d != null && (2 & d.__u) == 0;
-    if (d === null && t.key == null || f && p == d.key && u == d.type)
-      return i;
-    if (n > (f ? 1 : 0)) {
-      for (r = i - 1, s = i + 1; r >= 0 || s < e.length; )
-        if ((d = e[a = r >= 0 ? r-- : s++]) != null && !(2 & d.__u) && p == d.key && u == d.type)
-          return a;
+  function at(t, e, n, i) {
+    var o, r, l, c = t.key, p = t.type, a = e[n], h = a != null && (2 & a.__u) == 0;
+    if (a === null && t.key == null || h && c == a.key && p == a.type)
+      return n;
+    if (i > (h ? 1 : 0)) {
+      for (o = n - 1, r = n + 1; o >= 0 || r < e.length; )
+        if ((a = e[l = o >= 0 ? o-- : r++]) != null && !(2 & a.__u) && c == a.key && p == a.type)
+          return l;
     }
     return -1;
   }
-  function Me(t, e, i) {
-    e[0] == "-" ? t.setProperty(e, i ?? "") : t[e] = i == null ? "" : typeof i != "number" || ht.test(e) ? i : i + "px";
+  function Ce(t, e, n) {
+    e[0] == "-" ? t.setProperty(e, n ?? "") : t[e] = n == null ? "" : typeof n != "number" || st.test(e) ? n : n + "px";
   }
-  function ee(t, e, i, n, r) {
-    var s, a;
+  function K(t, e, n, i, o) {
+    var r, l;
     e:
       if (e == "style")
-        if (typeof i == "string")
-          t.style.cssText = i;
+        if (typeof n == "string")
+          t.style.cssText = n;
         else {
-          if (typeof n == "string" && (t.style.cssText = n = ""), n)
-            for (e in n)
-              i && e in i || Me(t.style, e, "");
-          if (i)
+          if (typeof i == "string" && (t.style.cssText = i = ""), i)
             for (e in i)
-              n && i[e] == n[e] || Me(t.style, e, i[e]);
+              n && e in n || Ce(t.style, e, "");
+          if (n)
+            for (e in n)
+              i && n[e] == i[e] || Ce(t.style, e, n[e]);
         }
       else if (e[0] == "o" && e[1] == "n")
-        s = e != (e = e.replace(ke, "$1")), a = e.toLowerCase(), e = a in t || e == "onFocusOut" || e == "onFocusIn" ? a.slice(2) : e.slice(2), t.l || (t.l = {}), t.l[e + s] = i, i ? n ? i.u = n.u : (i.u = ae, t.addEventListener(e, s ? ce : de, s)) : t.removeEventListener(e, s ? ce : de, s);
+        r = e != (e = e.replace(xe, "$1")), l = e.toLowerCase(), e = l in t || e == "onFocusOut" || e == "onFocusIn" ? l.slice(2) : e.slice(2), t.l || (t.l = {}), t.l[e + r] = n, n ? i ? n.u = i.u : (n.u = re, t.addEventListener(e, r ? le : se, r)) : t.removeEventListener(e, r ? le : se, r);
       else {
-        if (r == "http://www.w3.org/2000/svg")
+        if (o == "http://www.w3.org/2000/svg")
           e = e.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s");
         else if (e != "width" && e != "height" && e != "href" && e != "list" && e != "form" && e != "tabIndex" && e != "download" && e != "rowSpan" && e != "colSpan" && e != "role" && e != "popover" && e in t)
           try {
-            t[e] = i ?? "";
+            t[e] = n ?? "";
             break e;
           } catch {
           }
-        typeof i == "function" || (i == null || i === !1 && e[4] != "-" ? t.removeAttribute(e) : t.setAttribute(e, e == "popover" && i == 1 ? "" : i));
+        typeof n == "function" || (n == null || n === !1 && e[4] != "-" ? t.removeAttribute(e) : t.setAttribute(e, e == "popover" && n == 1 ? "" : n));
       }
   }
-  function Ae(t) {
+  function Re(t) {
     return function(e) {
       if (this.l) {
-        var i = this.l[e.type + t];
+        var n = this.l[e.type + t];
         if (e.t == null)
-          e.t = ae++;
-        else if (e.t < i.u)
+          e.t = re++;
+        else if (e.t < n.u)
           return;
-        return i(m.event ? m.event(e) : e);
+        return n(f.event ? f.event(e) : e);
       }
     };
   }
-  function he(t, e, i, n, r, s, a, p, u, d) {
-    var f, c, y, b, S, h, v, w, k, P, B, V, z, re, q, W, G, C = e.type;
+  function ce(t, e, n, i, o, r, l, c, p, a) {
+    var h, d, v, b, x, m, y, k, w, M, A, W, H, ie, U, u, _, S = e.type;
     if (e.constructor != null)
       return null;
-    128 & i.__u && (u = !!(32 & i.__u), s = [p = e.__e = i.__e]), (f = m.__b) && f(e);
+    128 & n.__u && (p = !!(32 & n.__u), r = [c = e.__e = n.__e]), (h = f.__b) && h(e);
     e:
-      if (typeof C == "function")
+      if (typeof S == "function")
         try {
-          if (w = e.props, k = "prototype" in C && C.prototype.render, P = (f = C.contextType) && n[f.__c], B = f ? P ? P.props.value : f.__ : n, i.__c ? v = (c = e.__c = i.__c).__ = c.__E : (k ? e.__c = c = new C(w, B) : (e.__c = c = new F(w, B), c.constructor = C, c.render = mt), P && P.sub(c), c.props = w, c.state || (c.state = {}), c.context = B, c.__n = n, y = c.__d = !0, c.__h = [], c._sb = []), k && c.__s == null && (c.__s = c.state), k && C.getDerivedStateFromProps != null && (c.__s == c.state && (c.__s = D({}, c.__s)), D(c.__s, C.getDerivedStateFromProps(w, c.__s))), b = c.props, S = c.state, c.__v = e, y)
-            k && C.getDerivedStateFromProps == null && c.componentWillMount != null && c.componentWillMount(), k && c.componentDidMount != null && c.__h.push(c.componentDidMount);
+          if (k = e.props, w = "prototype" in S && S.prototype.render, M = (h = S.contextType) && i[h.__c], A = h ? M ? M.props.value : h.__ : i, n.__c ? y = (d = e.__c = n.__c).__ = d.__E : (w ? e.__c = d = new S(k, A) : (e.__c = d = new $(k, A), d.constructor = S, d.render = ct), M && M.sub(d), d.props = k, d.state || (d.state = {}), d.context = A, d.__n = i, v = d.__d = !0, d.__h = [], d._sb = []), w && d.__s == null && (d.__s = d.state), w && S.getDerivedStateFromProps != null && (d.__s == d.state && (d.__s = B({}, d.__s)), B(d.__s, S.getDerivedStateFromProps(k, d.__s))), b = d.props, x = d.state, d.__v = e, v)
+            w && S.getDerivedStateFromProps == null && d.componentWillMount != null && d.componentWillMount(), w && d.componentDidMount != null && d.__h.push(d.componentDidMount);
           else {
-            if (k && C.getDerivedStateFromProps == null && w !== b && c.componentWillReceiveProps != null && c.componentWillReceiveProps(w, B), !c.__e && c.shouldComponentUpdate != null && c.shouldComponentUpdate(w, c.__s, B) === !1 || e.__v == i.__v) {
-              for (e.__v != i.__v && (c.props = w, c.state = c.__s, c.__d = !1), e.__e = i.__e, e.__k = i.__k, e.__k.some(function($) {
-                $ && ($.__ = e);
-              }), V = 0; V < c._sb.length; V++)
-                c.__h.push(c._sb[V]);
-              c._sb = [], c.__h.length && a.push(c);
+            if (w && S.getDerivedStateFromProps == null && k !== b && d.componentWillReceiveProps != null && d.componentWillReceiveProps(k, A), !d.__e && d.shouldComponentUpdate != null && d.shouldComponentUpdate(k, d.__s, A) === !1 || e.__v == n.__v) {
+              for (e.__v != n.__v && (d.props = k, d.state = d.__s, d.__d = !1), e.__e = n.__e, e.__k = n.__k, e.__k.some(function(C) {
+                C && (C.__ = e);
+              }), W = 0; W < d._sb.length; W++)
+                d.__h.push(d._sb[W]);
+              d._sb = [], d.__h.length && l.push(d);
               break e;
             }
-            c.componentWillUpdate != null && c.componentWillUpdate(w, c.__s, B), k && c.componentDidUpdate != null && c.__h.push(function() {
-              c.componentDidUpdate(b, S, h);
+            d.componentWillUpdate != null && d.componentWillUpdate(k, d.__s, A), w && d.componentDidUpdate != null && d.__h.push(function() {
+              d.componentDidUpdate(b, x, m);
             });
           }
-          if (c.context = B, c.props = w, c.__P = t, c.__e = !1, z = m.__r, re = 0, k) {
-            for (c.state = c.__s, c.__d = !1, z && z(e), f = c.render(c.props, c.state, c.context), q = 0; q < c._sb.length; q++)
-              c.__h.push(c._sb[q]);
-            c._sb = [];
+          if (d.context = A, d.props = k, d.__P = t, d.__e = !1, H = f.__r, ie = 0, w) {
+            for (d.state = d.__s, d.__d = !1, H && H(e), h = d.render(d.props, d.state, d.context), U = 0; U < d._sb.length; U++)
+              d.__h.push(d._sb[U]);
+            d._sb = [];
           } else
             do
-              c.__d = !1, z && z(e), f = c.render(c.props, c.state, c.context), c.state = c.__s;
-            while (c.__d && ++re < 25);
-          c.state = c.__s, c.getChildContext != null && (n = D(D({}, n), c.getChildContext())), k && !y && c.getSnapshotBeforeUpdate != null && (h = c.getSnapshotBeforeUpdate(b, S)), W = f, f != null && f.type === N && f.key == null && (W = Be(f.props.children)), p = Le(t, J(W) ? W : [W], e, i, n, r, s, a, p, u, d), c.base = e.__e, e.__u &= -161, c.__h.length && a.push(c), v && (c.__E = c.__ = null);
-        } catch ($) {
-          if (e.__v = null, u || s != null)
-            if ($.then) {
-              for (e.__u |= u ? 160 : 128; p && p.nodeType == 8 && p.nextSibling; )
-                p = p.nextSibling;
-              s[s.indexOf(p)] = null, e.__e = p;
+              d.__d = !1, H && H(e), h = d.render(d.props, d.state, d.context), d.state = d.__s;
+            while (d.__d && ++ie < 25);
+          d.state = d.__s, d.getChildContext != null && (i = B(B({}, i), d.getChildContext())), w && !v && d.getSnapshotBeforeUpdate != null && (m = d.getSnapshotBeforeUpdate(b, x)), u = h, h != null && h.type === N && h.key == null && (u = Me(h.props.children)), c = Te(t, q(u) ? u : [u], e, n, i, o, r, l, c, p, a), d.base = e.__e, e.__u &= -161, d.__h.length && l.push(d), y && (d.__E = d.__ = null);
+        } catch (C) {
+          if (e.__v = null, p || r != null)
+            if (C.then) {
+              for (e.__u |= p ? 160 : 128; c && c.nodeType == 8 && c.nextSibling; )
+                c = c.nextSibling;
+              r[r.indexOf(c)] = null, e.__e = c;
             } else {
-              for (G = s.length; G--; )
-                pe(s[G]);
-              ge(e);
+              for (_ = r.length; _--; )
+                ae(r[_]);
+              ue(e);
             }
           else
-            e.__e = i.__e, e.__k = i.__k, $.then || ge(e);
-          m.__e($, e, i);
+            e.__e = n.__e, e.__k = n.__k, C.then || ue(e);
+          f.__e(C, e, n);
         }
       else
-        s == null && e.__v == i.__v ? (e.__k = i.__k, e.__e = i.__e) : p = e.__e = _t(i.__e, e, i, n, r, s, a, u, d);
-    return (f = m.diffed) && f(e), 128 & e.__u ? void 0 : p;
+        r == null && e.__v == n.__v ? (e.__k = n.__k, e.__e = n.__e) : c = e.__e = dt(n.__e, e, n, i, o, r, l, p, a);
+    return (h = f.diffed) && h(e), 128 & e.__u ? void 0 : c;
   }
-  function ge(t) {
-    t && t.__c && (t.__c.__e = !0), t && t.__k && t.__k.forEach(ge);
+  function ue(t) {
+    t && t.__c && (t.__c.__e = !0), t && t.__k && t.__k.forEach(ue);
   }
-  function Pe(t, e, i) {
-    for (var n = 0; n < i.length; n++)
-      fe(i[n], i[++n], i[++n]);
-    m.__c && m.__c(e, t), t.some(function(r) {
+  function Ee(t, e, n) {
+    for (var i = 0; i < n.length; i++)
+      pe(n[i], n[++i], n[++i]);
+    f.__c && f.__c(e, t), t.some(function(o) {
       try {
-        t = r.__h, r.__h = [], t.some(function(s) {
-          s.call(r);
+        t = o.__h, o.__h = [], t.some(function(r) {
+          r.call(o);
         });
-      } catch (s) {
-        m.__e(s, r.__v);
+      } catch (r) {
+        f.__e(r, o.__v);
       }
     });
   }
-  function Be(t) {
-    return typeof t != "object" || t == null || t.__b && t.__b > 0 ? t : J(t) ? t.map(Be) : D({}, t);
+  function Me(t) {
+    return typeof t != "object" || t == null || t.__b && t.__b > 0 ? t : q(t) ? t.map(Me) : B({}, t);
   }
-  function _t(t, e, i, n, r, s, a, p, u) {
-    var d, f, c, y, b, S, h, v = i.props, w = e.props, k = e.type;
-    if (k == "svg" ? r = "http://www.w3.org/2000/svg" : k == "math" ? r = "http://www.w3.org/1998/Math/MathML" : r || (r = "http://www.w3.org/1999/xhtml"), s != null) {
-      for (d = 0; d < s.length; d++)
-        if ((b = s[d]) && "setAttribute" in b == !!k && (k ? b.localName == k : b.nodeType == 3)) {
-          t = b, s[d] = null;
+  function dt(t, e, n, i, o, r, l, c, p) {
+    var a, h, d, v, b, x, m, y = n.props, k = e.props, w = e.type;
+    if (w == "svg" ? o = "http://www.w3.org/2000/svg" : w == "math" ? o = "http://www.w3.org/1998/Math/MathML" : o || (o = "http://www.w3.org/1999/xhtml"), r != null) {
+      for (a = 0; a < r.length; a++)
+        if ((b = r[a]) && "setAttribute" in b == !!w && (w ? b.localName == w : b.nodeType == 3)) {
+          t = b, r[a] = null;
           break;
         }
     }
     if (t == null) {
-      if (k == null)
-        return document.createTextNode(w);
-      t = document.createElementNS(r, k, w.is && w), p && (m.__m && m.__m(e, s), p = !1), s = null;
+      if (w == null)
+        return document.createTextNode(k);
+      t = document.createElementNS(o, w, k.is && k), c && (f.__m && f.__m(e, r), c = !1), r = null;
     }
-    if (k == null)
-      v === w || p && t.data == w || (t.data = w);
+    if (w == null)
+      y === k || c && t.data == k || (t.data = k);
     else {
-      if (s = s && A.call(t.childNodes), v = i.props || X, !p && s != null)
-        for (v = {}, d = 0; d < t.attributes.length; d++)
-          v[(b = t.attributes[d]).name] = b.value;
-      for (d in v)
-        if (b = v[d], d != "children") {
-          if (d == "dangerouslySetInnerHTML")
-            c = b;
-          else if (!(d in w)) {
-            if (d == "value" && "defaultValue" in w || d == "checked" && "defaultChecked" in w)
+      if (r = r && E.call(t.childNodes), y = n.props || V, !c && r != null)
+        for (y = {}, a = 0; a < t.attributes.length; a++)
+          y[(b = t.attributes[a]).name] = b.value;
+      for (a in y)
+        if (b = y[a], a != "children") {
+          if (a == "dangerouslySetInnerHTML")
+            d = b;
+          else if (!(a in k)) {
+            if (a == "value" && "defaultValue" in k || a == "checked" && "defaultChecked" in k)
               continue;
-            ee(t, d, null, b, r);
+            K(t, a, null, b, o);
           }
         }
-      for (d in w)
-        b = w[d], d == "children" ? y = b : d == "dangerouslySetInnerHTML" ? f = b : d == "value" ? S = b : d == "checked" ? h = b : p && typeof b != "function" || v[d] === b || ee(t, d, b, v[d], r);
-      if (f)
-        p || c && (f.__html == c.__html || f.__html == t.innerHTML) || (t.innerHTML = f.__html), e.__k = [];
-      else if (c && (t.innerHTML = ""), Le(e.type == "template" ? t.content : t, J(y) ? y : [y], e, i, n, k == "foreignObject" ? "http://www.w3.org/1999/xhtml" : r, s, a, s ? s[0] : i.__k && O(i, 0), p, u), s != null)
-        for (d = s.length; d--; )
-          pe(s[d]);
-      p || (d = "value", k == "progress" && S == null ? t.removeAttribute("value") : S != null && (S !== t[d] || k == "progress" && !S || k == "option" && S != v[d]) && ee(t, d, S, v[d], r), d = "checked", h != null && h != t[d] && ee(t, d, h, v[d], r));
+      for (a in k)
+        b = k[a], a == "children" ? v = b : a == "dangerouslySetInnerHTML" ? h = b : a == "value" ? x = b : a == "checked" ? m = b : c && typeof b != "function" || y[a] === b || K(t, a, b, y[a], o);
+      if (h)
+        c || d && (h.__html == d.__html || h.__html == t.innerHTML) || (t.innerHTML = h.__html), e.__k = [];
+      else if (d && (t.innerHTML = ""), Te(e.type == "template" ? t.content : t, q(v) ? v : [v], e, n, i, w == "foreignObject" ? "http://www.w3.org/1999/xhtml" : o, r, l, r ? r[0] : n.__k && z(n, 0), c, p), r != null)
+        for (a = r.length; a--; )
+          ae(r[a]);
+      c || (a = "value", w == "progress" && x == null ? t.removeAttribute("value") : x != null && (x !== t[a] || w == "progress" && !x || w == "option" && x != y[a]) && K(t, a, x, y[a], o), a = "checked", m != null && m != t[a] && K(t, a, m, y[a], o));
     }
     return t;
   }
-  function fe(t, e, i) {
+  function pe(t, e, n) {
     try {
       if (typeof t == "function") {
-        var n = typeof t.__u == "function";
-        n && t.__u(), n && e == null || (t.__u = t(e));
+        var i = typeof t.__u == "function";
+        i && t.__u(), i && e == null || (t.__u = t(e));
       } else
         t.current = e;
-    } catch (r) {
-      m.__e(r, i);
+    } catch (o) {
+      f.__e(o, n);
     }
   }
-  function De(t, e, i) {
-    var n, r;
-    if (m.unmount && m.unmount(t), (n = t.ref) && (n.current && n.current != t.__e || fe(n, null, e)), (n = t.__c) != null) {
-      if (n.componentWillUnmount)
+  function Ae(t, e, n) {
+    var i, o;
+    if (f.unmount && f.unmount(t), (i = t.ref) && (i.current && i.current != t.__e || pe(i, null, e)), (i = t.__c) != null) {
+      if (i.componentWillUnmount)
         try {
-          n.componentWillUnmount();
-        } catch (s) {
-          m.__e(s, e);
+          i.componentWillUnmount();
+        } catch (r) {
+          f.__e(r, e);
         }
-      n.base = n.__P = null;
+      i.base = i.__P = null;
     }
-    if (n = t.__k)
-      for (r = 0; r < n.length; r++)
-        n[r] && De(n[r], e, i || typeof t.type != "function");
-    i || pe(t.__e), t.__c = t.__ = t.__e = void 0;
+    if (i = t.__k)
+      for (o = 0; o < i.length; o++)
+        i[o] && Ae(i[o], e, n || typeof t.type != "function");
+    n || ae(t.__e), t.__c = t.__ = t.__e = void 0;
   }
-  function mt(t, e, i) {
-    return this.constructor(t, i);
+  function ct(t, e, n) {
+    return this.constructor(t, n);
   }
-  function bt(t, e, i) {
-    var n, r, s, a;
-    e == document && (e = document.documentElement), m.__ && m.__(t, e), r = (n = typeof i == "function") ? null : i && i.__k || e.__k, s = [], a = [], he(e, t = (!n && i || e).__k = ue(N, null, [t]), r || X, X, e.namespaceURI, !n && i ? [i] : r ? null : e.firstChild ? A.call(e.childNodes) : null, s, !n && i ? i : r ? r.__e : e.firstChild, n, a), Pe(s, t, a);
+  function ut(t, e, n) {
+    var i, o, r, l;
+    e == document && (e = document.documentElement), f.__ && f.__(t, e), o = (i = typeof n == "function") ? null : n && n.__k || e.__k, r = [], l = [], ce(e, t = (!i && n || e).__k = de(N, null, [t]), o || V, V, e.namespaceURI, !i && n ? [n] : o ? null : e.firstChild ? E.call(e.childNodes) : null, r, !i && n ? n : o ? o.__e : e.firstChild, i, l), Ee(r, t, l);
   }
-  A = Te.slice, m = { __e: function(t, e, i, n) {
-    for (var r, s, a; e = e.__; )
-      if ((r = e.__c) && !r.__)
+  E = Se.slice, f = { __e: function(t, e, n, i) {
+    for (var o, r, l; e = e.__; )
+      if ((o = e.__c) && !o.__)
         try {
-          if ((s = r.constructor) && s.getDerivedStateFromError != null && (r.setState(s.getDerivedStateFromError(t)), a = r.__d), r.componentDidCatch != null && (r.componentDidCatch(t, n || {}), a = r.__d), a)
-            return r.__E = r;
-        } catch (p) {
-          t = p;
+          if ((r = o.constructor) && r.getDerivedStateFromError != null && (o.setState(r.getDerivedStateFromError(t)), l = o.__d), o.componentDidCatch != null && (o.componentDidCatch(t, i || {}), l = o.__d), l)
+            return o.__E = o;
+        } catch (c) {
+          t = c;
         }
     throw t;
-  } }, I = 0, F.prototype.setState = function(t, e) {
-    var i;
-    i = this.__s != null && this.__s != this.state ? this.__s : this.__s = D({}, this.state), typeof t == "function" && (t = t(D({}, i), this.props)), t && D(i, t), t != null && this.__v && (e && this._sb.push(e), Ce(this));
-  }, F.prototype.forceUpdate = function(t) {
-    this.__v && (this.__e = !0, t && this.__h.push(t), Ce(this));
-  }, F.prototype.render = N, H = [], Se = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, we = function(t, e) {
+  } }, F = 0, $.prototype.setState = function(t, e) {
+    var n;
+    n = this.__s != null && this.__s != this.state ? this.__s : this.__s = B({}, this.state), typeof t == "function" && (t = t(B({}, n), this.props)), t && B(n, t), t != null && this.__v && (e && this._sb.push(e), we(this));
+  }, $.prototype.forceUpdate = function(t) {
+    this.__v && (this.__e = !0, t && this.__h.push(t), we(this));
+  }, $.prototype.render = N, I = [], ve = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, ye = function(t, e) {
     return t.__v.__b - e.__v.__b;
-  }, Z.__r = 0, ke = /(PointerCapture)$|Capture$/i, ae = 0, de = Ae(!1), ce = Ae(!0);
-  var yt = 0;
-  function o(t, e, i, n, r, s) {
+  }, Z.__r = 0, xe = /(PointerCapture)$|Capture$/i, re = 0, se = Re(!1), le = Re(!0);
+  var pt = 0;
+  function s(t, e, n, i, o, r) {
     e || (e = {});
-    var a, p, u = e;
-    if ("ref" in u)
-      for (p in u = {}, e)
-        p == "ref" ? a = e[p] : u[p] = e[p];
-    var d = { type: t, props: u, key: i, ref: a, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --yt, __i: -1, __u: 0, __source: r, __self: s };
-    if (typeof t == "function" && (a = t.defaultProps))
-      for (p in a)
-        u[p] === void 0 && (u[p] = a[p]);
-    return m.vnode && m.vnode(d), d;
+    var l, c, p = e;
+    if ("ref" in p)
+      for (c in p = {}, e)
+        c == "ref" ? l = e[c] : p[c] = e[c];
+    var a = { type: t, props: p, key: n, ref: l, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --pt, __i: -1, __u: 0, __source: o, __self: r };
+    if (typeof t == "function" && (l = t.defaultProps))
+      for (c in l)
+        p[c] === void 0 && (p[c] = l[c]);
+    return f.vnode && f.vnode(a), a;
   }
-  var te, T, _e, Fe, me = 0, $e = [], R = m, Ie = R.__b, He = R.__r, Ne = R.diffed, ze = R.__c, We = R.unmount, Oe = R.__;
-  function Ue(t, e) {
-    R.__h && R.__h(T, t, me || e), me = 0;
-    var i = T.__H || (T.__H = { __: [], __h: [] });
-    return t >= i.__.length && i.__.push({}), i.__[t];
+  var ee, T, he, Pe, ge = 0, Be = [], L = f, $e = L.__b, De = L.__r, Fe = L.diffed, Ie = L.__c, Ne = L.unmount, He = L.__;
+  function ze(t, e) {
+    L.__h && L.__h(T, t, ge || e), ge = 0;
+    var n = T.__H || (T.__H = { __: [], __h: [] });
+    return t >= n.__.length && n.__.push({}), n.__[t];
   }
-  function E(t) {
-    return me = 1, vt(Ve, t);
+  function R(t) {
+    return ge = 1, ht(We, t);
   }
-  function vt(t, e, i) {
-    var n = Ue(te++, 2);
-    if (n.t = t, !n.__c && (n.__ = [i ? i(e) : Ve(void 0, e), function(p) {
-      var u = n.__N ? n.__N[0] : n.__[0], d = n.t(u, p);
-      u !== d && (n.__N = [d, n.__[1]], n.__c.setState({}));
-    }], n.__c = T, !T.__f)) {
-      var r = function(p, u, d) {
-        if (!n.__c.__H)
+  function ht(t, e, n) {
+    var i = ze(ee++, 2);
+    if (i.t = t, !i.__c && (i.__ = [n ? n(e) : We(void 0, e), function(c) {
+      var p = i.__N ? i.__N[0] : i.__[0], a = i.t(p, c);
+      p !== a && (i.__N = [a, i.__[1]], i.__c.setState({}));
+    }], i.__c = T, !T.__f)) {
+      var o = function(c, p, a) {
+        if (!i.__c.__H)
           return !0;
-        var f = n.__c.__H.__.filter(function(y) {
-          return !!y.__c;
+        var h = i.__c.__H.__.filter(function(v) {
+          return !!v.__c;
         });
-        if (f.every(function(y) {
-          return !y.__N;
+        if (h.every(function(v) {
+          return !v.__N;
         }))
-          return !s || s.call(this, p, u, d);
-        var c = n.__c.props !== p;
-        return f.forEach(function(y) {
-          if (y.__N) {
-            var b = y.__[0];
-            y.__ = y.__N, y.__N = void 0, b !== y.__[0] && (c = !0);
+          return !r || r.call(this, c, p, a);
+        var d = i.__c.props !== c;
+        return h.forEach(function(v) {
+          if (v.__N) {
+            var b = v.__[0];
+            v.__ = v.__N, v.__N = void 0, b !== v.__[0] && (d = !0);
           }
-        }), s && s.call(this, p, u, d) || c;
+        }), r && r.call(this, c, p, a) || d;
       };
       T.__f = !0;
-      var s = T.shouldComponentUpdate, a = T.componentWillUpdate;
-      T.componentWillUpdate = function(p, u, d) {
+      var r = T.shouldComponentUpdate, l = T.componentWillUpdate;
+      T.componentWillUpdate = function(c, p, a) {
         if (this.__e) {
-          var f = s;
-          s = void 0, r(p, u, d), s = f;
+          var h = r;
+          r = void 0, o(c, p, a), r = h;
         }
-        a && a.call(this, p, u, d);
-      }, T.shouldComponentUpdate = r;
+        l && l.call(this, c, p, a);
+      }, T.shouldComponentUpdate = o;
     }
-    return n.__N || n.__;
+    return i.__N || i.__;
   }
-  function be(t, e) {
-    var i = Ue(te++, 3);
-    !R.__s && wt(i.__H, e) && (i.__ = t, i.u = e, T.__H.__h.push(i));
+  function _e(t, e) {
+    var n = ze(ee++, 3);
+    !L.__s && ft(n.__H, e) && (n.__ = t, n.u = e, T.__H.__h.push(n));
   }
-  function xt() {
-    for (var t; t = $e.shift(); )
+  function gt() {
+    for (var t; t = Be.shift(); )
       if (t.__P && t.__H)
         try {
-          t.__H.__h.forEach(ie), t.__H.__h.forEach(ye), t.__H.__h = [];
+          t.__H.__h.forEach(te), t.__H.__h.forEach(fe), t.__H.__h = [];
         } catch (e) {
-          t.__H.__h = [], R.__e(e, t.__v);
+          t.__H.__h = [], L.__e(e, t.__v);
         }
   }
-  R.__b = function(t) {
-    T = null, Ie && Ie(t);
-  }, R.__ = function(t, e) {
-    t && e.__k && e.__k.__m && (t.__m = e.__k.__m), Oe && Oe(t, e);
-  }, R.__r = function(t) {
-    He && He(t), te = 0;
+  L.__b = function(t) {
+    T = null, $e && $e(t);
+  }, L.__ = function(t, e) {
+    t && e.__k && e.__k.__m && (t.__m = e.__k.__m), He && He(t, e);
+  }, L.__r = function(t) {
+    De && De(t), ee = 0;
     var e = (T = t.__c).__H;
-    e && (_e === T ? (e.__h = [], T.__h = [], e.__.forEach(function(i) {
-      i.__N && (i.__ = i.__N), i.u = i.__N = void 0;
-    })) : (e.__h.forEach(ie), e.__h.forEach(ye), e.__h = [], te = 0)), _e = T;
-  }, R.diffed = function(t) {
-    Ne && Ne(t);
+    e && (he === T ? (e.__h = [], T.__h = [], e.__.forEach(function(n) {
+      n.__N && (n.__ = n.__N), n.u = n.__N = void 0;
+    })) : (e.__h.forEach(te), e.__h.forEach(fe), e.__h = [], ee = 0)), he = T;
+  }, L.diffed = function(t) {
+    Fe && Fe(t);
     var e = t.__c;
-    e && e.__H && (e.__H.__h.length && ($e.push(e) !== 1 && Fe === R.requestAnimationFrame || ((Fe = R.requestAnimationFrame) || St)(xt)), e.__H.__.forEach(function(i) {
-      i.u && (i.__H = i.u), i.u = void 0;
-    })), _e = T = null;
-  }, R.__c = function(t, e) {
-    e.some(function(i) {
+    e && e.__H && (e.__H.__h.length && (Be.push(e) !== 1 && Pe === L.requestAnimationFrame || ((Pe = L.requestAnimationFrame) || _t)(gt)), e.__H.__.forEach(function(n) {
+      n.u && (n.__H = n.u), n.u = void 0;
+    })), he = T = null;
+  }, L.__c = function(t, e) {
+    e.some(function(n) {
       try {
-        i.__h.forEach(ie), i.__h = i.__h.filter(function(n) {
-          return !n.__ || ye(n);
+        n.__h.forEach(te), n.__h = n.__h.filter(function(i) {
+          return !i.__ || fe(i);
         });
-      } catch (n) {
-        e.some(function(r) {
-          r.__h && (r.__h = []);
-        }), e = [], R.__e(n, i.__v);
+      } catch (i) {
+        e.some(function(o) {
+          o.__h && (o.__h = []);
+        }), e = [], L.__e(i, n.__v);
       }
-    }), ze && ze(t, e);
-  }, R.unmount = function(t) {
-    We && We(t);
-    var e, i = t.__c;
-    i && i.__H && (i.__H.__.forEach(function(n) {
+    }), Ie && Ie(t, e);
+  }, L.unmount = function(t) {
+    Ne && Ne(t);
+    var e, n = t.__c;
+    n && n.__H && (n.__H.__.forEach(function(i) {
       try {
-        ie(n);
-      } catch (r) {
-        e = r;
+        te(i);
+      } catch (o) {
+        e = o;
       }
-    }), i.__H = void 0, e && R.__e(e, i.__v));
+    }), n.__H = void 0, e && L.__e(e, n.__v));
   };
-  var je = typeof requestAnimationFrame == "function";
-  function St(t) {
-    var e, i = function() {
-      clearTimeout(n), je && cancelAnimationFrame(e), setTimeout(t);
-    }, n = setTimeout(i, 35);
-    je && (e = requestAnimationFrame(i));
+  var Oe = typeof requestAnimationFrame == "function";
+  function _t(t) {
+    var e, n = function() {
+      clearTimeout(i), Oe && cancelAnimationFrame(e), setTimeout(t);
+    }, i = setTimeout(n, 35);
+    Oe && (e = requestAnimationFrame(n));
   }
-  function ie(t) {
-    var e = T, i = t.__c;
-    typeof i == "function" && (t.__c = void 0, i()), T = e;
+  function te(t) {
+    var e = T, n = t.__c;
+    typeof n == "function" && (t.__c = void 0, n()), T = e;
   }
-  function ye(t) {
+  function fe(t) {
     var e = T;
     t.__c = t.__(), T = e;
   }
-  function wt(t, e) {
-    return !t || t.length !== e.length || e.some(function(i, n) {
-      return i !== t[n];
+  function ft(t, e) {
+    return !t || t.length !== e.length || e.some(function(n, i) {
+      return n !== t[i];
     });
   }
-  function Ve(t, e) {
+  function We(t, e) {
     return typeof e == "function" ? e(t) : e;
   }
-  function kt(t, e) {
-    for (var i in e)
-      t[i] = e[i];
+  function mt(t, e) {
+    for (var n in e)
+      t[n] = e[n];
     return t;
   }
-  function qe(t, e) {
-    for (var i in t)
-      if (i !== "__source" && !(i in e))
+  function Ue(t, e) {
+    for (var n in t)
+      if (n !== "__source" && !(n in e))
         return !0;
-    for (var n in e)
-      if (n !== "__source" && t[n] !== e[n])
+    for (var i in e)
+      if (i !== "__source" && t[i] !== e[i])
         return !0;
     return !1;
   }
-  function Ge(t, e) {
+  function je(t, e) {
     this.props = t, this.context = e;
   }
-  (Ge.prototype = new F()).isPureReactComponent = !0, Ge.prototype.shouldComponentUpdate = function(t, e) {
-    return qe(this.props, t) || qe(this.state, e);
+  (je.prototype = new $()).isPureReactComponent = !0, je.prototype.shouldComponentUpdate = function(t, e) {
+    return Ue(this.props, t) || Ue(this.state, e);
   };
-  var Xe = m.__b;
-  m.__b = function(t) {
-    t.type && t.type.__f && t.ref && (t.props.ref = t.ref, t.ref = null), Xe && Xe(t);
+  var Ve = f.__b;
+  f.__b = function(t) {
+    t.type && t.type.__f && t.ref && (t.props.ref = t.ref, t.ref = null), Ve && Ve(t);
   };
-  var Tt = m.__e;
-  m.__e = function(t, e, i, n) {
+  var bt = f.__e;
+  f.__e = function(t, e, n, i) {
     if (t.then) {
-      for (var r, s = e; s = s.__; )
-        if ((r = s.__c) && r.__c)
-          return e.__e == null && (e.__e = i.__e, e.__k = i.__k), r.__c(t, e);
+      for (var o, r = e; r = r.__; )
+        if ((o = r.__c) && o.__c)
+          return e.__e == null && (e.__e = n.__e, e.__k = n.__k), o.__c(t, e);
     }
-    Tt(t, e, i, n);
+    bt(t, e, n, i);
   };
-  var Je = m.unmount;
-  function Qe(t, e, i) {
-    return t && (t.__c && t.__c.__H && (t.__c.__H.__.forEach(function(n) {
-      typeof n.__c == "function" && n.__c();
-    }), t.__c.__H = null), (t = kt({}, t)).__c != null && (t.__c.__P === i && (t.__c.__P = e), t.__c.__e = !0, t.__c = null), t.__k = t.__k && t.__k.map(function(n) {
-      return Qe(n, e, i);
+  var qe = f.unmount;
+  function Je(t, e, n) {
+    return t && (t.__c && t.__c.__H && (t.__c.__H.__.forEach(function(i) {
+      typeof i.__c == "function" && i.__c();
+    }), t.__c.__H = null), (t = mt({}, t)).__c != null && (t.__c.__P === n && (t.__c.__P = e), t.__c.__e = !0, t.__c = null), t.__k = t.__k && t.__k.map(function(i) {
+      return Je(i, e, n);
     })), t;
   }
-  function Ye(t, e, i) {
-    return t && i && (t.__v = null, t.__k = t.__k && t.__k.map(function(n) {
-      return Ye(n, e, i);
-    }), t.__c && t.__c.__P === e && (t.__e && i.appendChild(t.__e), t.__c.__e = !0, t.__c.__P = i)), t;
+  function Ge(t, e, n) {
+    return t && n && (t.__v = null, t.__k = t.__k && t.__k.map(function(i) {
+      return Ge(i, e, n);
+    }), t.__c && t.__c.__P === e && (t.__e && n.appendChild(t.__e), t.__c.__e = !0, t.__c.__P = n)), t;
   }
-  function ve() {
+  function me() {
     this.__u = 0, this.o = null, this.__b = null;
   }
-  function Ze(t) {
+  function Xe(t) {
     var e = t.__.__c;
     return e && e.__a && e.__a(t);
   }
   function ne() {
     this.i = null, this.l = null;
   }
-  m.unmount = function(t) {
+  f.unmount = function(t) {
     var e = t.__c;
-    e && e.__R && e.__R(), e && 32 & t.__u && (t.type = null), Je && Je(t);
-  }, (ve.prototype = new F()).__c = function(t, e) {
-    var i = e.__c, n = this;
-    n.o == null && (n.o = []), n.o.push(i);
-    var r = Ze(n.__v), s = !1, a = function() {
-      s || (s = !0, i.__R = null, r ? r(p) : p());
+    e && e.__R && e.__R(), e && 32 & t.__u && (t.type = null), qe && qe(t);
+  }, (me.prototype = new $()).__c = function(t, e) {
+    var n = e.__c, i = this;
+    i.o == null && (i.o = []), i.o.push(n);
+    var o = Xe(i.__v), r = !1, l = function() {
+      r || (r = !0, n.__R = null, o ? o(c) : c());
     };
-    i.__R = a;
-    var p = function() {
-      if (!--n.__u) {
-        if (n.state.__a) {
-          var u = n.state.__a;
-          n.__v.__k[0] = Ye(u, u.__c.__P, u.__c.__O);
+    n.__R = l;
+    var c = function() {
+      if (!--i.__u) {
+        if (i.state.__a) {
+          var p = i.state.__a;
+          i.__v.__k[0] = Ge(p, p.__c.__P, p.__c.__O);
         }
-        var d;
-        for (n.setState({ __a: n.__b = null }); d = n.o.pop(); )
-          d.forceUpdate();
+        var a;
+        for (i.setState({ __a: i.__b = null }); a = i.o.pop(); )
+          a.forceUpdate();
       }
     };
-    n.__u++ || 32 & e.__u || n.setState({ __a: n.__b = n.__v.__k[0] }), t.then(a, a);
-  }, ve.prototype.componentWillUnmount = function() {
+    i.__u++ || 32 & e.__u || i.setState({ __a: i.__b = i.__v.__k[0] }), t.then(l, l);
+  }, me.prototype.componentWillUnmount = function() {
     this.o = [];
-  }, ve.prototype.render = function(t, e) {
+  }, me.prototype.render = function(t, e) {
     if (this.__b) {
       if (this.__v.__k) {
-        var i = document.createElement("div"), n = this.__v.__k[0].__c;
-        this.__v.__k[0] = Qe(this.__b, i, n.__O = n.__P);
+        var n = document.createElement("div"), i = this.__v.__k[0].__c;
+        this.__v.__k[0] = Je(this.__b, n, i.__O = i.__P);
       }
       this.__b = null;
     }
-    var r = e.__a && ue(N, null, t.fallback);
-    return r && (r.__u &= -33), [ue(N, null, e.__a ? null : t.children), r];
+    var o = e.__a && de(N, null, t.fallback);
+    return o && (o.__u &= -33), [de(N, null, e.__a ? null : t.children), o];
   };
-  var Ke = function(t, e, i) {
-    if (++i[1] === i[0] && t.l.delete(e), t.props.revealOrder && (t.props.revealOrder[0] !== "t" || !t.l.size))
-      for (i = t.i; i; ) {
-        for (; i.length > 3; )
-          i.pop()();
-        if (i[1] < i[0])
+  var Qe = function(t, e, n) {
+    if (++n[1] === n[0] && t.l.delete(e), t.props.revealOrder && (t.props.revealOrder[0] !== "t" || !t.l.size))
+      for (n = t.i; n; ) {
+        for (; n.length > 3; )
+          n.pop()();
+        if (n[1] < n[0])
           break;
-        t.i = i = i[2];
+        t.i = n = n[2];
       }
   };
-  (ne.prototype = new F()).__a = function(t) {
-    var e = this, i = Ze(e.__v), n = e.l.get(t);
-    return n[0]++, function(r) {
-      var s = function() {
-        e.props.revealOrder ? (n.push(r), Ke(e, t, n)) : r();
+  (ne.prototype = new $()).__a = function(t) {
+    var e = this, n = Xe(e.__v), i = e.l.get(t);
+    return i[0]++, function(o) {
+      var r = function() {
+        e.props.revealOrder ? (i.push(o), Qe(e, t, i)) : o();
       };
-      i ? i(s) : s();
+      n ? n(r) : r();
     };
   }, ne.prototype.render = function(t) {
     this.i = null, this.l = /* @__PURE__ */ new Map();
-    var e = K(t.children);
+    var e = Y(t.children);
     t.revealOrder && t.revealOrder[0] === "b" && e.reverse();
-    for (var i = e.length; i--; )
-      this.l.set(e[i], this.i = [1, 0, this.i]);
+    for (var n = e.length; n--; )
+      this.l.set(e[n], this.i = [1, 0, this.i]);
     return t.children;
   }, ne.prototype.componentDidUpdate = ne.prototype.componentDidMount = function() {
     var t = this;
-    this.l.forEach(function(e, i) {
-      Ke(t, i, e);
+    this.l.forEach(function(e, n) {
+      Qe(t, n, e);
     });
   };
-  var Rt = typeof Symbol < "u" && Symbol.for && Symbol.for("react.element") || 60103, Ct = /^(?:accent|alignment|arabic|baseline|cap|clip(?!PathU)|color|dominant|fill|flood|font|glyph(?!R)|horiz|image(!S)|letter|lighting|marker(?!H|W|U)|overline|paint|pointer|shape|stop|strikethrough|stroke|text(?!L)|transform|underline|unicode|units|v|vector|vert|word|writing|x(?!C))[A-Z]/, Lt = /^on(Ani|Tra|Tou|BeforeInp|Compo)/, Et = /[A-Z0-9]/g, Mt = typeof document < "u", At = function(t) {
+  var vt = typeof Symbol < "u" && Symbol.for && Symbol.for("react.element") || 60103, yt = /^(?:accent|alignment|arabic|baseline|cap|clip(?!PathU)|color|dominant|fill|flood|font|glyph(?!R)|horiz|image(!S)|letter|lighting|marker(?!H|W|U)|overline|paint|pointer|shape|stop|strikethrough|stroke|text(?!L)|transform|underline|unicode|units|v|vector|vert|word|writing|x(?!C))[A-Z]/, xt = /^on(Ani|Tra|Tou|BeforeInp|Compo)/, St = /[A-Z0-9]/g, kt = typeof document < "u", wt = function(t) {
     return (typeof Symbol < "u" && typeof Symbol() == "symbol" ? /fil|che|rad/ : /fil|che|ra/).test(t);
   };
-  function et(t, e, i) {
-    return e.__k == null && (e.textContent = ""), bt(t, e), typeof i == "function" && i(), t ? t.__c : null;
+  function Ze(t, e, n) {
+    return e.__k == null && (e.textContent = ""), ut(t, e), typeof n == "function" && n(), t ? t.__c : null;
   }
-  F.prototype.isReactComponent = {}, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t) {
-    Object.defineProperty(F.prototype, t, { configurable: !0, get: function() {
+  $.prototype.isReactComponent = {}, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t) {
+    Object.defineProperty($.prototype, t, { configurable: !0, get: function() {
       return this["UNSAFE_" + t];
     }, set: function(e) {
       Object.defineProperty(this, t, { configurable: !0, writable: !0, value: e });
     } });
   });
-  var tt = m.event;
-  function Pt() {
+  var Ye = f.event;
+  function Tt() {
   }
-  function Bt() {
+  function Lt() {
     return this.cancelBubble;
   }
-  function Dt() {
+  function Ct() {
     return this.defaultPrevented;
   }
-  m.event = function(t) {
-    return tt && (t = tt(t)), t.persist = Pt, t.isPropagationStopped = Bt, t.isDefaultPrevented = Dt, t.nativeEvent = t;
+  f.event = function(t) {
+    return Ye && (t = Ye(t)), t.persist = Tt, t.isPropagationStopped = Lt, t.isDefaultPrevented = Ct, t.nativeEvent = t;
   };
-  var Ft = { enumerable: !1, configurable: !0, get: function() {
+  var Rt = { enumerable: !1, configurable: !0, get: function() {
     return this.class;
-  } }, it = m.vnode;
-  m.vnode = function(t) {
+  } }, Ke = f.vnode;
+  f.vnode = function(t) {
     typeof t.type == "string" && function(e) {
-      var i = e.props, n = e.type, r = {}, s = n.indexOf("-") === -1;
-      for (var a in i) {
-        var p = i[a];
-        if (!(a === "value" && "defaultValue" in i && p == null || Mt && a === "children" && n === "noscript" || a === "class" || a === "className")) {
-          var u = a.toLowerCase();
-          a === "defaultValue" && "value" in i && i.value == null ? a = "value" : a === "download" && p === !0 ? p = "" : u === "translate" && p === "no" ? p = !1 : u[0] === "o" && u[1] === "n" ? u === "ondoubleclick" ? a = "ondblclick" : u !== "onchange" || n !== "input" && n !== "textarea" || At(i.type) ? u === "onfocus" ? a = "onfocusin" : u === "onblur" ? a = "onfocusout" : Lt.test(a) && (a = u) : u = a = "oninput" : s && Ct.test(a) ? a = a.replace(Et, "-$&").toLowerCase() : p === null && (p = void 0), u === "oninput" && r[a = u] && (a = "oninputCapture"), r[a] = p;
+      var n = e.props, i = e.type, o = {}, r = i.indexOf("-") === -1;
+      for (var l in n) {
+        var c = n[l];
+        if (!(l === "value" && "defaultValue" in n && c == null || kt && l === "children" && i === "noscript" || l === "class" || l === "className")) {
+          var p = l.toLowerCase();
+          l === "defaultValue" && "value" in n && n.value == null ? l = "value" : l === "download" && c === !0 ? c = "" : p === "translate" && c === "no" ? c = !1 : p[0] === "o" && p[1] === "n" ? p === "ondoubleclick" ? l = "ondblclick" : p !== "onchange" || i !== "input" && i !== "textarea" || wt(n.type) ? p === "onfocus" ? l = "onfocusin" : p === "onblur" ? l = "onfocusout" : xt.test(l) && (l = p) : p = l = "oninput" : r && yt.test(l) ? l = l.replace(St, "-$&").toLowerCase() : c === null && (c = void 0), p === "oninput" && o[l = p] && (l = "oninputCapture"), o[l] = c;
         }
       }
-      n == "select" && r.multiple && Array.isArray(r.value) && (r.value = K(i.children).forEach(function(d) {
-        d.props.selected = r.value.indexOf(d.props.value) != -1;
-      })), n == "select" && r.defaultValue != null && (r.value = K(i.children).forEach(function(d) {
-        d.props.selected = r.multiple ? r.defaultValue.indexOf(d.props.value) != -1 : r.defaultValue == d.props.value;
-      })), i.class && !i.className ? (r.class = i.class, Object.defineProperty(r, "className", Ft)) : (i.className && !i.class || i.class && i.className) && (r.class = r.className = i.className), e.props = r;
-    }(t), t.$$typeof = Rt, it && it(t);
+      i == "select" && o.multiple && Array.isArray(o.value) && (o.value = Y(n.children).forEach(function(a) {
+        a.props.selected = o.value.indexOf(a.props.value) != -1;
+      })), i == "select" && o.defaultValue != null && (o.value = Y(n.children).forEach(function(a) {
+        a.props.selected = o.multiple ? o.defaultValue.indexOf(a.props.value) != -1 : o.defaultValue == a.props.value;
+      })), n.class && !n.className ? (o.class = n.class, Object.defineProperty(o, "className", Rt)) : (n.className && !n.class || n.class && n.className) && (o.class = o.className = n.className), e.props = o;
+    }(t), t.$$typeof = vt, Ke && Ke(t);
   };
-  var nt = m.__r;
-  m.__r = function(t) {
-    nt && nt(t), t.__c;
+  var et = f.__r;
+  f.__r = function(t) {
+    et && et(t), t.__c;
   };
-  var ot = m.diffed;
-  m.diffed = function(t) {
-    ot && ot(t);
-    var e = t.props, i = t.__e;
-    i != null && t.type === "textarea" && "value" in e && e.value !== i.value && (i.value = e.value == null ? "" : e.value);
+  var tt = f.diffed;
+  f.diffed = function(t) {
+    tt && tt(t);
+    var e = t.props, n = t.__e;
+    n != null && t.type === "textarea" && "value" in e && e.value !== n.value && (n.value = e.value == null ? "" : e.value);
   };
-  function $t({ detector: t }) {
-    const [e, i] = E({ activeBlocks: 0 }), [n, r] = E(15), [s, a] = E(!1), [p, u] = E(!1), d = window.Blinko.i18n;
-    be(() => {
-      const S = () => {
-        var w;
-        const v = ((w = window.blinkoRTL) == null ? void 0 : w.getStats()) || 0;
-        i({ activeBlocks: v });
+  function Et({ detector: t }) {
+    const [e, n] = R({ activeBlocks: 0 }), [i, o] = R(15), [r, l] = R(!1), [c, p] = R(!1), a = window.Blinko.i18n;
+    _e(() => {
+      const x = () => {
+        var k;
+        const y = ((k = window.blinkoRTL) == null ? void 0 : k.getStats()) || 0;
+        n({ activeBlocks: y });
       };
-      S();
-      const h = setInterval(S, 1e3);
-      return () => clearInterval(h);
-    }, []), be(() => {
-      const S = () => {
-        const h = window.blinkoRTL;
-        if (h) {
-          let v;
-          if (typeof h.getSettings == "function" ? v = h.getSettings() : typeof h.settings == "function" && (v = h.settings()), v && v.threshold !== void 0 && r(Math.round(v.threshold * 100)), v && v.debugMode !== void 0 && u(v.debugMode), v)
+      x();
+      const m = setInterval(x, 1e3);
+      return () => clearInterval(m);
+    }, []), _e(() => {
+      const x = () => {
+        const m = window.blinkoRTL;
+        if (m) {
+          let y;
+          if (typeof m.getSettings == "function" ? y = m.getSettings() : typeof m.settings == "function" && (y = m.settings()), y && y.threshold !== void 0 && o(Math.round(y.threshold * 100)), y && y.debugMode !== void 0 && p(y.debugMode), y)
             return !0;
         }
         return !1;
       };
-      if (!S()) {
-        const h = setInterval(() => {
-          S() && clearInterval(h);
+      if (!x()) {
+        const m = setInterval(() => {
+          x() && clearInterval(m);
         }, 100);
-        setTimeout(() => clearInterval(h), 2e3);
+        setTimeout(() => clearInterval(m), 2e3);
       }
     }, []);
-    const f = () => {
-      var S;
-      a(!0), (S = window.blinkoRTL) == null || S.fixSelection(), setTimeout(() => {
-        a(!1), window.Blinko.toast.success("Selection processed");
+    const h = () => {
+      var x;
+      l(!0), (x = window.blinkoRTL) == null || x.fixSelection(), setTimeout(() => {
+        l(!1), window.Blinko.toast.success("Selection processed");
       }, 500);
-    }, c = (S) => {
-      var v;
-      const h = parseInt(S.target.value);
-      r(h), (v = window.blinkoRTL) == null || v.setSensitivity(h / 100);
-    }, y = (S) => {
-      const h = S.target.checked;
-      u(h);
-      const v = window.blinkoRTL;
-      v && v.service && typeof v.service.toggleDebugMode == "function" && v.service.toggleDebugMode();
+    }, d = (x) => {
+      var y;
+      const m = parseInt(x.target.value);
+      o(m), (y = window.blinkoRTL) == null || y.setSensitivity(m / 100);
+    }, v = (x) => {
+      const m = x.target.checked;
+      p(m);
+      const y = window.blinkoRTL;
+      y && y.service && typeof y.service.toggleDebugMode == "function" && y.service.toggleDebugMode();
     };
-    return /* @__PURE__ */ o("div", { style: {
+    return /* @__PURE__ */ s("div", { style: {
       padding: "15px",
       fontFamily: "system-ui, sans-serif",
       width: "300px",
       background: "var(--bg-color, white)",
       color: "var(--text-color, black)"
     }, children: [
-      /* @__PURE__ */ o("div", { style: {
+      /* @__PURE__ */ s("div", { style: {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -675,16 +675,16 @@ var _ = (A, m, I) => (Yt(A, typeof m != "symbol" ? m + "" : m, I), I);
         borderBottom: "1px solid #eee",
         paddingBottom: "10px"
       }, children: [
-        /* @__PURE__ */ o("h3", { style: { margin: 0, fontSize: "16px" }, children: "RTL Control Center" }),
-        /* @__PURE__ */ o(
+        /* @__PURE__ */ s("h3", { style: { margin: 0, fontSize: "16px" }, children: "RTL Control Center" }),
+        /* @__PURE__ */ s(
           "button",
           {
             onClick: () => {
-              var h, v;
-              (h = window.blinkoRTL) == null || h.toggle();
-              const S = (v = window.blinkoRTL) == null ? void 0 : v.isEnabled();
+              var m, y;
+              (m = window.blinkoRTL) == null || m.toggle();
+              const x = (y = window.blinkoRTL) == null ? void 0 : y.isEnabled();
               window.Blinko.toast.success(
-                S ? d.t("rtl_enabled") : d.t("rtl_disabled")
+                x ? a.t("rtl_enabled") : a.t("rtl_disabled")
               );
             },
             style: {
@@ -695,12 +695,12 @@ var _ = (A, m, I) => (Yt(A, typeof m != "symbol" ? m + "" : m, I), I);
               padding: "4px",
               borderRadius: "4px"
             },
-            title: d.t("manual_toggle"),
+            title: a.t("manual_toggle"),
             children: "🔄"
           }
         )
       ] }),
-      /* @__PURE__ */ o("div", { style: {
+      /* @__PURE__ */ s("div", { style: {
         background: "#f8f9fa",
         padding: "12px",
         borderRadius: "8px",
@@ -708,22 +708,22 @@ var _ = (A, m, I) => (Yt(A, typeof m != "symbol" ? m + "" : m, I), I);
         textAlign: "center",
         borderLeft: "4px solid #007bff"
       }, children: [
-        /* @__PURE__ */ o("div", { style: { fontSize: "24px", fontWeight: "bold", color: "#007bff" }, children: e.activeBlocks }),
-        /* @__PURE__ */ o("div", { style: { fontSize: "12px", color: "#666" }, children: "Active RTL Blocks" })
+        /* @__PURE__ */ s("div", { style: { fontSize: "24px", fontWeight: "bold", color: "#007bff" }, children: e.activeBlocks }),
+        /* @__PURE__ */ s("div", { style: { fontSize: "12px", color: "#666" }, children: "Active RTL Blocks" })
       ] }),
-      /* @__PURE__ */ o("div", { style: { marginBottom: "20px" }, children: /* @__PURE__ */ o(
+      /* @__PURE__ */ s("div", { style: { marginBottom: "20px" }, children: /* @__PURE__ */ s(
         "button",
         {
-          onClick: f,
-          disabled: s,
+          onClick: h,
+          disabled: r,
           style: {
             width: "100%",
-            background: s ? "#6c757d" : "#28a745",
+            background: r ? "#6c757d" : "#28a745",
             color: "white",
             border: "none",
             padding: "10px",
             borderRadius: "6px",
-            cursor: s ? "wait" : "pointer",
+            cursor: r ? "wait" : "pointer",
             fontWeight: "500",
             display: "flex",
             alignItems: "center",
@@ -731,59 +731,59 @@ var _ = (A, m, I) => (Yt(A, typeof m != "symbol" ? m + "" : m, I), I);
             gap: "8px",
             transition: "background 0.2s"
           },
-          children: s ? "Processing..." : /* @__PURE__ */ o(N, { children: [
-            /* @__PURE__ */ o("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: /* @__PURE__ */ o("path", { d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" }) }),
+          children: r ? "Processing..." : /* @__PURE__ */ s(N, { children: [
+            /* @__PURE__ */ s("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: /* @__PURE__ */ s("path", { d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" }) }),
             "Fix Selected Text"
           ] })
         }
       ) }),
-      /* @__PURE__ */ o("div", { style: { marginBottom: "15px" }, children: [
-        /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", cursor: "pointer", fontSize: "13px" }, children: [
-          /* @__PURE__ */ o(
+      /* @__PURE__ */ s("div", { style: { marginBottom: "15px" }, children: [
+        /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", cursor: "pointer", fontSize: "13px" }, children: [
+          /* @__PURE__ */ s(
             "input",
             {
               type: "checkbox",
-              checked: p,
-              onChange: y,
+              checked: c,
+              onChange: v,
               style: { marginInlineEnd: "8px" }
             }
           ),
           "Enable Visual Debugger"
         ] }),
-        /* @__PURE__ */ o("div", { style: { fontSize: "10px", color: "#888", marginInlineStart: "20px", marginTop: "2px" }, children: "Highlights RTL (Red) and LTR (Blue) blocks" })
+        /* @__PURE__ */ s("div", { style: { fontSize: "10px", color: "#888", marginInlineStart: "20px", marginTop: "2px" }, children: "Highlights RTL (Red) and LTR (Blue) blocks" })
       ] }),
-      /* @__PURE__ */ o("div", { children: [
-        /* @__PURE__ */ o("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "13px" }, children: [
-          /* @__PURE__ */ o("strong", { children: "Detection Sensitivity" }),
-          /* @__PURE__ */ o("span", { style: { color: "#007bff" }, children: [
-            n,
+      /* @__PURE__ */ s("div", { children: [
+        /* @__PURE__ */ s("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "13px" }, children: [
+          /* @__PURE__ */ s("strong", { children: "Detection Sensitivity" }),
+          /* @__PURE__ */ s("span", { style: { color: "#007bff" }, children: [
+            i,
             "%"
           ] })
         ] }),
-        /* @__PURE__ */ o(
+        /* @__PURE__ */ s(
           "input",
           {
             type: "range",
             min: "1",
             max: "50",
-            value: n,
-            onChange: c,
+            value: i,
+            onChange: d,
             style: { width: "100%", cursor: "pointer" }
           }
         ),
-        /* @__PURE__ */ o("div", { style: { display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#999", marginTop: "4px" }, children: [
-          /* @__PURE__ */ o("span", { children: "More Sensitive (1%)" }),
-          /* @__PURE__ */ o("span", { children: "Less Sensitive (50%)" })
+        /* @__PURE__ */ s("div", { style: { display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#999", marginTop: "4px" }, children: [
+          /* @__PURE__ */ s("span", { children: "More Sensitive (1%)" }),
+          /* @__PURE__ */ s("span", { children: "Less Sensitive (50%)" })
         ] })
       ] }),
-      /* @__PURE__ */ o("div", { style: { marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #eee", fontSize: "11px", color: "#888", textAlign: "center" }, children: "Click 'Fix Selected' to force detection on specific text." }),
-      /* @__PURE__ */ o("div", { style: { marginTop: "5px", fontSize: "10px", color: "#aaa", textAlign: "center" }, children: [
+      /* @__PURE__ */ s("div", { style: { marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #eee", fontSize: "11px", color: "#888", textAlign: "center" }, children: "Click 'Fix Selected' to force detection on specific text." }),
+      /* @__PURE__ */ s("div", { style: { marginTop: "5px", fontSize: "10px", color: "#aaa", textAlign: "center" }, children: [
         "v",
-        "1.1.3"
+        "1.1.4"
       ] })
     ] });
   }
-  const M = `/* Dynamic CSS Rules for RTL Elements */
+  const O = `/* Dynamic CSS Rules for RTL Elements */
 .blinko-detected-rtl {
     direction: rtl !important;
     text-align: right !important;
@@ -835,8 +835,11 @@ var _ = (A, m, I) => (Yt(A, typeof m != "symbol" ? m + "" : m, I), I);
     white-space: nowrap;
 }
 
-/* Generic Force Classes */
-.rtl-force {
+/* Generic RTL Force - High Specificity */
+.rtl-force,
+[dir="rtl"].rtl-force,
+.markdown-body .rtl-force,
+.vditor-reset .rtl-force {
     direction: rtl !important;
     text-align: right !important;
     unicode-bidi: embed !important;
@@ -865,7 +868,7 @@ button.rtl-force,
     text-align: left !important;
     unicode-bidi: embed !important;
 }
-`, U = [
+`, J = [
     // Content containers
     ".markdown-body p",
     ".markdown-body div",
@@ -927,7 +930,7 @@ button.rtl-force,
     "td",
     "th",
     "caption"
-  ], It = {
+  ], nt = {
     enabled: !0,
     sensitivity: "medium",
     forceDirection: "auto",
@@ -943,9 +946,9 @@ button.rtl-force,
   direction: rtl;
 }
 `,
-    dynamicCSS: M,
+    dynamicCSS: O,
     permanentCSS: !1,
-    targetSelectors: U,
+    targetSelectors: J,
     disabledSelectors: [],
     minRTLChars: 2,
     processInterval: 1e3,
@@ -959,7 +962,7 @@ button.rtl-force,
       lineHeight: 1.5,
       paragraphMargin: 10
     }
-  }, j = [
+  }, G = [
     {
       id: "default",
       name: "Default CSS",
@@ -1002,8 +1005,8 @@ button.rtl-force,
     padding-left: 0 !important;
     padding-right: 0.9em !important;
 }`,
-      dynamicCSS: M,
-      targetSelectors: U,
+      dynamicCSS: O,
+      targetSelectors: J,
       disabledSelectors: [],
       isBuiltIn: !0
     },
@@ -1149,38 +1152,29 @@ ul {
 }`,
       isBuiltIn: !0
     }
-  ], oe = [
-    "inherit",
-    "Arial",
-    "Arial Hebrew",
-    "David",
-    "Miriam",
-    "Segoe UI",
-    "Tahoma"
   ];
-  function Ht() {
-    var G, C, $, at, dt, ct, pt, ut;
-    const [t, e] = E({
+  function Mt() {
+    const [t, e] = R({
       enabled: !0,
       sensitivity: "medium",
       threshold: 0.15,
       forceDirection: "auto",
-      autoDetect: !1,
+      autoDetect: !0,
+      // Default to true now
       manualMode: !0,
       manualToggle: !1,
       mobileView: !1,
       darkMode: !1,
       method: "all",
       customCSS: "",
-      dynamicCSS: M,
+      dynamicCSS: O,
       permanentCSS: !1,
-      dynamicCSS: M,
       visualStyles: {
         fontFamily: "inherit",
         lineHeight: 1.5,
         paragraphMargin: 1
       },
-      targetSelectors: U,
+      targetSelectors: J,
       disabledSelectors: [],
       minRTLChars: 3,
       processInterval: 2e3,
@@ -1188,137 +1182,133 @@ ul {
       arabicRegex: !0,
       mixedContent: !0,
       savedPresets: []
-    }), [i, n] = E(""), [r, s] = E(""), [a, p] = E(""), [u, d] = E(""), [f, c] = E([]), [y, b] = E("");
-    window.Blinko.i18n, be(() => {
-      var x, L, se;
-      const l = (x = window.blinkoRTL) == null ? void 0 : x.settings();
-      if (l)
-        e(l);
-      else {
-        const le = localStorage.getItem("blinko-rtl-settings");
-        if (le)
-          try {
-            const Q = JSON.parse(le);
-            e((Jt) => ({ ...Jt, ...Q }));
-          } catch (Q) {
-            console.error("Failed to load RTL plugin settings:", Q);
-          }
-      }
-      (se = (L = window.blinkoRTL) == null ? void 0 : L.service) != null && se.getActionLog && c(window.blinkoRTL.service.getActionLog());
-      const g = (le) => {
-        c((Q) => [le.detail, ...Q].slice(0, 50));
+    });
+    R("");
+    const [n, i] = R(""), [o, r] = R(""), [l, c] = R(""), [p, a] = R([]), [h, d] = R(""), [v, b] = R("");
+    _e(() => {
+      var C, oe;
+      (() => {
+        var P;
+        const D = (P = window.blinkoRTL) == null ? void 0 : P.settings();
+        if (D)
+          e(D);
+        else {
+          const j = localStorage.getItem("blinko-rtl-settings");
+          if (j)
+            try {
+              const X = JSON.parse(j);
+              e((Ot) => ({ ...Ot, ...X }));
+            } catch (X) {
+              console.error("Failed to load RTL plugin settings:", X);
+            }
+        }
+      })();
+      const _ = (D) => {
+        e((P) => ({ ...P, ...D.detail }));
+      }, S = (D) => {
+        a((P) => [D.detail, ...P].slice(0, 50));
       };
-      return window.addEventListener("rtl-action-logged", g), () => {
-        window.removeEventListener("rtl-action-logged", g);
+      return (oe = (C = window.blinkoRTL) == null ? void 0 : C.service) != null && oe.getActionLog && a(window.blinkoRTL.service.getActionLog()), window.addEventListener("rtl-settings-changed", _), window.addEventListener("rtl-action-logged", S), () => {
+        window.removeEventListener("rtl-settings-changed", _), window.removeEventListener("rtl-action-logged", S);
       };
     }, []);
-    const S = (l) => {
-      let g = 0;
-      for (let x = 0; x < l.length; x++)
-        if (l[x] === "{" && g++, l[x] === "}" && g--, g < 0)
+    const x = (u) => {
+      let _ = 0;
+      for (let S = 0; S < u.length; S++)
+        if (u[S] === "{" && _++, u[S] === "}" && _--, _ < 0)
           return !1;
-      return g === 0;
-    }, h = (l) => {
-      var x;
-      l.dynamicCSS !== void 0 && (S(l.dynamicCSS) ? b("") : b("Invalid CSS: Unbalanced curly braces"));
-      const g = { ...t, ...l };
-      e(g), (x = window.blinkoRTL) != null && x.service ? window.blinkoRTL.service.updateSettings(l) : (localStorage.setItem("blinko-rtl-settings", JSON.stringify(g)), window.dispatchEvent(
+      return _ === 0;
+    }, m = (u) => {
+      var S;
+      u.dynamicCSS !== void 0 && (x(u.dynamicCSS) ? d("") : d("Invalid CSS: Unbalanced curly braces"));
+      const _ = { ...t, ...u };
+      e(_), (S = window.blinkoRTL) != null && S.service ? window.blinkoRTL.service.updateSettings(u) : (localStorage.setItem("blinko-rtl-settings", JSON.stringify(_)), window.dispatchEvent(
         new CustomEvent("rtl-settings-changed", {
-          detail: g
+          detail: _
         })
       ));
-    }, v = () => {
-      var g;
-      if (!r.trim())
+    }, y = () => {
+      var _;
+      if (!n.trim())
         return;
-      const l = (g = window.blinkoRTL) == null ? void 0 : g.test(r);
-      p(l ? "RTL" : "LTR");
-    }, w = () => {
-      var l;
-      (l = window.blinkoRTL) == null || l.processAll(), window.Blinko.toast.success("Content processed!");
+      const u = (_ = window.blinkoRTL) == null ? void 0 : _.detector;
+      if (u) {
+        const S = u.detectRTL(n);
+        r(S ? "RTL" : "LTR");
+      } else
+        console.warn("RTL Detector not found via global API");
     }, k = () => {
-      i.trim() && !t.targetSelectors.includes(i.trim()) && (h({
-        targetSelectors: [...t.targetSelectors, i.trim()]
-      }), n(""));
-    }, P = (l) => {
-      h({
-        targetSelectors: t.targetSelectors.filter((g) => g !== l),
-        disabledSelectors: t.disabledSelectors.filter((g) => g !== l)
-      });
-    }, B = (l, g) => {
-      const x = t.disabledSelectors.includes(l);
-      let L;
-      g ? L = t.disabledSelectors.filter((se) => se !== l) : x ? L = t.disabledSelectors : L = [...t.disabledSelectors, l], h({ disabledSelectors: L });
-    }, V = () => {
-      if (!u)
-        return;
-      const g = [...j, ...t.savedPresets || []].find((x) => x.id === u);
-      g && (h({
-        customCSS: g.css,
-        dynamicCSS: g.dynamicCSS || t.dynamicCSS,
-        targetSelectors: g.targetSelectors || t.targetSelectors,
-        disabledSelectors: g.disabledSelectors || t.disabledSelectors
-      }), window.Blinko.toast.success(`Preset "${g.name}" loaded!`));
-    }, z = () => {
-      const l = prompt("Enter a name for this Full Preset (CSS, Dynamic Rules, Selectors):");
+      window.blinkoRTL && (window.blinkoRTL.processAll(), window.Blinko.toast.success("Content processed!"));
+    }, w = () => {
       if (!l)
         return;
-      const g = {
+      const _ = [...G, ...t.savedPresets || []].find((S) => S.id === l);
+      _ && (m({
+        customCSS: _.css,
+        dynamicCSS: _.dynamicCSS || t.dynamicCSS,
+        targetSelectors: _.targetSelectors || t.targetSelectors,
+        disabledSelectors: _.disabledSelectors || t.disabledSelectors
+      }), window.Blinko.toast.success(`Preset "${_.name}" loaded!`));
+    }, M = () => {
+      const u = prompt("Enter a name for this Full Preset (CSS, Dynamic Rules, Selectors):");
+      if (!u)
+        return;
+      const _ = {
         id: `custom-${Date.now()}`,
-        name: l,
+        name: u,
         css: t.customCSS,
         dynamicCSS: t.dynamicCSS,
         targetSelectors: t.targetSelectors,
         disabledSelectors: t.disabledSelectors,
         isBuiltIn: !1
       };
-      h({
-        savedPresets: [...t.savedPresets || [], g]
-      }), d(g.id);
-    }, re = () => {
-      if (!u)
+      m({
+        savedPresets: [...t.savedPresets || [], _]
+      }), c(_.id), window.Blinko.toast.success("Preset saved!");
+    }, A = () => {
+      if (!l)
         return;
-      if (j.some((g) => g.id === u)) {
+      if (G.some((_) => _.id === l)) {
         window.Blinko.toast.error("Cannot delete built-in presets.");
         return;
       }
-      confirm("Are you sure you want to delete this preset?") && (h({
-        savedPresets: (t.savedPresets || []).filter((g) => g.id !== u)
-      }), d(""));
-    }, q = () => {
-      const l = {
-        enabled: !0,
-        sensitivity: "medium",
-        threshold: 0.15,
-        forceDirection: "auto",
-        autoDetect: !1,
-        manualMode: !0,
-        manualToggle: !1,
-        darkMode: !1,
-        method: "all",
-        customCSS: "",
-        dynamicCSS: M,
-        permanentCSS: !1,
-        dynamicCSS: M,
-        visualStyles: {
-          fontFamily: "inherit",
-          lineHeight: 1.5,
-          paragraphMargin: 1
-        },
-        targetSelectors: U,
-        disabledSelectors: [],
-        minRTLChars: 3,
-        processInterval: 2e3,
-        hebrewRegex: !0,
-        arabicRegex: !0,
-        mixedContent: !0,
-        savedPresets: t.savedPresets || []
-      };
-      h(l), window.Blinko.toast.success("Settings reset to defaults");
+      confirm("Are you sure you want to delete this preset?") && (m({
+        savedPresets: (t.savedPresets || []).filter((_) => _.id !== l)
+      }), c(""));
     }, W = () => {
-      h({ dynamicCSS: M });
+      if (confirm("Reset all settings to defaults? This cannot be undone.")) {
+        const u = {
+          ...nt,
+          savedPresets: t.savedPresets || []
+          // Preserve user presets
+        };
+        m(u), window.Blinko.toast.success("Settings reset to defaults");
+      }
+    }, H = () => {
+      m({ dynamicCSS: O }), window.Blinko.toast.success("Dynamic CSS reset");
+    }, ie = () => {
+      const u = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(t, null, 2)), _ = document.createElement("a");
+      _.setAttribute("href", u), _.setAttribute("download", "blinko-rtl-settings.json"), document.body.appendChild(_), _.click(), _.remove();
+    }, U = (u) => {
+      var C;
+      const _ = (C = u.target.files) == null ? void 0 : C[0];
+      if (!_)
+        return;
+      const S = new FileReader();
+      S.onload = (oe) => {
+        var D;
+        try {
+          const P = (D = oe.target) == null ? void 0 : D.result, j = JSON.parse(P);
+          if (typeof j != "object" || j === null)
+            throw new Error("Invalid JSON format");
+          const X = { ...t, ...j };
+          m(X), b(""), window.Blinko.toast.success("Settings imported successfully!");
+        } catch (P) {
+          console.error("Import failed", P), b("Failed to import settings: Invalid JSON file."), window.Blinko.toast.error("Import failed");
+        }
+      }, S.readAsText(_), u.target.value = "";
     };
-    return [...j, ...t.savedPresets || []], /* @__PURE__ */ o(
+    return /* @__PURE__ */ s(
       "div",
       {
         className: t.darkMode ? "rtl-settings-dark" : "",
@@ -1328,26 +1318,26 @@ ul {
           padding: "20px",
           fontFamily: "system-ui, sans-serif",
           background: t.darkMode ? "#1a1a1a" : "white",
-          color: "#000"
+          color: t.darkMode ? "#e0e0e0" : "#000"
         },
         children: [
-          /* @__PURE__ */ o("div", { style: { marginBottom: "30px", paddingBottom: "20px", borderBottom: "2px solid #eee" }, children: [
-            /* @__PURE__ */ o("h2", { style: { margin: "0 0 10px 0", color: "#333" }, children: "🔧 Fixed RTL Language Support Settings" }),
-            /* @__PURE__ */ o("p", { style: { margin: "0", color: t.darkMode ? "#333" : "#666", fontSize: "14px" }, children: "Precise RTL support with manual control and optional permanent CSS injection." })
+          /* @__PURE__ */ s("div", { style: { marginBottom: "30px", paddingBottom: "20px", borderBottom: "2px solid #eee" }, children: [
+            /* @__PURE__ */ s("h2", { style: { margin: "0 0 10px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🔧 Fixed RTL Language Support Settings" }),
+            /* @__PURE__ */ s("p", { style: { margin: "0", color: t.darkMode ? "#aaa" : "#666", fontSize: "14px" }, children: "Precise RTL support with manual control and optional permanent CSS injection." })
           ] }),
-          /* @__PURE__ */ o("div", { style: {
+          /* @__PURE__ */ s("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "2px solid #007bff",
             borderRadius: "8px",
-            background: "#f8f9ff"
+            background: t.darkMode ? "#2c3e50" : "#f8f9ff"
           }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#007bff" }, children: "⚡ Quick Actions" }),
-            /* @__PURE__ */ o("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "15px" }, children: [
-              /* @__PURE__ */ o(
+            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: "#007bff" }, children: "⚡ Quick Actions" }),
+            /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "15px" }, children: [
+              /* @__PURE__ */ s(
                 "button",
                 {
-                  onClick: w,
+                  onClick: k,
                   disabled: !t.enabled,
                   style: {
                     background: "#28a745",
@@ -1361,12 +1351,12 @@ ul {
                   children: "🔄 Process All Content"
                 }
               ),
-              /* @__PURE__ */ o(
+              /* @__PURE__ */ s(
                 "button",
                 {
                   onClick: () => {
-                    var l;
-                    (l = window.blinkoRTL) == null || l.toggle(), window.Blinko.toast.success("RTL toggled!");
+                    var u;
+                    (u = window.blinkoRTL) == null || u.toggle(), window.Blinko.toast.success("RTL toggled!");
                   },
                   style: {
                     background: "#007bff",
@@ -1379,122 +1369,182 @@ ul {
                   },
                   children: "🔄 Toggle RTL (ع/א)"
                 }
-              ),
-              /* @__PURE__ */ o(
-                "button",
-                {
-                  onClick: () => {
-                    var g;
-                    const l = (g = window.blinkoRTL) == null ? void 0 : g.toggleManual();
-                    e((x) => ({ ...x, manualToggle: l })), window.Blinko.toast.success(`Manual RTL ${l ? "ON" : "OFF"}`);
-                  },
-                  style: {
-                    background: t.manualToggle ? "#28a745" : "#dc3545",
-                    color: "white",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontWeight: "500"
-                  },
-                  children: [
-                    "🔄 Manual Toggle ",
-                    t.manualToggle ? "ON" : "OFF"
-                  ]
-                }
-              ),
-              /* @__PURE__ */ o(
-                "button",
-                {
-                  onClick: () => {
-                    var g;
-                    const l = (g = window.blinkoRTL) == null ? void 0 : g.toggleDebugMode();
-                    e((x) => ({ ...x, debugMode: l })), window.Blinko.toast.success(`Debug Mode ${l ? "ON" : "OFF"}`);
-                  },
-                  style: {
-                    background: t.debugMode ? "#6610f2" : "#6c757d",
-                    color: "white",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontWeight: "500"
-                  },
-                  children: [
-                    "🐞 Visual Debugger ",
-                    t.debugMode ? "ON" : "OFF"
-                  ]
-                }
               )
-            ] }),
-            t.debugMode && /* @__PURE__ */ o("div", { style: { fontSize: "12px", color: "#6610f2", background: "rgba(102, 16, 242, 0.1)", padding: "10px", borderRadius: "4px" }, children: [
-              /* @__PURE__ */ o("strong", { children: "Debug Mode Active:" }),
-              " RTL/LTR elements are highlighted with colored outlines. ",
-              /* @__PURE__ */ o("br", {}),
-              "Red = RTL Detected, Blue = LTR Detected."
             ] })
           ] }),
-          /* @__PURE__ */ o("div", { style: {
+          /* @__PURE__ */ s("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "1px solid #ddd",
             borderRadius: "8px",
-            background: "#fafafa",
+            background: t.darkMode ? "#333" : "#fafafa",
             maxHeight: "300px",
             overflowY: "auto"
           }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#333" }, children: "📜 Real-time Action Log" }),
-            f.length === 0 ? /* @__PURE__ */ o("p", { style: { color: "#666", fontStyle: "italic" }, children: "No actions recorded yet..." }) : /* @__PURE__ */ o("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "12px" }, children: [
-              /* @__PURE__ */ o("thead", { children: /* @__PURE__ */ o("tr", { style: { textAlign: "left", borderBottom: "1px solid #ccc" }, children: [
-                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Time" }),
-                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Element" }),
-                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Action" }),
-                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Details" })
+            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "📜 Real-time Action Log" }),
+            p.length === 0 ? /* @__PURE__ */ s("p", { style: { color: t.darkMode ? "#aaa" : "#666", fontStyle: "italic" }, children: "No actions recorded yet..." }) : /* @__PURE__ */ s("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "12px", color: t.darkMode ? "#ccc" : "#000" }, children: [
+              /* @__PURE__ */ s("thead", { children: /* @__PURE__ */ s("tr", { style: { textAlign: "left", borderBottom: "1px solid #ccc" }, children: [
+                /* @__PURE__ */ s("th", { style: { padding: "5px" }, children: "Time" }),
+                /* @__PURE__ */ s("th", { style: { padding: "5px" }, children: "Element" }),
+                /* @__PURE__ */ s("th", { style: { padding: "5px" }, children: "Action" }),
+                /* @__PURE__ */ s("th", { style: { padding: "5px" }, children: "Details" })
               ] }) }),
-              /* @__PURE__ */ o("tbody", { children: f.map((l, g) => /* @__PURE__ */ o("tr", { style: { borderBottom: "1px solid #eee" }, children: [
-                /* @__PURE__ */ o("td", { style: { padding: "5px", whiteSpace: "nowrap" }, children: l.timestamp }),
-                /* @__PURE__ */ o("td", { style: { padding: "5px", fontFamily: "monospace" }, title: l.element, children: l.element.length > 20 ? l.element.substring(0, 20) + "..." : l.element }),
-                /* @__PURE__ */ o("td", { style: { padding: "5px", color: l.action.includes("RTL") ? "green" : "blue" }, children: l.action }),
-                /* @__PURE__ */ o("td", { style: { padding: "5px", color: "#666" }, children: l.details })
-              ] }, g)) })
+              /* @__PURE__ */ s("tbody", { children: p.map((u, _) => /* @__PURE__ */ s("tr", { style: { borderBottom: t.darkMode ? "1px solid #444" : "1px solid #eee" }, children: [
+                /* @__PURE__ */ s("td", { style: { padding: "5px", whiteSpace: "nowrap" }, children: u.timestamp }),
+                /* @__PURE__ */ s("td", { style: { padding: "5px", fontFamily: "monospace" }, title: u.element, children: u.element.length > 20 ? u.element.substring(0, 20) + "..." : u.element }),
+                /* @__PURE__ */ s("td", { style: { padding: "5px", color: u.direction === "RTL" ? "#28a745" : "#007bff" }, children: u.direction }),
+                /* @__PURE__ */ s("td", { style: { padding: "5px", color: t.darkMode ? "#888" : "#666" }, children: u.textPreview })
+              ] }, _)) })
             ] })
           ] }),
-          /* @__PURE__ */ o("div", { style: {
+          /* @__PURE__ */ s("div", { style: {
+            marginBottom: "30px",
+            padding: "20px",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            background: t.darkMode ? "#333" : "#fafafa"
+          }, children: [
+            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🎛️ Mode Settings" }),
+            /* @__PURE__ */ s("div", { style: { display: "grid", gap: "15px" }, children: [
+              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ s(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: t.enabled,
+                    onChange: (u) => m({ enabled: u.target.checked })
+                  }
+                ),
+                /* @__PURE__ */ s("span", { children: "🔧 Enable RTL Support" })
+              ] }),
+              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ s(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: t.manualMode,
+                    onChange: (u) => m({ manualMode: u.target.checked }),
+                    disabled: !t.enabled
+                  }
+                ),
+                /* @__PURE__ */ s("span", { children: "✋ Manual Mode (Recommended)" })
+              ] }),
+              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Manual mode only applies RTL when clearly detected, preventing unwanted changes" }),
+              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ s(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: t.mobileView,
+                    onChange: (u) => m({ mobileView: u.target.checked })
+                  }
+                ),
+                /* @__PURE__ */ s("span", { children: "📱 Mobile View" })
+              ] }),
+              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Optimizes layout for mobile devices" }),
+              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ s(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: t.debugMode,
+                    onChange: (u) => {
+                      var S, C;
+                      const _ = u.target.checked;
+                      m({ debugMode: _ }), (C = (S = window.blinkoRTL) == null ? void 0 : S.service) == null || C.toggleDebugMode();
+                    },
+                    disabled: !t.enabled
+                  }
+                ),
+                /* @__PURE__ */ s("span", { children: "🐞 Visual Debugger" })
+              ] }),
+              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Highlights detected RTL (Red) and LTR (Blue) elements with tooltips" }),
+              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ s(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: t.autoDetect,
+                    onChange: (u) => m({ autoDetect: u.target.checked }),
+                    disabled: !t.enabled
+                  }
+                ),
+                /* @__PURE__ */ s("span", { children: "🤖 Auto-detect All Content" })
+              ] }),
+              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Continuously processes all content on the page every 2 seconds" }),
+              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ s(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: t.manualToggle,
+                    onChange: (u) => {
+                      const _ = u.target.checked;
+                      m({ manualToggle: _ });
+                      const S = window.blinkoRTL;
+                      S && S.isEnabled() && S.processAll();
+                    },
+                    disabled: !t.enabled
+                  }
+                ),
+                /* @__PURE__ */ s("span", { children: "🔄 Manual RTL Toggle" })
+              ] }),
+              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Forces RTL on all content when enabled, ignores detection" }),
+              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ s(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: t.darkMode,
+                    onChange: (u) => {
+                      const _ = u.target.checked;
+                      m({ darkMode: _ }), _ ? document.body.classList.add("dark") : document.body.classList.remove("dark");
+                    }
+                  }
+                ),
+                /* @__PURE__ */ s("span", { children: "🌙 Dark Mode Plugin UI" })
+              ] }),
+              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Applies dark styling to RTL plugin components only" })
+            ] })
+          ] }),
+          /* @__PURE__ */ s("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "2px solid #6610f2",
             borderRadius: "8px",
-            background: "#f8f9ff"
+            background: t.darkMode ? "#2c2c3e" : "#f8f9ff"
           }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#6610f2" }, children: "🎨 Dynamic CSS Rules" }),
-            /* @__PURE__ */ o("p", { style: { margin: "0 0 15px 0", fontSize: "14px", color: t.darkMode ? "#333" : "#666" }, children: "These CSS rules are applied dynamically when RTL or LTR content is detected. Customize the class definitions below to control how detected elements are styled. This single source of truth controls all detected element styling." }),
-            /* @__PURE__ */ o("div", { style: { marginBottom: "15px" }, children: [
-              /* @__PURE__ */ o(
+            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: "#6610f2" }, children: "🎨 Dynamic CSS Rules" }),
+            /* @__PURE__ */ s("p", { style: { margin: "0 0 15px 0", fontSize: "14px", color: t.darkMode ? "#aaa" : "#666" }, children: "These CSS rules are applied dynamically when RTL or LTR content is detected. Customize the class definitions below to control how detected elements are styled." }),
+            /* @__PURE__ */ s("div", { style: { marginBottom: "15px" }, children: [
+              /* @__PURE__ */ s(
                 "textarea",
                 {
                   value: t.dynamicCSS,
-                  onChange: (l) => h({ dynamicCSS: l.target.value }),
+                  onChange: (u) => m({ dynamicCSS: u.target.value }),
                   placeholder: "Enter your dynamic CSS rules here...",
                   disabled: !t.enabled,
                   style: {
                     width: "100%",
                     height: "350px",
                     padding: "10px",
-                    border: y ? "2px solid red" : "1px solid #ccc",
+                    border: h ? "2px solid red" : "1px solid #ccc",
                     borderRadius: "4px",
                     fontFamily: "Monaco, Menlo, Ubuntu Mono, monospace",
                     fontSize: "13px",
-                    resize: "vertical"
+                    resize: "vertical",
+                    background: t.darkMode ? "#222" : "white",
+                    color: t.darkMode ? "#eee" : "black"
                   }
                 }
               ),
-              y && /* @__PURE__ */ o("div", { style: { color: "red", fontSize: "12px", marginTop: "5px" }, children: y })
+              h && /* @__PURE__ */ s("div", { style: { color: "red", fontSize: "12px", marginTop: "5px" }, children: h })
             ] }),
-            /* @__PURE__ */ o("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap" }, children: [
-              /* @__PURE__ */ o(
+            /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap" }, children: [
+              /* @__PURE__ */ s(
                 "button",
                 {
-                  onClick: () => h({ dynamicCSS: M }),
+                  onClick: H,
                   disabled: !t.enabled,
                   style: {
                     background: "#17a2b8",
@@ -1507,15 +1557,15 @@ ul {
                   children: "🔄 Reset Dynamic CSS"
                 }
               ),
-              /* @__PURE__ */ o(
+              /* @__PURE__ */ s(
                 "button",
                 {
                   onClick: () => {
-                    if (y) {
+                    if (h) {
                       window.Blinko.toast.error("Please fix CSS errors before saving.");
                       return;
                     }
-                    window.Blinko.toast.success("Dynamic CSS Settings Saved");
+                    m({ dynamicCSS: t.dynamicCSS }), window.Blinko.toast.success("Dynamic CSS Settings Saved");
                   },
                   disabled: !t.enabled,
                   style: {
@@ -1529,681 +1579,61 @@ ul {
                   children: "💾 Save Settings"
                 }
               )
-            ] }),
-            /* @__PURE__ */ o("div", { style: { marginTop: "20px", paddingTop: "15px", borderTop: "1px solid #ddd" }, children: [
-              /* @__PURE__ */ o("h4", { style: { margin: "0 0 10px 0", fontSize: "14px", color: "#6610f2" }, children: "Active Injected Stylesheet (Read-only Verification):" }),
-              /* @__PURE__ */ o("div", { style: {
-                background: "#eee",
-                padding: "10px",
-                borderRadius: "4px",
-                maxHeight: "150px",
-                overflowY: "auto",
-                fontSize: "11px",
-                fontFamily: "monospace",
-                whiteSpace: "pre-wrap"
-              }, children: t.dynamicCSS })
             ] })
           ] }),
-          /* @__PURE__ */ o("div", { style: {
-            marginBottom: "30px",
-            padding: "20px",
-            border: "2px solid #28a745",
-            borderRadius: "8px",
-            background: "#f8fff8"
-          }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#28a745" }, children: "🔧 RTL Application Method" }),
-            /* @__PURE__ */ o("div", { style: { marginBottom: "15px" }, children: /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500" }, children: [
-              "RTL Method:",
-              /* @__PURE__ */ o(
-                "select",
-                {
-                  value: t.method,
-                  onChange: (l) => h({
-                    method: l.target.value
-                  }),
-                  disabled: !t.enabled,
-                  style: {
-                    marginLeft: "auto",
-                    padding: "5px 10px",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    minWidth: "200px"
-                  },
-                  children: [
-                    /* @__PURE__ */ o("option", { value: "direct", children: "🎯 Direct Styling" }),
-                    /* @__PURE__ */ o("option", { value: "attributes", children: "🏷️ HTML Attributes" }),
-                    /* @__PURE__ */ o("option", { value: "css", children: "🎨 CSS Classes" }),
-                    /* @__PURE__ */ o("option", { value: "unicode", children: "🔤 Unicode Bidi" }),
-                    /* @__PURE__ */ o("option", { value: "all", children: "🚀 All Methods (Recommended)" })
-                  ]
-                }
-              )
-            ] }) })
-          ] }),
-          /* @__PURE__ */ o("div", { style: {
-            marginBottom: "30px",
-            padding: "20px",
-            border: "2px solid #fd7e14",
-            borderRadius: "8px",
-            background: "#fff9f0"
-          }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#fd7e14" }, children: "🎨 Dynamic CSS Rules" }),
-            /* @__PURE__ */ o("p", { style: { margin: "0 0 15px 0", fontSize: "14px", color: t.darkMode ? "#333" : "#666" }, children: [
-              "These styles are automatically injected when RTL is detected. The class ",
-              /* @__PURE__ */ o("code", { children: ".blinko-detected-rtl" }),
-              " is applied to RTL elements."
-            ] }),
-            /* @__PURE__ */ o("div", { style: { marginBottom: "15px" }, children: /* @__PURE__ */ o(
-              "textarea",
-              {
-                value: t.dynamicCSS || M,
-                onChange: (l) => h({ dynamicCSS: l.target.value }),
-                placeholder: "Enter your dynamic CSS rules here...",
-                disabled: !t.enabled,
-                style: {
-                  width: "100%",
-                  height: "200px",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  fontFamily: "Monaco, Menlo, Ubuntu Mono, monospace",
-                  fontSize: "13px",
-                  resize: "vertical"
-                }
-              }
-            ) }),
-            /* @__PURE__ */ o("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap" }, children: /* @__PURE__ */ o(
-              "button",
-              {
-                onClick: W,
-                disabled: !t.enabled,
-                style: {
-                  background: "#dc3545",
-                  color: "white",
-                  border: "none",
-                  padding: "8px 16px",
-                  borderRadius: "4px",
-                  cursor: "pointer"
-                },
-                children: "🔄 Reset to Default"
-              }
-            ) })
-          ] }),
-          /* @__PURE__ */ o("div", { style: {
-            marginBottom: "30px",
-            padding: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            background: "#fafafa"
-          }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#333" }, children: "🎛️ Mode Settings" }),
-            /* @__PURE__ */ o("div", { style: { display: "grid", gap: "15px" }, children: [
-              /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: t.enabled,
-                    onChange: (l) => h({ enabled: l.target.checked })
-                  }
-                ),
-                /* @__PURE__ */ o("span", { children: "🔧 Enable RTL Support" })
-              ] }),
-              /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: t.manualMode,
-                    onChange: (l) => h({ manualMode: l.target.checked }),
-                    disabled: !t.enabled
-                  }
-                ),
-                /* @__PURE__ */ o("span", { children: "✋ Manual Mode (Recommended)" })
-              ] }),
-              /* @__PURE__ */ o("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: "#666" }, children: "Manual mode only applies RTL when clearly detected, preventing unwanted changes" }),
-              /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: t.mobileView,
-                    onChange: (l) => h({ mobileView: l.target.checked })
-                  }
-                ),
-                /* @__PURE__ */ o("span", { children: "📱 Mobile View" })
-              ] }),
-              /* @__PURE__ */ o("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: "#666" }, children: "Optimizes layout for mobile devices" }),
-              /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: t.debugMode,
-                    onChange: (l) => {
-                      var x, L;
-                      const g = l.target.checked;
-                      h({ debugMode: g }), (L = (x = window.blinkoRTL) == null ? void 0 : x.service) == null || L.toggleDebugMode();
-                    },
-                    disabled: !t.enabled
-                  }
-                ),
-                /* @__PURE__ */ o("span", { children: "🐞 Visual Debugger" })
-              ] }),
-              /* @__PURE__ */ o("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: "#666" }, children: "Highlights detected RTL (Red) and LTR (Blue) elements with tooltips" }),
-              /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: t.autoDetect,
-                    onChange: (l) => h({ autoDetect: l.target.checked }),
-                    disabled: !t.enabled
-                  }
-                ),
-                /* @__PURE__ */ o("span", { children: "🤖 Auto-detect All Content" })
-              ] }),
-              /* @__PURE__ */ o("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: "#666" }, children: "Continuously processes all content on the page every 2 seconds" }),
-              /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: t.manualToggle,
-                    onChange: (l) => {
-                      const g = l.target.checked;
-                      h({ manualToggle: g });
-                      const x = window.blinkoRTL;
-                      x && x.isEnabled() && x.processAll();
-                    },
-                    disabled: !t.enabled
-                  }
-                ),
-                /* @__PURE__ */ o("span", { children: "🔄 Manual RTL Toggle" })
-              ] }),
-              /* @__PURE__ */ o("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: "#666" }, children: "Forces RTL on all content when enabled, ignores detection" }),
-              /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: t.darkMode,
-                    onChange: (l) => {
-                      const g = l.target.checked;
-                      h({ darkMode: g }), g ? document.body.classList.add("dark") : document.body.classList.remove("dark");
-                    }
-                  }
-                ),
-                /* @__PURE__ */ o("span", { children: "🌙 Dark Mode Plugin UI" })
-              ] }),
-              /* @__PURE__ */ o("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#333" : "#666" }, children: "Applies dark styling to RTL plugin components only" }),
-              /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: t.hebrewRegex,
-                    onChange: (l) => h({ hebrewRegex: l.target.checked }),
-                    disabled: !t.enabled
-                  }
-                ),
-                /* @__PURE__ */ o("span", { children: "📜 Hebrew Regex Detection" })
-              ] }),
-              /* @__PURE__ */ o("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#333" : "#666" }, children: "Uses Unicode Script property for Hebrew detection" }),
-              /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: t.arabicRegex,
-                    onChange: (l) => h({ arabicRegex: l.target.checked }),
-                    disabled: !t.enabled
-                  }
-                ),
-                /* @__PURE__ */ o("span", { children: "📜 Arabic Regex Detection" })
-              ] }),
-              /* @__PURE__ */ o("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: "#666" }, children: "Applies dark styling to RTL plugin components only" })
-            ] })
-          ] }),
-          /* @__PURE__ */ o("div", { style: {
-            marginBottom: "30px",
-            padding: "20px",
-            border: "1px solid #17a2b8",
-            borderRadius: "8px",
-            background: "#f0faff"
-          }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#17a2b8" }, children: "📊 Real-time Action Log" }),
-            /* @__PURE__ */ o("p", { style: { margin: "0 0 15px 0", fontSize: "14px", color: t.darkMode ? "#333" : "#666" }, children: "Shows real-time detection and application updates for transparency." }),
-            /* @__PURE__ */ o("div", { style: {
-              maxHeight: "200px",
-              overflowY: "auto",
-              background: "white",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              padding: "10px",
-              fontSize: "12px",
-              fontFamily: "Monaco, monospace"
-            }, children: f.length === 0 ? /* @__PURE__ */ o("div", { style: { color: "#999", textAlign: "center", padding: "20px" }, children: "No actions logged yet..." }) : /* @__PURE__ */ o("table", { style: { width: "100%", borderCollapse: "collapse" }, children: [
-              /* @__PURE__ */ o("thead", { children: /* @__PURE__ */ o("tr", { style: { borderBottom: "1px solid #eee", textAlign: "left" }, children: [
-                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Time" }),
-                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Element" }),
-                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Dir" }),
-                /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Content" })
-              ] }) }),
-              /* @__PURE__ */ o("tbody", { children: f.map((l, g) => /* @__PURE__ */ o("tr", { style: { borderBottom: "1px solid #f5f5f5" }, children: [
-                /* @__PURE__ */ o("td", { style: { padding: "5px", color: "#666" }, children: l.timestamp }),
-                /* @__PURE__ */ o("td", { style: { padding: "5px", color: "#007bff" }, children: l.element }),
-                /* @__PURE__ */ o("td", { style: { padding: "5px", fontWeight: "bold", color: l.direction === "RTL" ? "#28a745" : "#dc3545" }, children: l.direction }),
-                /* @__PURE__ */ o("td", { style: { padding: "5px", color: "#333" }, children: l.textPreview })
-              ] }, g)) })
-            ] }) })
-          ] }),
-          /* @__PURE__ */ o("div", { style: {
-            marginBottom: "30px",
-            padding: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            background: "#fafafa"
-          }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#333" }, children: "🎯 Target Selectors" }),
-            /* @__PURE__ */ o("p", { style: { margin: "0 0 15px 0", fontSize: "14px", color: t.darkMode ? "#333" : "#666" }, children: "Specific elements to process for RTL detection (focused approach)" }),
-            /* @__PURE__ */ o("div", { style: { marginBottom: "15px", maxHeight: "300px", overflowY: "auto" }, children: t.targetSelectors.map((l, g) => {
-              const x = (t.disabledSelectors || []).includes(l);
-              return /* @__PURE__ */ o("div", { style: {
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "8px 12px",
-                marginBottom: "5px",
-                background: "white",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                opacity: x ? 0.6 : 1
-              }, children: [
-                /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", flex: 1, cursor: "pointer" }, children: [
-                  /* @__PURE__ */ o(
-                    "input",
-                    {
-                      type: "checkbox",
-                      checked: !x,
-                      onChange: (L) => B(l, L.target.checked),
-                      disabled: !t.enabled
-                    }
-                  ),
-                  /* @__PURE__ */ o("code", { style: {
-                    fontFamily: "Monaco, Menlo, Ubuntu Mono, monospace",
-                    fontSize: "13px",
-                    color: "#333",
-                    textDecoration: x ? "line-through" : "none"
-                  }, children: l })
-                ] }),
-                /* @__PURE__ */ o(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: () => P(l),
-                    disabled: !t.enabled,
-                    style: {
-                      background: "#ff4757",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "50%",
-                      width: "24px",
-                      height: "24px",
-                      cursor: "pointer",
-                      fontSize: "16px",
-                      lineHeight: "1",
-                      marginLeft: "10px"
-                    },
-                    children: "×"
-                  }
-                )
-              ] }, g);
-            }) }),
-            /* @__PURE__ */ o("div", { style: { display: "flex", gap: "10px" }, children: [
-              /* @__PURE__ */ o(
-                "input",
-                {
-                  type: "text",
-                  value: i,
-                  onChange: (l) => n(l.target.value),
-                  placeholder: "e.g., .markdown-body p, .vditor-reset div",
-                  disabled: !t.enabled,
-                  onKeyPress: (l) => l.key === "Enter" && k(),
-                  style: {
-                    flex: "1",
-                    padding: "8px 12px",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px"
-                  }
-                }
-              ),
-              /* @__PURE__ */ o(
-                "button",
-                {
-                  type: "button",
-                  onClick: k,
-                  disabled: !t.enabled || !i.trim(),
-                  style: {
-                    padding: "8px 16px",
-                    background: "#007bff",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer"
-                  },
-                  children: "Add"
-                }
-              )
-            ] })
-          ] }),
-          /* @__PURE__ */ o("div", { style: {
-            marginBottom: "30px",
-            padding: "20px",
-            border: "2px solid #6610f2",
-            borderRadius: "8px",
-            background: "#f8f9ff"
-          }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#6610f2" }, children: "🎨 Visual Style Editor" }),
-            /* @__PURE__ */ o("div", { style: { display: "flex", flexDirection: "column", gap: "20px" }, children: [
-              /* @__PURE__ */ o("div", { children: [
-                /* @__PURE__ */ o("label", { style: { display: "block", fontWeight: "500", marginBottom: "8px" }, children: "Font Family:" }),
-                /* @__PURE__ */ o("div", { style: { display: "flex", gap: "10px" }, children: [
-                  /* @__PURE__ */ o(
-                    "select",
-                    {
-                      value: oe.includes(((G = t.visualStyles) == null ? void 0 : G.fontFamily) || "inherit") ? ((C = t.visualStyles) == null ? void 0 : C.fontFamily) || "inherit" : "custom",
-                      onChange: (l) => {
-                        var x;
-                        const g = l.target.value;
-                        g === "custom" ? oe.includes(((x = t.visualStyles) == null ? void 0 : x.fontFamily) || "inherit") && h({
-                          visualStyles: {
-                            ...t.visualStyles,
-                            fontFamily: ""
-                          }
-                        }) : h({
-                          visualStyles: {
-                            ...t.visualStyles,
-                            fontFamily: g
-                          }
-                        });
-                      },
-                      disabled: !t.enabled,
-                      style: {
-                        flex: 1,
-                        padding: "8px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px"
-                      },
-                      children: [
-                        oe.map((l) => /* @__PURE__ */ o("option", { value: l, children: l === "inherit" ? "Default (Inherit)" : l }, l)),
-                        /* @__PURE__ */ o("option", { value: "custom", children: "Custom..." })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ o(
-                    "input",
-                    {
-                      type: "text",
-                      value: (($ = t.visualStyles) == null ? void 0 : $.fontFamily) || "",
-                      onChange: (l) => h({
-                        visualStyles: {
-                          ...t.visualStyles,
-                          fontFamily: l.target.value
-                        }
-                      }),
-                      placeholder: "Custom font name",
-                      disabled: !t.enabled,
-                      style: {
-                        flex: 1,
-                        padding: "8px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                        display: oe.includes(((at = t.visualStyles) == null ? void 0 : at.fontFamily) || "inherit") ? "none" : "block"
-                      }
-                    }
-                  )
-                ] })
-              ] }),
-              /* @__PURE__ */ o("div", { children: [
-                /* @__PURE__ */ o("label", { style: { display: "flex", justifyContent: "space-between", fontWeight: "500", marginBottom: "8px" }, children: [
-                  /* @__PURE__ */ o("span", { children: "Line Height:" }),
-                  /* @__PURE__ */ o("span", { children: ((dt = t.visualStyles) == null ? void 0 : dt.lineHeight) || 1.5 })
-                ] }),
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "range",
-                    min: "1.0",
-                    max: "3.0",
-                    step: "0.1",
-                    value: ((ct = t.visualStyles) == null ? void 0 : ct.lineHeight) || 1.5,
-                    onChange: (l) => h({
-                      visualStyles: {
-                        ...t.visualStyles,
-                        lineHeight: parseFloat(l.target.value)
-                      }
-                    }),
-                    disabled: !t.enabled,
-                    style: { width: "100%" }
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ o("div", { children: [
-                /* @__PURE__ */ o("label", { style: { display: "flex", justifyContent: "space-between", fontWeight: "500", marginBottom: "8px" }, children: [
-                  /* @__PURE__ */ o("span", { children: "Paragraph Spacing (em):" }),
-                  /* @__PURE__ */ o("span", { children: [
-                    ((pt = t.visualStyles) == null ? void 0 : pt.paragraphMargin) || 1,
-                    "em"
-                  ] })
-                ] }),
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "range",
-                    min: "0",
-                    max: "3.0",
-                    step: "0.1",
-                    value: ((ut = t.visualStyles) == null ? void 0 : ut.paragraphMargin) || 1,
-                    onChange: (l) => h({
-                      visualStyles: {
-                        ...t.visualStyles,
-                        paragraphMargin: parseFloat(l.target.value)
-                      }
-                    }),
-                    disabled: !t.enabled,
-                    style: { width: "100%" }
-                  }
-                )
-              ] })
-            ] })
-          ] }),
-          /* @__PURE__ */ o("div", { style: {
-            marginBottom: "30px",
-            padding: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            background: "#fafafa"
-          }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#333" }, children: "🎯 Detection Settings" }),
-            /* @__PURE__ */ o("div", { style: { display: "flex", flexDirection: "column", gap: "15px" }, children: [
-              /* @__PURE__ */ o("div", { children: /* @__PURE__ */ o("label", { style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px", fontWeight: "500" }, children: [
-                "Detection Sensitivity:",
-                /* @__PURE__ */ o("div", { style: { marginLeft: "auto", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "5px", width: "100%", maxWidth: "300px" }, children: [
-                  /* @__PURE__ */ o("div", { style: { display: "flex", alignItems: "center", gap: "10px", width: "100%", justifyContent: "flex-end" }, children: [
-                    /* @__PURE__ */ o("span", { style: { fontSize: "12px", color: "#666" }, children: [
-                      Math.round((t.threshold || 0.15) * 100),
-                      "%"
-                    ] }),
-                    /* @__PURE__ */ o(
-                      "input",
-                      {
-                        type: "range",
-                        min: "1",
-                        max: "50",
-                        value: Math.round((t.threshold || 0.15) * 100),
-                        onChange: (l) => {
-                          const g = parseInt(l.target.value) / 100;
-                          let x = "medium";
-                          g < 0.12 ? x = "high" : g > 0.3 && (x = "low"), h({ threshold: g, sensitivity: x });
-                        },
-                        disabled: !t.enabled,
-                        style: { width: "150px" }
-                      }
-                    )
-                  ] }),
-                  /* @__PURE__ */ o(
-                    "select",
-                    {
-                      value: t.sensitivity,
-                      onChange: (l) => {
-                        const g = l.target.value;
-                        h({ sensitivity: g, threshold: {
-                          high: 0.1,
-                          // 10% RTL chars
-                          medium: 0.15,
-                          // 15% RTL chars
-                          low: 0.4
-                          // 40% RTL chars
-                        }[g] });
-                      },
-                      disabled: !t.enabled,
-                      style: {
-                        padding: "5px 10px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                        minWidth: "200px"
-                      },
-                      children: [
-                        /* @__PURE__ */ o("option", { value: "high", children: "🔥 High - 10% RTL characters" }),
-                        /* @__PURE__ */ o("option", { value: "medium", children: "⚖️ Medium - 15% RTL characters" }),
-                        /* @__PURE__ */ o("option", { value: "low", children: "🎯 Low - 40% RTL characters" })
-                      ]
-                    }
-                  )
-                ] })
-              ] }) }),
-              /* @__PURE__ */ o("div", { children: /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500" }, children: [
-                "Min RTL Characters:",
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "number",
-                    min: "1",
-                    max: "20",
-                    value: t.minRTLChars,
-                    onChange: (l) => h({ minRTLChars: parseInt(l.target.value) }),
-                    disabled: !t.enabled,
-                    style: {
-                      marginLeft: "auto",
-                      padding: "5px 10px",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      width: "80px"
-                    }
-                  }
-                )
-              ] }) }),
-              /* @__PURE__ */ o("div", { children: /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500" }, children: [
-                "Process Interval (ms):",
-                /* @__PURE__ */ o(
-                  "input",
-                  {
-                    type: "number",
-                    min: "500",
-                    max: "10000",
-                    step: "500",
-                    value: t.processInterval,
-                    onChange: (l) => h({ processInterval: parseInt(l.target.value) }),
-                    disabled: !t.enabled,
-                    style: {
-                      marginLeft: "auto",
-                      padding: "5px 10px",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      width: "100px"
-                    }
-                  }
-                )
-              ] }) }),
-              /* @__PURE__ */ o("div", { children: /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500" }, children: [
-                "Direction Override:",
-                /* @__PURE__ */ o(
-                  "select",
-                  {
-                    value: t.forceDirection,
-                    onChange: (l) => h({
-                      forceDirection: l.target.value
-                    }),
-                    disabled: !t.enabled,
-                    style: {
-                      marginLeft: "auto",
-                      padding: "5px 10px",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      minWidth: "200px"
-                    },
-                    children: [
-                      /* @__PURE__ */ o("option", { value: "auto", children: "🤖 Auto-detect" }),
-                      /* @__PURE__ */ o("option", { value: "rtl", children: "➡️ Force RTL" }),
-                      /* @__PURE__ */ o("option", { value: "ltr", children: "⬅️ Force LTR" })
-                    ]
-                  }
-                )
-              ] }) })
-            ] })
-          ] }),
-          /* @__PURE__ */ o("div", { style: {
+          /* @__PURE__ */ s("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "1px solid #28a745",
             borderRadius: "8px",
-            background: "#f8fff8"
+            background: t.darkMode ? "#1e3023" : "#f8fff8"
           }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#28a745" }, children: "🎨 Permanent CSS Settings" }),
-            /* @__PURE__ */ o("div", { style: { marginBottom: "15px" }, children: [
-              /* @__PURE__ */ o("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ o(
+            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: "#28a745" }, children: "📌 Permanent CSS Settings" }),
+            /* @__PURE__ */ s("div", { style: { marginBottom: "15px" }, children: [
+              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ s(
                   "input",
                   {
                     type: "checkbox",
                     checked: t.permanentCSS,
-                    onChange: (l) => h({ permanentCSS: l.target.checked }),
+                    onChange: (u) => m({ permanentCSS: u.target.checked }),
                     disabled: !t.enabled
                   }
                 ),
-                /* @__PURE__ */ o("span", { children: "📌 Enable Permanent CSS Injection" })
+                /* @__PURE__ */ s("span", { children: "Enable Permanent CSS Injection" })
               ] }),
-              /* @__PURE__ */ o("p", { style: { margin: "5px 0 0 30px", fontSize: "12px", color: "#666" }, children: "CSS will remain active even when RTL is disabled" })
+              /* @__PURE__ */ s("p", { style: { margin: "5px 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "This CSS is injected permanently as long as the plugin is enabled, regardless of RTL detection. Use this for global overrides." })
             ] }),
-            /* @__PURE__ */ o("div", { style: { marginBottom: "15px", padding: "15px", background: "rgba(0,0,0,0.03)", borderRadius: "6px" }, children: [
-              /* @__PURE__ */ o("label", { style: { display: "block", fontWeight: "500", marginBottom: "8px" }, children: "📚 CSS Presets:" }),
-              /* @__PURE__ */ o("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }, children: [
-                /* @__PURE__ */ o(
+            /* @__PURE__ */ s("div", { style: { marginBottom: "15px", padding: "15px", background: t.darkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", borderRadius: "6px" }, children: [
+              /* @__PURE__ */ s("label", { style: { display: "block", fontWeight: "500", marginBottom: "8px" }, children: "📚 CSS Presets:" }),
+              /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }, children: [
+                /* @__PURE__ */ s(
                   "select",
                   {
-                    value: u,
-                    onChange: (l) => d(l.target.value),
+                    value: l,
+                    onChange: (u) => c(u.target.value),
                     disabled: !t.enabled,
                     style: {
                       flex: 1,
                       padding: "8px 12px",
                       border: "1px solid #ccc",
                       borderRadius: "4px",
-                      minWidth: "200px"
+                      minWidth: "200px",
+                      background: t.darkMode ? "#333" : "white",
+                      color: t.darkMode ? "#eee" : "black"
                     },
                     children: [
-                      /* @__PURE__ */ o("option", { value: "", children: "-- Select a Preset --" }),
-                      /* @__PURE__ */ o("optgroup", { label: "Built-in Presets", children: j.map((l) => /* @__PURE__ */ o("option", { value: l.id, children: l.name }, l.id)) }),
-                      t.savedPresets && t.savedPresets.length > 0 && /* @__PURE__ */ o("optgroup", { label: "Saved Presets", children: t.savedPresets.map((l) => /* @__PURE__ */ o("option", { value: l.id, children: l.name }, l.id)) })
+                      /* @__PURE__ */ s("option", { value: "", children: "-- Select a Preset --" }),
+                      /* @__PURE__ */ s("optgroup", { label: "Built-in Presets", children: G.map((u) => /* @__PURE__ */ s("option", { value: u.id, children: u.name }, u.id)) }),
+                      t.savedPresets && t.savedPresets.length > 0 && /* @__PURE__ */ s("optgroup", { label: "Saved Presets", children: t.savedPresets.map((u) => /* @__PURE__ */ s("option", { value: u.id, children: u.name }, u.id)) })
                     ]
                   }
                 ),
-                /* @__PURE__ */ o(
+                /* @__PURE__ */ s(
                   "button",
                   {
-                    onClick: V,
-                    disabled: !t.enabled || !u,
+                    onClick: w,
+                    disabled: !t.enabled || !l,
                     style: {
                       background: "#17a2b8",
                       color: "white",
@@ -2215,11 +1645,11 @@ ul {
                     children: "📥 Load"
                   }
                 ),
-                /* @__PURE__ */ o(
+                /* @__PURE__ */ s(
                   "button",
                   {
-                    onClick: re,
-                    disabled: !t.enabled || !u || j.some((l) => l.id === u),
+                    onClick: A,
+                    disabled: !t.enabled || !l || G.some((u) => u.id === l),
                     style: {
                       background: "#dc3545",
                       color: "white",
@@ -2227,22 +1657,22 @@ ul {
                       padding: "8px 16px",
                       borderRadius: "4px",
                       cursor: "pointer",
-                      opacity: j.some((l) => l.id === u) ? 0.5 : 1
+                      opacity: G.some((u) => u.id === l) ? 0.5 : 1
                     },
-                    title: "Delete selected preset (Built-in presets cannot be deleted)",
+                    title: "Delete selected preset",
                     children: "🗑️"
                   }
                 )
               ] })
             ] }),
-            /* @__PURE__ */ o("div", { style: { marginBottom: "15px" }, children: [
-              /* @__PURE__ */ o("label", { style: { display: "block", fontWeight: "500", marginBottom: "5px" }, children: "Custom CSS Code:" }),
-              /* @__PURE__ */ o(
+            /* @__PURE__ */ s("div", { style: { marginBottom: "15px" }, children: [
+              /* @__PURE__ */ s("label", { style: { display: "block", fontWeight: "500", marginBottom: "5px" }, children: "Custom CSS Code (Permanent):" }),
+              /* @__PURE__ */ s(
                 "textarea",
                 {
                   value: t.customCSS,
-                  onChange: (l) => h({ customCSS: l.target.value }),
-                  placeholder: "Enter your custom CSS code here...",
+                  onChange: (u) => m({ customCSS: u.target.value }),
+                  placeholder: "Enter your permanent custom CSS code here...",
                   disabled: !t.enabled,
                   style: {
                     width: "100%",
@@ -2252,16 +1682,18 @@ ul {
                     borderRadius: "4px",
                     fontFamily: "Monaco, Menlo, Ubuntu Mono, monospace",
                     fontSize: "13px",
-                    resize: "vertical"
+                    resize: "vertical",
+                    background: t.darkMode ? "#222" : "white",
+                    color: t.darkMode ? "#eee" : "black"
                   }
                 }
               )
             ] }),
-            /* @__PURE__ */ o("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap" }, children: [
-              /* @__PURE__ */ o(
+            /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap" }, children: [
+              /* @__PURE__ */ s(
                 "button",
                 {
-                  onClick: z,
+                  onClick: M,
                   disabled: !t.enabled || !t.customCSS.trim(),
                   style: {
                     background: "#28a745",
@@ -2274,10 +1706,10 @@ ul {
                   children: "💾 Save as New Preset"
                 }
               ),
-              /* @__PURE__ */ o(
+              /* @__PURE__ */ s(
                 "button",
                 {
-                  onClick: () => h({ customCSS: "" }),
+                  onClick: () => m({ customCSS: "" }),
                   disabled: !t.enabled,
                   style: {
                     background: "#dc3545",
@@ -2292,19 +1724,19 @@ ul {
               )
             ] })
           ] }),
-          /* @__PURE__ */ o("div", { style: {
+          /* @__PURE__ */ s("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "1px solid #ddd",
             borderRadius: "8px",
-            background: "#fafafa"
+            background: t.darkMode ? "#333" : "#fafafa"
           }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#333" }, children: "🧪 Test RTL Detection" }),
-            /* @__PURE__ */ o("div", { style: { marginBottom: "15px" }, children: /* @__PURE__ */ o(
+            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🧪 Test RTL Detection" }),
+            /* @__PURE__ */ s("div", { style: { marginBottom: "15px" }, children: /* @__PURE__ */ s(
               "textarea",
               {
-                value: r,
-                onChange: (l) => s(l.target.value),
+                value: n,
+                onChange: (u) => i(u.target.value),
                 placeholder: "Enter text to test RTL detection...",
                 style: {
                   width: "100%",
@@ -2313,14 +1745,16 @@ ul {
                   border: "1px solid #ccc",
                   borderRadius: "4px",
                   resize: "vertical",
-                  fontFamily: "inherit"
+                  fontFamily: "inherit",
+                  background: t.darkMode ? "#222" : "white",
+                  color: t.darkMode ? "#eee" : "black"
                 }
               }
             ) }),
-            /* @__PURE__ */ o("div", { style: { display: "flex", gap: "10px", marginBottom: "15px" }, children: /* @__PURE__ */ o(
+            /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", marginBottom: "15px" }, children: /* @__PURE__ */ s(
               "button",
               {
-                onClick: v,
+                onClick: y,
                 style: {
                   background: "#28a745",
                   color: "white",
@@ -2332,43 +1766,32 @@ ul {
                 children: "🧪 Test Detection"
               }
             ) }),
-            a && /* @__PURE__ */ o("div", { style: {
+            o && /* @__PURE__ */ s("div", { style: {
               padding: "10px",
-              background: a === "RTL" ? "#d4edda" : "#f8d7da",
+              background: o === "RTL" ? "#d4edda" : "#f8d7da",
               borderRadius: "4px",
-              borderLeft: `4px solid ${a === "RTL" ? "#28a745" : "#dc3545"}`,
-              marginBottom: "15px"
+              borderLeft: `4px solid ${o === "RTL" ? "#28a745" : "#dc3545"}`,
+              marginBottom: "15px",
+              color: "#333"
             }, children: [
               "Detection Result: ",
-              /* @__PURE__ */ o("strong", { children: a === "RTL" ? "➡️ RTL" : "⬅️ LTR" })
-            ] }),
-            /* @__PURE__ */ o("div", { style: { fontSize: "14px", color: t.darkMode ? "#333" : "#666", lineHeight: "1.6" }, children: [
-              /* @__PURE__ */ o("strong", { children: "🧪 Test Examples:" }),
-              /* @__PURE__ */ o("br", {}),
-              /* @__PURE__ */ o("strong", { children: "Hebrew:" }),
-              " שלום עולם - זהו טקסט בעברית",
-              /* @__PURE__ */ o("br", {}),
-              /* @__PURE__ */ o("strong", { children: "Arabic:" }),
-              " مرحبا بالعالم - هذا نص باللغة العربية",
-              /* @__PURE__ */ o("br", {}),
-              /* @__PURE__ */ o("strong", { children: "English:" }),
-              " Hello world - this is English text"
+              /* @__PURE__ */ s("strong", { children: o === "RTL" ? "➡️ RTL" : "⬅️ LTR" })
             ] })
           ] }),
-          /* @__PURE__ */ o("div", { style: {
+          /* @__PURE__ */ s("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "1px solid #ddd",
             borderRadius: "8px",
-            background: "#fafafa"
+            background: t.darkMode ? "#333" : "#fafafa"
           }, children: [
-            /* @__PURE__ */ o("h3", { style: { margin: "0 0 15px 0", color: "#333" }, children: "🔧 Advanced Actions" }),
-            /* @__PURE__ */ o("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap" }, children: [
-              /* @__PURE__ */ o(
+            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🔧 Advanced Actions" }),
+            /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }, children: [
+              /* @__PURE__ */ s(
                 "button",
                 {
                   type: "button",
-                  onClick: q,
+                  onClick: W,
                   style: {
                     padding: "10px 20px",
                     background: "#dc3545",
@@ -2381,14 +1804,11 @@ ul {
                   children: "🔄 Reset to Defaults"
                 }
               ),
-              /* @__PURE__ */ o(
+              /* @__PURE__ */ s(
                 "button",
                 {
                   type: "button",
-                  onClick: () => {
-                    const l = JSON.stringify(t, null, 2);
-                    navigator.clipboard.writeText(l), window.Blinko.toast.success("Settings copied to clipboard");
-                  },
+                  onClick: ie,
                   style: {
                     padding: "10px 20px",
                     background: "#28a745",
@@ -2398,20 +1818,41 @@ ul {
                     cursor: "pointer",
                     fontWeight: "500"
                   },
-                  children: "📋 Export Settings"
+                  children: "📋 Export Settings (JSON)"
                 }
-              )
-            ] })
+              ),
+              /* @__PURE__ */ s("label", { style: {
+                padding: "10px 20px",
+                background: "#007bff",
+                color: "white",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontWeight: "500",
+                display: "inline-block"
+              }, children: [
+                "📂 Import Settings (JSON)",
+                /* @__PURE__ */ s(
+                  "input",
+                  {
+                    type: "file",
+                    accept: ".json",
+                    onChange: U,
+                    style: { display: "none" }
+                  }
+                )
+              ] })
+            ] }),
+            v && /* @__PURE__ */ s("p", { style: { color: "red", marginTop: "10px" }, children: v })
           ] })
         ]
       }
     );
   }
-  const rt = {
+  const it = {
     name: "blinko-plugin-rtl-support",
     author: "Daniel-OS01",
     url: "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
-    version: "1.1.3",
+    version: "1.1.4",
     minAppVersion: "0.0.0",
     displayName: {
       default: "RTL Language Support",
@@ -2431,18 +1872,18 @@ ul {
       he: "README_he.md"
     }
   };
-  class Nt {
+  class At {
     constructor(e = {
       sensitivity: "medium",
       minRTLChars: 3,
       sampleSize: 100
     }) {
-      _(this, "name", "CharacterCode");
-      _(this, "config");
+      g(this, "name", "CharacterCode");
+      g(this, "config");
       // Hebrew: \u0590-\u05FF
       // Arabic: \u0600-\u06FF
       // Additional RTL: \u0700-\u074F, \u0780-\u07BF
-      _(this, "RTL_RANGES", [
+      g(this, "RTL_RANGES", [
         [1424, 1535],
         // Hebrew
         [1536, 1791],
@@ -2462,8 +1903,8 @@ ul {
      * Check if a character is RTL
      */
     isRTLChar(e) {
-      const i = e.charCodeAt(0);
-      return this.RTL_RANGES.some(([n, r]) => i >= n && i <= r);
+      const n = e.charCodeAt(0);
+      return this.RTL_RANGES.some(([i, o]) => n >= i && n <= o);
     }
     /**
      * Detect RTL content in text
@@ -2471,11 +1912,11 @@ ul {
     detect(e) {
       if (!e || e.length === 0)
         return !1;
-      const i = e.substring(0, this.config.sampleSize);
-      let n = 0, r = 0;
-      for (const p of i)
-        /\s|[.,!?;:()[\]{}]/.test(p) || (r++, this.isRTLChar(p) && n++);
-      return n < this.config.minRTLChars ? !1 : (r > 0 ? n / r : 0) >= {
+      const n = e.substring(0, this.config.sampleSize);
+      let i = 0, o = 0;
+      for (const c of n)
+        /\s|[.,!?;:()[\]{}]/.test(c) || (o++, this.isRTLChar(c) && i++);
+      return i < this.config.minRTLChars ? !1 : (o > 0 ? i / o : 0) >= {
         high: 0.1,
         // 10% RTL chars
         medium: 0.15,
@@ -2488,20 +1929,20 @@ ul {
       this.config = { ...this.config, ...e };
     }
   }
-  class zt {
-    constructor(e = !0, i = !0, n = 0.3, r = 3) {
-      _(this, "name", "Regex");
+  class Pt {
+    constructor(e = !0, n = !0, i = 0.3, o = 3) {
+      g(this, "name", "Regex");
       // Hebrew regex range: 0590-05FF, FB1D-FB4F (Presentation forms A), FB50-FBB1 (Presentation forms B - wait, that's Arabic)
       // Hebrew: \u0590-\u05FF
-      _(this, "hebrewPattern", "\\u0590-\\u05FF");
+      g(this, "hebrewPattern", "\\u0590-\\u05FF");
       // Arabic regex range
-      _(this, "arabicPattern", "\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF");
-      _(this, "checkHebrew");
-      _(this, "checkArabic");
-      _(this, "threshold");
+      g(this, "arabicPattern", "\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF");
+      g(this, "checkHebrew");
+      g(this, "checkArabic");
+      g(this, "threshold");
       // Ratio 0.0 - 1.0
-      _(this, "minRTLChars", 3);
-      this.checkHebrew = e, this.checkArabic = i, this.threshold = n, this.minRTLChars = r;
+      g(this, "minRTLChars", 3);
+      this.checkHebrew = e, this.checkArabic = n, this.threshold = i, this.minRTLChars = o;
     }
     updateConfig(e) {
       e.minRTLChars !== void 0 && (this.minRTLChars = e.minRTLChars), e.threshold !== void 0 && (this.threshold = e.threshold);
@@ -2509,27 +1950,27 @@ ul {
     detect(e) {
       if (!e || !e.trim())
         return !1;
-      let i = [];
-      if (this.checkHebrew && i.push(this.hebrewPattern), this.checkArabic && i.push(this.arabicPattern), i.length === 0)
+      let n = [];
+      if (this.checkHebrew && n.push(this.hebrewPattern), this.checkArabic && n.push(this.arabicPattern), n.length === 0)
         return !1;
-      const n = new RegExp(`[${i.join("")}]`, "g"), r = e.match(n);
-      if (!r)
+      const i = new RegExp(`[${n.join("")}]`, "g"), o = e.match(i);
+      if (!o)
         return !1;
-      const s = r.length;
-      if (s < this.minRTLChars)
+      const r = o.length;
+      if (r < this.minRTLChars)
         return e.trim().length >= this.minRTLChars, !1;
-      const a = e.length;
-      return a === 0 ? !1 : s / a > this.threshold;
+      const l = e.length;
+      return l === 0 ? !1 : r / l > this.threshold;
     }
   }
-  class st {
+  class ot {
     constructor(e) {
-      _(this, "name", "Combined");
-      _(this, "strategies");
+      g(this, "name", "Combined");
+      g(this, "strategies");
       this.strategies = e;
     }
     detect(e) {
-      return this.strategies.some((i) => i.detect(e));
+      return this.strategies.some((n) => n.detect(e));
     }
     addStrategy(e) {
       this.strategies.push(e);
@@ -2538,20 +1979,20 @@ ul {
       return this.strategies;
     }
   }
-  class Wt {
+  class Bt {
     constructor(e = {}) {
-      _(this, "strategy");
-      _(this, "charCodeStrategy");
-      _(this, "regexStrategy");
-      _(this, "config");
+      g(this, "strategy");
+      g(this, "charCodeStrategy");
+      g(this, "regexStrategy");
+      g(this, "config");
       this.config = {
         sensitivity: "medium",
         minRTLChars: 3,
         sampleSize: 100,
         ...e
-      }, this.charCodeStrategy = new Nt(this.config);
-      const i = this.getThresholdFromSensitivity(this.config.sensitivity);
-      this.regexStrategy = new zt(!0, !0, i, this.config.minRTLChars), this.strategy = new st([
+      }, this.charCodeStrategy = new At(this.config);
+      const n = this.getThresholdFromSensitivity(this.config.sensitivity);
+      this.regexStrategy = new Pt(!0, !0, n, this.config.minRTLChars), this.strategy = new ot([
         this.charCodeStrategy,
         this.regexStrategy
       ]);
@@ -2577,7 +2018,7 @@ ul {
           this.strategy = this.regexStrategy;
           break;
         case "Combined":
-          this.strategy = new st([
+          this.strategy = new ot([
             this.charCodeStrategy,
             this.regexStrategy
           ]);
@@ -2594,43 +2035,43 @@ ul {
      * Detect RTL in multiple text segments
      */
     detectRTLInSegments(e) {
-      return e.map((i) => this.detectRTL(i));
+      return e.map((n) => this.detectRTL(n));
     }
     /**
      * Update detection configuration
      */
     updateConfig(e) {
       this.config = { ...this.config, ...e }, this.charCodeStrategy.updateConfig(e);
-      const i = this.getThresholdFromSensitivity(this.config.sensitivity);
+      const n = this.getThresholdFromSensitivity(this.config.sensitivity);
       this.regexStrategy.updateConfig({
         minRTLChars: e.minRTLChars,
-        threshold: i
+        threshold: n
       });
     }
   }
-  function lt(t, e, i = !1) {
-    let n = null;
-    return function(...r) {
-      const s = this, a = function() {
-        n = null, i || t.apply(s, r);
-      }, p = i && !n;
-      n && clearTimeout(n), n = setTimeout(a, e), p && t.apply(s, r);
+  function rt(t, e, n = !1) {
+    let i = null;
+    return function(...o) {
+      const r = this, l = function() {
+        i = null, n || t.apply(r, o);
+      }, c = n && !i;
+      i && clearTimeout(i), i = setTimeout(l, e), c && t.apply(r, o);
     };
   }
-  class Ot {
+  class $t {
     constructor(e) {
-      _(this, "detector");
-      _(this, "isEnabled", !1);
-      _(this, "activeToast", null);
-      _(this, "handlePaste", (e) => {
-        var r;
+      g(this, "detector");
+      g(this, "isEnabled", !1);
+      g(this, "activeToast", null);
+      g(this, "handlePaste", (e) => {
+        var o;
         if (!this.isEnabled)
           return;
-        const i = e.target;
-        if (!this.isEditable(i))
+        const n = e.target;
+        if (!this.isEditable(n))
           return;
-        const n = (r = e.clipboardData) == null ? void 0 : r.getData("text/plain");
-        n && this.detectMixedContent(n) && (e.preventDefault(), e.stopPropagation(), this.showSuggestionToast(n, i));
+        const i = (o = e.clipboardData) == null ? void 0 : o.getData("text/plain");
+        i && this.detectMixedContent(i) && (e.preventDefault(), e.stopPropagation(), this.showSuggestionToast(i, n));
       });
       this.detector = e;
     }
@@ -2644,14 +2085,14 @@ ul {
       return e.isContentEditable || e.tagName === "TEXTAREA" || e.tagName === "INPUT" && e.type === "text";
     }
     detectMixedContent(e) {
-      const i = (e.match(/[\u0590-\u05FF\u0600-\u06FF]/g) || []).length, n = (e.match(/[a-zA-Z]/g) || []).length;
-      return i > 3 && n > 3;
+      const n = (e.match(/[\u0590-\u05FF\u0600-\u06FF]/g) || []).length, i = (e.match(/[a-zA-Z]/g) || []).length;
+      return n > 3 && i > 3;
     }
-    showSuggestionToast(e, i) {
-      var r, s, a, p;
+    showSuggestionToast(e, n) {
+      var o, r, l, c;
       this.removeToast();
-      const n = document.createElement("div");
-      n.className = "rtl-paste-toast", n.innerHTML = `
+      const i = document.createElement("div");
+      i.className = "rtl-paste-toast", i.innerHTML = `
       <div style="margin-bottom: 10px;">
         <strong style="display: block; margin-bottom: 5px;">Mixed content detected</strong>
         <p style="margin: 0; font-size: 0.9em; opacity: 0.8;">How would you like to paste this text?</p>
@@ -2662,7 +2103,7 @@ ul {
         <button id="rtl-btn-original" style="flex: 1; padding: 6px 12px; border: 1px solid var(--b3-theme-surface-lighter, #ccc); border-radius: 4px; background: transparent; color: inherit; cursor: pointer;">Original</button>
       </div>
       <button class="rtl-toast-close" style="position: absolute; top: 5px; right: 5px; border: none; background: transparent; cursor: pointer; font-size: 16px;">&times;</button>
-    `, Object.assign(n.style, {
+    `, Object.assign(i.style, {
         position: "fixed",
         bottom: "20px",
         right: "20px",
@@ -2676,72 +2117,79 @@ ul {
         maxWidth: "350px",
         fontFamily: "sans-serif",
         fontSize: "14px"
-      }), document.body.appendChild(n), this.activeToast = n, (r = n.querySelector("#rtl-btn-split")) == null || r.addEventListener("click", () => {
-        this.insertText(i, this.processSplit(e)), this.removeToast();
-      }), (s = n.querySelector("#rtl-btn-wrap")) == null || s.addEventListener("click", () => {
-        this.insertText(i, this.processWrap(e)), this.removeToast();
-      }), (a = n.querySelector("#rtl-btn-original")) == null || a.addEventListener("click", () => {
-        this.insertText(i, e), this.removeToast();
-      }), (p = n.querySelector(".rtl-toast-close")) == null || p.addEventListener("click", () => {
+      }), document.body.appendChild(i), this.activeToast = i, (o = i.querySelector("#rtl-btn-split")) == null || o.addEventListener("click", () => {
+        this.insertText(n, this.processSplit(e)), this.removeToast();
+      }), (r = i.querySelector("#rtl-btn-wrap")) == null || r.addEventListener("click", () => {
+        this.insertText(n, this.processWrap(e)), this.removeToast();
+      }), (l = i.querySelector("#rtl-btn-original")) == null || l.addEventListener("click", () => {
+        this.insertText(n, e), this.removeToast();
+      }), (c = i.querySelector(".rtl-toast-close")) == null || c.addEventListener("click", () => {
         this.removeToast();
       });
     }
     removeToast() {
       this.activeToast && (this.activeToast.remove(), this.activeToast = null);
     }
-    insertText(e, i) {
+    insertText(e, n) {
       if (e.tagName === "TEXTAREA" || e.tagName === "INPUT") {
-        const n = e, r = n.selectionStart || 0, s = n.selectionEnd || 0;
-        n.value = n.value.substring(0, r) + i + n.value.substring(s), n.selectionStart = n.selectionEnd = r + i.length, n.dispatchEvent(new Event("input", { bubbles: !0 }));
-      } else if (e.focus(), !document.execCommand("insertText", !1, i)) {
-        const r = window.getSelection();
-        if (r && r.rangeCount > 0) {
-          const s = r.getRangeAt(0);
-          s.deleteContents(), s.insertNode(document.createTextNode(i)), s.collapse(!1);
+        const i = e, o = i.selectionStart || 0, r = i.selectionEnd || 0;
+        i.value = i.value.substring(0, o) + n + i.value.substring(r), i.selectionStart = i.selectionEnd = o + n.length, i.dispatchEvent(new Event("input", { bubbles: !0 }));
+      } else if (e.focus(), !document.execCommand("insertText", !1, n)) {
+        const o = window.getSelection();
+        if (o && o.rangeCount > 0) {
+          const r = o.getRangeAt(0);
+          r.deleteContents(), r.insertNode(document.createTextNode(n)), r.collapse(!1);
         }
       }
     }
     processSplit(e) {
-      const i = /([\u0590-\u05FF\u0600-\u06FF]+[\s\u0590-\u05FF\u0600-\u06FF]*)/g;
-      let n = e.replace(i, (r) => `
-${r}
+      const n = /([\u0590-\u05FF\u0600-\u06FF]+[\s\u0590-\u05FF\u0600-\u06FF]*)/g;
+      let i = e.replace(n, (o) => `
+${o}
 `);
-      return n = n.replace(/\n{3,}/g, `
+      return i = i.replace(/\n{3,}/g, `
 
-`).trim(), n;
+`).trim(), i;
     }
     processWrap(e) {
-      const i = "⁧", n = "⁩";
-      return e.replace(/([\u0590-\u05FF\u0600-\u06FF]+[\s\u0590-\u05FF\u0600-\u06FF]*)/g, `${i}$1${n}`);
+      const n = "⁧", i = "⁩";
+      return e.replace(/([\u0590-\u05FF\u0600-\u06FF]+[\s\u0590-\u05FF\u0600-\u06FF]*)/g, `${n}$1${i}`);
     }
   }
-  class Ut {
+  class Dt {
     constructor(e) {
-      _(this, "button", null);
-      _(this, "currentTarget", null);
-      _(this, "hideTimeout", null);
-      _(this, "options");
-      _(this, "isHoveringButton", !1);
-      _(this, "styleElement", null);
-      _(this, "onMouseOver", (e) => {
+      g(this, "button", null);
+      g(this, "currentTarget", null);
+      g(this, "hideTimeout", null);
+      g(this, "options");
+      g(this, "isHoveringButton", !1);
+      g(this, "styleElement", null);
+      g(this, "onMouseOver", (e) => {
         if (!this.options.isEnabled())
           return;
-        const n = e.target.closest(this.options.selectors.join(","));
-        n && this.showButton(n);
+        let n = e.target;
+        if (!n || !document.body.contains(n))
+          return;
+        if (n.closest('button, a, input, select, textarea, [role="button"], .btn')) {
+          this.scheduleHide();
+          return;
+        }
+        const i = n.closest(this.options.selectors.join(","));
+        i && this.showButton(i);
       });
-      _(this, "onMouseOut", (e) => {
+      g(this, "onMouseOut", (e) => {
         this.scheduleHide();
       });
-      _(this, "hideButton", () => {
+      g(this, "hideButton", () => {
         var e;
         (e = this.button) == null || e.classList.remove("visible");
       });
-      _(this, "onButtonClick", (e) => {
-        if (e.stopPropagation(), !this.currentTarget)
+      g(this, "onButtonClick", (e) => {
+        if (e.stopPropagation(), e.preventDefault(), !this.currentTarget)
           return;
-        const i = this.currentTarget.getAttribute("data-manual-dir"), r = window.getComputedStyle(this.currentTarget).direction === "rtl";
-        let s = "ltr";
-        i === "ltr" ? s = "rtl" : i === "rtl" ? s = "ltr" : s = r ? "ltr" : "rtl", this.currentTarget.setAttribute("data-manual-dir", s), this.options.processElement(this.currentTarget);
+        const n = this.currentTarget.getAttribute("data-manual-dir"), o = window.getComputedStyle(this.currentTarget).direction === "rtl";
+        let r = "ltr";
+        n === "ltr" ? r = "rtl" : n === "rtl" ? r = "ltr" : r = o ? "ltr" : "rtl", this.currentTarget.setAttribute("data-manual-dir", r), this.options.processElement(this.currentTarget), r === "rtl" ? (this.currentTarget.style.direction = "rtl", this.currentTarget.style.textAlign = "right", this.currentTarget.classList.add("rtl-force"), this.currentTarget.classList.remove("ltr-force")) : (this.currentTarget.style.direction = "ltr", this.currentTarget.style.textAlign = "left", this.currentTarget.classList.add("ltr-force"), this.currentTarget.classList.remove("rtl-force"));
       });
       this.options = e;
     }
@@ -2749,22 +2197,22 @@ ${r}
       this.createButton(), document.addEventListener("mouseover", this.onMouseOver), document.addEventListener("mouseout", this.onMouseOut), document.addEventListener("scroll", this.hideButton, { capture: !0, passive: !0 });
     }
     destroy() {
-      this.button && (this.button.remove(), this.button = null), document.removeEventListener("mouseover", this.onMouseOver), document.removeEventListener("mouseout", this.onMouseOut), document.removeEventListener("scroll", this.hideButton);
+      this.button && (this.button.remove(), this.button = null), this.styleElement && (this.styleElement.remove(), this.styleElement = null), document.removeEventListener("mouseover", this.onMouseOver), document.removeEventListener("mouseout", this.onMouseOut), document.removeEventListener("scroll", this.hideButton);
     }
     createButton() {
       this.button || (this.button = document.createElement("div"), this.button.className = "rtl-hover-action-btn", this.button.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 9h16"/><path d="M4 9l4-4"/><path d="M20 9l-4 4"/>
         <path d="M20 15H4"/><path d="M20 15l-4 4"/><path d="M4 15l4-4"/>
       </svg>
     `, this.button.title = "Flip Direction", this.styleElement = document.createElement("style"), this.styleElement.textContent = `
       .rtl-hover-action-btn {
         position: fixed;
-        z-index: 10000;
+        z-index: 99999; /* Very high z-index */
         background: var(--bg-card, #fff);
         border: 1px solid var(--border-color, #ddd);
         border-radius: 4px;
-        padding: 4px;
+        padding: 2px 4px; /* Smaller padding */
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -2775,6 +2223,9 @@ ${r}
         transition: opacity 0.2s ease, transform 0.2s ease;
         transform: scale(0.9);
         color: var(--text-color, #333);
+        font-size: 12px;
+        height: 20px;
+        width: 24px;
       }
       .rtl-hover-action-btn.visible {
         opacity: 1;
@@ -2784,6 +2235,7 @@ ${r}
       .rtl-hover-action-btn:hover {
         background: var(--bg-hover, #f5f5f5);
         color: var(--primary-color, #0066cc);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
       }
     `, document.head.appendChild(this.styleElement), document.body.appendChild(this.button), this.button.addEventListener("click", this.onButtonClick), this.button.addEventListener("mouseenter", () => {
         this.isHoveringButton = !0;
@@ -2792,8 +2244,8 @@ ${r}
       }));
     }
     showButton(e) {
-      var i, n;
-      this.hideTimeout && (clearTimeout(this.hideTimeout), this.hideTimeout = null), !(this.currentTarget === e && ((i = this.button) != null && i.classList.contains("visible"))) && (this.currentTarget = e, this.updateButtonPosition(), (n = this.button) == null || n.classList.add("visible"));
+      var n, i;
+      this.hideTimeout && (clearTimeout(this.hideTimeout), this.hideTimeout = null), !(this.currentTarget === e && ((n = this.button) != null && n.classList.contains("visible"))) && (this.currentTarget = e, this.updateButtonPosition(), (i = this.button) == null || i.classList.add("visible"));
     }
     scheduleHide() {
       this.hideTimeout && clearTimeout(this.hideTimeout), this.hideTimeout = setTimeout(() => {
@@ -2803,103 +2255,93 @@ ${r}
     updateButtonPosition() {
       if (!this.button || !this.currentTarget)
         return;
-      const e = this.currentTarget.getBoundingClientRect();
-      this.button.getBoundingClientRect(), e.top;
-      const i = Math.min(e.right - 30, window.innerWidth - 40);
-      this.button.style.top = e.top + 2 + "px", this.button.style.left = i + "px";
+      const e = this.currentTarget.getBoundingClientRect(), n = e.top;
+      let i = e.top - 25, o = e.right - 30;
+      n < 30 && (i = e.top + 5), this.button.style.top = `${i}px`, this.button.style.left = `${o}px`;
     }
   }
-  class jt {
+  class Ft {
     constructor(e) {
-      _(this, "detector");
-      _(this, "isRTLEnabled", !1);
-      _(this, "styleElement", null);
-      _(this, "permanentStyleElement", null);
-      _(this, "dynamicStyleElement", null);
-      _(this, "observer", null);
-      _(this, "autoProcessInterval", null);
+      g(this, "detector");
+      g(this, "isRTLEnabled", !1);
+      g(this, "styleElement", null);
+      g(this, "permanentStyleElement", null);
+      g(this, "dynamicStyleElement", null);
+      g(this, "observer", null);
+      g(this, "autoProcessInterval", null);
       // Managers
-      _(this, "pasteInterceptor");
-      _(this, "hoverManager", null);
+      g(this, "pasteInterceptor");
+      g(this, "hoverManager", null);
       // Optimizations
-      _(this, "pendingElements", /* @__PURE__ */ new Set());
-      _(this, "debouncedProcessQueue");
-      _(this, "debouncedProcessAll");
+      g(this, "pendingElements", /* @__PURE__ */ new Set());
+      g(this, "debouncedProcessQueue");
+      g(this, "debouncedProcessAll");
       // Action Log
-      _(this, "actionLog", []);
-      _(this, "MAX_LOG_SIZE", 50);
+      g(this, "actionLog", []);
+      g(this, "MAX_LOG_SIZE", 50);
       // Hebrew regex from userscript
-      _(this, "hebrewRegex", /\p{Script=Hebrew}/u);
-      _(this, "arabicRegex", /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/);
-      _(this, "settings", { ...It, targetSelectors: U });
-      _(this, "processElement", (e) => {
+      g(this, "hebrewRegex", /\p{Script=Hebrew}/u);
+      g(this, "arabicRegex", /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/);
+      g(this, "settings", { ...nt, targetSelectors: J });
+      g(this, "processElement", (e) => {
         if (!e)
           return;
-        if (this.settings.disabledSelectors && this.settings.disabledSelectors.some((r) => e.matches(r))) {
+        if (this.settings.disabledSelectors && this.settings.disabledSelectors.some((o) => e.matches(o))) {
           console.log("Skipping disabled element:", e.tagName);
           return;
         }
         e.closest(".flex, .grid, header, nav, .sidebar, .toolbar");
-        const i = e.textContent || e.value || e.placeholder || "";
-        if (console.log("Processing element:", e.tagName, "Text:", i.substring(0, 10)), !i.trim() || i.length < this.settings.minRTLChars) {
+        const n = e.textContent || e.value || e.placeholder || "";
+        if (console.log("Processing element:", e.tagName, "Text:", n.substring(0, 10)), !n.trim() || n.length < this.settings.minRTLChars) {
           console.log("Skipping short text");
           return;
         }
-        let n = !1;
-        const r = e.getAttribute("data-manual-dir");
-        if (r === "rtl")
-          n = !0;
-        else if (r === "ltr")
-          n = !1;
-        else if (this.settings.manualToggle)
-          n = !0;
+        let i = !1;
+        if (this.settings.manualToggle)
+          i = !0;
         else if (this.settings.forceDirection === "rtl")
-          n = !0;
+          i = !0;
         else if (this.settings.forceDirection === "ltr")
-          n = !1;
+          i = !1;
         else if (e.matches("pre, code, .code-block, .CodeMirror-line, .notion-code-block")) {
-          const a = (i.match(/[\u0590-\u05FF]/g) || []).length, p = (i.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g) || []).length, u = a + p, d = i.replace(/\s/g, "").length || i.length;
-          u / d > 0.6 && (n = !0);
+          const r = (n.match(/[\u0590-\u05FF]/g) || []).length, l = (n.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g) || []).length, c = r + l, p = n.replace(/\s/g, "").length || n.length;
+          c / p > 0.6 && (i = !0);
         } else
-          n = this.detector.detectRTL(i);
-        switch (this.logAction(e, n), this.settings.method) {
+          i = this.detector.detectRTL(n);
+        switch (this.logAction(e, i), this.settings.method) {
           case "direct":
-            this.applyDirectRTL(e, n);
+            this.applyDirectRTL(e, i);
             break;
           case "attributes":
-            this.applyAttributeRTL(e, n);
+            this.applyAttributeRTL(e, i);
             break;
           case "css":
-            this.applyCSSClassRTL(e, n);
+            this.applyCSSClassRTL(e, i);
             break;
           case "unicode":
             this.applyUnicodeBidiRTL(e);
             break;
           case "all":
           default:
-            this.applyCSSClassRTL(e, n), this.applyAttributeRTL(e, n), this.applyDirectRTL(e, n);
+            this.applyCSSClassRTL(e, i), this.applyAttributeRTL(e, i), this.applyDirectRTL(e, i);
             break;
         }
         this.settings.processMixedContent && this.settings.mixedContent;
       });
-      _(this, "processAllElements", () => {
+      g(this, "processAllElements", () => {
         if (!this.isRTLEnabled)
           return;
-        const i = this.settings.targetSelectors.filter(
-          (n) => !this.settings.disabledSelectors.includes(n)
+        const n = this.settings.targetSelectors.filter(
+          (i) => !this.settings.disabledSelectors.includes(i)
         ).join(", ");
-        if (console.log("processAllElements selectors:", i), i) {
-          const n = document.querySelectorAll(i);
-          console.log("processAllElements found elements:", n.length), n.forEach((r) => {
-            this.processElement(r);
+        if (console.log("processAllElements selectors:", n), n) {
+          const i = document.querySelectorAll(n);
+          console.log("processAllElements found elements:", i.length), i.forEach((o) => {
+            this.processElement(o);
           });
         }
       });
-      _(this, "handleInput", (e) => {
-        const i = e.target;
-        i && (i.tagName === "INPUT" || i.tagName === "TEXTAREA" || i.isContentEditable) && (this.pendingElements.add(i), this.debouncedProcessQueue());
-      });
-      this.detector = e, this.loadSettings(), this.pasteInterceptor = new Ot(e), this.debouncedProcessAll = lt(() => this.processAllElements(), 200), this.debouncedProcessQueue = lt(() => {
+      this.detector = e, this.loadSettings(), this.pasteInterceptor = new $t(e), this.debouncedProcessAll = rt(() => this.processAllElements(), 200), this.debouncedProcessQueue = rt(() => {
         this.processPendingElements();
       }, 50);
     }
@@ -2909,14 +2351,14 @@ ${r}
     getActionLog() {
       return [...this.actionLog];
     }
-    logAction(e, i) {
-      const n = {
+    logAction(e, n) {
+      const i = {
         timestamp: (/* @__PURE__ */ new Date()).toLocaleTimeString(),
         element: e.tagName.toLowerCase() + (e.id ? `#${e.id}` : "") + (e.className ? `.${e.className.split(" ").join(".")}` : ""),
-        direction: i ? "RTL" : "LTR",
+        direction: n ? "RTL" : "LTR",
         textPreview: (e.textContent || "").substring(0, 20) + "..."
       };
-      this.actionLog.unshift(n), this.actionLog.length > this.MAX_LOG_SIZE && this.actionLog.pop(), window.dispatchEvent(new CustomEvent("rtl-action-logged", { detail: n }));
+      this.actionLog.unshift(i), this.actionLog.length > this.MAX_LOG_SIZE && this.actionLog.pop(), window.dispatchEvent(new CustomEvent("rtl-action-logged", { detail: i }));
     }
     isEnabled() {
       return this.isRTLEnabled;
@@ -2925,18 +2367,20 @@ ${r}
       const e = localStorage.getItem("blinko-rtl-settings");
       if (e)
         try {
-          const i = JSON.parse(e);
-          if (this.settings = { ...this.settings, ...i }, !i.targetSelectors || i.targetSelectors.length < 5) {
-            const n = new Set(i.targetSelectors || []), r = [.../* @__PURE__ */ new Set([...U, ...Array.from(n)])];
-            this.settings.targetSelectors = r;
+          const n = JSON.parse(e);
+          if (this.settings = { ...this.settings, ...n }, !n.targetSelectors || n.targetSelectors.length < 5) {
+            const i = new Set(n.targetSelectors || []), o = [.../* @__PURE__ */ new Set([...J, ...Array.from(i)])];
+            this.settings.targetSelectors = o;
           }
-          this.settings.dynamicCSS || (this.settings.dynamicCSS = M), this.settings.disabledSelectors || (this.settings.disabledSelectors = []), this.detector.updateConfig({
+          this.settings.dynamicCSS || (this.settings.dynamicCSS = O), this.settings.disabledSelectors || (this.settings.disabledSelectors = []), this.settings.autoDetect === void 0 && (this.settings.autoDetect = !0), this.detector.updateConfig({
             sensitivity: this.settings.sensitivity,
             minRTLChars: this.settings.minRTLChars
           }), this.settings.permanentCSS && this.settings.customCSS && this.injectPermanentCSS();
-        } catch (i) {
-          console.error("Failed to load RTL plugin settings:", i);
+        } catch (n) {
+          console.error("Failed to load RTL plugin settings:", n);
         }
+      else
+        this.settings.autoDetect = !0;
     }
     updateSettings(e) {
       this.settings = { ...this.settings, ...e }, localStorage.setItem("blinko-rtl-settings", JSON.stringify(this.settings)), this.detector.updateConfig({
@@ -2953,7 +2397,7 @@ ${r}
     }
     injectDynamicCSS() {
       this.dynamicStyleElement || (this.dynamicStyleElement = document.createElement("style"), this.dynamicStyleElement.id = "blinko-rtl-dynamic-css", document.head.appendChild(this.dynamicStyleElement));
-      let e = this.settings.dynamicCSS || M;
+      let e = this.settings.dynamicCSS || O;
       this.settings.debugMode && (e.includes(".rtl-debug-rtl") || (e += `
 /* Visual Debugger - RTL Detected */
 .rtl-debug-rtl {
@@ -3009,16 +2453,16 @@ ${r}
     // Method 1: Direct style application
     // DEPRECATED: Moving to class-based application only, but kept for legacy method 'direct' if user specifically requests it
     // However, we align it to avoid inline conflict with dynamic CSS
-    applyDirectRTL(e, i) {
-      i ? (e.classList.add("blinko-detected-rtl"), e.style.direction = "rtl", e.style.textAlign = "right", e.style.unicodeBidi = "embed") : (e.classList.remove("blinko-detected-rtl"), e.style.removeProperty("direction"), e.style.removeProperty("text-align"), e.style.removeProperty("unicode-bidi")), this.applyDebugVisuals(e, i);
+    applyDirectRTL(e, n) {
+      n ? (e.classList.add("blinko-detected-rtl"), e.style.direction = "rtl", e.style.textAlign = "right", e.style.unicodeBidi = "embed") : (e.classList.remove("blinko-detected-rtl"), e.style.removeProperty("direction"), e.style.removeProperty("text-align"), e.style.removeProperty("unicode-bidi")), this.applyDebugVisuals(e, n);
     }
     // Method 2: Attribute-based RTL
-    applyAttributeRTL(e, i) {
-      i ? (e.setAttribute("dir", "rtl"), e.setAttribute("lang", "he")) : (e.setAttribute("dir", "ltr"), e.removeAttribute("lang")), this.applyDebugVisuals(e, i);
+    applyAttributeRTL(e, n) {
+      n ? (e.setAttribute("dir", "rtl"), e.setAttribute("lang", "he")) : (e.setAttribute("dir", "ltr"), e.removeAttribute("lang")), this.applyDebugVisuals(e, n);
     }
     // Method 3: CSS class-based RTL (Primary Method)
-    applyCSSClassRTL(e, i) {
-      e.classList.remove("rtl-force", "ltr-force", "rtl-auto"), i ? e.classList.add("rtl-force") : e.classList.add("ltr-force"), this.applyDebugVisuals(e, i);
+    applyCSSClassRTL(e, n) {
+      e.classList.remove("rtl-force", "ltr-force", "rtl-auto"), n ? e.classList.add("rtl-force") : e.classList.add("ltr-force"), this.applyDebugVisuals(e, n);
     }
     // Method 4: Unicode bidi method
     applyUnicodeBidiRTL(e) {
@@ -3040,11 +2484,11 @@ ${r}
       }), this.pendingElements.clear();
     }
     enable() {
-      this.isRTLEnabled = !0, this.injectCSS(), this.injectDynamicCSS(), this.settings.permanentCSS && this.injectPermanentCSS(), this.pasteInterceptor.enable(), this.hoverManager || (this.hoverManager = new Ut({
+      this.isRTLEnabled = !0, this.injectCSS(), this.injectDynamicCSS(), this.settings.permanentCSS && this.injectPermanentCSS(), this.pasteInterceptor.enable(), this.hoverManager || (this.hoverManager = new Dt({
         selectors: this.settings.targetSelectors,
         processElement: (e) => this.processElement(e),
         isEnabled: () => this.isRTLEnabled
-      }), this.hoverManager.init()), this.setupObserver(), this.startAutoProcessing(), this.debouncedProcessAll();
+      }), this.hoverManager.init()), this.setupObserver(), this.startAutoProcessing(), this.processAllElements(), setTimeout(() => this.processAllElements(), 500);
     }
     disable() {
       this.isRTLEnabled = !1, this.removeCSS(), this.pasteInterceptor.disable(), this.hoverManager && (this.hoverManager.destroy(), this.hoverManager = null), this.stopAutoProcessing(), this.observer && (this.observer.disconnect(), this.observer = null), this.pendingElements.clear();
@@ -3058,36 +2502,36 @@ ${r}
     }
     toggleDebugMode() {
       const e = !this.settings.debugMode;
-      return this.updateSettings({ debugMode: e }), e ? (document.body.classList.add("rtl-debug-mode"), this.injectDynamicCSS(), this.processAllElements()) : (document.body.classList.remove("rtl-debug-mode"), document.querySelectorAll(".rtl-debug-rtl, .rtl-debug-ltr").forEach((i) => {
-        i.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), i.removeAttribute("data-rtl-debug");
+      return this.updateSettings({ debugMode: e }), e ? (document.body.classList.add("rtl-debug-mode"), this.injectDynamicCSS(), this.processAllElements()) : (document.body.classList.remove("rtl-debug-mode"), document.querySelectorAll(".rtl-debug-rtl, .rtl-debug-ltr").forEach((n) => {
+        n.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), n.removeAttribute("data-rtl-debug");
       })), e;
     }
-    applyDebugVisuals(e, i) {
-      this.settings.debugMode ? (e.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), i ? (e.classList.add("rtl-debug-rtl"), e.setAttribute("data-rtl-debug", "RTL Detected")) : (e.classList.add("rtl-debug-ltr"), e.setAttribute("data-rtl-debug", "LTR Detected"))) : (e.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), e.removeAttribute("data-rtl-debug"));
+    applyDebugVisuals(e, n) {
+      this.settings.debugMode ? (e.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), n ? (e.classList.add("rtl-debug-rtl"), e.setAttribute("data-rtl-debug", "RTL Detected")) : (e.classList.add("rtl-debug-ltr"), e.setAttribute("data-rtl-debug", "LTR Detected"))) : (e.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), e.removeAttribute("data-rtl-debug"));
     }
     setupObserver() {
       this.observer && this.observer.disconnect(), this.settings.autoDetect && (this.observer = new MutationObserver((e) => {
         if (!this.isRTLEnabled)
           return;
-        let i = !1;
-        const n = this.settings.targetSelectors.filter(
-          (s) => !this.settings.disabledSelectors.includes(s)
-        ), r = n.join(", ");
-        e.forEach((s) => {
-          if (s.type === "childList")
-            s.addedNodes.forEach((a) => {
-              if (a.nodeType === Node.ELEMENT_NODE) {
-                const p = a;
-                n.some((u) => p.matches(u)) && (this.pendingElements.add(p), i = !0), r && p.querySelector(r) && (p.querySelectorAll(r).forEach((u) => {
-                  this.pendingElements.add(u);
-                }), i = !0);
+        let n = !1;
+        const i = this.settings.targetSelectors.filter(
+          (r) => !this.settings.disabledSelectors.includes(r)
+        ), o = i.join(", ");
+        e.forEach((r) => {
+          if (r.type === "childList")
+            r.addedNodes.forEach((l) => {
+              if (l.nodeType === Node.ELEMENT_NODE) {
+                const c = l;
+                i.some((p) => c.matches(p)) && (this.pendingElements.add(c), n = !0), o && c.querySelector(o) && (c.querySelectorAll(o).forEach((p) => {
+                  this.pendingElements.add(p);
+                }), n = !0);
               }
             });
-          else if (s.type === "characterData" || s.type === "attributes") {
-            const a = s.target.nodeType === Node.ELEMENT_NODE ? s.target : s.target.parentElement;
-            a && n.some((p) => a.matches(p)) && (this.pendingElements.add(a), i = !0);
+          else if (r.type === "characterData" || r.type === "attributes") {
+            const l = r.target.nodeType === Node.ELEMENT_NODE ? r.target : r.target.parentElement;
+            l && i.some((c) => l.matches(c)) && (this.pendingElements.add(l), n = !0);
           }
-        }), i && this.debouncedProcessQueue();
+        }), n && this.debouncedProcessQueue();
       }), this.observer.observe(document.body, {
         childList: !0,
         subtree: !0,
@@ -3105,7 +2549,7 @@ ${r}
       this.autoProcessInterval && (clearInterval(this.autoProcessInterval), this.autoProcessInterval = null);
     }
   }
-  const ai = "", Vt = {
+  const en = "", It = {
     rtl_support: "RTL Support",
     auto_detect: "Auto Detect",
     manual_toggle: "Manual Toggle",
@@ -3120,11 +2564,11 @@ ${r}
     force_ltr: "Force LTR",
     auto: "Auto",
     plugin_description: "This plugin automatically detects Hebrew and Arabic text and applies appropriate RTL styling."
-  }, qt = {
+  }, Nt = {
     title: "我的插件",
     countLabel: "计数为 {{count}}",
     successMessage: "成功！"
-  }, Gt = {
+  }, Ht = {
     rtl_support: "תמיכה ב-RTL",
     auto_detect: "זיהוי אוטומטי",
     manual_toggle: "החלפה ידנית",
@@ -3139,7 +2583,7 @@ ${r}
     force_ltr: "אלץ LTR",
     auto: "אוטומטי",
     plugin_description: "תוסף זה מזהה אוטומטית טקסט עברי וערבי ומחיל עליו עיצוב RTL מתאים."
-  }, Xt = {
+  }, zt = {
     rtl_support: "دعم RTL",
     auto_detect: "الكشف التلقائي",
     manual_toggle: "التبديل اليدوي",
@@ -3157,107 +2601,107 @@ ${r}
   };
   System.register([], (t) => ({
     execute: () => {
-      const e = new Wt(), i = new jt(e);
-      let n = null;
-      function r() {
-        if (n)
+      const e = new Bt(), n = new Ft(e);
+      let i = null;
+      function o() {
+        if (i)
           return;
-        const u = i.getSettings();
-        n = document.createElement("button"), n.className = "rtl-toggle-btn", n.innerHTML = "ع/א", n.title = "Toggle RTL Support (Hebrew/Arabic)", n.addEventListener("click", () => {
-          i.toggle(), s();
-        }), document.body.appendChild(n), u.darkMode && n.classList.add("dark-mode"), s();
+        const p = n.getSettings();
+        i = document.createElement("button"), i.className = "rtl-toggle-btn", i.innerHTML = "ع/א", i.title = "Toggle RTL Support (Hebrew/Arabic)", i.addEventListener("click", () => {
+          n.toggle(), r();
+        }), document.body.appendChild(i), p.darkMode && i.classList.add("dark-mode"), r();
       }
-      function s() {
-        n && (i.isEnabled() ? n.classList.add("active") : n.classList.remove("active"));
+      function r() {
+        i && (n.isEnabled() ? i.classList.add("active") : i.classList.remove("active"));
       }
-      function a() {
-        n && (n.remove(), n = null);
+      function l() {
+        i && (i.remove(), i = null);
       }
-      function p() {
-        console.log("Initializing Advanced Blinko RTL Plugin..."), r(), localStorage.getItem("blinko-rtl-enabled") === "true" && (i.enable(), s()), window.addEventListener("rtl-settings-changed", (d) => {
-          const f = d.detail;
-          n && (f.darkMode ? n.classList.add("dark-mode") : n.classList.remove("dark-mode"));
+      function c() {
+        console.log("Initializing Advanced Blinko RTL Plugin..."), o(), localStorage.getItem("blinko-rtl-enabled") === "true" && (n.enable(), r()), window.addEventListener("rtl-settings-changed", (a) => {
+          const h = a.detail;
+          i && (h.darkMode ? i.classList.add("dark-mode") : i.classList.remove("dark-mode"));
         }), window.blinkoRTL = {
           detector: e,
-          service: i,
+          service: n,
           // Expose service
           toggle: () => {
-            i.toggle(), s();
+            n.toggle(), r();
           },
           enable: () => {
-            i.enable(), s();
+            n.enable(), r();
           },
           disable: () => {
-            i.disable(), s();
+            n.disable(), r();
           },
-          isEnabled: () => i.isEnabled(),
-          settings: () => i.getSettings(),
-          getSettings: () => i.getSettings(),
+          isEnabled: () => n.isEnabled(),
+          settings: () => n.getSettings(),
+          getSettings: () => n.getSettings(),
           // Alias for app.tsx compatibility
-          processAll: i.processAllElements,
-          processElement: i.processElement,
-          toggleManual: () => i.toggleManual(),
-          test: (d) => {
-            const f = e.detectRTL(d), c = i.detectHebrewRegex(d), y = i.detectArabicRegex(d);
-            return console.log(`Text "${d}" -> Original: ${f ? "RTL" : "LTR"}, Hebrew: ${c}, Arabic: ${y}`), f;
+          processAll: n.processAllElements,
+          processElement: n.processElement,
+          toggleManual: () => n.toggleManual(),
+          test: (a) => {
+            const h = e.detectRTL(a), d = n.detectHebrewRegex(a), v = n.detectArabicRegex(a);
+            return console.log(`Text "${a}" -> Original: ${h ? "RTL" : "LTR"}, Hebrew: ${d}, Arabic: ${v}`), h;
           },
-          testHebrew: (d) => i.detectHebrewRegex(d),
-          testArabic: (d) => i.detectArabicRegex(d),
+          testHebrew: (a) => n.detectHebrewRegex(a),
+          testArabic: (a) => n.detectArabicRegex(a),
           getStats: () => document.querySelectorAll('.rtl-force, .rtl-auto, [dir="rtl"]').length,
-          setSensitivity: (d) => {
-            let f = "medium";
-            d < 0.12 ? f = "high" : d > 0.3 && (f = "low"), i.updateSettings({ threshold: d, sensitivity: f });
+          setSensitivity: (a) => {
+            let h = "medium";
+            a < 0.12 ? h = "high" : a > 0.3 && (h = "low"), n.updateSettings({ threshold: a, sensitivity: h });
           },
           fixSelection: () => {
-            const d = window.getSelection();
-            if (!d || d.rangeCount === 0)
+            const a = window.getSelection();
+            if (!a || a.rangeCount === 0)
               return;
-            let c = d.getRangeAt(0).commonAncestorContainer;
-            if (c.nodeType === Node.TEXT_NODE && (c = c.parentNode), c instanceof HTMLElement) {
-              i.processElement(c);
-              const y = c.closest("p, div, li, td, th");
-              y && i.processElement(y);
+            let d = a.getRangeAt(0).commonAncestorContainer;
+            if (d.nodeType === Node.TEXT_NODE && (d = d.parentNode), d instanceof HTMLElement) {
+              n.processElement(d);
+              const v = d.closest("p, div, li, td, th");
+              v && n.processElement(v);
             }
           }
         }, console.log("Advanced Blinko RTL Plugin initialized successfully");
       }
       t("default", class {
         constructor() {
-          _(this, "withSettingPanel", !0);
-          _(this, "renderSettingPanel", () => {
-            const d = document.createElement("div");
-            return et(/* @__PURE__ */ o(Ht, {}), d), d;
+          g(this, "withSettingPanel", !0);
+          g(this, "renderSettingPanel", () => {
+            const a = document.createElement("div");
+            return Ze(/* @__PURE__ */ s(Mt, {}), a), a;
           });
-          Object.assign(this, rt);
+          Object.assign(this, it);
         }
         async init() {
-          this.initI18n(), document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", p) : setTimeout(p, 100), window.Blinko.addToolBarIcon({
+          this.initI18n(), document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", c) : setTimeout(c, 100), window.Blinko.addToolBarIcon({
             name: "rtl-support",
             icon: "<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m5 8 6 6'/><path d='m4 14 6-6 2-3'/><path d='M2 5h12'/><path d='M7 2h1'/><path d='m22 18-6-6'/><path d='m17 12-6 6-2 3'/><path d='M14 22h1'/><path d='M22 14h-7'/></svg>",
             placement: "top",
-            tooltip: `RTL Language Support (v${rt.version}) (ع/א)`,
+            tooltip: `RTL Language Support (v${it.version}) (ع/א)`,
             content: () => {
-              const d = document.createElement("div");
-              return d.setAttribute("data-plugin", "rtl-support"), et(/* @__PURE__ */ o($t, { detector: e }), d), d;
+              const a = document.createElement("div");
+              return a.setAttribute("data-plugin", "rtl-support"), Ze(/* @__PURE__ */ s(Et, { detector: e }), a), a;
             }
           }), window.Blinko.addRightClickMenu({
             name: "rtl-toggle",
             label: "Toggle RTL (ع/א)",
             icon: "material-symbols:format-textdirection-r-to-l",
             onClick: () => {
-              i.toggle(), s();
-              const d = window.Blinko.i18n;
+              n.toggle(), r();
+              const a = window.Blinko.i18n;
               window.Blinko.toast.success(
-                i.isEnabled() ? d.t("rtl_enabled") : d.t("rtl_disabled")
+                n.isEnabled() ? a.t("rtl_enabled") : a.t("rtl_disabled")
               );
             }
           });
         }
         initI18n() {
-          window.Blinko.i18n.addResourceBundle("en", "translation", Vt), window.Blinko.i18n.addResourceBundle("zh", "translation", qt), window.Blinko.i18n.addResourceBundle("he", "translation", Gt), window.Blinko.i18n.addResourceBundle("ar", "translation", Xt);
+          window.Blinko.i18n.addResourceBundle("en", "translation", It), window.Blinko.i18n.addResourceBundle("zh", "translation", Nt), window.Blinko.i18n.addResourceBundle("he", "translation", Ht), window.Blinko.i18n.addResourceBundle("ar", "translation", zt);
         }
         destroy() {
-          i.disable(), a(), console.log("Advanced RTL Plugin destroyed");
+          n.disable(), l(), console.log("Advanced RTL Plugin destroyed");
         }
       });
     }
