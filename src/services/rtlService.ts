@@ -3,7 +3,6 @@ import { RTLSettings } from '../types';
 import { advancedRTLCSS, DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './constants';
 import { debounce } from '../utils/debounce';
 import { PasteInterceptor } from '../utils/pasteInterceptor';
-import { HoverContextManager } from '../utils/hoverManager';
 
 export class RTLService {
   private detector: RTLDetector;
@@ -15,7 +14,6 @@ export class RTLService {
   private autoProcessInterval: any = null;
   // Managers
   private pasteInterceptor: PasteInterceptor;
-  private hoverManager: HoverContextManager | null = null;
 
   // Optimizations
   private pendingElements: Set<HTMLElement> = new Set();
@@ -323,11 +321,9 @@ export class RTLService {
         return;
     }
 
-    // Skip layout elements, BUT exclude explicit target selectors like 'button' or '.btn' from being skipped
-    if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar')) {
-       // We still want to process the element if it matches a target selector, even if it's inside a layout container.
-       // The previous exclusion of 'button' and '.btn' here prevented buttons from being processed even if they were in targetSelectors.
-    }
+    // Check if element is part of the UI shell that should be protected
+    // But allow processing if it's explicitly in target selectors (which processAllElements uses)
+    // or if it's a content element.
 
     const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
     console.log('Processing element:', element.tagName, 'Text:', text.substring(0, 10));
@@ -477,14 +473,6 @@ export class RTLService {
     
     // Enable Managers
     this.pasteInterceptor.enable();
-    if (!this.hoverManager) {
-        this.hoverManager = new HoverContextManager({
-            selectors: this.settings.targetSelectors,
-            processElement: (el) => this.processElement(el),
-            isEnabled: () => this.isRTLEnabled
-        });
-        this.hoverManager.init();
-    }
 
     // Add input listener for immediate response to typing
     document.addEventListener('input', this.handleInput, { capture: true, passive: true });
@@ -500,10 +488,6 @@ export class RTLService {
     
     // Disable Managers
     this.pasteInterceptor.disable();
-    if (this.hoverManager) {
-        this.hoverManager.destroy();
-        this.hoverManager = null;
-    }
 
     document.removeEventListener('input', this.handleInput);
 

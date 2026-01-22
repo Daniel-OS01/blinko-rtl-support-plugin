@@ -2894,3 +2894,14 @@ header {
   line-height: 1.2;
   white-space: nowrap;
 }
+
+/* Mobile optimization for RTL Toggle Button */
+@media (max-width: 768px) {
+  .rtl-toggle-btn {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 14px !important;
+    bottom: 15px !important;
+    right: 15px !important;
+  }
+}
