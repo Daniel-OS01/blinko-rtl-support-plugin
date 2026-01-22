@@ -1,6 +1,7 @@
 # Blinko RTL Language Support Plugin
 
 Enhanced RTL (Right-to-Left) language support for Blinko with automatic detection, manual controls, mixed content handling, and mobile optimization.
+[![Release Pipeline](https://github.com/Daniel-OS01/blinko-rtl-support-plugin/actions/workflows/release.yml/badge.svg)](https://github.com/Daniel-OS01/blinko-rtl-support-plugin/actions/workflows/release.yml)
 
 <img width="335" height="220" alt="image" src="https://github.com/user-attachments/assets/3ea8530d-060c-48d1-844f-14c50f2612f7" /> <img width="335" height="220" alt="image" src="https://github.com/user-attachments/assets/6e7da3b0-37e8-44a4-9028-6055b583e15d" />
 
