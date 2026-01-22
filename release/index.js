@@ -12,19 +12,19 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
     t && t.parentNode && t.parentNode.removeChild(t);
   }
   function de(t, e, n) {
-    var i, o, r, l = {};
-    for (r in e)
-      r == "key" ? i = e[r] : r == "ref" ? o = e[r] : l[r] = e[r];
-    if (arguments.length > 2 && (l.children = arguments.length > 3 ? E.call(arguments, 2) : n), typeof t == "function" && t.defaultProps != null)
-      for (r in t.defaultProps)
-        l[r] === void 0 && (l[r] = t.defaultProps[r]);
-    return Q(t, l, i, o, null);
+    var i, r, o, s = {};
+    for (o in e)
+      o == "key" ? i = e[o] : o == "ref" ? r = e[o] : s[o] = e[o];
+    if (arguments.length > 2 && (s.children = arguments.length > 3 ? A.call(arguments, 2) : n), typeof t == "function" && t.defaultProps != null)
+      for (o in t.defaultProps)
+        s[o] === void 0 && (s[o] = t.defaultProps[o]);
+    return Z(t, s, i, r, null);
   }
   function Q(t, e, n, i, o) {
     var r = { type: t, props: e, key: n, ref: i, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: o ?? ++F, __i: -1, __u: 0 };
     return o == null && _.vnode != null && _.vnode(r), r;
   }
-  function N(t) {
+  function H(t) {
     return t.children;
   }
   function D(t, e) {
@@ -86,26 +86,26 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
     return e;
   }
   function Y(t, e) {
-    return e = e || [], t == null || typeof t == "boolean" || (q(t) ? t.some(function(n) {
+    return e = e || [], t == null || typeof t == "boolean" || (J(t) ? t.some(function(n) {
       Y(n, e);
     }) : e.push(t)), e;
   }
-  function at(t, e, n, i) {
-    var o, r, l, c = t.key, p = t.type, a = e[n], h = a != null && (2 & a.__u) == 0;
-    if (a === null && t.key == null || h && c == a.key && p == a.type)
+  function dt(t, e, n, i) {
+    var r, o, s, c = t.key, u = t.type, a = e[n], h = a != null && (2 & a.__u) == 0;
+    if (a === null && t.key == null || h && c == a.key && u == a.type)
       return n;
     if (i > (h ? 1 : 0)) {
-      for (o = n - 1, r = n + 1; o >= 0 || r < e.length; )
-        if ((a = e[l = o >= 0 ? o-- : r++]) != null && !(2 & a.__u) && c == a.key && p == a.type)
-          return l;
+      for (r = n - 1, o = n + 1; r >= 0 || o < e.length; )
+        if ((a = e[s = r >= 0 ? r-- : o++]) != null && !(2 & a.__u) && c == a.key && u == a.type)
+          return s;
     }
     return -1;
   }
   function Re(t, e, n) {
     e[0] == "-" ? t.setProperty(e, n ?? "") : t[e] = n == null ? "" : typeof n != "number" || st.test(e) ? n : n + "px";
   }
-  function K(t, e, n, i, o) {
-    var r, l;
+  function K(t, e, n, i, r) {
+    var o, s;
     e:
       if (e == "style")
         if (typeof n == "string")
@@ -119,9 +119,9 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
               i && n[e] == i[e] || Re(t.style, e, n[e]);
         }
       else if (e[0] == "o" && e[1] == "n")
-        r = e != (e = e.replace(xe, "$1")), l = e.toLowerCase(), e = l in t || e == "onFocusOut" || e == "onFocusIn" ? l.slice(2) : e.slice(2), t.l || (t.l = {}), t.l[e + r] = n, n ? i ? n.u = i.u : (n.u = re, t.addEventListener(e, r ? le : se, r)) : t.removeEventListener(e, r ? le : se, r);
+        o = e != (e = e.replace(xe, "$1")), s = e.toLowerCase(), e = s in t || e == "onFocusOut" || e == "onFocusIn" ? s.slice(2) : e.slice(2), t.l || (t.l = {}), t.l[e + o] = n, n ? i ? n.u = i.u : (n.u = oe, t.addEventListener(e, o ? le : se, o)) : t.removeEventListener(e, o ? le : se, o);
       else {
-        if (o == "http://www.w3.org/2000/svg")
+        if (r == "http://www.w3.org/2000/svg")
           e = e.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s");
         else if (e != "width" && e != "height" && e != "href" && e != "list" && e != "form" && e != "tabIndex" && e != "download" && e != "rowSpan" && e != "colSpan" && e != "role" && e != "popover" && e in t)
           try {
@@ -137,7 +137,7 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
       if (this.l) {
         var n = this.l[e.type + t];
         if (e.t == null)
-          e.t = re++;
+          e.t = oe++;
         else if (e.t < n.u)
           return;
         return n(_.event ? _.event(e) : e);
@@ -150,7 +150,7 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
       return null;
     128 & n.__u && (p = !!(32 & n.__u), r = [c = e.__e = n.__e]), (h = _.__b) && h(e);
     e:
-      if (typeof S == "function")
+      if (typeof x == "function")
         try {
           if (k = e.props, w = "prototype" in S && S.prototype.render, A = (h = S.contextType) && i[h.__c], P = h ? A ? A.props.value : h.__ : i, n.__c ? y = (d = e.__c = n.__c).__ = d.__E : (w ? e.__c = d = new S(k, P) : (e.__c = d = new D(k, P), d.constructor = S, d.render = ct), A && A.sub(d), d.props = k, d.state || (d.state = {}), d.context = P, d.__n = i, b = d.__d = !0, d.__h = [], d._sb = []), w && d.__s == null && (d.__s = d.state), w && S.getDerivedStateFromProps != null && (d.__s == d.state && (d.__s = $({}, d.__s)), $(d.__s, S.getDerivedStateFromProps(k, d.__s))), m = d.props, x = d.state, d.__v = e, b)
             w && S.getDerivedStateFromProps == null && d.componentWillMount != null && d.componentWillMount(), w && d.componentDidMount != null && d.__h.push(d.componentDidMount);
@@ -160,7 +160,7 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
                 R && (R.__ = e);
               }), W = 0; W < d._sb.length; W++)
                 d.__h.push(d._sb[W]);
-              d._sb = [], d.__h.length && l.push(d);
+              d._sb = [], d.__h.length && s.push(d);
               break e;
             }
             d.componentWillUpdate != null && d.componentWillUpdate(k, d.__s, P), w && d.componentDidUpdate != null && d.__h.push(function() {
@@ -181,7 +181,7 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
             if (R.then) {
               for (e.__u |= p ? 160 : 128; c && c.nodeType == 8 && c.nextSibling; )
                 c = c.nextSibling;
-              r[r.indexOf(c)] = null, e.__e = c;
+              o[o.indexOf(c)] = null, e.__e = c;
             } else {
               for (g = r.length; g--; )
                 ae(r[g]);
@@ -203,8 +203,8 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
       pe(n[i], n[++i], n[++i]);
     _.__c && _.__c(e, t), t.some(function(o) {
       try {
-        t = o.__h, o.__h = [], t.some(function(r) {
-          r.call(o);
+        t = r.__h, r.__h = [], t.some(function(o) {
+          o.call(r);
         });
       } catch (r) {
         _.__e(r, o.__v);
@@ -231,7 +231,7 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
     if (w == null)
       y === k || c && t.data == k || (t.data = k);
     else {
-      if (r = r && E.call(t.childNodes), y = n.props || V, !c && r != null)
+      if (o = o && A.call(t.childNodes), y = n.props || q, !c && o != null)
         for (y = {}, a = 0; a < t.attributes.length; a++)
           y[(m = t.attributes[a]).name] = m.value;
       for (a in y)
@@ -282,7 +282,7 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
         i[o] && Pe(i[o], e, n || typeof t.type != "function");
     n || ae(t.__e), t.__c = t.__ = t.__e = void 0;
   }
-  function ct(t, e, n) {
+  function ut(t, e, n) {
     return this.constructor(t, n);
   }
   function ut(t, e, n) {
@@ -293,8 +293,8 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
     for (var o, r, l; e = e.__; )
       if ((o = e.__c) && !o.__)
         try {
-          if ((r = o.constructor) && r.getDerivedStateFromError != null && (o.setState(r.getDerivedStateFromError(t)), l = o.__d), o.componentDidCatch != null && (o.componentDidCatch(t, i || {}), l = o.__d), l)
-            return o.__E = o;
+          if ((o = r.constructor) && o.getDerivedStateFromError != null && (r.setState(o.getDerivedStateFromError(t)), s = r.__d), r.componentDidCatch != null && (r.componentDidCatch(t, i || {}), s = r.__d), s)
+            return r.__E = r;
         } catch (c) {
           t = c;
         }
@@ -335,7 +335,7 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
       var p = i.__N ? i.__N[0] : i.__[0], a = i.t(p, c);
       p !== a && (i.__N = [a, i.__[1]], i.__c.setState({}));
     }], i.__c = T, !T.__f)) {
-      var o = function(c, p, a) {
+      var r = function(c, u, a) {
         if (!i.__c.__H)
           return !0;
         var h = i.__c.__H.__.filter(function(b) {
@@ -344,24 +344,24 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
         if (h.every(function(b) {
           return !b.__N;
         }))
-          return !r || r.call(this, c, p, a);
+          return !o || o.call(this, c, u, a);
         var d = i.__c.props !== c;
         return h.forEach(function(b) {
           if (b.__N) {
             var m = b.__[0];
             b.__ = b.__N, b.__N = void 0, m !== b.__[0] && (d = !0);
           }
-        }), r && r.call(this, c, p, a) || d;
+        }), o && o.call(this, c, u, a) || d;
       };
       T.__f = !0;
-      var r = T.shouldComponentUpdate, l = T.componentWillUpdate;
-      T.componentWillUpdate = function(c, p, a) {
+      var o = T.shouldComponentUpdate, s = T.componentWillUpdate;
+      T.componentWillUpdate = function(c, u, a) {
         if (this.__e) {
-          var h = r;
-          r = void 0, o(c, p, a), r = h;
+          var h = o;
+          o = void 0, r(c, u, a), o = h;
         }
-        l && l.call(this, c, p, a);
-      }, T.shouldComponentUpdate = o;
+        s && s.call(this, c, u, a);
+      }, T.shouldComponentUpdate = r;
     }
     return i.__N || i.__;
   }
@@ -412,13 +412,13 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
     n && n.__H && (n.__H.__.forEach(function(i) {
       try {
         te(i);
-      } catch (o) {
-        e = o;
+      } catch (r) {
+        e = r;
       }
     }), n.__H = void 0, e && C.__e(e, n.__v));
   };
   var Oe = typeof requestAnimationFrame == "function";
-  function _t(t) {
+  function ft(t) {
     var e, n = function() {
       clearTimeout(i), Oe && cancelAnimationFrame(e), setTimeout(t);
     }, i = setTimeout(n, 35);
@@ -432,20 +432,20 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
     var e = T;
     t.__c = t.__(), T = e;
   }
-  function ft(t, e) {
+  function mt(t, e) {
     return !t || t.length !== e.length || e.some(function(n, i) {
       return n !== t[i];
     });
   }
-  function We(t, e) {
+  function Ue(t, e) {
     return typeof e == "function" ? e(t) : e;
   }
-  function mt(t, e) {
+  function bt(t, e) {
     for (var n in e)
       t[n] = e[n];
     return t;
   }
-  function Ue(t, e) {
+  function We(t, e) {
     for (var n in t)
       if (n !== "__source" && !(n in e))
         return !0;
@@ -467,17 +467,17 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
   var bt = _.__e;
   _.__e = function(t, e, n, i) {
     if (t.then) {
-      for (var o, r = e; r = r.__; )
-        if ((o = r.__c) && o.__c)
-          return e.__e == null && (e.__e = n.__e, e.__k = n.__k), o.__c(t, e);
+      for (var r, o = e; o = o.__; )
+        if ((r = o.__c) && r.__c)
+          return e.__e == null && (e.__e = n.__e, e.__k = n.__k), r.__c(t, e);
     }
-    bt(t, e, n, i);
+    vt(t, e, n, i);
   };
   var qe = _.unmount;
   function Je(t, e, n) {
     return t && (t.__c && t.__c.__H && (t.__c.__H.__.forEach(function(i) {
       typeof i.__c == "function" && i.__c();
-    }), t.__c.__H = null), (t = mt({}, t)).__c != null && (t.__c.__P === n && (t.__c.__P = e), t.__c.__e = !0, t.__c = null), t.__k = t.__k && t.__k.map(function(i) {
+    }), t.__c.__H = null), (t = bt({}, t)).__c != null && (t.__c.__P === n && (t.__c.__P = e), t.__c.__e = !0, t.__c = null), t.__k = t.__k && t.__k.map(function(i) {
       return Je(i, e, n);
     })), t;
   }
@@ -502,22 +502,22 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
   }, (me.prototype = new D()).__c = function(t, e) {
     var n = e.__c, i = this;
     i.o == null && (i.o = []), i.o.push(n);
-    var o = Xe(i.__v), r = !1, l = function() {
-      r || (r = !0, n.__R = null, o ? o(c) : c());
+    var r = Xe(i.__v), o = !1, s = function() {
+      o || (o = !0, n.__R = null, r ? r(c) : c());
     };
-    n.__R = l;
+    n.__R = s;
     var c = function() {
       if (!--i.__u) {
         if (i.state.__a) {
-          var p = i.state.__a;
-          i.__v.__k[0] = Ge(p, p.__c.__P, p.__c.__O);
+          var u = i.state.__a;
+          i.__v.__k[0] = Ge(u, u.__c.__P, u.__c.__O);
         }
         var a;
         for (i.setState({ __a: i.__b = null }); a = i.o.pop(); )
           a.forceUpdate();
       }
     };
-    i.__u++ || 32 & e.__u || i.setState({ __a: i.__b = i.__v.__k[0] }), t.then(l, l);
+    i.__u++ || 32 & e.__u || i.setState({ __a: i.__b = i.__v.__k[0] }), t.then(s, s);
   }, me.prototype.componentWillUnmount = function() {
     this.o = [];
   }, me.prototype.render = function(t, e) {
@@ -528,10 +528,10 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
       }
       this.__b = null;
     }
-    var o = e.__a && de(N, null, t.fallback);
-    return o && (o.__u &= -33), [de(N, null, e.__a ? null : t.children), o];
+    var r = e.__a && de(H, null, t.fallback);
+    return r && (r.__u &= -33), [de(H, null, e.__a ? null : t.children), r];
   };
-  var Qe = function(t, e, n) {
+  var Ze = function(t, e, n) {
     if (++n[1] === n[0] && t.l.delete(e), t.props.revealOrder && (t.props.revealOrder[0] !== "t" || !t.l.size))
       for (n = t.i; n; ) {
         for (; n.length > 3; )
@@ -543,11 +543,11 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
   };
   (ne.prototype = new D()).__a = function(t) {
     var e = this, n = Xe(e.__v), i = e.l.get(t);
-    return i[0]++, function(o) {
-      var r = function() {
-        e.props.revealOrder ? (i.push(o), Qe(e, t, i)) : o();
+    return i[0]++, function(r) {
+      var o = function() {
+        e.props.revealOrder ? (i.push(r), Ze(e, t, i)) : r();
       };
-      n ? n(r) : r();
+      n ? n(o) : o();
     };
   }, ne.prototype.render = function(t) {
     this.i = null, this.l = /* @__PURE__ */ new Map();
@@ -559,14 +559,14 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
   }, ne.prototype.componentDidUpdate = ne.prototype.componentDidMount = function() {
     var t = this;
     this.l.forEach(function(e, n) {
-      Qe(t, n, e);
+      Ze(t, n, e);
     });
   };
   var yt = typeof Symbol < "u" && Symbol.for && Symbol.for("react.element") || 60103, vt = /^(?:accent|alignment|arabic|baseline|cap|clip(?!PathU)|color|dominant|fill|flood|font|glyph(?!R)|horiz|image(!S)|letter|lighting|marker(?!H|W|U)|overline|paint|pointer|shape|stop|strikethrough|stroke|text(?!L)|transform|underline|unicode|units|v|vector|vert|word|writing|x(?!C))[A-Z]/, xt = /^on(Ani|Tra|Tou|BeforeInp|Compo)/, St = /[A-Z0-9]/g, kt = typeof document < "u", wt = function(t) {
     return (typeof Symbol < "u" && typeof Symbol() == "symbol" ? /fil|che|rad/ : /fil|che|ra/).test(t);
   };
-  function Ze(t, e, n) {
-    return e.__k == null && (e.textContent = ""), ut(t, e), typeof n == "function" && n(), t ? t.__c : null;
+  function Qe(t, e, n) {
+    return e.__k == null && (e.textContent = ""), pt(t, e), typeof n == "function" && n(), t ? t.__c : null;
   }
   D.prototype.isReactComponent = {}, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t) {
     Object.defineProperty(D.prototype, t, { configurable: !0, get: function() {
@@ -620,7 +620,7 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
   function Et({ detector: t }) {
     const [e, n] = L({ activeBlocks: 0 }), [i, o] = L(15), [r, l] = L(!1), [c, p] = L(!1), a = window.Blinko.i18n;
     _e(() => {
-      const x = () => {
+      const S = () => {
         var k;
         const y = ((k = window.blinkoRTL) == null ? void 0 : k.getStats()) || 0;
         n({ activeBlocks: y });
@@ -646,11 +646,11 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
       }
     }, []);
     const h = () => {
-      var x;
-      l(!0), (x = window.blinkoRTL) == null || x.fixSelection(), setTimeout(() => {
-        l(!1), window.Blinko.toast.success("Selection processed");
+      var S;
+      s(!0), (S = window.blinkoRTL) == null || S.fixSelection(), setTimeout(() => {
+        s(!1), window.Blinko.toast.success("Selection processed");
       }, 500);
-    }, d = (x) => {
+    }, d = (S) => {
       var y;
       const f = parseInt(x.target.value);
       o(f), (y = window.blinkoRTL) == null || y.setSensitivity(f / 100);
@@ -660,14 +660,14 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
       const y = window.blinkoRTL;
       y && y.service && typeof y.service.toggleDebugMode == "function" && y.service.toggleDebugMode();
     };
-    return /* @__PURE__ */ s("div", { style: {
+    return /* @__PURE__ */ l("div", { style: {
       padding: "15px",
       fontFamily: "system-ui, sans-serif",
       width: "300px",
       background: "var(--bg-color, white)",
       color: "var(--text-color, black)"
     }, children: [
-      /* @__PURE__ */ s("div", { style: {
+      /* @__PURE__ */ l("div", { style: {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -675,8 +675,8 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
         borderBottom: "1px solid #eee",
         paddingBottom: "10px"
       }, children: [
-        /* @__PURE__ */ s("h3", { style: { margin: 0, fontSize: "16px" }, children: "RTL Control Center" }),
-        /* @__PURE__ */ s(
+        /* @__PURE__ */ l("h3", { style: { margin: 0, fontSize: "16px" }, children: "RTL Control Center" }),
+        /* @__PURE__ */ l(
           "button",
           {
             onClick: () => {
@@ -684,7 +684,7 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
               (f = window.blinkoRTL) == null || f.toggle();
               const x = (y = window.blinkoRTL) == null ? void 0 : y.isEnabled();
               window.Blinko.toast.success(
-                x ? a.t("rtl_enabled") : a.t("rtl_disabled")
+                S ? a.t("rtl_enabled") : a.t("rtl_disabled")
               );
             },
             style: {
@@ -700,7 +700,7 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
           }
         )
       ] }),
-      /* @__PURE__ */ s("div", { style: {
+      /* @__PURE__ */ l("div", { style: {
         background: "#f8f9fa",
         padding: "12px",
         borderRadius: "8px",
@@ -708,22 +708,22 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
         textAlign: "center",
         borderLeft: "4px solid #007bff"
       }, children: [
-        /* @__PURE__ */ s("div", { style: { fontSize: "24px", fontWeight: "bold", color: "#007bff" }, children: e.activeBlocks }),
-        /* @__PURE__ */ s("div", { style: { fontSize: "12px", color: "#666" }, children: "Active RTL Blocks" })
+        /* @__PURE__ */ l("div", { style: { fontSize: "24px", fontWeight: "bold", color: "#007bff" }, children: e.activeBlocks }),
+        /* @__PURE__ */ l("div", { style: { fontSize: "12px", color: "#666" }, children: "Active RTL Blocks" })
       ] }),
-      /* @__PURE__ */ s("div", { style: { marginBottom: "20px" }, children: /* @__PURE__ */ s(
+      /* @__PURE__ */ l("div", { style: { marginBottom: "20px" }, children: /* @__PURE__ */ l(
         "button",
         {
           onClick: h,
-          disabled: r,
+          disabled: o,
           style: {
             width: "100%",
-            background: r ? "#6c757d" : "#28a745",
+            background: o ? "#6c757d" : "#28a745",
             color: "white",
             border: "none",
             padding: "10px",
             borderRadius: "6px",
-            cursor: r ? "wait" : "pointer",
+            cursor: o ? "wait" : "pointer",
             fontWeight: "500",
             display: "flex",
             alignItems: "center",
@@ -731,15 +731,15 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
             gap: "8px",
             transition: "background 0.2s"
           },
-          children: r ? "Processing..." : /* @__PURE__ */ s(N, { children: [
-            /* @__PURE__ */ s("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: /* @__PURE__ */ s("path", { d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" }) }),
+          children: o ? "Processing..." : /* @__PURE__ */ l(H, { children: [
+            /* @__PURE__ */ l("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: /* @__PURE__ */ l("path", { d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" }) }),
             "Fix Selected Text"
           ] })
         }
       ) }),
-      /* @__PURE__ */ s("div", { style: { marginBottom: "15px" }, children: [
-        /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", cursor: "pointer", fontSize: "13px" }, children: [
-          /* @__PURE__ */ s(
+      /* @__PURE__ */ l("div", { style: { marginBottom: "15px" }, children: [
+        /* @__PURE__ */ l("label", { style: { display: "flex", alignItems: "center", cursor: "pointer", fontSize: "13px" }, children: [
+          /* @__PURE__ */ l(
             "input",
             {
               type: "checkbox",
@@ -750,17 +750,17 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
           ),
           "Enable Visual Debugger"
         ] }),
-        /* @__PURE__ */ s("div", { style: { fontSize: "10px", color: "#888", marginInlineStart: "20px", marginTop: "2px" }, children: "Highlights RTL (Red) and LTR (Blue) blocks" })
+        /* @__PURE__ */ l("div", { style: { fontSize: "10px", color: "#888", marginInlineStart: "20px", marginTop: "2px" }, children: "Highlights RTL (Red) and LTR (Blue) blocks" })
       ] }),
-      /* @__PURE__ */ s("div", { children: [
-        /* @__PURE__ */ s("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "13px" }, children: [
-          /* @__PURE__ */ s("strong", { children: "Detection Sensitivity" }),
-          /* @__PURE__ */ s("span", { style: { color: "#007bff" }, children: [
+      /* @__PURE__ */ l("div", { children: [
+        /* @__PURE__ */ l("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "13px" }, children: [
+          /* @__PURE__ */ l("strong", { children: "Detection Sensitivity" }),
+          /* @__PURE__ */ l("span", { style: { color: "#007bff" }, children: [
             i,
             "%"
           ] })
         ] }),
-        /* @__PURE__ */ s(
+        /* @__PURE__ */ l(
           "input",
           {
             type: "range",
@@ -771,19 +771,19 @@ var v = (E, _, F) => (Wt(E, typeof _ != "symbol" ? _ + "" : _, F), F);
             style: { width: "100%", cursor: "pointer" }
           }
         ),
-        /* @__PURE__ */ s("div", { style: { display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#999", marginTop: "4px" }, children: [
-          /* @__PURE__ */ s("span", { children: "More Sensitive (1%)" }),
-          /* @__PURE__ */ s("span", { children: "Less Sensitive (50%)" })
+        /* @__PURE__ */ l("div", { style: { display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#999", marginTop: "4px" }, children: [
+          /* @__PURE__ */ l("span", { children: "More Sensitive (1%)" }),
+          /* @__PURE__ */ l("span", { children: "Less Sensitive (50%)" })
         ] })
       ] }),
-      /* @__PURE__ */ s("div", { style: { marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #eee", fontSize: "11px", color: "#888", textAlign: "center" }, children: "Click 'Fix Selected' to force detection on specific text." }),
-      /* @__PURE__ */ s("div", { style: { marginTop: "5px", fontSize: "10px", color: "#aaa", textAlign: "center" }, children: [
+      /* @__PURE__ */ l("div", { style: { marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #eee", fontSize: "11px", color: "#888", textAlign: "center" }, children: "Click 'Fix Selected' to force detection on specific text." }),
+      /* @__PURE__ */ l("div", { style: { marginTop: "5px", fontSize: "10px", color: "#aaa", textAlign: "center" }, children: [
         "v",
         "1.1.5"
       ] })
     ] });
   }
-  const O = `/* Dynamic CSS Rules for RTL Elements */
+  const U = `/* Dynamic CSS Rules for RTL Elements */
 .blinko-detected-rtl {
     direction: rtl !important;
     text-align: right !important;
@@ -868,7 +868,7 @@ button.rtl-force,
     text-align: left !important;
     unicode-bidi: embed !important;
 }
-`, J = [
+`, G = [
     // Content containers
     ".markdown-body p",
     ".markdown-body div",
@@ -948,9 +948,9 @@ button.rtl-force,
   direction: rtl;
 }
 `,
-    dynamicCSS: O,
+    dynamicCSS: U,
     permanentCSS: !1,
-    targetSelectors: J,
+    targetSelectors: G,
     disabledSelectors: [],
     minRTLChars: 2,
     processInterval: 1e3,
@@ -964,7 +964,191 @@ button.rtl-force,
       lineHeight: 1.5,
       paragraphMargin: 10
     }
-  }, G = [
+  };
+  class Mt {
+    constructor(e = {
+      sensitivity: "medium",
+      minRTLChars: 3,
+      sampleSize: 100
+    }) {
+      g(this, "name", "CharacterCode");
+      g(this, "config");
+      // Hebrew: \u0590-\u05FF
+      // Arabic: \u0600-\u06FF
+      // Additional RTL: \u0700-\u074F, \u0780-\u07BF
+      g(this, "RTL_RANGES", [
+        [1424, 1535],
+        // Hebrew
+        [1536, 1791],
+        // Arabic
+        [1792, 1871],
+        // Syriac
+        [1872, 1919],
+        // Arabic Supplement
+        [1920, 1983],
+        // Thaana
+        [2208, 2303],
+        // Arabic Extended-A
+        [64285, 64335],
+        // Hebrew Presentation Forms
+        [64336, 65023],
+        // Arabic Presentation Forms-A
+        [65136, 65279]
+        // Arabic Presentation Forms-B
+      ]);
+      this.config = e;
+    }
+    /**
+     * Check if a character is RTL
+     */
+    isRTLChar(e) {
+      const n = e.charCodeAt(0);
+      return this.RTL_RANGES.some(([i, r]) => n >= i && n <= r);
+    }
+    /**
+     * Detect RTL content in text
+     */
+    detect(e) {
+      if (!e || e.length === 0)
+        return !1;
+      const n = e.substring(0, this.config.sampleSize);
+      let i = 0, r = 0;
+      for (const c of n)
+        /\s|[.,!?;:()[\]{}]/.test(c) || (r++, this.isRTLChar(c) && i++);
+      return i < this.config.minRTLChars ? !1 : (r > 0 ? i / r : 0) >= {
+        high: 0.1,
+        // 10% RTL chars
+        medium: 0.15,
+        // 15% RTL chars
+        low: 0.4
+        // 40% RTL chars
+      }[this.config.sensitivity];
+    }
+    updateConfig(e) {
+      this.config = { ...this.config, ...e };
+    }
+  }
+  class Pt {
+    constructor(e = !0, n = !0, i = 0.3, r = 3) {
+      g(this, "name", "Regex");
+      // Hebrew regex range: 0590-05FF, FB1D-FB4F (Presentation forms A), FB50-FBB1 (Presentation forms B - wait, that's Arabic)
+      // Hebrew: \u0590-\u05FF
+      g(this, "hebrewPattern", "\\u0590-\\u05FF\\uFB1D-\\uFB4F");
+      // Arabic regex range
+      g(this, "arabicPattern", "\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF");
+      g(this, "checkHebrew");
+      g(this, "checkArabic");
+      g(this, "threshold");
+      // Ratio 0.0 - 1.0
+      g(this, "minRTLChars", 3);
+      this.checkHebrew = e, this.checkArabic = n, this.threshold = i, this.minRTLChars = r;
+    }
+    updateConfig(e) {
+      e.minRTLChars !== void 0 && (this.minRTLChars = e.minRTLChars), e.threshold !== void 0 && (this.threshold = e.threshold);
+    }
+    detect(e) {
+      if (!e || !e.trim())
+        return !1;
+      let n = [];
+      if (this.checkHebrew && n.push(this.hebrewPattern), this.checkArabic && n.push(this.arabicPattern), n.length === 0)
+        return !1;
+      const i = new RegExp(`[${n.join("")}]`, "g"), r = e.match(i);
+      if (!r)
+        return !1;
+      const o = r.length;
+      if (o < this.minRTLChars)
+        return e.trim().length >= this.minRTLChars, !1;
+      const s = e.length;
+      return s === 0 ? !1 : o / s > this.threshold;
+    }
+  }
+  class it {
+    constructor(e) {
+      g(this, "name", "Combined");
+      g(this, "strategies");
+      this.strategies = e;
+    }
+    detect(e) {
+      return this.strategies.some((n) => n.detect(e));
+    }
+    addStrategy(e) {
+      this.strategies.push(e);
+    }
+    getStrategies() {
+      return this.strategies;
+    }
+  }
+  class rt {
+    constructor(e = {}) {
+      g(this, "strategy");
+      g(this, "charCodeStrategy");
+      g(this, "regexStrategy");
+      g(this, "config");
+      this.config = {
+        sensitivity: "medium",
+        minRTLChars: 3,
+        sampleSize: 100,
+        ...e
+      }, this.charCodeStrategy = new Mt(this.config);
+      const n = this.getThresholdFromSensitivity(this.config.sensitivity);
+      this.regexStrategy = new Pt(!0, !0, n, this.config.minRTLChars), this.strategy = new it([
+        this.charCodeStrategy,
+        this.regexStrategy
+      ]);
+    }
+    getThresholdFromSensitivity(e) {
+      switch (e) {
+        case "high":
+          return 0.1;
+        case "medium":
+          return 0.15;
+        case "low":
+          return 0.4;
+        default:
+          return 0.15;
+      }
+    }
+    setStrategy(e) {
+      switch (e) {
+        case "CharacterCode":
+          this.strategy = this.charCodeStrategy;
+          break;
+        case "Regex":
+          this.strategy = this.regexStrategy;
+          break;
+        case "Combined":
+          this.strategy = new it([
+            this.charCodeStrategy,
+            this.regexStrategy
+          ]);
+          break;
+      }
+    }
+    /**
+     * Detect RTL content in text using current strategy
+     */
+    detectRTL(e) {
+      return this.strategy.detect(e);
+    }
+    /**
+     * Detect RTL in multiple text segments
+     */
+    detectRTLInSegments(e) {
+      return e.map((n) => this.detectRTL(n));
+    }
+    /**
+     * Update detection configuration
+     */
+    updateConfig(e) {
+      this.config = { ...this.config, ...e }, this.charCodeStrategy.updateConfig(e);
+      const n = this.getThresholdFromSensitivity(this.config.sensitivity);
+      this.regexStrategy.updateConfig({
+        minRTLChars: e.minRTLChars,
+        threshold: n
+      });
+    }
+  }
+  const X = [
     {
       id: "default",
       name: "Default CSS",
@@ -1007,8 +1191,8 @@ button.rtl-force,
     padding-left: 0 !important;
     padding-right: 0.9em !important;
 }`,
-      dynamicCSS: O,
-      targetSelectors: J,
+      dynamicCSS: U,
+      targetSelectors: G,
       disabledSelectors: [],
       isBuiltIn: !0
     },
@@ -1169,14 +1353,14 @@ ul {
       darkMode: !1,
       method: "all",
       customCSS: "",
-      dynamicCSS: O,
+      dynamicCSS: U,
       permanentCSS: !1,
       visualStyles: {
         fontFamily: "inherit",
         lineHeight: 1.5,
         paragraphMargin: 1
       },
-      targetSelectors: J,
+      targetSelectors: G,
       disabledSelectors: [],
       minRTLChars: 3,
       processInterval: 2e3,
@@ -1195,8 +1379,8 @@ ul {
         if (B)
           e(B);
         else {
-          const j = localStorage.getItem("blinko-rtl-settings");
-          if (j)
+          const B = localStorage.getItem("blinko-rtl-settings");
+          if (B)
             try {
               const X = JSON.parse(j);
               e((Ht) => ({ ...Ht, ...X }));
@@ -1238,11 +1422,16 @@ ul {
         const S = u.detectRTL(n);
         r(S ? "RTL" : "LTR");
       } else
-        console.warn("RTL Detector not found via global API");
+        try {
+          const C = new rt().detectRTL(n);
+          o(C ? "RTL" : "LTR");
+        } catch (x) {
+          console.error("Failed to create fallback detector", x), console.warn("RTL Detector not found via global API or fallback");
+        }
     }, k = () => {
       window.blinkoRTL && (window.blinkoRTL.processAll(), window.Blinko.toast.success("Content processed!"));
     }, w = () => {
-      if (!l)
+      if (!s)
         return;
       const g = [...G, ...t.savedPresets || []].find((S) => S.id === l);
       g && (f({
@@ -1257,7 +1446,7 @@ ul {
         return;
       const g = {
         id: `custom-${Date.now()}`,
-        name: u,
+        name: p,
         css: t.customCSS,
         dynamicCSS: t.dynamicCSS,
         targetSelectors: t.targetSelectors,
@@ -1279,7 +1468,7 @@ ul {
       }), c(""));
     }, W = () => {
       if (confirm("Reset all settings to defaults? This cannot be undone.")) {
-        const u = {
+        const p = {
           ...nt,
           savedPresets: t.savedPresets || []
           // Preserve user presets
@@ -1310,7 +1499,7 @@ ul {
         }
       }, S.readAsText(g), u.target.value = "";
     };
-    return /* @__PURE__ */ s(
+    return /* @__PURE__ */ l(
       "div",
       {
         className: t.darkMode ? "rtl-settings-dark" : "",
@@ -1323,20 +1512,20 @@ ul {
           color: t.darkMode ? "#e0e0e0" : "#000"
         },
         children: [
-          /* @__PURE__ */ s("div", { style: { marginBottom: "30px", paddingBottom: "20px", borderBottom: "2px solid #eee" }, children: [
-            /* @__PURE__ */ s("h2", { style: { margin: "0 0 10px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🔧 Fixed RTL Language Support Settings" }),
-            /* @__PURE__ */ s("p", { style: { margin: "0", color: t.darkMode ? "#aaa" : "#666", fontSize: "14px" }, children: "Precise RTL support with manual control and optional permanent CSS injection." })
+          /* @__PURE__ */ l("div", { style: { marginBottom: "30px", paddingBottom: "20px", borderBottom: "2px solid #eee" }, children: [
+            /* @__PURE__ */ l("h2", { style: { margin: "0 0 10px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🔧 Fixed RTL Language Support Settings" }),
+            /* @__PURE__ */ l("p", { style: { margin: "0", color: t.darkMode ? "#aaa" : "#666", fontSize: "14px" }, children: "Precise RTL support with manual control and optional permanent CSS injection." })
           ] }),
-          /* @__PURE__ */ s("div", { style: {
+          /* @__PURE__ */ l("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "2px solid #007bff",
             borderRadius: "8px",
             background: t.darkMode ? "#2c3e50" : "#f8f9ff"
           }, children: [
-            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: "#007bff" }, children: "⚡ Quick Actions" }),
-            /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "15px" }, children: [
-              /* @__PURE__ */ s(
+            /* @__PURE__ */ l("h3", { style: { margin: "0 0 15px 0", color: "#007bff" }, children: "⚡ Quick Actions" }),
+            /* @__PURE__ */ l("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "15px" }, children: [
+              /* @__PURE__ */ l(
                 "button",
                 {
                   onClick: k,
@@ -1353,12 +1542,12 @@ ul {
                   children: "🔄 Process All Content"
                 }
               ),
-              /* @__PURE__ */ s(
+              /* @__PURE__ */ l(
                 "button",
                 {
                   onClick: () => {
-                    var u;
-                    (u = window.blinkoRTL) == null || u.toggle(), window.Blinko.toast.success("RTL toggled!");
+                    var p;
+                    (p = window.blinkoRTL) == null || p.toggle(), window.Blinko.toast.success("RTL toggled!");
                   },
                   style: {
                     background: "#007bff",
@@ -1374,7 +1563,7 @@ ul {
               )
             ] })
           ] }),
-          /* @__PURE__ */ s("div", { style: {
+          /* @__PURE__ */ l("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "1px solid #ddd",
@@ -1383,13 +1572,13 @@ ul {
             maxHeight: "300px",
             overflowY: "auto"
           }, children: [
-            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "📜 Real-time Action Log" }),
-            p.length === 0 ? /* @__PURE__ */ s("p", { style: { color: t.darkMode ? "#aaa" : "#666", fontStyle: "italic" }, children: "No actions recorded yet..." }) : /* @__PURE__ */ s("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "12px", color: t.darkMode ? "#ccc" : "#000" }, children: [
-              /* @__PURE__ */ s("thead", { children: /* @__PURE__ */ s("tr", { style: { textAlign: "left", borderBottom: "1px solid #ccc" }, children: [
-                /* @__PURE__ */ s("th", { style: { padding: "5px" }, children: "Time" }),
-                /* @__PURE__ */ s("th", { style: { padding: "5px" }, children: "Element" }),
-                /* @__PURE__ */ s("th", { style: { padding: "5px" }, children: "Action" }),
-                /* @__PURE__ */ s("th", { style: { padding: "5px" }, children: "Details" })
+            /* @__PURE__ */ l("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "📜 Real-time Action Log" }),
+            u.length === 0 ? /* @__PURE__ */ l("p", { style: { color: t.darkMode ? "#aaa" : "#666", fontStyle: "italic" }, children: "No actions recorded yet..." }) : /* @__PURE__ */ l("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "12px", color: t.darkMode ? "#ccc" : "#000" }, children: [
+              /* @__PURE__ */ l("thead", { children: /* @__PURE__ */ l("tr", { style: { textAlign: "left", borderBottom: "1px solid #ccc" }, children: [
+                /* @__PURE__ */ l("th", { style: { padding: "5px" }, children: "Time" }),
+                /* @__PURE__ */ l("th", { style: { padding: "5px" }, children: "Element" }),
+                /* @__PURE__ */ l("th", { style: { padding: "5px" }, children: "Action" }),
+                /* @__PURE__ */ l("th", { style: { padding: "5px" }, children: "Details" })
               ] }) }),
               /* @__PURE__ */ s("tbody", { children: p.map((u, g) => /* @__PURE__ */ s("tr", { style: { borderBottom: t.darkMode ? "1px solid #444" : "1px solid #eee" }, children: [
                 /* @__PURE__ */ s("td", { style: { padding: "5px", whiteSpace: "nowrap" }, children: u.timestamp }),
@@ -1399,17 +1588,17 @@ ul {
               ] }, g)) })
             ] })
           ] }),
-          /* @__PURE__ */ s("div", { style: {
+          /* @__PURE__ */ l("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "1px solid #ddd",
             borderRadius: "8px",
             background: t.darkMode ? "#333" : "#fafafa"
           }, children: [
-            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🎛️ Mode Settings" }),
-            /* @__PURE__ */ s("div", { style: { display: "grid", gap: "15px" }, children: [
-              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ s(
+            /* @__PURE__ */ l("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🎛️ Mode Settings" }),
+            /* @__PURE__ */ l("div", { style: { display: "grid", gap: "15px" }, children: [
+              /* @__PURE__ */ l("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ l(
                   "input",
                   {
                     type: "checkbox",
@@ -1417,10 +1606,10 @@ ul {
                     onChange: (u) => f({ enabled: u.target.checked })
                   }
                 ),
-                /* @__PURE__ */ s("span", { children: "🔧 Enable RTL Support" })
+                /* @__PURE__ */ l("span", { children: "🔧 Enable RTL Support" })
               ] }),
-              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ s(
+              /* @__PURE__ */ l("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ l(
                   "input",
                   {
                     type: "checkbox",
@@ -1429,11 +1618,11 @@ ul {
                     disabled: !t.enabled
                   }
                 ),
-                /* @__PURE__ */ s("span", { children: "✋ Manual Mode (Recommended)" })
+                /* @__PURE__ */ l("span", { children: "✋ Manual Mode (Recommended)" })
               ] }),
-              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Manual mode only applies RTL when clearly detected, preventing unwanted changes" }),
-              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ s(
+              /* @__PURE__ */ l("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Manual mode only applies RTL when clearly detected, preventing unwanted changes" }),
+              /* @__PURE__ */ l("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ l(
                   "input",
                   {
                     type: "checkbox",
@@ -1441,11 +1630,11 @@ ul {
                     onChange: (u) => f({ mobileView: u.target.checked })
                   }
                 ),
-                /* @__PURE__ */ s("span", { children: "📱 Mobile View" })
+                /* @__PURE__ */ l("span", { children: "📱 Mobile View" })
               ] }),
-              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Optimizes layout for mobile devices" }),
-              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ s(
+              /* @__PURE__ */ l("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Optimizes layout for mobile devices" }),
+              /* @__PURE__ */ l("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ l(
                   "input",
                   {
                     type: "checkbox",
@@ -1458,11 +1647,11 @@ ul {
                     disabled: !t.enabled
                   }
                 ),
-                /* @__PURE__ */ s("span", { children: "🐞 Visual Debugger" })
+                /* @__PURE__ */ l("span", { children: "🐞 Visual Debugger" })
               ] }),
-              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Highlights detected RTL (Red) and LTR (Blue) elements with tooltips" }),
-              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ s(
+              /* @__PURE__ */ l("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Highlights detected RTL (Red) and LTR (Blue) elements with tooltips" }),
+              /* @__PURE__ */ l("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ l(
                   "input",
                   {
                     type: "checkbox",
@@ -1471,11 +1660,11 @@ ul {
                     disabled: !t.enabled
                   }
                 ),
-                /* @__PURE__ */ s("span", { children: "🤖 Auto-detect All Content" })
+                /* @__PURE__ */ l("span", { children: "🤖 Auto-detect All Content" })
               ] }),
-              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Continuously processes all content on the page every 2 seconds" }),
-              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ s(
+              /* @__PURE__ */ l("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Continuously processes all content on the page every 2 seconds" }),
+              /* @__PURE__ */ l("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ l(
                   "input",
                   {
                     type: "checkbox",
@@ -1489,11 +1678,11 @@ ul {
                     disabled: !t.enabled
                   }
                 ),
-                /* @__PURE__ */ s("span", { children: "🔄 Manual RTL Toggle" })
+                /* @__PURE__ */ l("span", { children: "🔄 Manual RTL Toggle" })
               ] }),
-              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Forces RTL on all content when enabled, ignores detection" }),
-              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ s(
+              /* @__PURE__ */ l("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Forces RTL on all content when enabled, ignores detection" }),
+              /* @__PURE__ */ l("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ l(
                   "input",
                   {
                     type: "checkbox",
@@ -1504,22 +1693,22 @@ ul {
                     }
                   }
                 ),
-                /* @__PURE__ */ s("span", { children: "🌙 Dark Mode Plugin UI" })
+                /* @__PURE__ */ l("span", { children: "🌙 Dark Mode Plugin UI" })
               ] }),
-              /* @__PURE__ */ s("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Applies dark styling to RTL plugin components only" })
+              /* @__PURE__ */ l("p", { style: { margin: "0 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "Applies dark styling to RTL plugin components only" })
             ] })
           ] }),
-          /* @__PURE__ */ s("div", { style: {
+          /* @__PURE__ */ l("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "2px solid #6610f2",
             borderRadius: "8px",
             background: t.darkMode ? "#2c2c3e" : "#f8f9ff"
           }, children: [
-            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: "#6610f2" }, children: "🎨 Dynamic CSS Rules" }),
-            /* @__PURE__ */ s("p", { style: { margin: "0 0 15px 0", fontSize: "14px", color: t.darkMode ? "#aaa" : "#666" }, children: "These CSS rules are applied dynamically when RTL or LTR content is detected. Customize the class definitions below to control how detected elements are styled." }),
-            /* @__PURE__ */ s("div", { style: { marginBottom: "15px" }, children: [
-              /* @__PURE__ */ s(
+            /* @__PURE__ */ l("h3", { style: { margin: "0 0 15px 0", color: "#6610f2" }, children: "🎨 Dynamic CSS Rules" }),
+            /* @__PURE__ */ l("p", { style: { margin: "0 0 15px 0", fontSize: "14px", color: t.darkMode ? "#aaa" : "#666" }, children: "These CSS rules are applied dynamically when RTL or LTR content is detected. Customize the class definitions below to control how detected elements are styled." }),
+            /* @__PURE__ */ l("div", { style: { marginBottom: "15px" }, children: [
+              /* @__PURE__ */ l(
                 "textarea",
                 {
                   value: t.dynamicCSS,
@@ -1540,10 +1729,10 @@ ul {
                   }
                 }
               ),
-              h && /* @__PURE__ */ s("div", { style: { color: "red", fontSize: "12px", marginTop: "5px" }, children: h })
+              h && /* @__PURE__ */ l("div", { style: { color: "red", fontSize: "12px", marginTop: "5px" }, children: h })
             ] }),
-            /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap" }, children: [
-              /* @__PURE__ */ s(
+            /* @__PURE__ */ l("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap" }, children: [
+              /* @__PURE__ */ l(
                 "button",
                 {
                   onClick: z,
@@ -1559,7 +1748,7 @@ ul {
                   children: "🔄 Reset Dynamic CSS"
                 }
               ),
-              /* @__PURE__ */ s(
+              /* @__PURE__ */ l(
                 "button",
                 {
                   onClick: () => {
@@ -1583,17 +1772,17 @@ ul {
               )
             ] })
           ] }),
-          /* @__PURE__ */ s("div", { style: {
+          /* @__PURE__ */ l("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "1px solid #28a745",
             borderRadius: "8px",
             background: t.darkMode ? "#1e3023" : "#f8fff8"
           }, children: [
-            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: "#28a745" }, children: "📌 Permanent CSS Settings" }),
-            /* @__PURE__ */ s("div", { style: { marginBottom: "15px" }, children: [
-              /* @__PURE__ */ s("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
-                /* @__PURE__ */ s(
+            /* @__PURE__ */ l("h3", { style: { margin: "0 0 15px 0", color: "#28a745" }, children: "📌 Permanent CSS Settings" }),
+            /* @__PURE__ */ l("div", { style: { marginBottom: "15px" }, children: [
+              /* @__PURE__ */ l("label", { style: { display: "flex", alignItems: "center", gap: "10px", fontWeight: "500", cursor: "pointer" }, children: [
+                /* @__PURE__ */ l(
                   "input",
                   {
                     type: "checkbox",
@@ -1602,18 +1791,18 @@ ul {
                     disabled: !t.enabled
                   }
                 ),
-                /* @__PURE__ */ s("span", { children: "Enable Permanent CSS Injection" })
+                /* @__PURE__ */ l("span", { children: "Enable Permanent CSS Injection" })
               ] }),
-              /* @__PURE__ */ s("p", { style: { margin: "5px 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "This CSS is injected permanently as long as the plugin is enabled, regardless of RTL detection. Use this for global overrides." })
+              /* @__PURE__ */ l("p", { style: { margin: "5px 0 0 30px", fontSize: "12px", color: t.darkMode ? "#aaa" : "#666" }, children: "This CSS is injected permanently as long as the plugin is enabled, regardless of RTL detection. Use this for global overrides." })
             ] }),
-            /* @__PURE__ */ s("div", { style: { marginBottom: "15px", padding: "15px", background: t.darkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", borderRadius: "6px" }, children: [
-              /* @__PURE__ */ s("label", { style: { display: "block", fontWeight: "500", marginBottom: "8px" }, children: "📚 CSS Presets:" }),
-              /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }, children: [
-                /* @__PURE__ */ s(
+            /* @__PURE__ */ l("div", { style: { marginBottom: "15px", padding: "15px", background: t.darkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", borderRadius: "6px" }, children: [
+              /* @__PURE__ */ l("label", { style: { display: "block", fontWeight: "500", marginBottom: "8px" }, children: "📚 CSS Presets:" }),
+              /* @__PURE__ */ l("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }, children: [
+                /* @__PURE__ */ l(
                   "select",
                   {
-                    value: l,
-                    onChange: (u) => c(u.target.value),
+                    value: s,
+                    onChange: (p) => c(p.target.value),
                     disabled: !t.enabled,
                     style: {
                       flex: 1,
@@ -1625,17 +1814,17 @@ ul {
                       color: t.darkMode ? "#eee" : "black"
                     },
                     children: [
-                      /* @__PURE__ */ s("option", { value: "", children: "-- Select a Preset --" }),
-                      /* @__PURE__ */ s("optgroup", { label: "Built-in Presets", children: G.map((u) => /* @__PURE__ */ s("option", { value: u.id, children: u.name }, u.id)) }),
-                      t.savedPresets && t.savedPresets.length > 0 && /* @__PURE__ */ s("optgroup", { label: "Saved Presets", children: t.savedPresets.map((u) => /* @__PURE__ */ s("option", { value: u.id, children: u.name }, u.id)) })
+                      /* @__PURE__ */ l("option", { value: "", children: "-- Select a Preset --" }),
+                      /* @__PURE__ */ l("optgroup", { label: "Built-in Presets", children: X.map((p) => /* @__PURE__ */ l("option", { value: p.id, children: p.name }, p.id)) }),
+                      t.savedPresets && t.savedPresets.length > 0 && /* @__PURE__ */ l("optgroup", { label: "Saved Presets", children: t.savedPresets.map((p) => /* @__PURE__ */ l("option", { value: p.id, children: p.name }, p.id)) })
                     ]
                   }
                 ),
-                /* @__PURE__ */ s(
+                /* @__PURE__ */ l(
                   "button",
                   {
                     onClick: w,
-                    disabled: !t.enabled || !l,
+                    disabled: !t.enabled || !s,
                     style: {
                       background: "#17a2b8",
                       color: "white",
@@ -1647,7 +1836,7 @@ ul {
                     children: "📥 Load"
                   }
                 ),
-                /* @__PURE__ */ s(
+                /* @__PURE__ */ l(
                   "button",
                   {
                     onClick: P,
@@ -1659,7 +1848,7 @@ ul {
                       padding: "8px 16px",
                       borderRadius: "4px",
                       cursor: "pointer",
-                      opacity: G.some((u) => u.id === l) ? 0.5 : 1
+                      opacity: X.some((p) => p.id === s) ? 0.5 : 1
                     },
                     title: "Delete selected preset",
                     children: "🗑️"
@@ -1667,9 +1856,9 @@ ul {
                 )
               ] })
             ] }),
-            /* @__PURE__ */ s("div", { style: { marginBottom: "15px" }, children: [
-              /* @__PURE__ */ s("label", { style: { display: "block", fontWeight: "500", marginBottom: "5px" }, children: "Custom CSS Code (Permanent):" }),
-              /* @__PURE__ */ s(
+            /* @__PURE__ */ l("div", { style: { marginBottom: "15px" }, children: [
+              /* @__PURE__ */ l("label", { style: { display: "block", fontWeight: "500", marginBottom: "5px" }, children: "Custom CSS Code (Permanent):" }),
+              /* @__PURE__ */ l(
                 "textarea",
                 {
                   value: t.customCSS,
@@ -1691,8 +1880,8 @@ ul {
                 }
               )
             ] }),
-            /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap" }, children: [
-              /* @__PURE__ */ s(
+            /* @__PURE__ */ l("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap" }, children: [
+              /* @__PURE__ */ l(
                 "button",
                 {
                   onClick: A,
@@ -1708,7 +1897,7 @@ ul {
                   children: "💾 Save as New Preset"
                 }
               ),
-              /* @__PURE__ */ s(
+              /* @__PURE__ */ l(
                 "button",
                 {
                   onClick: () => f({ customCSS: "" }),
@@ -1726,19 +1915,19 @@ ul {
               )
             ] })
           ] }),
-          /* @__PURE__ */ s("div", { style: {
+          /* @__PURE__ */ l("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "1px solid #ddd",
             borderRadius: "8px",
             background: t.darkMode ? "#333" : "#fafafa"
           }, children: [
-            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🧪 Test RTL Detection" }),
-            /* @__PURE__ */ s("div", { style: { marginBottom: "15px" }, children: /* @__PURE__ */ s(
+            /* @__PURE__ */ l("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🧪 Test RTL Detection" }),
+            /* @__PURE__ */ l("div", { style: { marginBottom: "15px" }, children: /* @__PURE__ */ l(
               "textarea",
               {
                 value: n,
-                onChange: (u) => i(u.target.value),
+                onChange: (p) => i(p.target.value),
                 placeholder: "Enter text to test RTL detection...",
                 style: {
                   width: "100%",
@@ -1753,7 +1942,7 @@ ul {
                 }
               }
             ) }),
-            /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", marginBottom: "15px" }, children: /* @__PURE__ */ s(
+            /* @__PURE__ */ l("div", { style: { display: "flex", gap: "10px", marginBottom: "15px" }, children: /* @__PURE__ */ l(
               "button",
               {
                 onClick: y,
@@ -1768,28 +1957,28 @@ ul {
                 children: "🧪 Test Detection"
               }
             ) }),
-            o && /* @__PURE__ */ s("div", { style: {
+            r && /* @__PURE__ */ l("div", { style: {
               padding: "10px",
-              background: o === "RTL" ? "#d4edda" : "#f8d7da",
+              background: r === "RTL" ? "#d4edda" : "#f8d7da",
               borderRadius: "4px",
-              borderLeft: `4px solid ${o === "RTL" ? "#28a745" : "#dc3545"}`,
+              borderLeft: `4px solid ${r === "RTL" ? "#28a745" : "#dc3545"}`,
               marginBottom: "15px",
               color: "#333"
             }, children: [
               "Detection Result: ",
-              /* @__PURE__ */ s("strong", { children: o === "RTL" ? "➡️ RTL" : "⬅️ LTR" })
+              /* @__PURE__ */ l("strong", { children: r === "RTL" ? "➡️ RTL" : "⬅️ LTR" })
             ] })
           ] }),
-          /* @__PURE__ */ s("div", { style: {
+          /* @__PURE__ */ l("div", { style: {
             marginBottom: "30px",
             padding: "20px",
             border: "1px solid #ddd",
             borderRadius: "8px",
             background: t.darkMode ? "#333" : "#fafafa"
           }, children: [
-            /* @__PURE__ */ s("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🔧 Advanced Actions" }),
-            /* @__PURE__ */ s("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }, children: [
-              /* @__PURE__ */ s(
+            /* @__PURE__ */ l("h3", { style: { margin: "0 0 15px 0", color: t.darkMode ? "#fff" : "#333" }, children: "🔧 Advanced Actions" }),
+            /* @__PURE__ */ l("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }, children: [
+              /* @__PURE__ */ l(
                 "button",
                 {
                   type: "button",
@@ -1806,7 +1995,7 @@ ul {
                   children: "🔄 Reset to Defaults"
                 }
               ),
-              /* @__PURE__ */ s(
+              /* @__PURE__ */ l(
                 "button",
                 {
                   type: "button",
@@ -1823,7 +2012,7 @@ ul {
                   children: "📋 Export Settings (JSON)"
                 }
               ),
-              /* @__PURE__ */ s("label", { style: {
+              /* @__PURE__ */ l("label", { style: {
                 padding: "10px 20px",
                 background: "#007bff",
                 color: "white",
@@ -1833,12 +2022,12 @@ ul {
                 display: "inline-block"
               }, children: [
                 "📂 Import Settings (JSON)",
-                /* @__PURE__ */ s(
+                /* @__PURE__ */ l(
                   "input",
                   {
                     type: "file",
                     accept: ".json",
-                    onChange: U,
+                    onChange: j,
                     style: { display: "none" }
                   }
                 )
@@ -1850,7 +2039,7 @@ ul {
       }
     );
   }
-  const it = {
+  const ot = {
     name: "blinko-plugin-rtl-support",
     author: "Daniel-OS01",
     url: "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
@@ -2053,11 +2242,11 @@ ul {
   }
   function rt(t, e, n = !1) {
     let i = null;
-    return function(...o) {
-      const r = this, l = function() {
-        i = null, n || t.apply(r, o);
+    return function(...r) {
+      const o = this, s = function() {
+        i = null, n || t.apply(o, r);
       }, c = n && !i;
-      i && clearTimeout(i), i = setTimeout(l, e), c && t.apply(r, o);
+      i && clearTimeout(i), i = setTimeout(s, e), c && t.apply(o, r);
     };
   }
   class Dt {
@@ -2072,7 +2261,7 @@ ul {
         const n = e.target;
         if (!this.isEditable(n))
           return;
-        const i = (o = e.clipboardData) == null ? void 0 : o.getData("text/plain");
+        const i = (r = e.clipboardData) == null ? void 0 : r.getData("text/plain");
         i && this.detectMixedContent(i) && (e.preventDefault(), e.stopPropagation(), this.showSuggestionToast(i, n));
       });
       this.detector = e;
@@ -2091,7 +2280,7 @@ ul {
       return n > 3 && i > 3;
     }
     showSuggestionToast(e, n) {
-      var o, r, l, c;
+      var r, o, s, c;
       this.removeToast();
       const i = document.createElement("div");
       i.className = "rtl-paste-toast", i.innerHTML = `
@@ -2119,11 +2308,11 @@ ul {
         maxWidth: "350px",
         fontFamily: "sans-serif",
         fontSize: "14px"
-      }), document.body.appendChild(i), this.activeToast = i, (o = i.querySelector("#rtl-btn-split")) == null || o.addEventListener("click", () => {
+      }), document.body.appendChild(i), this.activeToast = i, (r = i.querySelector("#rtl-btn-split")) == null || r.addEventListener("click", () => {
         this.insertText(n, this.processSplit(e)), this.removeToast();
-      }), (r = i.querySelector("#rtl-btn-wrap")) == null || r.addEventListener("click", () => {
+      }), (o = i.querySelector("#rtl-btn-wrap")) == null || o.addEventListener("click", () => {
         this.insertText(n, this.processWrap(e)), this.removeToast();
-      }), (l = i.querySelector("#rtl-btn-original")) == null || l.addEventListener("click", () => {
+      }), (s = i.querySelector("#rtl-btn-original")) == null || s.addEventListener("click", () => {
         this.insertText(n, e), this.removeToast();
       }), (c = i.querySelector(".rtl-toast-close")) == null || c.addEventListener("click", () => {
         this.removeToast();
@@ -2134,20 +2323,20 @@ ul {
     }
     insertText(e, n) {
       if (e.tagName === "TEXTAREA" || e.tagName === "INPUT") {
-        const i = e, o = i.selectionStart || 0, r = i.selectionEnd || 0;
-        i.value = i.value.substring(0, o) + n + i.value.substring(r), i.selectionStart = i.selectionEnd = o + n.length, i.dispatchEvent(new Event("input", { bubbles: !0 }));
+        const i = e, r = i.selectionStart || 0, o = i.selectionEnd || 0;
+        i.value = i.value.substring(0, r) + n + i.value.substring(o), i.selectionStart = i.selectionEnd = r + n.length, i.dispatchEvent(new Event("input", { bubbles: !0 }));
       } else if (e.focus(), !document.execCommand("insertText", !1, n)) {
-        const o = window.getSelection();
-        if (o && o.rangeCount > 0) {
-          const r = o.getRangeAt(0);
-          r.deleteContents(), r.insertNode(document.createTextNode(n)), r.collapse(!1);
+        const r = window.getSelection();
+        if (r && r.rangeCount > 0) {
+          const o = r.getRangeAt(0);
+          o.deleteContents(), o.insertNode(document.createTextNode(n)), o.collapse(!1);
         }
       }
     }
     processSplit(e) {
       const n = /([\u0590-\u05FF\u0600-\u06FF]+[\s\u0590-\u05FF\u0600-\u06FF]*)/g;
-      let i = e.replace(n, (o) => `
-${o}
+      let i = e.replace(n, (r) => `
+${r}
 `);
       return i = i.replace(/\n{3,}/g, `
 
@@ -2183,8 +2372,14 @@ ${o}
       v(this, "processElement", (e) => {
         if (!e)
           return;
-        if (this.settings.disabledSelectors && this.settings.disabledSelectors.some((o) => e.matches(o))) {
-          console.log("Skipping disabled element:", e.tagName);
+        const n = (s, c) => {
+          try {
+            return s.matches(c);
+          } catch (u) {
+            return console.warn(`Invalid selector '${c}':`, u), !1;
+          }
+        };
+        if (this.settings.disabledSelectors && this.settings.disabledSelectors.some((s) => n(e, s)) || e.closest(".flex, .grid, header, nav, .sidebar, .toolbar") && n(e, ".flex, .grid, header, nav, .sidebar, .toolbar"))
           return;
         }
         const n = e.textContent || e.value || e.placeholder || "";
@@ -2192,50 +2387,52 @@ ${o}
           console.log("Skipping short text");
           return;
         }
-        let i = !1;
+        let r = "neutral";
         if (this.settings.manualToggle)
-          i = !0;
+          r = "rtl";
         else if (this.settings.forceDirection === "rtl")
-          i = !0;
+          r = "rtl";
         else if (this.settings.forceDirection === "ltr")
-          i = !1;
-        else if (e.matches("pre, code, .code-block, .CodeMirror-line, .notion-code-block")) {
-          const r = (n.match(/[\u0590-\u05FF]/g) || []).length, l = (n.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g) || []).length, c = r + l, p = n.replace(/\s/g, "").length || n.length;
-          c / p > 0.6 && (i = !0);
+          r = "ltr";
+        else if (n(e, "pre, code, .code-block, .CodeMirror-line, .notion-code-block")) {
+          const c = (i.match(/[\u0590-\u05FF]/g) || []).length, u = (i.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g) || []).length, a = c + u, h = i.replace(/\s/g, "").length || i.length;
+          a / h > 0.6 ? r = "rtl" : r = "ltr";
         } else
-          i = this.detector.detectRTL(n);
-        switch (this.logAction(e, i), this.settings.method) {
+          this.detector.detectRTL(i) ? r = "rtl" : /[a-zA-Z]/.test(i) ? r = "ltr" : r = "neutral";
+        const o = e.getAttribute("data-manual-dir");
+        switch (o === "rtl" && (r = "rtl"), o === "ltr" && (r = "ltr"), this.logAction(e, r), this.settings.method) {
           case "direct":
-            this.applyDirectRTL(e, i);
+            this.applyDirectRTL(e, r);
             break;
           case "attributes":
-            this.applyAttributeRTL(e, i);
+            this.applyAttributeRTL(e, r);
             break;
           case "css":
-            this.applyCSSClassRTL(e, i);
+            this.applyCSSClassRTL(e, r);
             break;
           case "unicode":
             this.applyUnicodeBidiRTL(e);
             break;
           case "all":
           default:
-            this.applyCSSClassRTL(e, i), this.applyAttributeRTL(e, i), this.applyDirectRTL(e, i);
+            this.applyCSSClassRTL(e, r), this.applyAttributeRTL(e, r);
             break;
         }
-        this.settings.processMixedContent && this.settings.mixedContent;
       });
       v(this, "processAllElements", () => {
         if (!this.isRTLEnabled)
           return;
-        const n = this.settings.targetSelectors.filter(
-          (i) => !this.settings.disabledSelectors.includes(i)
-        ).join(", ");
-        if (console.log("processAllElements selectors:", n), n) {
-          const i = document.querySelectorAll(n);
-          console.log("processAllElements found elements:", i.length), i.forEach((o) => {
-            this.processElement(o);
-          });
-        }
+        this.settings.targetSelectors.filter(
+          (n) => !this.settings.disabledSelectors.includes(n)
+        ).forEach((n) => {
+          try {
+            document.querySelectorAll(n).forEach((r) => {
+              this.processElement(r);
+            });
+          } catch (i) {
+            console.warn(`Invalid selector in processAllElements: '${n}'`, i);
+          }
+        });
       });
       this.detector = e, this.loadSettings(), this.pasteInterceptor = new Dt(e), this.debouncedProcessAll = rt(() => this.processAllElements(), 200), this.debouncedProcessQueue = rt(() => {
         this.processPendingElements();
@@ -2251,7 +2448,7 @@ ${o}
       const i = {
         timestamp: (/* @__PURE__ */ new Date()).toLocaleTimeString(),
         element: e.tagName.toLowerCase() + (e.id ? `#${e.id}` : "") + (e.className ? `.${e.className.split(" ").join(".")}` : ""),
-        direction: n ? "RTL" : "LTR",
+        direction: n.toUpperCase(),
         textPreview: (e.textContent || "").substring(0, 20) + "..."
       };
       this.actionLog.unshift(i), this.actionLog.length > this.MAX_LOG_SIZE && this.actionLog.pop(), window.dispatchEvent(new CustomEvent("rtl-action-logged", { detail: i }));
@@ -2265,10 +2462,10 @@ ${o}
         try {
           const n = JSON.parse(e);
           if (this.settings = { ...this.settings, ...n }, !n.targetSelectors || n.targetSelectors.length < 5) {
-            const i = new Set(n.targetSelectors || []), o = [.../* @__PURE__ */ new Set([...J, ...Array.from(i)])];
-            this.settings.targetSelectors = o;
+            const i = new Set(n.targetSelectors || []), r = [.../* @__PURE__ */ new Set([...G, ...Array.from(i)])];
+            this.settings.targetSelectors = r;
           }
-          this.settings.dynamicCSS || (this.settings.dynamicCSS = O), this.settings.disabledSelectors || (this.settings.disabledSelectors = []), this.settings.autoDetect === void 0 && (this.settings.autoDetect = !0), this.detector.updateConfig({
+          this.settings.dynamicCSS || (this.settings.dynamicCSS = U), this.settings.disabledSelectors || (this.settings.disabledSelectors = []), this.settings.autoDetect === void 0 && (this.settings.autoDetect = !0), this.detector.updateConfig({
             sensitivity: this.settings.sensitivity,
             minRTLChars: this.settings.minRTLChars
           }), this.settings.permanentCSS && this.settings.customCSS && this.injectPermanentCSS();
@@ -2293,7 +2490,7 @@ ${o}
     }
     injectDynamicCSS() {
       this.dynamicStyleElement || (this.dynamicStyleElement = document.createElement("style"), this.dynamicStyleElement.id = "blinko-rtl-dynamic-css", document.head.appendChild(this.dynamicStyleElement));
-      let e = this.settings.dynamicCSS || O;
+      let e = this.settings.dynamicCSS || U;
       this.settings.debugMode && (e.includes(".rtl-debug-rtl") || (e += `
 /* Visual Debugger - RTL Detected */
 .rtl-debug-rtl {
@@ -2346,21 +2543,15 @@ ${o}
     removeCSS() {
       this.styleElement && (this.styleElement.remove(), this.styleElement = null), this.settings.permanentCSS || this.removePermanentCSS(), this.removeDynamicCSS();
     }
-    // Method 1: Direct style application
-    // DEPRECATED: Moving to class-based application only, but kept for legacy method 'direct' if user specifically requests it
-    // However, we align it to avoid inline conflict with dynamic CSS
     applyDirectRTL(e, n) {
-      n ? (e.classList.add("blinko-detected-rtl"), e.style.direction = "rtl", e.style.textAlign = "right", e.style.unicodeBidi = "embed") : (e.classList.remove("blinko-detected-rtl"), e.style.removeProperty("direction"), e.style.removeProperty("text-align"), e.style.removeProperty("unicode-bidi")), this.applyDebugVisuals(e, n);
+      n === "rtl" ? (e.classList.add("blinko-detected-rtl"), e.style.direction = "rtl", e.style.textAlign = "right", e.style.unicodeBidi = "embed") : n === "ltr" ? (e.classList.remove("blinko-detected-rtl"), e.style.direction = "ltr", e.style.textAlign = "left", e.style.unicodeBidi = "embed") : (e.classList.remove("blinko-detected-rtl"), e.style.removeProperty("direction"), e.style.removeProperty("text-align"), e.style.removeProperty("unicode-bidi")), this.applyDebugVisuals(e, n);
     }
-    // Method 2: Attribute-based RTL
     applyAttributeRTL(e, n) {
-      n ? (e.setAttribute("dir", "rtl"), e.setAttribute("lang", "he")) : (e.setAttribute("dir", "ltr"), e.removeAttribute("lang")), this.applyDebugVisuals(e, n);
+      n === "rtl" ? (e.setAttribute("dir", "rtl"), e.setAttribute("lang", "he")) : n === "ltr" ? (e.setAttribute("dir", "ltr"), e.removeAttribute("lang")) : (e.removeAttribute("dir"), e.removeAttribute("lang")), this.applyDebugVisuals(e, n);
     }
-    // Method 3: CSS class-based RTL (Primary Method)
     applyCSSClassRTL(e, n) {
-      e.classList.remove("rtl-force", "ltr-force", "rtl-auto"), n ? e.classList.add("rtl-force") : e.classList.add("ltr-force"), this.applyDebugVisuals(e, n);
+      e.classList.remove("rtl-force", "ltr-force", "rtl-auto"), n === "rtl" ? e.classList.add("rtl-force") : n === "ltr" && e.classList.add("ltr-force"), this.applyDebugVisuals(e, n);
     }
-    // Method 4: Unicode bidi method
     applyUnicodeBidiRTL(e) {
       e.classList.add("rtl-auto"), e.style.unicodeBidi = "plaintext";
     }
@@ -2399,7 +2590,7 @@ ${o}
       })), e;
     }
     applyDebugVisuals(e, n) {
-      this.settings.debugMode ? (e.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), n ? (e.classList.add("rtl-debug-rtl"), e.setAttribute("data-rtl-debug", "RTL Detected")) : (e.classList.add("rtl-debug-ltr"), e.setAttribute("data-rtl-debug", "LTR Detected"))) : (e.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), e.removeAttribute("data-rtl-debug"));
+      this.settings.debugMode ? (e.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), n === "rtl" ? (e.classList.add("rtl-debug-rtl"), e.setAttribute("data-rtl-debug", "RTL Detected")) : n === "ltr" ? (e.classList.add("rtl-debug-ltr"), e.setAttribute("data-rtl-debug", "LTR Detected")) : e.removeAttribute("data-rtl-debug")) : (e.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), e.removeAttribute("data-rtl-debug"));
     }
     setupObserver() {
       this.observer && this.observer.disconnect(), this.settings.autoDetect && (this.observer = new MutationObserver((e) => {
@@ -2407,21 +2598,50 @@ ${o}
           return;
         let n = !1;
         const i = this.settings.targetSelectors.filter(
-          (r) => !this.settings.disabledSelectors.includes(r)
-        ), o = i.join(", ");
-        e.forEach((r) => {
-          if (r.type === "childList")
-            r.addedNodes.forEach((l) => {
-              if (l.nodeType === Node.ELEMENT_NODE) {
-                const c = l;
-                i.some((p) => c.matches(p)) && (this.pendingElements.add(c), n = !0), o && c.querySelector(o) && (c.querySelectorAll(o).forEach((p) => {
-                  this.pendingElements.add(p);
-                }), n = !0);
+          (s) => !this.settings.disabledSelectors.includes(s)
+        ), r = [];
+        i.forEach((s) => {
+          try {
+            document.querySelector(s), r.push(s);
+          } catch {
+          }
+        });
+        const o = r.join(", ");
+        e.forEach((s) => {
+          if (s.type === "childList")
+            s.addedNodes.forEach((c) => {
+              if (c.nodeType === Node.ELEMENT_NODE) {
+                const u = c;
+                let a = !1;
+                for (const h of r)
+                  if (u.matches(h)) {
+                    a = !0;
+                    break;
+                  }
+                if (a && (this.pendingElements.add(u), n = !0), o)
+                  try {
+                    const h = u.querySelectorAll(o);
+                    h.length > 0 && (h.forEach((d) => {
+                      this.pendingElements.add(d);
+                    }), n = !0);
+                  } catch {
+                  }
               }
             });
-          else if (r.type === "characterData" || r.type === "attributes") {
-            const l = r.target.nodeType === Node.ELEMENT_NODE ? r.target : r.target.parentElement;
-            l && i.some((c) => l.matches(c)) && (this.pendingElements.add(l), n = !0);
+          else if (s.type === "characterData" || s.type === "attributes") {
+            const c = s.target.nodeType === Node.ELEMENT_NODE ? s.target : s.target.parentElement;
+            if (c) {
+              let u = !1;
+              for (const a of r)
+                try {
+                  if (c.matches(a)) {
+                    u = !0;
+                    break;
+                  }
+                } catch {
+                }
+              u && (this.pendingElements.add(c), n = !0);
+            }
           }
         }), n && this.debouncedProcessQueue();
       }), this.observer.observe(document.body, {
@@ -2495,22 +2715,22 @@ ${o}
     execute: () => {
       const e = new $t(), n = new Bt(e);
       let i = null;
-      function o() {
+      function r() {
         if (i)
           return;
-        const p = n.getSettings();
+        const u = n.getSettings();
         i = document.createElement("button"), i.className = "rtl-toggle-btn", i.innerHTML = "ع/א", i.title = "Toggle RTL Support (Hebrew/Arabic)", i.addEventListener("click", () => {
-          n.toggle(), r();
-        }), document.body.appendChild(i), p.darkMode && i.classList.add("dark-mode"), r();
+          n.toggle(), o();
+        }), document.body.appendChild(i), u.darkMode && i.classList.add("dark-mode"), o();
       }
-      function r() {
+      function o() {
         i && (n.isEnabled() ? i.classList.add("active") : i.classList.remove("active"));
       }
-      function l() {
+      function s() {
         i && (i.remove(), i = null);
       }
       function c() {
-        console.log("Initializing Advanced Blinko RTL Plugin..."), o(), localStorage.getItem("blinko-rtl-enabled") === "true" && (n.enable(), r()), window.addEventListener("rtl-settings-changed", (a) => {
+        console.log("Initializing Advanced Blinko RTL Plugin..."), r(), localStorage.getItem("blinko-rtl-enabled") === "true" && (n.enable(), o()), window.addEventListener("rtl-settings-changed", (a) => {
           const h = a.detail;
           i && (h.darkMode ? i.classList.add("dark-mode") : i.classList.remove("dark-mode"));
         }), window.blinkoRTL = {
@@ -2518,13 +2738,13 @@ ${o}
           service: n,
           // Expose service
           toggle: () => {
-            n.toggle(), r();
+            n.toggle(), o();
           },
           enable: () => {
-            n.enable(), r();
+            n.enable(), o();
           },
           disable: () => {
-            n.disable(), r();
+            n.disable(), o();
           },
           isEnabled: () => n.isEnabled(),
           settings: () => n.getSettings(),
@@ -2564,24 +2784,24 @@ ${o}
             const a = document.createElement("div");
             return Ze(/* @__PURE__ */ s(At, {}), a), a;
           });
-          Object.assign(this, it);
+          Object.assign(this, ot);
         }
         async init() {
           this.initI18n(), document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", c) : setTimeout(c, 100), window.Blinko.addToolBarIcon({
             name: "rtl-support",
             icon: "<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m5 8 6 6'/><path d='m4 14 6-6 2-3'/><path d='M2 5h12'/><path d='M7 2h1'/><path d='m22 18-6-6'/><path d='m17 12-6 6-2 3'/><path d='M14 22h1'/><path d='M22 14h-7'/></svg>",
             placement: "top",
-            tooltip: `RTL Language Support (v${it.version}) (ع/א)`,
+            tooltip: `RTL Language Support (v${ot.version}) (ع/א)`,
             content: () => {
               const a = document.createElement("div");
-              return a.setAttribute("data-plugin", "rtl-support"), Ze(/* @__PURE__ */ s(Et, { detector: e }), a), a;
+              return a.setAttribute("data-plugin", "rtl-support"), Qe(/* @__PURE__ */ l(At, { detector: e }), a), a;
             }
           }), window.Blinko.addRightClickMenu({
             name: "rtl-toggle",
             label: "Toggle RTL (ع/א)",
             icon: "material-symbols:format-textdirection-r-to-l",
             onClick: () => {
-              n.toggle(), r();
+              n.toggle(), o();
               const a = window.Blinko.i18n;
               window.Blinko.toast.success(
                 n.isEnabled() ? a.t("rtl_enabled") : a.t("rtl_disabled")
@@ -2593,7 +2813,7 @@ ${o}
           window.Blinko.i18n.addResourceBundle("en", "translation", Ft), window.Blinko.i18n.addResourceBundle("zh", "translation", It), window.Blinko.i18n.addResourceBundle("he", "translation", Nt), window.Blinko.i18n.addResourceBundle("ar", "translation", zt);
         }
         destroy() {
-          n.disable(), l(), console.log("Advanced RTL Plugin destroyed");
+          n.disable(), s(), console.log("Advanced RTL Plugin destroyed");
         }
       });
     }

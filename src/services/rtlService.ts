@@ -32,6 +32,7 @@ export class RTLService {
 
   constructor(detector: RTLDetector) {
     this.detector = detector;
+    this.storageManager = new StorageManager();
     this.loadSettings();
     
     // Initialize Managers
@@ -52,11 +53,11 @@ export class RTLService {
     return [...this.actionLog];
   }
 
-  private logAction(element: HTMLElement, isRTL: boolean) {
+  private logAction(element: HTMLElement, direction: Direction) {
       const logEntry = {
           timestamp: new Date().toLocaleTimeString(),
           element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
-          direction: isRTL ? 'RTL' : 'LTR',
+          direction: direction.toUpperCase(),
           textPreview: (element.textContent || '').substring(0, 20) + '...'
       };
 
@@ -74,55 +75,41 @@ export class RTLService {
   }
 
   public loadSettings() {
-    const savedSettings = localStorage.getItem('blinko-rtl-settings');
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        // Merge with default settings to ensure new fields are present
-        this.settings = { ...this.settings, ...parsed };
+    const loadedSettings = this.storageManager.load();
+    if (loadedSettings) {
+        // Merge with default settings
+        this.settings = { ...this.settings, ...loadedSettings };
 
-        // Backwards compatibility for target selectors
-        if (!parsed.targetSelectors || parsed.targetSelectors.length < 5) {
-             // If selectors look like the old default list, merge with new defaults
-             const oldDefaults = new Set(parsed.targetSelectors || []);
-             const combined = [...new Set([...DEFAULT_TARGET_SELECTORS, ...Array.from(oldDefaults)])] as string[];
-             this.settings.targetSelectors = combined;
-        }
-
-        // Ensure dynamicCSS has a default if missing (migration)
+        // Ensure critical fields are initialized
         if (!this.settings.dynamicCSS) {
             this.settings.dynamicCSS = DEFAULT_DYNAMIC_CSS;
         }
-        // Ensure disabledSelectors is initialized
         if (!this.settings.disabledSelectors) {
             this.settings.disabledSelectors = [];
         }
-
-        // Ensure autoDetect defaults to true if undefined (fix for existing users)
         if (this.settings.autoDetect === undefined) {
             this.settings.autoDetect = true;
         }
 
+        // Apply config to detector
         this.detector.updateConfig({
           sensitivity: this.settings.sensitivity,
           minRTLChars: this.settings.minRTLChars
         });
 
+        // Inject persistent CSS if enabled
         if (this.settings.permanentCSS && this.settings.customCSS) {
           this.injectPermanentCSS();
         }
-      } catch (error) {
-        console.error('Failed to load RTL plugin settings:', error);
-      }
     } else {
-        // No saved settings, ensure we start with defaults (autoDetect: true)
+        // No saved settings, default to autoDetect
         this.settings.autoDetect = true;
     }
   }
 
   public updateSettings(newSettings: Partial<RTLSettings>) {
     this.settings = { ...this.settings, ...newSettings };
-    localStorage.setItem('blinko-rtl-settings', JSON.stringify(this.settings));
+    this.storageManager.save(this.settings);
 
     this.detector.updateConfig({
       sensitivity: this.settings.sensitivity,
@@ -156,6 +143,23 @@ export class RTLService {
           detail: this.settings
         })
     );
+  }
+
+  // Import/Export Proxy Methods
+  public exportSettings(): string {
+      return this.storageManager.export(this.settings);
+  }
+
+  public importSettings(jsonString: string) {
+      try {
+          const importedSettings = this.storageManager.import(jsonString);
+          // Apply imported settings (merge with current defaults to be safe)
+          this.updateSettings(importedSettings);
+          return true;
+      } catch (e) {
+          console.error('Import failed:', e);
+          throw e; // Re-throw for UI handling
+      }
   }
 
   private injectCSS() {
@@ -265,14 +269,16 @@ export class RTLService {
     this.removeDynamicCSS();
   }
 
-  // Method 1: Direct style application
-  // DEPRECATED: Moving to class-based application only, but kept for legacy method 'direct' if user specifically requests it
-  // However, we align it to avoid inline conflict with dynamic CSS
-  private applyDirectRTL(element: HTMLElement, isRTL: boolean) {
-    if (isRTL) {
+  private applyDirectRTL(element: HTMLElement, direction: Direction) {
+    if (direction === 'rtl') {
       element.classList.add('blinko-detected-rtl');
       element.style.direction = 'rtl';
       element.style.textAlign = 'right';
+      element.style.unicodeBidi = 'embed';
+    } else if (direction === 'ltr') {
+      element.classList.remove('blinko-detected-rtl');
+      element.style.direction = 'ltr';
+      element.style.textAlign = 'left';
       element.style.unicodeBidi = 'embed';
     } else {
       element.classList.remove('blinko-detected-rtl');
@@ -280,33 +286,33 @@ export class RTLService {
       element.style.removeProperty('text-align');
       element.style.removeProperty('unicode-bidi');
     }
-    this.applyDebugVisuals(element, isRTL);
+    this.applyDebugVisuals(element, direction);
   }
 
-  // Method 2: Attribute-based RTL
-  private applyAttributeRTL(element: HTMLElement, isRTL: boolean) {
-    if (isRTL) {
+  private applyAttributeRTL(element: HTMLElement, direction: Direction) {
+    if (direction === 'rtl') {
       element.setAttribute('dir', 'rtl');
       element.setAttribute('lang', 'he');
-    } else {
+    } else if (direction === 'ltr') {
       element.setAttribute('dir', 'ltr');
       element.removeAttribute('lang');
+    } else {
+        element.removeAttribute('dir');
+        element.removeAttribute('lang');
     }
-    this.applyDebugVisuals(element, isRTL);
+    this.applyDebugVisuals(element, direction);
   }
 
-  // Method 3: CSS class-based RTL (Primary Method)
-  private applyCSSClassRTL(element: HTMLElement, isRTL: boolean) {
+  private applyCSSClassRTL(element: HTMLElement, direction: Direction) {
     element.classList.remove('rtl-force', 'ltr-force', 'rtl-auto');
-    if (isRTL) {
+    if (direction === 'rtl') {
       element.classList.add('rtl-force');
-    } else {
+    } else if (direction === 'ltr') {
       element.classList.add('ltr-force');
     }
-    this.applyDebugVisuals(element, isRTL);
+    this.applyDebugVisuals(element, direction);
   }
 
-  // Method 4: Unicode bidi method
   private applyUnicodeBidiRTL(element: HTMLElement) {
     element.classList.add('rtl-auto');
     element.style.unicodeBidi = 'plaintext';
@@ -323,9 +329,19 @@ export class RTLService {
   public processElement = (element: HTMLElement) => {
     if (!element) return;
 
+    // Helper: Safely check matches
+    const safeMatches = (el: HTMLElement, selector: string) => {
+        try {
+            return el.matches(selector);
+        } catch (e) {
+            console.warn(`Invalid selector '${selector}':`, e);
+            return false;
+        }
+    };
+
     // Skip disabled selectors
-    if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => element.matches(selector))) {
-        console.log('Skipping disabled element:', element.tagName);
+    if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) {
+        // console.log('Skipping disabled element:', element.tagName);
         return;
     }
 
@@ -334,100 +350,92 @@ export class RTLService {
     // or if it's a content element.
 
     const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
-    console.log('Processing element:', element.tagName, 'Text:', text.substring(0, 10));
+    // console.log('Processing element:', element.tagName, 'Text:', text.substring(0, 10));
+
+    // Short text handling
     if (!text.trim() || text.length < this.settings.minRTLChars) {
-        console.log('Skipping short text');
-        // Even if empty, for inputs we might want to default to LTR if previously set to RTL?
-        // But let's avoid flickering.
+        // Neutral state for empty/short text to avoid forcing LTR on what might be an RTL placeholder
+        this.applyCSSClassRTL(element, 'neutral');
         return;
     }
 
-    let isRTL = false;
-
-    // We intentionally removed the explicit forceLTR variable to avoid confusion.
-    // The default state is isRTL = false, which will result in .ltr-force being applied
-    // via applyCSSClassRTL if 'all' or 'css' method is used.
-    // This effectively enforces LTR for anything that doesn't match RTL criteria.
+    let direction: Direction = 'neutral';
 
     // Manual toggle - force RTL on all
     if (this.settings.manualToggle) {
-      isRTL = true;
+      direction = 'rtl';
     }
     // Force direction override
     else if (this.settings.forceDirection === 'rtl') {
-      isRTL = true;
+      direction = 'rtl';
     }
     else if (this.settings.forceDirection === 'ltr') {
-      isRTL = false;
+      direction = 'ltr';
     }
     // Auto-detection with multiple methods
     else {
       // SPECIAL HANDLING FOR CODE BLOCKS
-      // If element is a code block, use stricter threshold to prevent mixed content from flipping entire block
-      const isCodeBlock = element.matches('pre, code, .code-block, .CodeMirror-line, .notion-code-block');
+      const isCodeBlock = safeMatches(element, 'pre, code, .code-block, .CodeMirror-line, .notion-code-block');
 
       if (isCodeBlock) {
-          // Stricter detection for code blocks
-          // We need a higher ratio of RTL characters to flip a code block
-          // Or we rely solely on detector with a higher threshold temporarily
-
-          // Count RTL chars manually for stricter check
           const hebrewChars = (text.match(/[\u0590-\u05FF]/g) || []).length;
           const arabicChars = (text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g) || []).length;
           const totalRTL = hebrewChars + arabicChars;
 
-          // Use non-whitespace length for more accurate ratio in code blocks
-          // (Code blocks often have significant indentation/whitespace)
           const nonWhitespaceLength = text.replace(/\s/g, '').length || text.length;
           const ratio = totalRTL / nonWhitespaceLength;
 
-          // Require at least 60% RTL (of visible characters) to flip a code block
           if (ratio > 0.6) {
-              isRTL = true;
+              direction = 'rtl';
+          } else {
+              direction = 'ltr'; // Code blocks default to LTR usually
           }
       } else {
-          // Normal detection using configured strategy (Strategy Pattern)
-          // This supports sensitivity settings and proper mixed content handling
-          isRTL = this.detector.detectRTL(text);
+          // Normal detection
+          const isRTL = this.detector.detectRTL(text);
+          if (isRTL) {
+              direction = 'rtl';
+          } else {
+              // Check if it's explicitly LTR (contains latin chars)
+              // If it has NO LTR chars (e.g. "123" or "!!!"), stay neutral
+              const hasLTR = /[a-zA-Z]/.test(text);
+              if (hasLTR) {
+                  direction = 'ltr';
+              } else {
+                  direction = 'neutral';
+              }
+          }
       }
     }
 
-    // Log the action for transparency
-    this.logAction(element, isRTL);
+    // Check manual override attribute
+    const manualDir = element.getAttribute('data-manual-dir');
+    if (manualDir === 'rtl') direction = 'rtl';
+    if (manualDir === 'ltr') direction = 'ltr';
 
-    // Special handling for code blocks:
-    // If it's a code block (isCodeBlock) and we found RTL (isRTL=true), we allow it.
-    // If we didn't find RTL (isRTL=false), it stays false, effectively forcing LTR via .ltr-force.
-    // This logic works without a separate forceLTR variable because .ltr-force is applied when isRTL is false.
+    // Log action if direction changed (optimization: only log changes?)
+    // For now log all for transparency
+    this.logAction(element, direction);
 
     // Apply RTL using selected method
     switch (this.settings.method) {
       case 'direct':
-        this.applyDirectRTL(element, isRTL);
+        this.applyDirectRTL(element, direction);
         break;
       case 'attributes':
-        this.applyAttributeRTL(element, isRTL);
+        this.applyAttributeRTL(element, direction);
         break;
       case 'css':
-        this.applyCSSClassRTL(element, isRTL);
+        this.applyCSSClassRTL(element, direction);
         break;
       case 'unicode':
         this.applyUnicodeBidiRTL(element);
         break;
       case 'all':
       default:
-        // Prioritize CSS Class method as it uses the dynamic CSS
-        this.applyCSSClassRTL(element, isRTL);
-        this.applyAttributeRTL(element, isRTL);
-
-        // Direct styles are still useful as fallback
-        this.applyDirectRTL(element, isRTL);
+        this.applyCSSClassRTL(element, direction);
+        this.applyAttributeRTL(element, direction);
         break;
-    }
-
-    // Handle mixed content if enabled
-    if (this.settings.processMixedContent && this.settings.mixedContent) {
-        // Implementation logic for mixed content could go here
     }
   }
 
@@ -438,16 +446,20 @@ export class RTLService {
     const activeSelectors = this.settings.targetSelectors.filter(
         s => !this.settings.disabledSelectors.includes(s)
     );
-    const selectors = activeSelectors.join(', ');
-    console.log('processAllElements selectors:', selectors);
-    if (selectors) {
-        const elements = document.querySelectorAll(selectors);
-        console.log('processAllElements found elements:', elements.length);
-        elements.forEach(element => {
-            this.processElement(element as HTMLElement);
-        });
-    }
 
+    // Robust selector processing
+    // Iterate individually to prevent one bad selector from crashing everything
+    activeSelectors.forEach(selector => {
+        try {
+            const elements = document.querySelectorAll(selector);
+            // console.log(`Processing selector '${selector}': found ${elements.length}`);
+            elements.forEach(element => {
+                this.processElement(element as HTMLElement);
+            });
+        } catch (e) {
+            console.warn(`Invalid selector in processAllElements: '${selector}'`, e);
+        }
+    });
   }
 
   private processPendingElements() {
@@ -530,15 +542,19 @@ export class RTLService {
       return newVal;
     }
 
-  private applyDebugVisuals(element: HTMLElement, isRTL: boolean) {
+  private applyDebugVisuals(element: HTMLElement, direction: Direction) {
       if (this.settings.debugMode) {
           element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
-          if (isRTL) {
+          if (direction === 'rtl') {
               element.classList.add('rtl-debug-rtl');
               element.setAttribute('data-rtl-debug', 'RTL Detected');
-          } else {
+          } else if (direction === 'ltr') {
               element.classList.add('rtl-debug-ltr');
               element.setAttribute('data-rtl-debug', 'LTR Detected');
+          } else {
+              // Neutral - no visual or maybe a neutral visual?
+              // For now, no visual for neutral
+              element.removeAttribute('data-rtl-debug');
           }
       } else {
           // Cleanup if debug mode was disabled but we are processing
@@ -560,23 +576,54 @@ export class RTLService {
           const activeSelectors = this.settings.targetSelectors.filter(
             s => !this.settings.disabledSelectors.includes(s)
           );
-          const selectors = activeSelectors.join(', ');
+
+          // Build a safe matching function or list
+          // We can't check 'matches' with invalid selectors without try-catch
+          const safeSelectors: string[] = [];
+          activeSelectors.forEach(s => {
+              try {
+                  document.querySelector(s); // Just to test validity, or trust the loop below
+                  safeSelectors.push(s);
+              } catch (e) {
+                  // Ignore invalid
+              }
+          });
+
+          const joinedSelectors = safeSelectors.join(', ');
 
           mutations.forEach((mutation) => {
              if (mutation.type === 'childList') {
                  mutation.addedNodes.forEach(node => {
                      if (node.nodeType === Node.ELEMENT_NODE) {
                          const element = node as HTMLElement;
-                         if (activeSelectors.some(s => element.matches(s))) {
+
+                         // Check individual matches safely
+                         let matched = false;
+                         for (const s of safeSelectors) {
+                             if (element.matches(s)) {
+                                 matched = true;
+                                 break;
+                             }
+                         }
+
+                         if (matched) {
                              this.pendingElements.add(element);
                              hasRelevantMutation = true;
                          }
 
-                         if (selectors && element.querySelector(selectors)) {
-                             element.querySelectorAll(selectors).forEach(child => {
-                                 this.pendingElements.add(child as HTMLElement);
-                             });
-                             hasRelevantMutation = true;
+                         // Also check children
+                         if (joinedSelectors) {
+                             try {
+                                const children = element.querySelectorAll(joinedSelectors);
+                                if (children.length > 0) {
+                                    children.forEach(child => {
+                                        this.pendingElements.add(child as HTMLElement);
+                                    });
+                                    hasRelevantMutation = true;
+                                }
+                             } catch (e) {
+                                 // Should not happen as we filtered joinedSelectors, but safe is safe
+                             }
                          }
                      }
                  });
@@ -586,7 +633,17 @@ export class RTLService {
                     : mutation.target.parentElement;
 
                   if (target) {
-                      if (activeSelectors.some(s => target.matches(s))) {
+                      let matched = false;
+                      for (const s of safeSelectors) {
+                           try {
+                               if (target.matches(s)) {
+                                   matched = true;
+                                   break;
+                               }
+                           } catch (e) {}
+                      }
+
+                      if (matched) {
                           this.pendingElements.add(target);
                           hasRelevantMutation = true;
                       }
