@@ -1,8 +1,8 @@
 import { expect, test, describe } from "bun:test";
-import { RegexStrategy } from "../../src/utils/strategies/RegexStrategy";
-import { CharacterCodeStrategy } from "../../src/utils/strategies/CharacterCodeStrategy";
-import { CombinedStrategy } from "../../src/utils/strategies/CombinedStrategy";
-import { RTLDetector } from "../../src/utils/rtlDetector";
+import { RegexStrategy } from "../src/utils/strategies/RegexStrategy";
+import { CharacterCodeStrategy } from "../src/utils/strategies/CharacterCodeStrategy";
+import { CombinedStrategy } from "../src/utils/strategies/CombinedStrategy";
+import { RTLDetector } from "../src/utils/rtlDetector";
 
 describe("RTL Detection", () => {
     describe("RegexStrategy", () => {

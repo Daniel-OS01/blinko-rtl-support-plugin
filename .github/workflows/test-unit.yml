@@ -10,17 +10,8 @@ on:
 jobs:
   test-unit:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
-
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
-
-    - name: Install Dependencies
-      run: bun install
-
-    - name: Run Unit Tests
-      run: bun test tests/unit tests/utils tests/regex_config.test.ts tests/strategies.test.ts tests/strategies_extra.test.ts
+    - uses: oven-sh/setup-bun@v1
+    - run: bun install
+    - run: bun test tests/unit/ tests/utils/ tests/services/ --exclude tests/integration/

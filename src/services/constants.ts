@@ -65,6 +65,16 @@ textarea, [contenteditable], input[type="text"] {
     background: #28a745;
 }
 
+@media (max-width: 768px) {
+    .rtl-toggle-btn {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 14px !important;
+        bottom: 15px !important;
+        right: 15px !important;
+    }
+}
+
 .rtl-toggle-btn.dark-mode {
     background: #1a1a1a;
     color: #fff;
@@ -208,6 +218,9 @@ button.rtl-force,
 
 export const DEFAULT_TARGET_SELECTORS = [
     // Content containers
+    '.markdown-body', /* Added broad container */
+    '.card-masonry-grid', /* Added main layout container */
+    '.blog-masonry-grid', /* Added blog layout container */
     '.markdown-body p',
     '.markdown-body div',
     '.markdown-body span',
@@ -252,8 +265,6 @@ export const DEFAULT_TARGET_SELECTORS = [
     '.popover',
     '.card-masonry-grid .markdown-body p',
     '.card-masonry-grid .markdown-body div',
-    '.card-masonry-grid .markdown-body',
-    '.blog-masonry-grid .markdown-body',
     'figcaption',
 
     // Lists
