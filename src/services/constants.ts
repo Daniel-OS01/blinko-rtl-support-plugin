@@ -41,7 +41,7 @@ textarea, [contenteditable], input[type="text"] {
 /* RTL Toggle Button */
 .rtl-toggle-btn {
     position: fixed;
-    top: 20px;
+    bottom: 20px;
     right: 20px;
     z-index: 9999;
     background: #007bff;

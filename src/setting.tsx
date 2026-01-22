@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import type { JSXInternal } from 'preact/src/jsx';
 import { RTLSettings, Preset } from './types';
 import { DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './services/constants';
+import { RTLDetector } from './utils/rtlDetector';
 
 const DEFAULT_CSS = `/* Enhanced RTL Support from Blinko-RTL.css */
 *:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"] {
@@ -336,7 +337,15 @@ export function RTLSetting(): JSXInternal.Element {
         const result = detector.detectRTL(testText);
         setTestResult(result ? 'RTL' : 'LTR');
     } else {
-        console.warn('RTL Detector not found via global API');
+        // Fallback if plugin API is not available
+        try {
+            const tempDetector = new RTLDetector();
+            const result = tempDetector.detectRTL(testText);
+            setTestResult(result ? 'RTL' : 'LTR');
+        } catch (e) {
+            console.error('Failed to create fallback detector', e);
+            console.warn('RTL Detector not found via global API or fallback');
+        }
     }
   };
 
@@ -471,12 +480,22 @@ export function RTLSetting(): JSXInternal.Element {
 
               // Validate minimal structure
               if (typeof imported !== 'object' || imported === null) {
-                  throw new Error('Invalid JSON format');
+                  throw new Error('Invalid JSON format: Not an object');
+              }
+
+              // Basic validation of fields
+              if (imported.targetSelectors && !Array.isArray(imported.targetSelectors)) {
+                   throw new Error('Invalid JSON format: targetSelectors must be an array');
               }
 
               // Merge with current settings to ensure we don't lose structure
               // But imported values override current
               const merged = { ...settings, ...imported };
+
+              // Ensure savedPresets is an array if present
+              if (imported.savedPresets && !Array.isArray(imported.savedPresets)) {
+                  merged.savedPresets = settings.savedPresets || [];
+              }
 
               // Restore functions/defaults if missing from import (though merging handles this mostly)
               saveSettings(merged);
@@ -485,7 +504,7 @@ export function RTLSetting(): JSXInternal.Element {
 
           } catch (err) {
               console.error('Import failed', err);
-              setImportError('Failed to import settings: Invalid JSON file.');
+              setImportError('Failed to import settings: ' + (err instanceof Error ? err.message : 'Invalid file'));
               window.Blinko.toast.error('Import failed');
           }
       };

@@ -5,7 +5,7 @@ export class RegexStrategy implements DetectionStrategy {
 
   // Hebrew regex range: 0590-05FF, FB1D-FB4F (Presentation forms A), FB50-FBB1 (Presentation forms B - wait, that's Arabic)
   // Hebrew: \u0590-\u05FF
-  private readonly hebrewPattern = '\\u0590-\\u05FF';
+  private readonly hebrewPattern = '\\u0590-\\u05FF\\uFB1D-\\uFB4F';
 
   // Arabic regex range
   private readonly arabicPattern = '\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF';
