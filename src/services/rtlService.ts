@@ -3,10 +3,6 @@ import { RTLSettings } from '../types';
 import { advancedRTLCSS, DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './constants';
 import { debounce } from '../utils/debounce';
 import { PasteInterceptor } from '../utils/pasteInterceptor';
-import { HoverContextManager } from '../utils/hoverManager';
-import { StorageManager } from './storageManager';
-
-type Direction = 'rtl' | 'ltr' | 'neutral';
 
 export class RTLService {
   private detector: RTLDetector;
@@ -18,8 +14,6 @@ export class RTLService {
   private autoProcessInterval: any = null;
   // Managers
   private pasteInterceptor: PasteInterceptor;
-  private hoverManager: HoverContextManager | null = null;
-  private storageManager: StorageManager;
 
   // Optimizations
   private pendingElements: Set<HTMLElement> = new Set();
@@ -351,14 +345,9 @@ export class RTLService {
         return;
     }
 
-    // Skip layout elements
-    if (element.closest('.flex, .grid, header, nav, .sidebar, .toolbar')) {
-        // Only skip if the element itself IS the layout container
-        if (safeMatches(element, '.flex, .grid, header, nav, .sidebar, .toolbar')) {
-             return;
-        }
-        // If it's a child (like a paragraph inside a flex container), we continue processing
-    }
+    // Check if element is part of the UI shell that should be protected
+    // But allow processing if it's explicitly in target selectors (which processAllElements uses)
+    // or if it's a content element.
 
     const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
     // console.log('Processing element:', element.tagName, 'Text:', text.substring(0, 10));
@@ -497,14 +486,6 @@ export class RTLService {
     
     // Enable Managers
     this.pasteInterceptor.enable();
-    if (!this.hoverManager) {
-        this.hoverManager = new HoverContextManager({
-            selectors: this.settings.targetSelectors,
-            processElement: (el) => this.processElement(el),
-            isEnabled: () => this.isRTLEnabled
-        });
-        this.hoverManager.init();
-    }
 
     this.setupObserver();
     this.startAutoProcessing();
@@ -520,10 +501,6 @@ export class RTLService {
     
     // Disable Managers
     this.pasteInterceptor.disable();
-    if (this.hoverManager) {
-        this.hoverManager.destroy();
-        this.hoverManager = null;
-    }
 
     this.stopAutoProcessing();
     if (this.observer) {

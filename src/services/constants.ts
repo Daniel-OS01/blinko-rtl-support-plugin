@@ -252,6 +252,8 @@ export const DEFAULT_TARGET_SELECTORS = [
     '.popover',
     '.card-masonry-grid .markdown-body p',
     '.card-masonry-grid .markdown-body div',
+    '.card-masonry-grid .markdown-body',
+    '.blog-masonry-grid .markdown-body',
     'figcaption',
 
     // Lists
