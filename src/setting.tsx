@@ -322,7 +322,12 @@ export function RTLSetting(): JSXInternal.Element {
 
   const testRTL = () => {
     if (!testText.trim()) return;
-    const result = (window as any).blinkoRTL?.test(testText);
+    const api = (window as any).blinkoRTL;
+    if (!api) {
+        window.Blinko.toast.error('RTL Plugin not fully initialized yet.');
+        return;
+    }
+    const result = api.test(testText);
     setTestResult(result ? 'RTL' : 'LTR');
   };
 
@@ -1586,8 +1591,18 @@ export function RTLSetting(): JSXInternal.Element {
             type="button"
             onClick={() => {
               const settingsData = JSON.stringify(settings, null, 2);
-              navigator.clipboard.writeText(settingsData);
-              window.Blinko.toast.success('Settings copied to clipboard');
+              const blob = new Blob([settingsData], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `blinko-rtl-settings-${new Date().toISOString().slice(0, 10)}.json`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+
+              window.Blinko.toast.success('Settings exported to JSON file');
             }}
             style={{ 
               padding: '10px 20px', 
@@ -1599,7 +1614,55 @@ export function RTLSetting(): JSXInternal.Element {
               fontWeight: '500' 
             }}
           >
-            📋 Export Settings
+            📋 Export JSON
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const fileInput = document.createElement('input');
+              fileInput.type = 'file';
+              fileInput.accept = '.json';
+              fileInput.onchange = (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  try {
+                    const text = event.target?.result as string;
+                    const imported = JSON.parse(text);
+                    // Basic validation schema check
+                    if (typeof imported === 'object' && imported !== null &&
+                        (imported.targetSelectors || imported.dynamicCSS || imported.enabled !== undefined)) {
+
+                       // Merge with current settings to ensure we don't lose required fields
+                       const merged = { ...settings, ...imported };
+                       saveSettings(merged);
+                       window.Blinko.toast.success('Settings imported successfully from JSON file');
+                    } else {
+                       window.Blinko.toast.error('Invalid JSON: Missing required RTL settings fields');
+                    }
+                  } catch (error) {
+                    console.error('Import failed:', error);
+                    window.Blinko.toast.error('Failed to parse JSON file');
+                  }
+                };
+                reader.readAsText(file);
+              };
+              fileInput.click();
+            }}
+            style={{
+              padding: '10px 20px',
+              background: '#17a2b8',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            📥 Import JSON
           </button>
         </div>
       </div>
