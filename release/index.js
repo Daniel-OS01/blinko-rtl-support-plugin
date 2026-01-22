@@ -779,7 +779,7 @@ var _ = (A, m, I) => (Yt(A, typeof m != "symbol" ? m + "" : m, I), I);
       /* @__PURE__ */ o("div", { style: { marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #eee", fontSize: "11px", color: "#888", textAlign: "center" }, children: "Click 'Fix Selected' to force detection on specific text." }),
       /* @__PURE__ */ o("div", { style: { marginTop: "5px", fontSize: "10px", color: "#aaa", textAlign: "center" }, children: [
         "v",
-        "1.1.0"
+        "1.1.3"
       ] })
     ] });
   }
@@ -833,6 +833,13 @@ var _ = (A, m, I) => (Yt(A, typeof m != "symbol" ? m + "" : m, I), I);
     pointer-events: none;
     line-height: 1;
     white-space: nowrap;
+}
+
+/* Generic Force Classes */
+.rtl-force {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: embed !important;
 }
 
 /* Specific overrides for Inputs and Textareas */
@@ -2404,7 +2411,7 @@ ul {
     name: "blinko-plugin-rtl-support",
     author: "Daniel-OS01",
     url: "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
-    version: "1.1.0",
+    version: "1.1.3",
     minAppVersion: "0.0.0",
     displayName: {
       default: "RTL Language Support",
@@ -2542,10 +2549,24 @@ ul {
         minRTLChars: 3,
         sampleSize: 100,
         ...e
-      }, this.charCodeStrategy = new Nt(this.config), this.regexStrategy = new zt(!0, !0, 0.3, this.config.minRTLChars), this.strategy = new st([
+      }, this.charCodeStrategy = new Nt(this.config);
+      const i = this.getThresholdFromSensitivity(this.config.sensitivity);
+      this.regexStrategy = new zt(!0, !0, i, this.config.minRTLChars), this.strategy = new st([
         this.charCodeStrategy,
         this.regexStrategy
       ]);
+    }
+    getThresholdFromSensitivity(e) {
+      switch (e) {
+        case "high":
+          return 0.1;
+        case "medium":
+          return 0.15;
+        case "low":
+          return 0.4;
+        default:
+          return 0.15;
+      }
     }
     setStrategy(e) {
       switch (e) {
@@ -2579,7 +2600,12 @@ ul {
      * Update detection configuration
      */
     updateConfig(e) {
-      this.charCodeStrategy.updateConfig(e), this.regexStrategy.updateConfig({ minRTLChars: e.minRTLChars }), this.config = { ...this.config, ...e };
+      this.config = { ...this.config, ...e }, this.charCodeStrategy.updateConfig(e);
+      const i = this.getThresholdFromSensitivity(this.config.sensitivity);
+      this.regexStrategy.updateConfig({
+        minRTLChars: e.minRTLChars,
+        threshold: i
+      });
     }
   }
   function lt(t, e, i = !1) {
@@ -2778,7 +2804,9 @@ ${r}
       if (!this.button || !this.currentTarget)
         return;
       const e = this.currentTarget.getBoundingClientRect();
-      this.button.getBoundingClientRect(), e.top, this.button.style.top = e.top + 2 + "px", this.button.style.left = e.right - 30 + "px";
+      this.button.getBoundingClientRect(), e.top;
+      const i = Math.min(e.right - 30, window.innerWidth - 40);
+      this.button.style.top = e.top + 2 + "px", this.button.style.left = i + "px";
     }
   }
   class jt {
@@ -2818,17 +2846,22 @@ ${r}
           return;
         }
         let n = !1;
-        if (this.settings.manualToggle)
+        const r = e.getAttribute("data-manual-dir");
+        if (r === "rtl")
+          n = !0;
+        else if (r === "ltr")
+          n = !1;
+        else if (this.settings.manualToggle)
           n = !0;
         else if (this.settings.forceDirection === "rtl")
           n = !0;
         else if (this.settings.forceDirection === "ltr")
           n = !1;
         else if (e.matches("pre, code, .code-block, .CodeMirror-line, .notion-code-block")) {
-          const s = (i.match(/[\u0590-\u05FF]/g) || []).length, a = (i.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g) || []).length, p = s + a, u = i.replace(/\s/g, "").length || i.length;
-          p / u > 0.6 && (n = !0);
+          const a = (i.match(/[\u0590-\u05FF]/g) || []).length, p = (i.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g) || []).length, u = a + p, d = i.replace(/\s/g, "").length || i.length;
+          u / d > 0.6 && (n = !0);
         } else
-          this.settings.hebrewRegex && this.detectHebrewRegex(i) || this.settings.arabicRegex && this.detectArabicRegex(i) ? n = !0 : n = this.detector.detectRTL(i);
+          n = this.detector.detectRTL(i);
         switch (this.logAction(e, n), this.settings.method) {
           case "direct":
             this.applyDirectRTL(e, n);
@@ -2861,6 +2894,10 @@ ${r}
             this.processElement(r);
           });
         }
+      });
+      _(this, "handleInput", (e) => {
+        const i = e.target;
+        i && (i.tagName === "INPUT" || i.tagName === "TEXTAREA" || i.isContentEditable) && (this.pendingElements.add(i), this.debouncedProcessQueue());
       });
       this.detector = e, this.loadSettings(), this.pasteInterceptor = new Ot(e), this.debouncedProcessAll = lt(() => this.processAllElements(), 200), this.debouncedProcessQueue = lt(() => {
         this.processPendingElements();
