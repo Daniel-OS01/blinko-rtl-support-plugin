@@ -102,7 +102,7 @@ export const defaultConfig: RTLConfig = {
       /* Toggle Button */
       .rtl-toggle-btn {
           position: fixed;
-          top: 20px;
+          bottom: 20px;
           inset-inline-end: 20px; /* Logical property */
           z-index: 9999;
           background: var(--primary, #007bff);

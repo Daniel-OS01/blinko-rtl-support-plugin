@@ -41,7 +41,7 @@ textarea, [contenteditable], input[type="text"] {
 /* RTL Toggle Button */
 .rtl-toggle-btn {
     position: fixed;
-    top: 20px;
+    bottom: 20px;
     right: 20px;
     z-index: 9999;
     background: #007bff;
@@ -171,8 +171,11 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
     white-space: nowrap;
 }
 
-/* Generic Force Classes */
-.rtl-force {
+/* Generic RTL Force - High Specificity */
+.rtl-force,
+[dir="rtl"].rtl-force,
+.markdown-body .rtl-force,
+.vditor-reset .rtl-force {
     direction: rtl !important;
     text-align: right !important;
     unicode-bidi: embed !important;
