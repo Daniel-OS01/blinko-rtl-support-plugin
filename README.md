@@ -180,6 +180,27 @@ This script generates screenshots in `verification/` for visual inspection of:
 npm run release:publish
 ```
 
+### Advanced Testing
+The project now includes specialized testing tools for performance and accessibility:
+
+```bash
+# Run Performance Benchmark (Checks processing speed on 1000+ nodes)
+npm run test:perf  # or bun run test:perf
+
+# Run Accessibility Compliance Checks (A11y/ARIA)
+npm run test:a11y  # or bun run test:a11y
+```
+
+## 🤖 CI/CD Pipeline
+
+The project uses a robust **Advanced CI Pipeline** (`.github/workflows/advanced-ci.yml`) that enforces:
+1.  **Integrity**: Unit & Integration tests + Build verification.
+2.  **Performance Gate**: Fails if RTL processing exceeds **100ms** (Performance Budget).
+3.  **A11y Gate**: Checks for WCAG/ARIA compliance in RTL layouts.
+4.  **Cross-Environment**: Validates against multiple Bun versions.
+5.  **Security**: Automatic high-severity vulnerability scanning.
+6.  **Code Quality**: ESLint, Type Checking, and Bundle Size Monitoring (200KB limit).
+
 ## 🎨 CSS Integration
 
 The plugin includes comprehensive CSS from `Blinko-RTL.css`:

@@ -44,7 +44,10 @@ export interface RTLSettings {
   unicodeBidiMode?: string;
   processMixedContent?: boolean;
   debugMode?: boolean;
-  pasteInterceptorEnabled?: boolean;
-  mobileViewEnabled?: boolean; // Renaming from mobileView to be more explicit if desired, but sticking to existing mobileView for consistency with settings object
-  overrideDirectives?: boolean;
+
+  // Advanced Feature Toggles
+  enablePasteInterceptor: boolean;
+  enableHoverContext: boolean; // Note: Current codebase removed HoverContext, but we'll add flag for future
+  enableNotifications: boolean;
+  enableObserver: boolean; // Toggle for the MutationObserver specifically
 }

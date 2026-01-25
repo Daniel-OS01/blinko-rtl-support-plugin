@@ -141,15 +141,12 @@ export class RTLService {
         this.startAutoProcessing();
         this.debouncedProcessAll();
 
-        // Update Managers
-        if (this.settings.pasteInterceptorEnabled !== false) {
-             this.pasteInterceptor.enable();
+        // Update Paste Interceptor State
+        if (this.settings.enablePasteInterceptor) {
+            this.pasteInterceptor.enable();
         } else {
-             this.pasteInterceptor.disable();
+            this.pasteInterceptor.disable();
         }
-
-        // Update Mobile View
-        this.applyMobileView();
     }
 
     // Dispatch event for UI updates
@@ -596,7 +593,8 @@ export class RTLService {
 
   private setupObserver() {
       if (this.observer) this.observer.disconnect();
-      if (!this.settings.autoDetect) return;
+      // Check both autoDetect master switch AND granular enableObserver toggle
+      if (!this.settings.autoDetect || (this.settings.enableObserver === false)) return;
 
       this.observer = new MutationObserver((mutations) => {
           if (!this.isRTLEnabled) return;
