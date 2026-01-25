@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'preact/hooks';
-import type { JSXInternal } from 'preact/src/jsx';
+import { JSX } from 'preact';
 import type { RTLDetector } from './utils/rtlDetector';
+
+declare const __PLUGIN_VERSION__: string;
 
 interface RTLAppProps {
   detector: RTLDetector;
 }
 
-export function RTLApp({ detector }: RTLAppProps): JSXInternal.Element {
+export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const [stats, setStats] = useState({ activeBlocks: 0 });
   const [sensitivity, setSensitivity] = useState(15); // Default 15%
   const [isFixing, setIsFixing] = useState(false);
@@ -210,7 +212,7 @@ export function RTLApp({ detector }: RTLAppProps): JSXInternal.Element {
       </div>
 
       <div style={{ marginTop: '15px', paddingTop: '10px', borderTop: '1px solid #eee', fontSize: '11px', color: '#888', textAlign: 'center' }}>
-        Click 'Fix Selected' to force detection on specific text.
+        Click &apos;Fix Selected&apos; to force detection on specific text.
       </div>
       <div style={{ marginTop: '5px', fontSize: '10px', color: '#aaa', textAlign: 'center' }}>
         v{__PLUGIN_VERSION__}

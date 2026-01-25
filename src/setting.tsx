@@ -1,235 +1,32 @@
 import { useState, useEffect } from 'preact/hooks';
-import type { JSXInternal } from 'preact/src/jsx';
+import { JSX } from 'preact';
 import { RTLSettings, Preset } from './types';
 import { DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './services/constants';
 import { RTLDetector } from './utils/rtlDetector';
-
-const DEFAULT_CSS = `/* Enhanced RTL Support from Blinko-RTL.css */
-*:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"] {
-    text-align: right !important;
-    direction: rtl !important;
-}
-
-.markdown-body div, .markdown-body p, .markdown-body span {
-    unicode-bidi: plaintext !important;
-}
-
-.vditor-reset, .vditor-reset > div, .vditor-reset > p {
-    unicode-bidi: plaintext !important;
-}
-
-.card-masonry-grid .markdown-body {
-    line-height: 1.35 !important;
-}
-
-.card-masonry-grid .markdown-body > div {
-    margin-bottom: 0.3em !important;
-}
-
-*:dir(rtl) input[type="text"], *:dir(rtl) textarea {
-    text-align: right !important;
-    direction: rtl !important;
-}
-
-*:dir(rtl) ol, *:dir(rtl) ul {
-    list-style-position: outside !important;
-    padding-left: 0 !important;
-    padding-right: 2em !important;
-}
-
-*:dir(rtl) blockquote {
-    border-left: none !important;
-    border-right: 3px solid currentcolor !important;
-    padding-left: 0 !important;
-    padding-right: 0.9em !important;
-}`;
-
-const APP_SHELL_CSS = `/* ==========================================================================
-   1. App Shell & UI Protection
-   Prevents the main interface (buttons, toolbars, layout) from flipping incorrectly.
-   ========================================================================== */
-#page-wrap,
-#page-wrap > div,
-#page-wrap > header,
-header,
-nav,
-.sidebar,
-.toolbar,
-.flex,
-.grid,
-button,
-.btn {
-    direction: unset; /* Or 'ltr' if unset doesn't work specific cases */
-}
-
-/* ==========================================================================
-   2. General Text Content (BiDi Support)
-   Forces browser to auto-detect direction (LTR vs RTL) per paragraph.
-   ========================================================================== */
-.markdown-body p,
-.markdown-body div,
-.markdown-body span,
-.vditor-reset p,
-.vditor-reset div,
-.vditor-reset span,
-.card-masonry-grid p,
-.card-masonry-grid div,
-textarea,
-[contenteditable],
-input[type="text"] {
-    unicode-bidi: plaintext !important;
-}
-
-/* Specific spacing for editor paragraphs */
-.vditor-reset p {
-    margin-bottom: 8px;
-}
-
-/* Force RTL on the last element to ensure cursor behaves in editor */
-.vditor-reset p:last-child,
-.vditor-reset blockquote:last-child,
-.vditor-reset pre:last-child,
-.vditor-reset ul:last-child,
-.vditor-reset ol:last-child,
-.vditor-reset hr:last-child {
-    direction: rtl;
-}
-
-/* ==========================================================================
-   3. Headings
-   Ensures titles respect bidirectional text and spacing.
-   ========================================================================== */
-.expanded-container .markdown-body h1,
-.expanded-container .markdown-body h2,
-.expanded-container .markdown-body h3,
-.expanded-container .markdown-body h4,
-.expanded-container .markdown-body h5,
-.expanded-container .markdown-body h6,
-.vditor-reset h1,
-.vditor-reset h2,
-.vditor-reset h3,
-.vditor-reset h4,
-.vditor-reset h5,
-.vditor-reset h6 {
-    unicode-bidi: plaintext;
-}
-
-/* Heading margins for the editor */
-.vditor-reset h1,
-.vditor-reset h2,
-.vditor-reset h3,
-.vditor-reset h4,
-.vditor-reset h5,
-.vditor-reset h6 {
-    margin-top: 12px;
-    margin-bottom: 8px;
-}
-
-/* ==========================================================================
-   4. Lists & Indentation
-   Aligns bullets and numbers to the right and handles nesting.
-   ========================================================================== */
-ol,
-ul,
-menu,
-.markdown-body ul,
-.vditor-reset ul,
-.vditor-reset ol {
-    direction: rtl;
-    unicode-bidi: plaintext;
-    margin: 0;
-}
-
-/* specific padding adjustment for editor lists */
-.vditor-reset ul,
-.vditor-reset ol {
-    padding: 0px 1em 0px 1px;
-}
-
-/* ==========================================================================
-   5. Tasks & Checkboxes
-   Ensures checkboxes align correctly with text.
-   ========================================================================== */
-.vditor-task {
-    direction: rtl;
-    margin-left: 0px;
-}
-
-.vditor-task input {
-    margin: 0;
-    direction: rtl;
-    unicode-bidi: plaintext;
-}
-
-/* ==========================================================================
-   6. Expanded / Reading View
-   Specific layout tweaks for the expanded note view.
-   ========================================================================== */
-.expanded-container .markdown-body p,
-.expanded-container .markdown-body blockquote,
-.expanded-container .markdown-body ul,
-.expanded-container .markdown-body ol,
-.expanded-container .markdown-body dl,
-.expanded-container .markdown-body pre,
-.expanded-container .markdown-body details {
-    margin-bottom: var(--base-size-8);
-    padding: 0px 20px; /* 20PX normalized to lowercase */
-    direction: rtl;
-    unicode-bidi: plaintext;
-}
-
-ul {
-    direction: unset;
-}`;
 
 const BUILT_IN_PRESETS: Preset[] = [
   {
     id: 'default',
     name: 'Default CSS',
-    css: DEFAULT_CSS,
+    css: DEFAULT_SETTINGS.customCSS,
     dynamicCSS: DEFAULT_DYNAMIC_CSS,
     targetSelectors: DEFAULT_TARGET_SELECTORS,
     disabledSelectors: [],
     isBuiltIn: true
   },
-  {
-    id: 'app-shell',
-    name: 'Enhanced RTL (App Shell & UI)',
-    css: APP_SHELL_CSS,
-    isBuiltIn: true
-  }
+  // We can add more presets here if needed
 ];
 
-export function RTLSetting(): JSXInternal.Element {
+export function RTLSetting(): JSX.Element {
   const [settings, setSettings] = useState<RTLSettings>({
-    enabled: true,
-    sensitivity: 'medium',
-    threshold: 0.15,
-    forceDirection: 'auto',
-    autoDetect: true, // Default to true now
-    manualMode: true,
-    manualToggle: false,
-    mobileView: false,
-    darkMode: false,
-    method: 'all',
-    customCSS: '',
-    dynamicCSS: DEFAULT_DYNAMIC_CSS,
-    permanentCSS: false,
-    visualStyles: {
-      fontFamily: 'inherit',
-      lineHeight: 1.5,
-      paragraphMargin: 1
-    },
+    ...DEFAULT_SETTINGS,
+    // Ensure all fields are present even if loading from older storage
     targetSelectors: DEFAULT_TARGET_SELECTORS,
     disabledSelectors: [],
-    minRTLChars: 3,
-    processInterval: 2000,
-    hebrewRegex: true,
-    arabicRegex: true,
-    mixedContent: true,
     savedPresets: []
   });
 
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [customSelector, setCustomSelector] = useState('');
   const [testText, setTestText] = useState('');
   const [testResult, setTestResult] = useState('');
@@ -243,30 +40,20 @@ export function RTLSetting(): JSXInternal.Element {
     const loadInitialSettings = () => {
         const currentSettings = (window as any).blinkoRTL?.settings();
         if (currentSettings) {
-            setSettings(currentSettings);
-        } else {
-            // Fallback if global API isn't ready immediately
-            // But we should try to avoid direct localStorage access here if possible
-            // to respect the StorageManager abstraction.
-            // However, RTLService updates the global object.
-            // If the global object isn't ready, we might just wait or use defaults.
-            // Let's rely on RTLService to have initialized correctly.
+            setSettings({ ...DEFAULT_SETTINGS, ...currentSettings });
         }
     };
 
     loadInitialSettings();
 
-    // Listen for settings changes (if triggered externally)
     const handleSettingsChange = (e: CustomEvent) => {
         setSettings(prev => ({ ...prev, ...e.detail }));
     };
 
-    // Listen for log updates
     const handleLogUpdate = (e: CustomEvent) => {
         setActionLog(prev => [e.detail, ...prev].slice(0, 50));
     };
 
-    // Load initial logs
     if ((window as any).blinkoRTL?.service?.getActionLog) {
         setActionLog((window as any).blinkoRTL.service.getActionLog());
     }
@@ -302,13 +89,9 @@ export function RTLSetting(): JSXInternal.Element {
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
     
-    // Call service update if available
     if ((window as any).blinkoRTL?.service) {
         (window as any).blinkoRTL.service.updateSettings(newSettings);
     } else {
-        // Fallback or error logging if service is missing
-        console.warn('RTL Service not found, settings might not persist correctly via StorageManager');
-        // We could write to localStorage as a desperate fallback but let's trust the service
         localStorage.setItem('blinko-rtl-settings', JSON.stringify(updatedSettings));
         window.dispatchEvent(
             new CustomEvent('rtl-settings-changed', {
@@ -320,21 +103,17 @@ export function RTLSetting(): JSXInternal.Element {
 
   const testRTL = () => {
     if (!testText.trim()) return;
-    // Use the exposed API directly which routes to detector
-    // Make sure we pass the text properly
     const detector = (window as any).blinkoRTL?.detector;
     if (detector) {
         const result = detector.detectRTL(testText);
         setTestResult(result ? 'RTL' : 'LTR');
     } else {
-        // Fallback if plugin API is not available
         try {
             const tempDetector = new RTLDetector();
             const result = tempDetector.detectRTL(testText);
             setTestResult(result ? 'RTL' : 'LTR');
         } catch (e) {
-            console.error('Failed to create fallback detector', e);
-            console.warn('RTL Detector not found via global API or fallback');
+            console.error(e);
         }
     }
   };
@@ -342,7 +121,7 @@ export function RTLSetting(): JSXInternal.Element {
   const processAllContent = () => {
     if ((window as any).blinkoRTL) {
         (window as any).blinkoRTL.processAll();
-        window.Blinko.toast.success('Content processed!');
+        if (settings.notifications) window.Blinko.toast.success('Content processed!');
     }
   };
 
@@ -355,7 +134,11 @@ export function RTLSetting(): JSXInternal.Element {
     }
   };
 
-  const removeCustomSelector = (selector: string) => {
+  const removeSelector = (selector: string) => {
+    // Only remove if it's not a default? Or allow removing anything?
+    // If we remove it from targetSelectors, it's gone.
+    // But if it's in DEFAULT, we might want to just disable it?
+    // Let's assume we just filter it out of the array.
     saveSettings({
       targetSelectors: settings.targetSelectors.filter(s => s !== selector),
       disabledSelectors: settings.disabledSelectors.filter(s => s !== selector)
@@ -378,12 +161,11 @@ export function RTLSetting(): JSXInternal.Element {
       saveSettings({ disabledSelectors: newDisabledSelectors });
   };
 
+  // Presets Logic
   const loadPreset = () => {
     if (!selectedPresetId) return;
-
     const allPresets = [...BUILT_IN_PRESETS, ...(settings.savedPresets || [])];
     const preset = allPresets.find(p => p.id === selectedPresetId);
-
     if (preset) {
       saveSettings({
           customCSS: preset.css,
@@ -391,14 +173,13 @@ export function RTLSetting(): JSXInternal.Element {
           targetSelectors: preset.targetSelectors || settings.targetSelectors,
           disabledSelectors: preset.disabledSelectors || settings.disabledSelectors
       });
-      window.Blinko.toast.success(`Preset "${preset.name}" loaded!`);
+      if (settings.notifications) window.Blinko.toast.success(`Preset "${preset.name}" loaded!`);
     }
   };
 
   const saveAsPreset = () => {
     const name = prompt('Enter a name for this Full Preset (CSS, Dynamic Rules, Selectors):');
     if (!name) return;
-
     const newPreset: Preset = {
       id: `custom-${Date.now()}`,
       name: name,
@@ -408,20 +189,18 @@ export function RTLSetting(): JSXInternal.Element {
       disabledSelectors: settings.disabledSelectors,
       isBuiltIn: false
     };
-
     saveSettings({
       savedPresets: [...(settings.savedPresets || []), newPreset]
     });
-
     setSelectedPresetId(newPreset.id);
-    window.Blinko.toast.success('Preset saved!');
+    if (settings.notifications) window.Blinko.toast.success('Preset saved!');
   };
 
   const deletePreset = () => {
     if (!selectedPresetId) return;
     const isBuiltIn = BUILT_IN_PRESETS.some(p => p.id === selectedPresetId);
     if (isBuiltIn) {
-      window.Blinko.toast.error('Cannot delete built-in presets.');
+      if (settings.notifications) window.Blinko.toast.error('Cannot delete built-in presets.');
       return;
     }
     if (confirm('Are you sure you want to delete this preset?')) {
@@ -436,16 +215,16 @@ export function RTLSetting(): JSXInternal.Element {
     if (confirm('Reset all settings to defaults? This cannot be undone.')) {
         const defaultSettings: RTLSettings = {
         ...DEFAULT_SETTINGS,
-        savedPresets: settings.savedPresets || [] // Preserve user presets
+        savedPresets: settings.savedPresets || []
         };
         saveSettings(defaultSettings);
-        window.Blinko.toast.success('Settings reset to defaults');
+        if (settings.notifications) window.Blinko.toast.success('Settings reset to defaults');
     }
   };
 
   const resetDynamicCSS = () => {
       saveSettings({ dynamicCSS: DEFAULT_DYNAMIC_CSS });
-      window.Blinko.toast.success('Dynamic CSS reset');
+      if (settings.notifications) window.Blinko.toast.success('Dynamic CSS reset');
   };
 
   const exportSettings = () => {
@@ -454,12 +233,12 @@ export function RTLSetting(): JSXInternal.Element {
           const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(service.exportSettings());
           const downloadAnchorNode = document.createElement('a');
           downloadAnchorNode.setAttribute("href", dataStr);
-          downloadAnchorNode.setAttribute("download", `blinko-rtl-settings-v1.json`); // Versioned filename
+          downloadAnchorNode.setAttribute("download", `blinko-rtl-settings-v1.json`);
           document.body.appendChild(downloadAnchorNode);
           downloadAnchorNode.click();
           downloadAnchorNode.remove();
       } else {
-          window.Blinko.toast.error('Export failed: Service not available');
+          if (settings.notifications) window.Blinko.toast.error('Export failed: Service not available');
       }
   };
 
@@ -476,7 +255,7 @@ export function RTLSetting(): JSXInternal.Element {
               if (service) {
                   service.importSettings(content);
                   setImportError('');
-                  window.Blinko.toast.success('Settings imported successfully!');
+                  if (settings.notifications) window.Blinko.toast.success('Settings imported successfully!');
               } else {
                   throw new Error('Service not available');
               }
@@ -484,74 +263,109 @@ export function RTLSetting(): JSXInternal.Element {
           } catch (err) {
               console.error('Import failed', err);
               setImportError('Failed to import settings: ' + (err instanceof Error ? err.message : 'Invalid file'));
-              window.Blinko.toast.error('Import failed');
+              if (settings.notifications) window.Blinko.toast.error('Import failed');
           }
       };
       reader.readAsText(file);
-      // Reset input value to allow re-importing same file if needed
       (event.target as HTMLInputElement).value = '';
   };
+
+  const RenderToggle = ({ label, checked, onChange, desc, disabled }: { label: string, checked: boolean, onChange: (v: boolean) => void, desc?: string, disabled?: boolean }) => (
+    <div style={{ marginBottom: '15px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.6 : 1 }}>
+            <input
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => onChange((e.target as HTMLInputElement).checked)}
+            disabled={disabled}
+            />
+            <span>{label}</span>
+        </label>
+        {desc && <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>{desc}</p>}
+    </div>
+  );
 
   return (
     <div 
       className={settings.darkMode ? 'rtl-settings-dark' : ''}
       style={{ 
-        maxWidth: '700px', 
+        maxWidth: '800px',
         margin: '0 auto', 
         padding: '20px', 
         fontFamily: 'system-ui, sans-serif',
         background: settings.darkMode ? '#1a1a1a' : 'white',
         color: settings.darkMode ? '#e0e0e0' : '#000'
       }}>
-      <div style={{ marginBottom: '30px', paddingBottom: '20px', borderBottom: '2px solid #eee' }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '2px solid #eee' }}>
         <h2 style={{ margin: '0 0 10px 0', color: settings.darkMode ? '#fff' : '#333' }}>
-          🔧 Fixed RTL Language Support Settings
+          🔧 Blinko RTL Support
         </h2>
         <p style={{ margin: '0', color: settings.darkMode ? '#aaa' : '#666', fontSize: '14px' }}>
-          Precise RTL support with manual control and optional permanent CSS injection.
+          Comprehensive Right-to-Left language support for Hebrew, Arabic, and more.
         </p>
+      </div>
+
+      {/* Basic Settings */}
+      <div style={{ marginBottom: '20px' }}>
+          <h3 style={{ borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>Basic Settings</h3>
+          <RenderToggle
+              label="Enable RTL Support"
+              checked={settings.enabled}
+              onChange={v => saveSettings({ enabled: v })}
+              desc="Master switch for the entire plugin functionality."
+          />
+          <RenderToggle
+              label="Mobile View Optimization"
+              checked={settings.mobileView || false}
+              onChange={v => saveSettings({ mobileView: v })}
+              desc="Adjusts layout and button positioning for mobile devices."
+          />
+          <RenderToggle
+              label="Manual Mode"
+              checked={settings.manualMode}
+              onChange={v => saveSettings({ manualMode: v })}
+              desc="If enabled, RTL is applied only when explicitly detected or requested."
+              disabled={!settings.enabled}
+          />
+          <RenderToggle
+              label="Dark Mode UI"
+              checked={settings.darkMode}
+              onChange={v => {
+                  saveSettings({ darkMode: v });
+                  if (v) document.body.classList.add('dark');
+                  else document.body.classList.remove('dark');
+              }}
+              desc="Apply dark theme to this settings panel."
+          />
       </div>
 
       {/* Quick Actions */}
       <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '2px solid #007bff', 
+        marginBottom: '20px',
+        padding: '15px',
         borderRadius: '8px', 
-        background: settings.darkMode ? '#2c3e50' : '#f8f9ff'
+        background: settings.darkMode ? '#2c3e50' : '#f0f4f8'
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#007bff' }}>⚡ Quick Actions</h3>
-        
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', color: '#007bff' }}>⚡ Quick Actions</h3>
+        <div style={{ display: 'flex', gap: '10px' }}>
           <button
             onClick={processAllContent}
             disabled={!settings.enabled}
             style={{ 
-              background: '#28a745', 
-              color: 'white', 
-              border: 'none', 
-              padding: '10px 20px', 
-              borderRadius: '4px', 
-              cursor: 'pointer',
-              fontWeight: '500'
+              background: '#28a745', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer'
             }}
           >
             🔄 Process All Content
           </button>
-          
           <button
             onClick={() => {
               (window as any).blinkoRTL?.toggle();
-              window.Blinko.toast.success('RTL toggled!');
+              if(settings.notifications) window.Blinko.toast.success('RTL toggled!');
             }}
             style={{ 
-              background: '#007bff', 
-              color: 'white', 
-              border: 'none', 
-              padding: '10px 20px', 
-              borderRadius: '4px', 
-              cursor: 'pointer',
-              fontWeight: '500'
+              background: '#007bff', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer'
             }}
           >
             🔄 Toggle RTL (ع/א)
@@ -559,509 +373,220 @@ export function RTLSetting(): JSXInternal.Element {
         </div>
       </div>
 
-      {/* Real-time Action Log */}
-      <div style={{
-        marginBottom: '30px',
-        padding: '20px',
-        border: '1px solid #ddd',
-        borderRadius: '8px',
-        background: settings.darkMode ? '#333' : '#fafafa',
-        maxHeight: '300px',
-        overflowY: 'auto'
-      }}>
-          <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>📜 Real-time Action Log</h3>
-          {actionLog.length === 0 ? (
-              <p style={{ color: settings.darkMode ? '#aaa' : '#666', fontStyle: 'italic' }}>No actions recorded yet...</p>
-          ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', color: settings.darkMode ? '#ccc' : '#000' }}>
-                  <thead>
-                      <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-                          <th style={{ padding: '5px' }}>Time</th>
-                          <th style={{ padding: '5px' }}>Element</th>
-                          <th style={{ padding: '5px' }}>Action</th>
-                          <th style={{ padding: '5px' }}>Details</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      {actionLog.map((log, i) => (
-                          <tr key={i} style={{ borderBottom: settings.darkMode ? '1px solid #444' : '1px solid #eee' }}>
-                              <td style={{ padding: '5px', whiteSpace: 'nowrap' }}>{log.timestamp}</td>
-                              <td style={{ padding: '5px', fontFamily: 'monospace' }} title={log.element}>{log.element.length > 20 ? log.element.substring(0, 20) + '...' : log.element}</td>
-                              <td style={{ padding: '5px', color: log.direction === 'RTL' ? '#28a745' : '#007bff' }}>{log.direction}</td>
-                              <td style={{ padding: '5px', color: settings.darkMode ? '#888' : '#666' }}>{log.textPreview}</td>
-                          </tr>
-                      ))}
-                  </tbody>
-              </table>
-          )}
-      </div>
-
-      {/* Mode Settings */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #ddd', 
-        borderRadius: '8px', 
-        background: settings.darkMode ? '#333' : '#fafafa'
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>🎛️ Mode Settings</h3>
-        
-        <div style={{ display: 'grid', gap: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.enabled}
-              onChange={(e) => saveSettings({ enabled: (e.target as HTMLInputElement).checked })}
-            />
-            <span>🔧 Enable RTL Support</span>
-          </label>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.manualMode}
-              onChange={(e) => saveSettings({ manualMode: (e.target as HTMLInputElement).checked })}
-              disabled={!settings.enabled}
-            />
-            <span>✋ Manual Mode (Recommended)</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Manual mode only applies RTL when clearly detected, preventing unwanted changes
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.mobileView}
-              onChange={(e) => saveSettings({ mobileView: (e.target as HTMLInputElement).checked })}
-            />
-            <span>📱 Mobile View</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Optimizes layout for mobile devices
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.debugMode}
-              onChange={(e) => {
-                  const debugMode = (e.target as HTMLInputElement).checked;
-                  saveSettings({ debugMode });
-                  (window as any).blinkoRTL?.service?.toggleDebugMode();
-              }}
-              disabled={!settings.enabled}
-            />
-            <span>🐞 Visual Debugger</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Highlights detected RTL (Red) and LTR (Blue) elements with tooltips
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.autoDetect}
-              onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked })}
-              disabled={!settings.enabled}
-            />
-            <span>🤖 Auto-detect All Content</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Continuously processes all content on the page every 2 seconds
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.manualToggle}
-              onChange={(e) => {
-                const manualToggle = (e.target as HTMLInputElement).checked;
-                saveSettings({ manualToggle });
-                const api = (window as any).blinkoRTL;
-                if (api && api.isEnabled()) {
-                  api.processAll();
-                }
-              }}
-              disabled={!settings.enabled}
-            />
-            <span>🔄 Manual RTL Toggle</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Forces RTL on all content when enabled, ignores detection
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.darkMode}
-              onChange={(e) => {
-                const darkMode = (e.target as HTMLInputElement).checked;
-                saveSettings({ darkMode });
-                if (darkMode) {
-                  document.body.classList.add('dark');
-                } else {
-                  document.body.classList.remove('dark');
-                }
-              }}
-            />
-            <span>🌙 Dark Mode Plugin UI</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Applies dark styling to RTL plugin components only
-          </p>
-        </div>
-      </div>
-
-      {/* Dynamic CSS Rules Section */}
-      <div style={{
-        marginBottom: '30px',
-        padding: '20px',
-        border: '2px solid #6610f2',
-        borderRadius: '8px',
-        background: settings.darkMode ? '#2c2c3e' : '#f8f9ff'
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#6610f2' }}>🎨 Dynamic CSS Rules</h3>
-        <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            These CSS rules are applied dynamically when RTL or LTR content is detected.
-            Customize the class definitions below to control how detected elements are styled.
-        </p>
-
-        <div style={{ marginBottom: '15px' }}>
-          <textarea
-            value={settings.dynamicCSS}
-            onChange={(e) => saveSettings({ dynamicCSS: (e.target as HTMLTextAreaElement).value })}
-            placeholder="Enter your dynamic CSS rules here..."
-            disabled={!settings.enabled}
-            style={{
-              width: '100%',
-              height: '350px',
-              padding: '10px',
-              border: cssError ? '2px solid red' : '1px solid #ccc',
-              borderRadius: '4px',
-              fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
-              fontSize: '13px',
-              resize: 'vertical',
-              background: settings.darkMode ? '#222' : 'white',
-              color: settings.darkMode ? '#eee' : 'black'
-            }}
-          />
-          {cssError && <div style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{cssError}</div>}
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+      {/* Advanced Toggle */}
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <button
-            onClick={resetDynamicCSS}
-            disabled={!settings.enabled}
+            onClick={() => setShowAdvanced(!showAdvanced)}
             style={{
-              background: '#17a2b8',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            🔄 Reset Dynamic CSS
-          </button>
-          <button
-            onClick={() => {
-                if (cssError) {
-                    window.Blinko.toast.error('Please fix CSS errors before saving.');
-                    return;
-                }
-                saveSettings({ dynamicCSS: settings.dynamicCSS }); // Trigger save explicitly
-                window.Blinko.toast.success('Dynamic CSS Settings Saved');
-            }}
-            disabled={!settings.enabled}
-             style={{
-              background: '#28a745',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-             💾 Save Settings
-          </button>
-        </div>
-      </div>
-
-      {/* Permanent CSS Settings */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #28a745', 
-        borderRadius: '8px', 
-        background: settings.darkMode ? '#1e3023' : '#f8fff8'
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#28a745' }}>📌 Permanent CSS Settings</h3>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.permanentCSS}
-              onChange={(e) => saveSettings({ permanentCSS: (e.target as HTMLInputElement).checked })}
-              disabled={!settings.enabled}
-            />
-            <span>Enable Permanent CSS Injection</span>
-          </label>
-          <p style={{ margin: '5px 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            This CSS is injected permanently as long as the plugin is enabled, regardless of RTL detection.
-            Use this for global overrides.
-          </p>
-        </div>
-
-        {/* CSS Presets */}
-        <div style={{ marginBottom: '15px', padding: '15px', background: settings.darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
-          <label style={{ display: 'block', fontWeight: '500', marginBottom: '8px' }}>
-            📚 CSS Presets:
-          </label>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <select
-              value={selectedPresetId}
-              onChange={(e) => setSelectedPresetId((e.target as HTMLSelectElement).value)}
-              disabled={!settings.enabled}
-              style={{
-                flex: 1,
-                padding: '8px 12px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                minWidth: '200px',
-                background: settings.darkMode ? '#333' : 'white',
-                color: settings.darkMode ? '#eee' : 'black'
-              }}
-            >
-              <option value="">-- Select a Preset --</option>
-              <optgroup label="Built-in Presets">
-                {BUILT_IN_PRESETS.map(preset => (
-                  <option key={preset.id} value={preset.id}>{preset.name}</option>
-                ))}
-              </optgroup>
-              {(settings.savedPresets && settings.savedPresets.length > 0) && (
-                <optgroup label="Saved Presets">
-                  {settings.savedPresets.map(preset => (
-                    <option key={preset.id} value={preset.id}>{preset.name}</option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-
-            <button
-              onClick={loadPreset}
-              disabled={!settings.enabled || !selectedPresetId}
-              style={{
-                background: '#17a2b8',
-                color: 'white',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '4px',
+                background: 'transparent',
+                border: '1px solid #aaa',
+                color: settings.darkMode ? '#aaa' : '#666',
+                padding: '8px 20px',
+                borderRadius: '20px',
                 cursor: 'pointer'
-              }}
-            >
-              📥 Load
-            </button>
-
-            <button
-              onClick={deletePreset}
-              disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
-              style={{
-                background: '#dc3545',
-                color: 'white',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
-              }}
-              title="Delete selected preset"
-            >
-              🗑️
-            </button>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', fontWeight: '500', marginBottom: '5px' }}>
-            Custom CSS Code (Permanent):
-          </label>
-          <textarea
-            value={settings.customCSS}
-            onChange={(e) => saveSettings({ customCSS: (e.target as HTMLTextAreaElement).value })}
-            placeholder="Enter your permanent custom CSS code here..."
-            disabled={!settings.enabled}
-            style={{ 
-              width: '100%', 
-              height: '200px', 
-              padding: '10px', 
-              border: '1px solid #ccc', 
-              borderRadius: '4px',
-              fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
-              fontSize: '13px',
-              resize: 'vertical',
-              background: settings.darkMode ? '#222' : 'white',
-              color: settings.darkMode ? '#eee' : 'black'
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button
-            onClick={saveAsPreset}
-            disabled={!settings.enabled || !settings.customCSS.trim()}
-            style={{ 
-              background: '#28a745',
-              color: 'white', 
-              border: 'none', 
-              padding: '8px 16px', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
             }}
           >
-            💾 Save as New Preset
+              {showAdvanced ? '🔼 Hide Advanced Settings' : '🔽 Show Advanced Settings'}
           </button>
-          
-          <button
-            onClick={() => saveSettings({ customCSS: '' })}
-            disabled={!settings.enabled}
-            style={{ 
-              background: '#dc3545', 
-              color: 'white', 
-              border: 'none', 
-              padding: '8px 16px', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
-            }}
-          >
-            🗑️ Clear CSS
-          </button>
-        </div>
       </div>
 
-      {/* Testing */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #ddd', 
-        borderRadius: '8px', 
-        background: settings.darkMode ? '#333' : '#fafafa'
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>🧪 Test RTL Detection</h3>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <textarea
-            value={testText}
-            onChange={(e) => setTestText((e.target as HTMLTextAreaElement).value)}
-            placeholder="Enter text to test RTL detection..."
-            style={{ 
-              width: '100%', 
-              height: '80px', 
-              padding: '10px', 
-              border: '1px solid #ccc', 
-              borderRadius: '4px',
-              resize: 'vertical',
-              fontFamily: 'inherit',
-              background: settings.darkMode ? '#222' : 'white',
-              color: settings.darkMode ? '#eee' : 'black'
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-          <button 
-            onClick={testRTL}
-            style={{ 
-              background: '#28a745', 
-              color: 'white', 
-              border: 'none', 
-              padding: '8px 16px', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
-            }}
-          >
-            🧪 Test Detection
-          </button>
-        </div>
-
-        {testResult && (
-          <div style={{ 
-            padding: '10px', 
-            background: testResult === 'RTL' ? '#d4edda' : '#f8d7da', 
-            borderRadius: '4px',
-            borderLeft: `4px solid ${testResult === 'RTL' ? '#28a745' : '#dc3545'}`,
-            marginBottom: '15px',
-            color: '#333'
+      {/* Advanced Settings Section */}
+      {showAdvanced && (
+          <div style={{
+              padding: '20px',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              marginBottom: '30px',
+              background: settings.darkMode ? '#222' : '#fcfcfc'
           }}>
-            Detection Result: <strong>{testResult === 'RTL' ? '➡️ RTL' : '⬅️ LTR'}</strong>
+              {/* Detection & Performance */}
+              <h4 style={{ color: settings.darkMode ? '#fff' : '#333', marginTop: 0 }}>🧠 Detection & Performance</h4>
+              <RenderToggle
+                  label="Background Auto-Detection (Interval)"
+                  checked={settings.autoDetect}
+                  onChange={v => saveSettings({ autoDetect: v })}
+                  desc="Periodically scans the page for new content."
+                  disabled={!settings.enabled}
+              />
+              <div style={{ marginLeft: '30px', marginBottom: '15px' }}>
+                  <label style={{ fontSize: '13px', display: 'block', marginBottom: '5px' }}>Interval (ms):</label>
+                  <input
+                      type="number"
+                      value={settings.processInterval}
+                      onChange={(e) => saveSettings({ processInterval: parseInt((e.target as HTMLInputElement).value) })}
+                      disabled={!settings.enabled || !settings.autoDetect}
+                      style={{ padding: '4px', width: '80px' }}
+                  />
+              </div>
+
+              <RenderToggle
+                  label="Use Mutation Observer"
+                  checked={settings.mutationObserver}
+                  onChange={v => saveSettings({ mutationObserver: v })}
+                  desc="Reacts immediately to DOM changes. Recommended for dynamic apps."
+                  disabled={!settings.enabled}
+              />
+
+              <div style={{ marginBottom: '15px' }}>
+                  <label style={{ fontSize: '13px', display: 'block', marginBottom: '5px' }}>Debounce Delay (ms):</label>
+                  <input
+                      type="number"
+                      value={settings.debounceDelay || 200}
+                      onChange={(e) => saveSettings({ debounceDelay: parseInt((e.target as HTMLInputElement).value) })}
+                      disabled={!settings.enabled}
+                      style={{ padding: '4px', width: '80px' }}
+                  />
+                  <p style={{ margin: '3px 0', fontSize: '11px', color: '#888' }}>Delay processing to group rapid updates.</p>
+              </div>
+
+              {/* Strategies */}
+              <h4 style={{ color: settings.darkMode ? '#fff' : '#333' }}>🎯 Strategies</h4>
+              <RenderToggle
+                  label="Hebrew Regex Detection"
+                  checked={settings.hebrewRegex}
+                  onChange={v => saveSettings({ hebrewRegex: v })}
+                  disabled={!settings.enabled}
+              />
+              <RenderToggle
+                  label="Arabic Regex Detection"
+                  checked={settings.arabicRegex}
+                  onChange={v => saveSettings({ arabicRegex: v })}
+                  disabled={!settings.enabled}
+              />
+
+              {/* Interactions */}
+              <h4 style={{ color: settings.darkMode ? '#fff' : '#333' }}>🤝 Interactions</h4>
+              <RenderToggle
+                  label="Smart Paste Interception"
+                  checked={settings.pasteInterception}
+                  onChange={v => saveSettings({ pasteInterception: v })}
+                  desc="Detects mixed content on paste and offers formatting options."
+                  disabled={!settings.enabled}
+              />
+              <RenderToggle
+                  label="Enable Notifications"
+                  checked={settings.notifications}
+                  onChange={v => saveSettings({ notifications: v })}
+                  desc="Show toast notifications for actions."
+              />
+
+              {/* Debugging */}
+              <h4 style={{ color: settings.darkMode ? '#fff' : '#333' }}>🐞 Debugging</h4>
+              <RenderToggle
+                  label="Visual Debugger"
+                  checked={settings.debugMode || false}
+                  onChange={v => {
+                      saveSettings({ debugMode: v });
+                      (window as any).blinkoRTL?.service?.toggleDebugMode();
+                  }}
+                  desc="Highlights RTL (Red) and LTR (Blue) elements."
+                  disabled={!settings.enabled}
+              />
+
+              {/* Target Selectors Editor */}
+              <h4 style={{ color: settings.darkMode ? '#fff' : '#333' }}>🎯 Target Selectors</h4>
+              <p style={{ fontSize: '12px', color: '#888' }}>Control which elements are processed. Uncheck to disable.</p>
+              <div style={{
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  border: '1px solid #ccc',
+                  padding: '10px',
+                  marginBottom: '10px',
+                  borderRadius: '4px',
+                  background: settings.darkMode ? '#333' : '#fff'
+              }}>
+                  {settings.targetSelectors.map((selector, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                          <input
+                              type="checkbox"
+                              checked={!settings.disabledSelectors.includes(selector)}
+                              onChange={(e) => toggleSelector(selector, (e.target as HTMLInputElement).checked)}
+                              style={{ marginRight: '8px' }}
+                          />
+                          <span style={{ fontSize: '13px', fontFamily: 'monospace', flex: 1 }}>{selector}</span>
+                          <button
+                              onClick={() => removeSelector(selector)}
+                              style={{
+                                  background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: '16px'
+                              }}
+                              title="Remove selector"
+                          >
+                              ×
+                          </button>
+                      </div>
+                  ))}
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                      type="text"
+                      value={customSelector}
+                      onChange={(e) => setCustomSelector((e.target as HTMLInputElement).value)}
+                      placeholder="Add CSS selector (e.g. .my-class)"
+                      style={{ flex: 1, padding: '6px' }}
+                  />
+                  <button
+                      onClick={addCustomSelector}
+                      style={{ background: '#28a745', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                      Add
+                  </button>
+              </div>
+
+              {/* CSS Editors (Collapsed by default or inside Advanced) */}
+              <h4 style={{ color: settings.darkMode ? '#fff' : '#333', marginTop: '20px' }}>🎨 Dynamic CSS Rules</h4>
+              <textarea
+                value={settings.dynamicCSS}
+                onChange={(e) => saveSettings({ dynamicCSS: (e.target as HTMLTextAreaElement).value })}
+                style={{ width: '100%', height: '150px', fontFamily: 'monospace', fontSize: '12px', padding: '5px' }}
+              />
+              <button
+                  onClick={() => saveSettings({ dynamicCSS: settings.dynamicCSS })}
+                  style={{ marginTop: '5px', padding: '5px 10px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                  Save Dynamic CSS
+              </button>
+
+              <h4 style={{ color: settings.darkMode ? '#fff' : '#333', marginTop: '20px' }}>📌 Permanent CSS</h4>
+              <RenderToggle
+                  label="Enable Permanent CSS"
+                  checked={settings.permanentCSS}
+                  onChange={v => saveSettings({ permanentCSS: v })}
+              />
+              <textarea
+                value={settings.customCSS}
+                onChange={(e) => saveSettings({ customCSS: (e.target as HTMLTextAreaElement).value })}
+                placeholder="Permanent CSS overrides..."
+                style={{ width: '100%', height: '150px', fontFamily: 'monospace', fontSize: '12px', padding: '5px' }}
+              />
           </div>
-        )}
+      )}
+
+      {/* Action Log */}
+      <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+          <h3 style={{ fontSize: '16px' }}>📜 Activity Log</h3>
+          <div style={{ maxHeight: '150px', overflowY: 'auto', background: settings.darkMode ? '#333' : '#fafafa', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }}>
+              {actionLog.length === 0 ? <span style={{color:'#888'}}>No activity.</span> : (
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '12px' }}>
+                      {actionLog.map((log, i) => (
+                          <li key={i} style={{ marginBottom: '5px', borderBottom: '1px solid #eee', paddingBottom: '2px' }}>
+                              <span style={{ color: '#888' }}>[{log.timestamp}]</span> <strong>{log.direction}</strong>: {log.element.substring(0, 30)}...
+                          </li>
+                      ))}
+                  </ul>
+              )}
+          </div>
       </div>
 
-      {/* Advanced Actions & Import/Export */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #ddd', 
-        borderRadius: '8px', 
-        background: settings.darkMode ? '#333' : '#fafafa'
-      }}>
-        <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>🔧 Advanced Actions</h3>
-        
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button
-            type="button"
-            onClick={resetToDefaults}
-            style={{ 
-              padding: '10px 20px', 
-              background: '#dc3545', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: 'pointer', 
-              fontWeight: '500' 
-            }}
-          >
-            🔄 Reset to Defaults
-          </button>
-
-          <button
-            type="button"
-            onClick={exportSettings}
-            style={{ 
-              padding: '10px 20px', 
-              background: '#28a745', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: 'pointer', 
-              fontWeight: '500' 
-            }}
-          >
-            📋 Export Settings (JSON)
-          </button>
-
-          <label style={{
-              padding: '10px 20px',
-              background: '#007bff',
-              color: 'white',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '500',
-              display: 'inline-block'
-            }}>
-            📂 Import Settings (JSON)
-            <input
-              type="file"
-              accept=".json"
-              onChange={importSettings}
-              style={{ display: 'none' }}
-            />
+      {/* Footer / Advanced Actions */}
+      <div style={{ marginTop: '30px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button onClick={resetToDefaults} style={{ padding: '8px 12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Reset Defaults</button>
+          <button onClick={exportSettings} style={{ padding: '8px 12px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Export JSON</button>
+          <label style={{ padding: '8px 12px', background: '#6c757d', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>
+              Import JSON
+              <input type="file" accept=".json" onChange={importSettings} style={{ display: 'none' }} />
           </label>
-        </div>
-        {importError && <p style={{ color: 'red', marginTop: '10px' }}>{importError}</p>}
       </div>
+
     </div>
   );
 }

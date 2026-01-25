@@ -5,6 +5,8 @@ import { debounce } from '../utils/debounce';
 import { PasteInterceptor } from '../utils/pasteInterceptor';
 import { StorageManager } from './storageManager';
 
+export type Direction = 'rtl' | 'ltr' | 'neutral';
+
 export class RTLService {
   private detector: RTLDetector;
   private isRTLEnabled: boolean = false;
@@ -19,8 +21,8 @@ export class RTLService {
 
   // Optimizations
   private pendingElements: Set<HTMLElement> = new Set();
-  private debouncedProcessQueue: () => void;
-  private debouncedProcessAll: () => void;
+  private debouncedProcessQueue!: () => void;
+  private debouncedProcessAll!: () => void;
 
   // Action Log
   private actionLog: { timestamp: string; element: string; direction: string; textPreview: string }[] = [];
@@ -41,10 +43,15 @@ export class RTLService {
     this.pasteInterceptor = new PasteInterceptor(detector);
 
     // Initialize optimization debouncers
-    this.debouncedProcessAll = debounce(() => this.processAllElements(), 200);
-    this.debouncedProcessQueue = debounce(() => {
-       this.processPendingElements();
-    }, 50);
+    this.initializeDebouncers();
+  }
+
+  private initializeDebouncers() {
+      const delay = this.settings.debounceDelay || 200;
+      this.debouncedProcessAll = debounce(() => this.processAllElements(), delay);
+      this.debouncedProcessQueue = debounce(() => {
+         this.processPendingElements();
+      }, 50); // Keep queue debounce short
   }
 
   public getSettings(): RTLSettings {
@@ -131,12 +138,24 @@ export class RTLService {
         this.injectDynamicCSS(); // Update dynamic CSS if changed
     }
 
+    // Update Mobile View
+    this.updateMobileView();
+
+    // Update Managers
+    if (this.isRTLEnabled && this.settings.pasteInterception) {
+        this.pasteInterceptor.enable();
+    } else {
+        this.pasteInterceptor.disable();
+    }
+
+    // Re-initialize debouncers if delay changed (simplistic approach: just re-init always)
+    this.initializeDebouncers();
+
     // Re-setup observer and processing if enabled
     if (this.isRTLEnabled) {
-        this.setupObserver();
+        this.setupObserver(); // Will check mutationObserver setting internally
         this.startAutoProcessing();
         this.debouncedProcessAll();
-        // Managers update implicitly via enabled check or settings usage
     }
 
     // Dispatch event for UI updates
@@ -485,9 +504,13 @@ export class RTLService {
     if (this.settings.permanentCSS) {
       this.injectPermanentCSS();
     }
+
+    this.updateMobileView();
     
     // Enable Managers
-    this.pasteInterceptor.enable();
+    if (this.settings.pasteInterception) {
+        this.pasteInterceptor.enable();
+    }
 
     this.setupObserver();
     this.startAutoProcessing();
@@ -500,6 +523,7 @@ export class RTLService {
   public disable() {
     this.isRTLEnabled = false;
     this.removeCSS();
+    this.updateMobileView();
     
     // Disable Managers
     this.pasteInterceptor.disable();
@@ -565,9 +589,19 @@ export class RTLService {
       }
   }
 
+  private updateMobileView() {
+      if (this.isRTLEnabled && this.settings.mobileView) {
+          document.body.classList.add('rtl-mobile-view');
+      } else {
+          document.body.classList.remove('rtl-mobile-view');
+      }
+  }
+
   private setupObserver() {
       if (this.observer) this.observer.disconnect();
-      if (!this.settings.autoDetect) return;
+
+      // Check both autoDetect and specific mutationObserver flag
+      if (!this.settings.autoDetect || !this.settings.mutationObserver) return;
 
       this.observer = new MutationObserver((mutations) => {
           if (!this.isRTLEnabled) return;
@@ -642,7 +676,7 @@ export class RTLService {
                                    matched = true;
                                    break;
                                }
-                           } catch (e) {}
+                           } catch (e) { /* ignore invalid selectors */ }
                       }
 
                       if (matched) {

@@ -1,19 +1,16 @@
-export function debounce<T extends (...args: any[]) => void>(func: T, wait: number, immediate: boolean = false): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-
-  return function(this: any, ...args: Parameters<T>) {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-this-alias */
+/* eslint-disable prefer-rest-params */
+export function debounce(func: any, wait: number) {
+  let timeout: any;
+  return function(this: any) {
     const context = this;
+    const args = arguments;
     const later = function() {
       timeout = null;
-      if (!immediate) func.apply(context, args);
+      func.apply(context, args);
     };
-
-    const callNow = immediate && !timeout;
-    if (timeout) {
-      clearTimeout(timeout);
-    }
+    clearTimeout(timeout);
     timeout = setTimeout(later, wait);
-
-    if (callNow) func.apply(context, args);
   };
 }

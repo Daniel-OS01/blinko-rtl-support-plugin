@@ -65,6 +65,9 @@ System.register([], (exports) => ({
     function initializeRTLPlugin() {
       console.log('Initializing Advanced Blinko RTL Plugin...');
       
+      // Reload settings to ensure we capture the User ID if it wasn't available during initial load
+      rtlService.loadSettings();
+
       createToggleButton();
       
       // Check if previously enabled
