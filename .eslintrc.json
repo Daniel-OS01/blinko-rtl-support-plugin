@@ -1,0 +1,7 @@
+{
+  "extends": "preact",
+  "rules": {
+    "jest/no-deprecated-functions": "off"
+  },
+  "ignorePatterns": ["dist", "release", "node_modules", "coverage"]
+}

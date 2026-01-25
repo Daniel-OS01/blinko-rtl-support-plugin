@@ -38,6 +38,16 @@ The audit was conducted using a combination of:
 - **Observation:** The import system handles malformed JSON, partial data, and legacy formats gracefully.
 - **Evidence:** `tests/audit/import_export_edge_cases.test.ts` passed all fuzzing scenarios.
 
+### 4.4 Mixed Content Integrity
+*Status: 🟢 VERIFIED*
+- **Observation:** Processing logic preserves DOM tags (span, strong) and text order within mixed LTR/RTL paragraphs.
+- **Evidence:** `tests/audit/mixed_content_dom.test.ts`.
+
+### 4.5 Load Time Performance
+*Status: 🟢 VERIFIED*
+- **Observation:** Service initialization occurs within strict 50ms budget.
+- **Evidence:** `tests/performance/benchmark.test.ts`.
+
 ## 5. Technical Audit Findings
 ### 5.1 Code Quality & Architecture
 - **Observation:** The codebase follows a clear separation of concerns (Service vs. UI vs. Storage).
@@ -75,6 +85,12 @@ A new, robust pipeline has been established in `.github/workflows/advanced-ci.ym
 #### 6.2.4 Security Scanning
 - **Tooling:** `npm audit` (via `package-lock.json` bridge).
 - **Focus:** High-severity vulnerability scanning in dependencies.
+- **Status:** 🟢 Active
+
+#### 6.2.5 Static Analysis & Integrity
+- **Linting:** ESLint with Preact configuration.
+- **Type Safety:** strict `tsc` checks.
+- **Bundle Budget:** Fails if `release/index.js` exceeds 200KB.
 - **Status:** 🟢 Active
 
 ---

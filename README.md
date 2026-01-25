@@ -169,6 +169,7 @@ The project uses a robust **Advanced CI Pipeline** (`.github/workflows/advanced-
 3.  **A11y Gate**: Checks for WCAG/ARIA compliance in RTL layouts.
 4.  **Cross-Environment**: Validates against multiple Bun versions.
 5.  **Security**: Automatic high-severity vulnerability scanning.
+6.  **Code Quality**: ESLint, Type Checking, and Bundle Size Monitoring (200KB limit).
 
 ## 🎨 CSS Integration
 

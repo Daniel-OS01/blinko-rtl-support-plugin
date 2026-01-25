@@ -67,4 +67,18 @@ describe("Performance Benchmark: RTL Processing", () => {
 
         expect(duration).toBeLessThan(50);
     });
+
+    it("initializes within load time budget", () => {
+        // Measure instantiation time (simulating script load/init)
+        const start = performance.now();
+        const svc = new RTLService(new RTLDetector());
+        svc.enable(); // Includes initial injection and observer setup
+        const end = performance.now();
+        const duration = end - start;
+
+        console.log(`Benchmark: Initialization time: ${duration.toFixed(2)}ms`);
+
+        // Strict budget for initialization to ensure no blocking on page load
+        expect(duration).toBeLessThan(50);
+    });
 });
