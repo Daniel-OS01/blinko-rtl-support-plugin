@@ -8,6 +8,8 @@ export interface Preset {
   isBuiltIn?: boolean;
 }
 
+export type Direction = 'rtl' | 'ltr' | 'neutral';
+
 export interface RTLSettings {
   enabled: boolean;
   sensitivity: 'high' | 'medium' | 'low';
@@ -22,7 +24,6 @@ export interface RTLSettings {
   customCSS: string; // Kept for backward compatibility or other uses, but dynamicCSS is the new main one for this feature
   dynamicCSS: string; // NEW
   permanentCSS: boolean;
-  dynamicCSS: string; // New field for user-editable dynamic rules
   visualStyles?: {
     fontFamily: string;
     lineHeight: number;
@@ -43,4 +44,7 @@ export interface RTLSettings {
   unicodeBidiMode?: string;
   processMixedContent?: boolean;
   debugMode?: boolean;
+  pasteInterceptorEnabled?: boolean;
+  mobileViewEnabled?: boolean; // Renaming from mobileView to be more explicit if desired, but sticking to existing mobileView for consistency with settings object
+  overrideDirectives?: boolean;
 }

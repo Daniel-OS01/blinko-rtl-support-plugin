@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import type { JSXInternal } from 'preact/src/jsx';
+import { JSX } from 'preact';
 import { RTLSettings, Preset } from './types';
 import { DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './services/constants';
 import { RTLDetector } from './utils/rtlDetector';
@@ -200,7 +200,7 @@ const BUILT_IN_PRESETS: Preset[] = [
   }
 ];
 
-export function RTLSetting(): JSXInternal.Element {
+export function RTLSetting(): JSX.Element {
   const [settings, setSettings] = useState<RTLSettings>({
     enabled: true,
     sensitivity: 'medium',
@@ -210,6 +210,7 @@ export function RTLSetting(): JSXInternal.Element {
     manualMode: true,
     manualToggle: false,
     mobileView: false,
+    pasteInterceptorEnabled: true,
     darkMode: false,
     method: 'all',
     customCSS: '',
@@ -230,6 +231,7 @@ export function RTLSetting(): JSXInternal.Element {
     savedPresets: []
   });
 
+  const [activeTab, setActiveTab] = useState<'simple' | 'advanced'>('simple');
   const [customSelector, setCustomSelector] = useState('');
   const [testText, setTestText] = useState('');
   const [testResult, setTestResult] = useState('');
@@ -596,7 +598,42 @@ export function RTLSetting(): JSXInternal.Element {
           )}
       </div>
 
-      {/* Mode Settings */}
+      {/* Tabs */}
+      <div style={{ display: 'flex', marginBottom: '20px', borderBottom: '1px solid #ddd' }}>
+        <button
+          onClick={() => setActiveTab('simple')}
+          style={{
+            flex: 1,
+            padding: '10px',
+            background: activeTab === 'simple' ? (settings.darkMode ? '#444' : '#eee') : 'transparent',
+            color: settings.darkMode ? '#fff' : '#333',
+            border: 'none',
+            borderBottom: activeTab === 'simple' ? '2px solid #007bff' : 'none',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          Simple
+        </button>
+        <button
+          onClick={() => setActiveTab('advanced')}
+          style={{
+            flex: 1,
+            padding: '10px',
+            background: activeTab === 'advanced' ? (settings.darkMode ? '#444' : '#eee') : 'transparent',
+            color: settings.darkMode ? '#fff' : '#333',
+            border: 'none',
+            borderBottom: activeTab === 'advanced' ? '2px solid #007bff' : 'none',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          Advanced
+        </button>
+      </div>
+
+      {/* Simple Settings */}
+      {activeTab === 'simple' && (
       <div style={{ 
         marginBottom: '30px', 
         padding: '20px', 
@@ -604,7 +641,7 @@ export function RTLSetting(): JSXInternal.Element {
         borderRadius: '8px', 
         background: settings.darkMode ? '#333' : '#fafafa'
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>🎛️ Mode Settings</h3>
+        <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>🎛️ Basic Settings</h3>
         
         <div style={{ display: 'grid', gap: '15px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
@@ -619,56 +656,14 @@ export function RTLSetting(): JSXInternal.Element {
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
               type="checkbox"
-              checked={settings.manualMode}
-              onChange={(e) => saveSettings({ manualMode: (e.target as HTMLInputElement).checked })}
-              disabled={!settings.enabled}
-            />
-            <span>✋ Manual Mode (Recommended)</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Manual mode only applies RTL when clearly detected, preventing unwanted changes
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.mobileView}
-              onChange={(e) => saveSettings({ mobileView: (e.target as HTMLInputElement).checked })}
-            />
-            <span>📱 Mobile View</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Optimizes layout for mobile devices
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.debugMode}
-              onChange={(e) => {
-                  const debugMode = (e.target as HTMLInputElement).checked;
-                  saveSettings({ debugMode });
-                  (window as any).blinkoRTL?.service?.toggleDebugMode();
-              }}
-              disabled={!settings.enabled}
-            />
-            <span>🐞 Visual Debugger</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Highlights detected RTL (Red) and LTR (Blue) elements with tooltips
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
               checked={settings.autoDetect}
               onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked })}
               disabled={!settings.enabled}
             />
-            <span>🤖 Auto-detect All Content</span>
+            <span>🤖 Auto-detect Content (Recommended)</span>
           </label>
           <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Continuously processes all content on the page every 2 seconds
+            Automatically detects Hebrew/Arabic content and applies RTL direction.
           </p>
 
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
@@ -685,11 +680,80 @@ export function RTLSetting(): JSXInternal.Element {
               }}
               disabled={!settings.enabled}
             />
-            <span>🔄 Manual RTL Toggle</span>
+            <span>🔄 Force All RTL</span>
           </label>
           <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Forces RTL on all content when enabled, ignores detection
+            Forces RTL direction on everything, useful if auto-detection misses something.
           </p>
+        </div>
+      </div>
+      )}
+
+      {/* Advanced Settings */}
+      {activeTab === 'advanced' && (
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        background: settings.darkMode ? '#333' : '#fafafa'
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>🛠️ Advanced Configuration</h3>
+
+        <div style={{ display: 'grid', gap: '15px' }}>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={settings.mobileView}
+              onChange={(e) => saveSettings({ mobileView: (e.target as HTMLInputElement).checked })}
+              disabled={!settings.enabled}
+            />
+            <span>📱 Mobile Optimization View</span>
+          </label>
+          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+            Applies specific CSS fixes for mobile layouts (e.g. preventing horizontal scroll).
+          </p>
+
+           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={settings.pasteInterceptorEnabled ?? true}
+              onChange={(e) => saveSettings({ pasteInterceptorEnabled: (e.target as HTMLInputElement).checked })}
+              disabled={!settings.enabled}
+            />
+            <span>📋 Paste Interceptor</span>
+          </label>
+          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+            Detects mixed content on paste and offers to split/wrap it.
+          </p>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={settings.debugMode}
+              onChange={(e) => {
+                  const debugMode = (e.target as HTMLInputElement).checked;
+                  saveSettings({ debugMode });
+                  (window as any).blinkoRTL?.service?.toggleDebugMode();
+              }}
+              disabled={!settings.enabled}
+            />
+            <span>🐞 Visual Debugger</span>
+          </label>
+          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+            Highlights detected RTL (Red) and LTR (Blue) elements.
+          </p>
+
+           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={settings.manualMode}
+              onChange={(e) => saveSettings({ manualMode: (e.target as HTMLInputElement).checked })}
+              disabled={!settings.enabled}
+            />
+            <span>✋ Manual Mode (Strict Detection)</span>
+          </label>
 
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
@@ -707,11 +771,9 @@ export function RTLSetting(): JSXInternal.Element {
             />
             <span>🌙 Dark Mode Plugin UI</span>
           </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Applies dark styling to RTL plugin components only
-          </p>
         </div>
       </div>
+      )}
 
       {/* Dynamic CSS Rules Section */}
       <div style={{
