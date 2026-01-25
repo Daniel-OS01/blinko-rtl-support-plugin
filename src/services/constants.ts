@@ -296,18 +296,12 @@ export const DEFAULT_SETTINGS: RTLSettings = {
   mixedContent: true,
   savedPresets: [],
   debugMode: false,
-  pasteInterceptorEnabled: true,
+  enablePasteInterceptor: true,
   mobileView: false,
   overrideDirectives: true,
   visualStyles: {
     fontFamily: 'inherit',
     lineHeight: 1.5,
     paragraphMargin: 10
-  },
-
-  // Feature Toggles Defaults
-  enablePasteInterceptor: true,
-  enableHoverContext: false,
-  enableNotifications: true,
-  enableObserver: true
+  }
 };
