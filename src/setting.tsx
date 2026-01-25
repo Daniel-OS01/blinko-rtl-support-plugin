@@ -604,7 +604,7 @@ export function RTLSetting(): JSXInternal.Element {
         borderRadius: '8px', 
         background: settings.darkMode ? '#333' : '#fafafa'
       }}>
-        <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>🎛️ Mode Settings</h3>
+        <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>🎛️ Basic Settings</h3>
         
         <div style={{ display: 'grid', gap: '15px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
@@ -632,68 +632,6 @@ export function RTLSetting(): JSXInternal.Element {
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
               type="checkbox"
-              checked={settings.mobileView}
-              onChange={(e) => saveSettings({ mobileView: (e.target as HTMLInputElement).checked })}
-            />
-            <span>📱 Mobile View</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Optimizes layout for mobile devices
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.debugMode}
-              onChange={(e) => {
-                  const debugMode = (e.target as HTMLInputElement).checked;
-                  saveSettings({ debugMode });
-                  (window as any).blinkoRTL?.service?.toggleDebugMode();
-              }}
-              disabled={!settings.enabled}
-            />
-            <span>🐞 Visual Debugger</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Highlights detected RTL (Red) and LTR (Blue) elements with tooltips
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.autoDetect}
-              onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked })}
-              disabled={!settings.enabled}
-            />
-            <span>🤖 Auto-detect All Content</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Continuously processes all content on the page every 2 seconds
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.manualToggle}
-              onChange={(e) => {
-                const manualToggle = (e.target as HTMLInputElement).checked;
-                saveSettings({ manualToggle });
-                const api = (window as any).blinkoRTL;
-                if (api && api.isEnabled()) {
-                  api.processAll();
-                }
-              }}
-              disabled={!settings.enabled}
-            />
-            <span>🔄 Manual RTL Toggle</span>
-          </label>
-          <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-            Forces RTL on all content when enabled, ignores detection
-          </p>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
               checked={settings.darkMode}
               onChange={(e) => {
                 const darkMode = (e.target as HTMLInputElement).checked;
@@ -711,6 +649,119 @@ export function RTLSetting(): JSXInternal.Element {
             Applies dark styling to RTL plugin components only
           </p>
         </div>
+      </div>
+
+      {/* Advanced Settings */}
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '1px solid #ffc107',
+        borderRadius: '8px',
+        background: settings.darkMode ? '#2c2c00' : '#fff9e6'
+      }}>
+        <details>
+            <summary style={{ cursor: 'pointer', fontWeight: 'bold', color: settings.darkMode ? '#fff' : '#856404' }}>
+                ⚙️ Advanced Configuration
+            </summary>
+
+            <div style={{ display: 'grid', gap: '15px', marginTop: '15px', paddingLeft: '10px', borderLeft: '3px solid #ffc107' }}>
+
+                <h4 style={{ margin: '5px 0', fontSize: '14px' }}>Detection & Automation</h4>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+                    <input
+                    type="checkbox"
+                    checked={settings.autoDetect}
+                    onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked })}
+                    disabled={!settings.enabled}
+                    />
+                    <span>🤖 Auto-detect (Timer)</span>
+                </label>
+                <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                    Runs checks every 2 seconds. Disable if performance is impacted.
+                </p>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+                    <input
+                    type="checkbox"
+                    checked={settings.enableObserver ?? true}
+                    onChange={(e) => saveSettings({ enableObserver: (e.target as HTMLInputElement).checked })}
+                    disabled={!settings.enabled}
+                    />
+                    <span>👀 Live DOM Observer</span>
+                </label>
+                <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                    Instantly detects new content changes.
+                </p>
+
+                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+                    <input
+                    type="checkbox"
+                    checked={settings.mobileView}
+                    onChange={(e) => saveSettings({ mobileView: (e.target as HTMLInputElement).checked })}
+                    />
+                    <span>📱 Mobile View Optimization</span>
+                </label>
+
+                <h4 style={{ margin: '10px 0 5px 0', fontSize: '14px' }}>Utilities</h4>
+
+                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+                    <input
+                    type="checkbox"
+                    checked={settings.enablePasteInterceptor ?? true}
+                    onChange={(e) => saveSettings({ enablePasteInterceptor: (e.target as HTMLInputElement).checked })}
+                    disabled={!settings.enabled}
+                    />
+                    <span>📋 Paste Interceptor</span>
+                </label>
+                <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                    Detects mixed content when pasting and offers to fix it.
+                </p>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+                    <input
+                    type="checkbox"
+                    checked={settings.enableNotifications ?? true}
+                    onChange={(e) => saveSettings({ enableNotifications: (e.target as HTMLInputElement).checked })}
+                    disabled={!settings.enabled}
+                    />
+                    <span>🔔 Toast Notifications</span>
+                </label>
+
+                <h4 style={{ margin: '10px 0 5px 0', fontSize: '14px' }}>Debugging</h4>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+                    <input
+                    type="checkbox"
+                    checked={settings.debugMode}
+                    onChange={(e) => {
+                        const debugMode = (e.target as HTMLInputElement).checked;
+                        saveSettings({ debugMode });
+                        (window as any).blinkoRTL?.service?.toggleDebugMode();
+                    }}
+                    disabled={!settings.enabled}
+                    />
+                    <span>🐞 Visual Debugger</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+                    <input
+                    type="checkbox"
+                    checked={settings.manualToggle}
+                    onChange={(e) => {
+                        const manualToggle = (e.target as HTMLInputElement).checked;
+                        saveSettings({ manualToggle });
+                        const api = (window as any).blinkoRTL;
+                        if (api && api.isEnabled()) {
+                        api.processAll();
+                        }
+                    }}
+                    disabled={!settings.enabled}
+                    />
+                    <span>🔄 Force Global RTL</span>
+                </label>
+            </div>
+        </details>
       </div>
 
       {/* Dynamic CSS Rules Section */}

@@ -136,7 +136,13 @@ export class RTLService {
         this.setupObserver();
         this.startAutoProcessing();
         this.debouncedProcessAll();
-        // Managers update implicitly via enabled check or settings usage
+
+        // Update Paste Interceptor State
+        if (this.settings.enablePasteInterceptor) {
+            this.pasteInterceptor.enable();
+        } else {
+            this.pasteInterceptor.disable();
+        }
     }
 
     // Dispatch event for UI updates
@@ -567,7 +573,8 @@ export class RTLService {
 
   private setupObserver() {
       if (this.observer) this.observer.disconnect();
-      if (!this.settings.autoDetect) return;
+      // Check both autoDetect master switch AND granular enableObserver toggle
+      if (!this.settings.autoDetect || (this.settings.enableObserver === false)) return;
 
       this.observer = new MutationObserver((mutations) => {
           if (!this.isRTLEnabled) return;

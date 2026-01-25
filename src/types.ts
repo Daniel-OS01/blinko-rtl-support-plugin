@@ -43,4 +43,10 @@ export interface RTLSettings {
   unicodeBidiMode?: string;
   processMixedContent?: boolean;
   debugMode?: boolean;
+
+  // Advanced Feature Toggles
+  enablePasteInterceptor: boolean;
+  enableHoverContext: boolean; // Note: Current codebase removed HoverContext, but we'll add flag for future
+  enableNotifications: boolean;
+  enableObserver: boolean; // Toggle for the MutationObserver specifically
 }
