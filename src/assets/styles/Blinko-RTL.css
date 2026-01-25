@@ -2875,3 +2875,40 @@ header {
     right: 15px !important;
   }
 }
+
+/* === Mobile View Optimization (Toggled via Settings) === */
+body.rtl-mobile-view .rtl-toggle-btn {
+    bottom: 80px !important; /* Higher to avoid bottom navigation bars */
+    right: 20px !important;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 16px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+}
+
+body.rtl-mobile-view .markdown-body {
+    /* Maximize horizontal space */
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+body.rtl-mobile-view .card-masonry-grid {
+    /* Force single column or tighter grid if possible,
+       but strictly speaking masonry is controlled by JS often.
+       We can just adjust margins. */
+    margin-left: 5px !important;
+    margin-right: 5px !important;
+}
+
+body.rtl-mobile-view .vditor-toolbar {
+    /* Make toolbar scrollable or more compact */
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+}
+
+body.rtl-mobile-view textarea,
+body.rtl-mobile-view input[type="text"] {
+    font-size: 16px !important; /* Prevent zoom on focus in iOS */
+}

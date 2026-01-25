@@ -1,4 +1,5 @@
-import { RTLSettings, DEFAULT_SETTINGS } from './constants';
+import { DEFAULT_SETTINGS } from './constants';
+import { RTLSettings } from '../types';
 
 export interface StorageSchema {
     version: number;
@@ -135,6 +136,11 @@ export class StorageManager {
         // Basic Type Checks
         if (data.minRTLChars !== undefined && typeof data.minRTLChars !== 'number') {
              throw new Error('Invalid settings: minRTLChars must be a number');
+        }
+
+        if (data.debounceDelay !== undefined && typeof data.debounceDelay !== 'number') {
+             // Fallback or throw? Let's sanitize to default
+             data.debounceDelay = 200;
         }
 
         // Sanitize CSS (basic)

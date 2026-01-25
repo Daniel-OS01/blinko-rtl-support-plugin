@@ -25,5 +25,11 @@ jobs:
     - name: Run All Tests
       run: bun test
 
+    - name: Lint Code
+      run: bun run lint
+
+    - name: Type Check
+      run: bun run typecheck
+
     - name: Build Check
       run: bun run build:prod

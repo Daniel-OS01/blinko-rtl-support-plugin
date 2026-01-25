@@ -2,9 +2,9 @@ export interface Preset {
   id: string;
   name: string;
   css: string;
-  dynamicCSS?: string; // Added dynamicCSS to presets
-  targetSelectors?: string[]; // Added targetSelectors to presets
-  disabledSelectors?: string[]; // Added disabledSelectors to presets
+  dynamicCSS?: string;
+  targetSelectors?: string[];
+  disabledSelectors?: string[];
   isBuiltIn?: boolean;
 }
 
@@ -19,17 +19,16 @@ export interface RTLSettings {
   mobileView?: boolean;
   darkMode: boolean;
   method: 'direct' | 'attributes' | 'css' | 'unicode' | 'all';
-  customCSS: string; // Kept for backward compatibility or other uses, but dynamicCSS is the new main one for this feature
-  dynamicCSS: string; // NEW
+  customCSS: string;
+  dynamicCSS: string;
   permanentCSS: boolean;
-  dynamicCSS: string; // New field for user-editable dynamic rules
   visualStyles?: {
     fontFamily: string;
     lineHeight: number;
     paragraphMargin: number;
   };
   targetSelectors: string[];
-  disabledSelectors: string[]; // New field for toggling selectors
+  disabledSelectors: string[];
   minRTLChars: number;
   processInterval: number;
   hebrewRegex: boolean;
@@ -43,4 +42,11 @@ export interface RTLSettings {
   unicodeBidiMode?: string;
   processMixedContent?: boolean;
   debugMode?: boolean;
+
+  // Advanced granular controls
+  pasteInterception: boolean;
+  mutationObserver: boolean;
+  fontInjection: boolean;
+  notifications: boolean;
+  debounceDelay: number;
 }

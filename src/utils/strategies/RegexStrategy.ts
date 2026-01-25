@@ -39,7 +39,7 @@ export class RegexStrategy implements DetectionStrategy {
     // Simplifying: Count total alphanumeric characters vs RTL characters.
 
     // Match all RTL chars
-    let patterns: string[] = [];
+    const patterns: string[] = [];
     if (this.checkHebrew) patterns.push(this.hebrewPattern);
     if (this.checkArabic) patterns.push(this.arabicPattern);
 
