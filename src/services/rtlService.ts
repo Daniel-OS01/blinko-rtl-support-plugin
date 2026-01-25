@@ -3,6 +3,7 @@ import { RTLSettings } from '../types';
 import { advancedRTLCSS, DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './constants';
 import { debounce } from '../utils/debounce';
 import { PasteInterceptor } from '../utils/pasteInterceptor';
+import { StorageManager } from './storageManager';
 
 export class RTLService {
   private detector: RTLDetector;
@@ -14,6 +15,7 @@ export class RTLService {
   private autoProcessInterval: any = null;
   // Managers
   private pasteInterceptor: PasteInterceptor;
+  private storageManager: StorageManager;
 
   // Optimizations
   private pendingElements: Set<HTMLElement> = new Set();
