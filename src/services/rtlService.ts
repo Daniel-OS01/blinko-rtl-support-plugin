@@ -1,5 +1,5 @@
 import { RTLDetector } from '../utils/rtlDetector';
-import { RTLSettings } from '../types';
+import { RTLSettings, Direction } from '../types';
 import { advancedRTLCSS, DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './constants';
 import { debounce } from '../utils/debounce';
 import { PasteInterceptor } from '../utils/pasteInterceptor';
@@ -92,6 +92,9 @@ export class RTLService {
         if (this.settings.autoDetect === undefined) {
             this.settings.autoDetect = true;
         }
+        if (this.settings.enablePasteInterceptor === undefined) {
+            this.settings.enablePasteInterceptor = true;
+        }
 
         // Apply config to detector
         this.detector.updateConfig({
@@ -106,6 +109,7 @@ export class RTLService {
     } else {
         // No saved settings, default to autoDetect
         this.settings.autoDetect = true;
+        this.settings.enablePasteInterceptor = true;
     }
   }
 
@@ -137,12 +141,15 @@ export class RTLService {
         this.startAutoProcessing();
         this.debouncedProcessAll();
 
-        // Update Paste Interceptor State
-        if (this.settings.enablePasteInterceptor) {
-            this.pasteInterceptor.enable();
+        // Update Managers
+        if (this.settings.enablePasteInterceptor !== false) {
+             this.pasteInterceptor.enable();
         } else {
-            this.pasteInterceptor.disable();
+             this.pasteInterceptor.disable();
         }
+
+        // Update Mobile View
+        this.applyMobileView();
     }
 
     // Dispatch event for UI updates
@@ -493,7 +500,12 @@ export class RTLService {
     }
     
     // Enable Managers
-    this.pasteInterceptor.enable();
+    if (this.settings.enablePasteInterceptor !== false) {
+        this.pasteInterceptor.enable();
+    }
+
+    // Apply Mobile View
+    this.applyMobileView();
 
     this.setupObserver();
     this.startAutoProcessing();
@@ -510,12 +522,23 @@ export class RTLService {
     // Disable Managers
     this.pasteInterceptor.disable();
 
+    // Remove Mobile View
+    document.body.classList.remove('blinko-rtl-mobile-view');
+
     this.stopAutoProcessing();
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
     }
     this.pendingElements.clear();
+  }
+
+  private applyMobileView() {
+      if (this.settings.mobileView) {
+          document.body.classList.add('blinko-rtl-mobile-view');
+      } else {
+          document.body.classList.remove('blinko-rtl-mobile-view');
+      }
   }
 
   public toggle() {
@@ -573,8 +596,7 @@ export class RTLService {
 
   private setupObserver() {
       if (this.observer) this.observer.disconnect();
-      // Check both autoDetect master switch AND granular enableObserver toggle
-      if (!this.settings.autoDetect || (this.settings.enableObserver === false)) return;
+      if (!this.settings.autoDetect) return;
 
       this.observer = new MutationObserver((mutations) => {
           if (!this.isRTLEnabled) return;

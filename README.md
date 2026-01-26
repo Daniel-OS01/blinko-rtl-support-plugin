@@ -136,40 +136,49 @@ window.blinkoRTL.getStats(); // Get count of active RTL blocks
 ```bash
 git clone https://github.com/Daniel-OS01/blinko-rtl-language-support-plugin.git
 cd blinko-rtl-language-support-plugin
-npm install
-npm run build
+bun install
+bun run build:prod
 ```
 
 ### Development Mode
 ```bash
-npm run dev
+bun run dev
 ```
+
+### Testing & Verification
+
+**Unit Tests**
+The project uses `bun test` for fast unit testing of logic and components.
+```bash
+bun test
+```
+
+**Visual Regression (E2E)**
+A Python-based Playwright script is included to verify UI rendering, mobile responsiveness, and CSS application.
+```bash
+# Prerequisites
+pip install playwright
+playwright install chromium
+
+# Run Verification
+python verification/verify_rtl_ui.py
+```
+This script generates screenshots in `verification/` for visual inspection of:
+- Desktop layout (RTL/LTR).
+- Mobile emulation (iPhone 12 viewport).
+- FAB positioning and responsiveness.
+- Mobile View optimization classes.
+
+### Architecture Notes
+- **Storage Manager**: Automatically handles settings persistence across different login states. It migrates anonymous settings to the user profile upon login.
+- **Paste Interceptor**: Uses modern `Clipboard` and `Selection` APIs to handle mixed-content insertion safely without `execCommand`.
+- **Mobile View**: Toggles a `blinko-rtl-mobile-view` class on `document.body` to apply targeted CSS overrides (e.g., `overflow-x: hidden`).
 
 ### Release
 ```bash
+# Releases are handled via GitHub Actions
 npm run release:publish
 ```
-
-### Advanced Testing
-The project now includes specialized testing tools for performance and accessibility:
-
-```bash
-# Run Performance Benchmark (Checks processing speed on 1000+ nodes)
-npm run test:perf  # or bun run test:perf
-
-# Run Accessibility Compliance Checks (A11y/ARIA)
-npm run test:a11y  # or bun run test:a11y
-```
-
-## 🤖 CI/CD Pipeline
-
-The project uses a robust **Advanced CI Pipeline** (`.github/workflows/advanced-ci.yml`) that enforces:
-1.  **Integrity**: Unit & Integration tests + Build verification.
-2.  **Performance Gate**: Fails if RTL processing exceeds **100ms** (Performance Budget).
-3.  **A11y Gate**: Checks for WCAG/ARIA compliance in RTL layouts.
-4.  **Cross-Environment**: Validates against multiple Bun versions.
-5.  **Security**: Automatic high-severity vulnerability scanning.
-6.  **Code Quality**: ESLint, Type Checking, and Bundle Size Monitoring (200KB limit).
 
 ## 🎨 CSS Integration
 

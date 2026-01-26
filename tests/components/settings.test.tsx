@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from "bun:test";
 import { RTLSetting } from "../../src/setting";
-import { render } from "@testing-library/preact";
+import { render, fireEvent, waitFor, act } from "@testing-library/preact";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { h } from "preact";
 import { DEFAULT_TARGET_SELECTORS, DEFAULT_DYNAMIC_CSS } from "../../src/services/constants";
@@ -134,9 +134,10 @@ describe("RTLSetting Component", () => {
     expect(container.innerHTML).toContain('Fixed RTL Language Support Settings');
   });
 
-  it("renders mobile view toggle", () => {
+  it("renders settings tabs", () => {
     const { container } = render(<RTLSetting />);
-    expect(container.textContent).toContain("Mobile View");
+    expect(container.innerHTML).toContain("Simple");
+    expect(container.innerHTML).toContain("Advanced");
   });
 
   it("saves settings to localStorage on change", () => {

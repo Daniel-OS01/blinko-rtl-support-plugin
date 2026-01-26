@@ -1,3 +1,5 @@
+import { RTLSettings } from '../types';
+
 export const advancedRTLCSS = `
 /* Method 1: Direct RTL styling */
 .rtl-force {
@@ -267,7 +269,7 @@ export const DEFAULT_TARGET_SELECTORS = [
     'caption'
 ];
 
-export const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS: RTLSettings = {
   enabled: true,
   sensitivity: 'medium',
   forceDirection: 'auto',
@@ -294,15 +296,12 @@ export const DEFAULT_SETTINGS = {
   mixedContent: true,
   savedPresets: [],
   debugMode: false,
+  enablePasteInterceptor: true,
+  mobileView: false,
+  overrideDirectives: true,
   visualStyles: {
     fontFamily: 'inherit',
     lineHeight: 1.5,
     paragraphMargin: 10
-  },
-
-  // Feature Toggles Defaults
-  enablePasteInterceptor: true,
-  enableHoverContext: false,
-  enableNotifications: true,
-  enableObserver: true
+  }
 };

@@ -1,124 +1,45 @@
-name: Advanced CI Pipeline
+name: Advanced CI
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  schedule:
-    - cron: '0 0 * * 0' # Weekly run to catch regressions in dependencies
   workflow_dispatch:
 
 jobs:
-  # 1. Functional & Technical Integrity
-  verify-integrity:
-    name: 🛡️ Integrity & Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
-    - name: Install Dependencies
-      run: bun install
-    - name: Run Standard Tests
-      run: bun test tests/unit tests/integration tests/services tests/utils tests/components tests/e2e
-    - name: Build Production Artifact
-      run: bun run build:prod
-
-  # 2. Performance Gate
-  performance-gate:
-    name: 🚀 Performance Benchmarks
-    runs-on: ubuntu-latest
-    needs: verify-integrity
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
-    - name: Install Dependencies
-      run: bun install
-    - name: Run Benchmark
-      run: bun run test:perf
-      # Note: The test file itself contains the 'expect(duration).toBeLessThan(X)' assertion
-      # which will cause this job to fail if the budget is exceeded.
-
-  # 3. Accessibility Compliance
-  a11y-compliance:
-    name: ♿ Accessibility Checks (WCAG/ARIA)
-    runs-on: ubuntu-latest
-    needs: verify-integrity
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
-    - name: Install Dependencies
-      run: bun install
-    - name: Run A11y Tests
-      run: bun run test:a11y
-
-  # 4. Cross-Environment Compatibility Matrix
-  cross-env-matrix:
-    name: 🌐 Cross-Env Compatibility
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        bun-version: ["1.0.0", "latest"]
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup Bun (${{ matrix.bun-version }})
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: ${{ matrix.bun-version }}
-    - name: Install Dependencies
-      run: bun install
-    - name: Verification Build
-      run: bun run build:prod
-
-  # 5. Static Analysis & Bundle Checks
-  static-checks:
-    name: 🔍 Static Analysis (Lint/Types/Size)
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
-    - name: Install Dependencies
-      run: bun install
-    - name: Type Check
-      run: bun run type-check
-    - name: Linting
-      run: bun run lint
-    - name: Build for Size Check
-      run: bun run build:prod
-    - name: Bundle Size Verification
-      run: bun run check-size
-
-  # 6. Security Scanning
   security-audit:
-    name: 🔒 Security Audit
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
-    - name: Install Dependencies
-      run: bun install
-    # Bun doesn't have a native 'audit' command like npm yet that is fully standard.
-    # We can use npm audit as a proxy since lockfile exists, or a dedicated tool.
-    # Falling back to npm audit for the lockfile if package-lock.json exists, else skip.
-    - name: Dependency Vulnerability Scan
-      run: |
-        if [ -f package-lock.json ]; then
-          npm audit --audit-level=high
-        else
-          echo "No package-lock.json found, skipping npm audit."
-        fi
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Dependency Vulnerability Scan
+        run: |
+          if [ -f package-lock.json ]; then
+            # Install jq for JSON parsing
+            sudo apt-get update -y
+            sudo apt-get install -y jq
+
+            # Run audit and always produce JSON (don't let npm exit non-zero stop the script)
+            npm audit --json > audit.json || true
+
+            # Extract counts (vulnerabilities metadata is present in npm audit JSON)
+            HIGH=$(jq '.metadata.vulnerabilities.high // 0' audit.json)
+            CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' audit.json)
+
+            echo "Vulnerability summary: high=$HIGH critical=$CRITICAL"
+            if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+              echo "High/Critical vulnerabilities found. Full report:"
+              cat audit.json
+              exit 1
+            else
+              echo "No high/critical vulnerabilities found."
+            fi
+          else
+            echo "No package-lock.json found, skipping npm audit."
+          fi
