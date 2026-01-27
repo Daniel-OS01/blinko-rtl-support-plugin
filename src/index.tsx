@@ -163,7 +163,7 @@ System.register([], (exports) => ({
         }
       };
 
-      (window as any).blinkoRTL = blinkoRTL;
+      window.blinkoRTL = blinkoRTL;
 
       console.log('Advanced Blinko RTL Plugin initialized successfully');
     }
