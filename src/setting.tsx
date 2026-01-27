@@ -295,7 +295,7 @@ export function RTLSetting(): JSX.Element {
       return openBraces === 0;
   };
 
-  const saveSettings = (newSettings: Partial<RTLSettings>) => {
+  const saveSettings = (newSettings: Partial<RTLSettings>, feedbackMessage?: string) => {
     if (newSettings.dynamicCSS !== undefined) {
         if (!validateCSS(newSettings.dynamicCSS)) {
             setCssError('Invalid CSS: Unbalanced curly braces');
@@ -312,7 +312,9 @@ export function RTLSetting(): JSX.Element {
         window.blinkoRTL.service.updateSettings(newSettings);
 
         // Show feedback for any change
-        window.Blinko.toast.success('Settings updated');
+        if (window.Blinko?.toast) {
+            window.Blinko.toast.success(feedbackMessage || 'Settings updated');
+        }
     } else {
         // Fallback or error logging if service is missing
         console.warn('RTL Service not found, settings might not persist correctly via StorageManager');
@@ -459,16 +461,22 @@ export function RTLSetting(): JSX.Element {
   const exportSettings = () => {
       try {
           let exportData: string;
-          try {
-              const service = window.blinkoRTL?.service;
-              if (service && typeof service.exportSettings === 'function') {
+          const service = window.blinkoRTL?.service;
+
+          if (service && typeof service.exportSettings === 'function') {
+              try {
                   exportData = service.exportSettings();
-              } else {
-                   throw new Error('Service unavailable');
+              } catch (e) {
+                   console.warn('Service export failed, falling back to local state:', e);
+                   exportData = JSON.stringify({
+                      version: 1,
+                      source: 'blinko-rtl-support-plugin',
+                      timestamp: Date.now(),
+                      data: settings
+                  }, null, 2);
               }
-          } catch (e) {
-               console.warn('Exporting from state fallback:', e);
-               // Fallback: Manually constructing export data if service fails
+          } else {
+               console.log('Service unavailable for export, using local state');
                exportData = JSON.stringify({
                   version: 1,
                   source: 'blinko-rtl-support-plugin',
@@ -486,13 +494,16 @@ export function RTLSetting(): JSX.Element {
           downloadAnchorNode.click();
           document.body.removeChild(downloadAnchorNode);
           URL.revokeObjectURL(url);
-          if (window.Blinko) {
+
+          if (window.Blinko?.toast) {
               window.Blinko.toast.success('Settings exported successfully');
           }
       } catch (e) {
           console.error('Export error:', e);
-          if (window.Blinko) {
-              window.Blinko.toast.error('Export failed');
+          if (window.Blinko?.toast) {
+              window.Blinko.toast.error('Export failed: ' + (e instanceof Error ? e.message : String(e)));
+          } else {
+              alert('Export failed');
           }
       }
   };
@@ -621,7 +632,7 @@ export function RTLSetting(): JSX.Element {
                       {actionLog.map((log, i) => (
                           <tr key={i} style={{ borderBottom: settings.darkMode ? '1px solid #444' : '1px solid #eee' }}>
                               <td style={{ padding: '5px', whiteSpace: 'nowrap' }}>{log.timestamp}</td>
-                              <td style={{ padding: '5px', fontFamily: 'monospace' }} title={log.element}>{log.element}</td>
+                              <td style={{ padding: '5px', fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }} title={log.element}>{log.element}</td>
                               <td style={{ padding: '5px', color: log.direction === 'RTL' ? '#28a745' : '#007bff' }}>{log.direction}</td>
                               <td style={{ padding: '5px', color: settings.darkMode ? '#888' : '#666' }}>{log.textPreview}</td>
                           </tr>
@@ -682,7 +693,7 @@ export function RTLSetting(): JSX.Element {
             <input
               type="checkbox"
               checked={settings.enabled}
-              onChange={(e) => saveSettings({ enabled: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => saveSettings({ enabled: (e.target as HTMLInputElement).checked }, (e.target as HTMLInputElement).checked ? 'RTL Support Enabled' : 'RTL Support Disabled')}
             />
             <span>🔧 Enable RTL Support</span>
           </label>
@@ -691,7 +702,7 @@ export function RTLSetting(): JSX.Element {
             <input
               type="checkbox"
               checked={settings.autoDetect}
-              onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked }, (e.target as HTMLInputElement).checked ? 'Auto-detect Enabled' : 'Auto-detect Disabled')}
               disabled={!settings.enabled}
             />
             <span>🤖 Auto-detect Content (Recommended)</span>
@@ -706,8 +717,7 @@ export function RTLSetting(): JSX.Element {
               checked={settings.manualToggle}
               onChange={(e) => {
                 const manualToggle = (e.target as HTMLInputElement).checked;
-                saveSettings({ manualToggle });
-                window.Blinko.toast.success('Settings saved');
+                saveSettings({ manualToggle }, manualToggle ? 'Force RTL Enabled' : 'Force RTL Disabled');
                 const api = (window as any).blinkoRTL;
                 if (api && api.isEnabled()) {
                   api.processAll();
@@ -733,7 +743,7 @@ export function RTLSetting(): JSX.Element {
                     min="1"
                     max="20"
                     value={settings.minRTLChars}
-                    onChange={(e) => saveSettings({ minRTLChars: parseInt((e.target as HTMLInputElement).value) })}
+                    onChange={(e) => saveSettings({ minRTLChars: parseInt((e.target as HTMLInputElement).value) }, `Min RTL Chars: ${(e.target as HTMLInputElement).value}`)}
                     style={{ flex: 1, cursor: 'pointer' }}
                 />
                 <input
@@ -741,7 +751,7 @@ export function RTLSetting(): JSX.Element {
                     min="1"
                     max="20"
                     value={settings.minRTLChars}
-                    onChange={(e) => saveSettings({ minRTLChars: parseInt((e.target as HTMLInputElement).value) })}
+                    onChange={(e) => saveSettings({ minRTLChars: parseInt((e.target as HTMLInputElement).value) }, `Min RTL Chars: ${(e.target as HTMLInputElement).value}`)}
                     style={{ width: '60px', padding: '5px' }}
                 />
             </div>
@@ -778,8 +788,7 @@ export function RTLSetting(): JSX.Element {
                   onChange={(e) => {
                       const val = parseInt((e.target as HTMLInputElement).value, 10);
                       if (val > 0) {
-                          saveSettings({ minRTLChars: val });
-                          window.Blinko.toast.success('Settings saved');
+                          saveSettings({ minRTLChars: val }, `Min RTL Chars: ${val}`);
                       }
                   }}
                   disabled={!settings.enabled}
@@ -802,8 +811,7 @@ export function RTLSetting(): JSX.Element {
               type="checkbox"
               checked={settings.mobileView}
               onChange={(e) => {
-                  saveSettings({ mobileView: (e.target as HTMLInputElement).checked });
-                  window.Blinko.toast.success('Settings saved');
+                  saveSettings({ mobileView: (e.target as HTMLInputElement).checked }, (e.target as HTMLInputElement).checked ? 'Mobile View Enabled' : 'Mobile View Disabled');
               }}
               disabled={!settings.enabled}
             />
@@ -818,8 +826,7 @@ export function RTLSetting(): JSX.Element {
               type="checkbox"
               checked={settings.enablePasteInterceptor ?? true}
               onChange={(e) => {
-                  saveSettings({ enablePasteInterceptor: (e.target as HTMLInputElement).checked });
-                  window.Blinko.toast.success('Settings saved');
+                  saveSettings({ enablePasteInterceptor: (e.target as HTMLInputElement).checked }, (e.target as HTMLInputElement).checked ? 'Paste Interceptor Enabled' : 'Paste Interceptor Disabled');
               }}
               disabled={!settings.enabled}
             />
@@ -836,9 +843,13 @@ export function RTLSetting(): JSX.Element {
                   checked={settings.debugMode}
                   onChange={(e) => {
                       const debugMode = (e.target as HTMLInputElement).checked;
-                      saveSettings({ debugMode });
-                      (window as any).blinkoRTL?.service?.toggleDebugMode();
-                      window.Blinko.toast.success(debugMode ? 'Debug Mode Enabled' : 'Debug Mode Disabled');
+                      saveSettings({ debugMode }, debugMode ? 'Debug Mode Enabled' : 'Debug Mode Disabled');
+                      if (debugMode) {
+                          document.body.classList.add('rtl-debug-mode');
+                      } else {
+                          document.body.classList.remove('rtl-debug-mode');
+                      }
+                      (window as any).blinkoRTL?.service?.processAllElements();
                   }}
                   disabled={!settings.enabled}
                 />
@@ -849,14 +860,11 @@ export function RTLSetting(): JSX.Element {
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer', marginLeft: '30px' }}>
                     <input
                       type="checkbox"
-                      checked={settings.showElementNames}
+                      checked={settings.debugShowElementNames}
                       onChange={(e) => {
-                          const showElementNames = (e.target as HTMLInputElement).checked;
-                          saveSettings({ showElementNames });
-                          window.Blinko.toast.success('Settings saved');
-                          // Re-trigger debug mode to update visuals
-                          (window as any).blinkoRTL?.service?.toggleDebugMode();
-                          (window as any).blinkoRTL?.service?.toggleDebugMode();
+                          const debugShowElementNames = (e.target as HTMLInputElement).checked;
+                          saveSettings({ debugShowElementNames }, debugShowElementNames ? 'Element Names Shown' : 'Element Names Hidden');
+                          (window as any).blinkoRTL?.service?.processAllElements();
                       }}
                     />
                     <span>Show Element Names (e.g. "RTL (DIV)")</span>
@@ -873,11 +881,8 @@ export function RTLSetting(): JSX.Element {
               checked={settings.debugShowElementNames}
               onChange={(e) => {
                   const debugShowElementNames = (e.target as HTMLInputElement).checked;
-                  saveSettings({ debugShowElementNames });
-                  window.blinkoRTL?.service?.updateSettings({ debugShowElementNames });
-                  if (window.Blinko) {
-                      window.Blinko.toast.success(debugShowElementNames ? 'Element names enabled' : 'Element names disabled');
-                  }
+                  saveSettings({ debugShowElementNames }, debugShowElementNames ? 'Element Names Shown' : 'Element Names Hidden');
+                  (window as any).blinkoRTL?.service?.processAllElements();
               }}
               disabled={!settings.enabled}
             />
@@ -893,10 +898,7 @@ export function RTLSetting(): JSX.Element {
               checked={settings.enableActionLog ?? true}
               onChange={(e) => {
                   const enableActionLog = (e.target as HTMLInputElement).checked;
-                  saveSettings({ enableActionLog });
-                  if (window.Blinko) {
-                      window.Blinko.toast.success(enableActionLog ? 'Action log enabled' : 'Action log disabled');
-                  }
+                  saveSettings({ enableActionLog }, enableActionLog ? 'Action Log Enabled' : 'Action Log Disabled');
               }}
               disabled={!settings.enabled}
             />
@@ -909,10 +911,7 @@ export function RTLSetting(): JSX.Element {
               checked={settings.showManualToggle ?? true}
               onChange={(e) => {
                   const showManualToggle = (e.target as HTMLInputElement).checked;
-                  saveSettings({ showManualToggle });
-                  if (window.Blinko) {
-                      window.Blinko.toast.success(showManualToggle ? 'Toggle button shown' : 'Toggle button hidden');
-                  }
+                  saveSettings({ showManualToggle }, showManualToggle ? 'Toggle Button Shown' : 'Toggle Button Hidden');
               }}
               disabled={!settings.enabled}
             />
@@ -924,8 +923,7 @@ export function RTLSetting(): JSX.Element {
               type="checkbox"
               checked={settings.manualMode}
               onChange={(e) => {
-                  saveSettings({ manualMode: (e.target as HTMLInputElement).checked });
-                  window.Blinko.toast.success('Settings saved');
+                  saveSettings({ manualMode: (e.target as HTMLInputElement).checked }, (e.target as HTMLInputElement).checked ? 'Manual Mode Enabled' : 'Manual Mode Disabled');
               }}
               disabled={!settings.enabled}
             />
