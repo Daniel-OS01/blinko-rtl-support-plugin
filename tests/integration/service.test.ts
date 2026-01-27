@@ -45,17 +45,21 @@ describe("RTLService", () => {
 
   it("applies debug visual classes when processing elements in debug mode", () => {
     const el = document.createElement("div");
+    el.id = 'debug-test';
     el.textContent = "שלום"; // Hebrew
     document.body.appendChild(el);
 
-    // Enable debug mode
-    service.toggleDebugMode();
+    // Enable debug mode and name display
+    service.updateSettings({ debugMode: true, debugShowElementNames: true });
+    // Manually add debug class to body as toggleDebugMode does, since we used updateSettings
+    document.body.classList.add('rtl-debug-mode');
 
     // Process element
     service.processElement(el);
 
     expect(el.classList.contains('rtl-debug-rtl')).toBe(true);
     expect(el.getAttribute('data-rtl-debug')).toBe('RTL');
+    expect(el.getAttribute('data-debug-name')).toBe('div#debug-test');
   });
 
   it.skip("removes debug visual classes when debug mode is disabled", () => {
