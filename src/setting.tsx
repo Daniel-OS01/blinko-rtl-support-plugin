@@ -77,7 +77,7 @@ button,
 textarea,
 [contenteditable],
 input[type="text"] {
-    unicode-bidi: plaintext !important;
+    unicode-bidi: isolate !important;
 }
 
 /* Specific spacing for editor paragraphs */
@@ -111,7 +111,7 @@ input[type="text"] {
 .vditor-reset h4,
 .vditor-reset h5,
 .vditor-reset h6 {
-    unicode-bidi: plaintext;
+    unicode-bidi: isolate;
 }
 
 /* Heading margins for the editor */
@@ -136,7 +136,7 @@ menu,
 .vditor-reset ul,
 .vditor-reset ol {
     direction: rtl;
-    unicode-bidi: plaintext;
+    unicode-bidi: isolate;
     margin: 0;
 }
 
@@ -158,7 +158,7 @@ menu,
 .vditor-task input {
     margin: 0;
     direction: rtl;
-    unicode-bidi: plaintext;
+    unicode-bidi: isolate;
 }
 
 /* ==========================================================================
@@ -175,7 +175,7 @@ menu,
     margin-bottom: var(--base-size-8);
     padding: 0px 20px; /* 20PX normalized to lowercase */
     direction: rtl;
-    unicode-bidi: plaintext;
+    unicode-bidi: isolate;
 }
 
 ul {
@@ -246,7 +246,7 @@ export function RTLSetting(): JSX.Element {
   useEffect(() => {
     // Load initial settings
     const loadInitialSettings = () => {
-        const currentSettings = (window as any).blinkoRTL?.settings();
+        const currentSettings = window.blinkoRTL?.settings();
         if (currentSettings) {
             setSettings(currentSettings);
         } else {
@@ -272,8 +272,8 @@ export function RTLSetting(): JSX.Element {
     };
 
     // Load initial logs
-    if ((window as any).blinkoRTL?.service?.getActionLog) {
-        setActionLog((window as any).blinkoRTL.service.getActionLog());
+    if (window.blinkoRTL?.service?.getActionLog) {
+        setActionLog(window.blinkoRTL.service.getActionLog());
     }
 
     window.addEventListener('rtl-settings-changed', handleSettingsChange as EventListener);
@@ -308,8 +308,8 @@ export function RTLSetting(): JSX.Element {
     setSettings(updatedSettings);
     
     // Call service update if available
-    if ((window as any).blinkoRTL?.service) {
-        (window as any).blinkoRTL.service.updateSettings(newSettings);
+    if (window.blinkoRTL?.service) {
+        window.blinkoRTL.service.updateSettings(newSettings);
 
         // Show feedback for any change
         window.Blinko.toast.success('Settings updated');
@@ -330,7 +330,7 @@ export function RTLSetting(): JSX.Element {
     if (!testText.trim()) return;
     // Use the exposed API directly which routes to detector
     // Make sure we pass the text properly
-    const detector = (window as any).blinkoRTL?.detector;
+    const detector = window.blinkoRTL?.detector;
     if (detector) {
         const result = detector.detectRTL(testText);
         setTestResult(result ? 'RTL' : 'LTR');
@@ -348,8 +348,8 @@ export function RTLSetting(): JSX.Element {
   };
 
   const processAllContent = () => {
-    if ((window as any).blinkoRTL) {
-        (window as any).blinkoRTL.processAll();
+    if (window.blinkoRTL) {
+        window.blinkoRTL.processAll();
         window.Blinko.toast.success('Content processed!');
     }
   };
@@ -458,17 +458,24 @@ export function RTLSetting(): JSX.Element {
 
   const exportSettings = () => {
       try {
-          // Use settings from state directly if service export isn't behaving,
-          // but service.exportSettings handles metadata nicely.
-          const service = (window as any).blinkoRTL?.service;
-
-          // Fallback: Manually constructing export data if service fails or for robustness
-          const exportData = service ? service.exportSettings() : JSON.stringify({
-              version: 1,
-              source: 'blinko-rtl-support-plugin',
-              timestamp: Date.now(),
-              data: settings
-          }, null, 2);
+          let exportData: string;
+          try {
+              const service = window.blinkoRTL?.service;
+              if (service && typeof service.exportSettings === 'function') {
+                  exportData = service.exportSettings();
+              } else {
+                   throw new Error('Service unavailable');
+              }
+          } catch (e) {
+               console.warn('Exporting from state fallback:', e);
+               // Fallback: Manually constructing export data if service fails
+               exportData = JSON.stringify({
+                  version: 1,
+                  source: 'blinko-rtl-support-plugin',
+                  timestamp: Date.now(),
+                  data: settings
+              }, null, 2);
+          }
 
           const blob = new Blob([exportData], { type: "application/json" });
           const url = URL.createObjectURL(blob);
@@ -498,7 +505,7 @@ export function RTLSetting(): JSX.Element {
       reader.onload = (e) => {
           try {
               const content = e.target?.result as string;
-              const service = (window as any).blinkoRTL?.service;
+              const service = window.blinkoRTL?.service;
 
               if (service) {
                   service.importSettings(content);
@@ -568,7 +575,7 @@ export function RTLSetting(): JSX.Element {
           
           <button
             onClick={() => {
-              (window as any).blinkoRTL?.toggle();
+              window.blinkoRTL?.toggle();
               window.Blinko.toast.success('RTL toggled!');
             }}
             style={{ 
@@ -700,6 +707,7 @@ export function RTLSetting(): JSX.Element {
               onChange={(e) => {
                 const manualToggle = (e.target as HTMLInputElement).checked;
                 saveSettings({ manualToggle });
+                window.Blinko.toast.success('Settings saved');
                 const api = (window as any).blinkoRTL;
                 if (api && api.isEnabled()) {
                   api.processAll();
@@ -719,14 +727,24 @@ export function RTLSetting(): JSX.Element {
                 <span>Minimum RTL Characters:</span>
                 <span>{settings.minRTLChars}</span>
             </label>
-            <input
-                type="range"
-                min="1"
-                max="20"
-                value={settings.minRTLChars}
-                onChange={(e) => saveSettings({ minRTLChars: parseInt((e.target as HTMLInputElement).value) })}
-                style={{ width: '100%', cursor: 'pointer' }}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={settings.minRTLChars}
+                    onChange={(e) => saveSettings({ minRTLChars: parseInt((e.target as HTMLInputElement).value) })}
+                    style={{ flex: 1, cursor: 'pointer' }}
+                />
+                <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={settings.minRTLChars}
+                    onChange={(e) => saveSettings({ minRTLChars: parseInt((e.target as HTMLInputElement).value) })}
+                    style={{ width: '60px', padding: '5px' }}
+                />
+            </div>
             <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
                 Elements with fewer than {settings.minRTLChars} RTL characters will be ignored.
             </p>
@@ -748,11 +766,45 @@ export function RTLSetting(): JSX.Element {
 
         <div style={{ display: 'grid', gap: '15px' }}>
 
+          <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '6px', background: settings.darkMode ? '#444' : '#fff' }}>
+              <label style={{ display: 'block', fontWeight: '500', marginBottom: '5px' }}>
+                  🔤 Minimum RTL Characters:
+              </label>
+              <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={settings.minRTLChars}
+                  onChange={(e) => {
+                      const val = parseInt((e.target as HTMLInputElement).value, 10);
+                      if (val > 0) {
+                          saveSettings({ minRTLChars: val });
+                          window.Blinko.toast.success('Settings saved');
+                      }
+                  }}
+                  disabled={!settings.enabled}
+                  style={{
+                      padding: '5px',
+                      borderRadius: '4px',
+                      border: '1px solid #999',
+                      width: '60px',
+                      background: settings.darkMode ? '#222' : 'white',
+                      color: settings.darkMode ? '#eee' : 'black'
+                  }}
+              />
+              <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Minimum number of RTL characters required to trigger detection.
+              </p>
+          </div>
+
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={settings.mobileView}
-              onChange={(e) => saveSettings({ mobileView: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => {
+                  saveSettings({ mobileView: (e.target as HTMLInputElement).checked });
+                  window.Blinko.toast.success('Settings saved');
+              }}
               disabled={!settings.enabled}
             />
             <span>📱 Mobile Optimization View</span>
@@ -765,7 +817,10 @@ export function RTLSetting(): JSX.Element {
             <input
               type="checkbox"
               checked={settings.enablePasteInterceptor ?? true}
-              onChange={(e) => saveSettings({ enablePasteInterceptor: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => {
+                  saveSettings({ enablePasteInterceptor: (e.target as HTMLInputElement).checked });
+                  window.Blinko.toast.success('Settings saved');
+              }}
               disabled={!settings.enabled}
             />
             <span>📋 Paste Interceptor</span>
@@ -774,19 +829,40 @@ export function RTLSetting(): JSX.Element {
             Detects mixed content on paste and offers to split/wrap it.
           </p>
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={settings.debugMode}
-              onChange={(e) => {
-                  const debugMode = (e.target as HTMLInputElement).checked;
-                  saveSettings({ debugMode });
-                  (window as any).blinkoRTL?.service?.toggleDebugMode();
-              }}
-              disabled={!settings.enabled}
-            />
-            <span>🐞 Visual Debugger</span>
-          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={settings.debugMode}
+                  onChange={(e) => {
+                      const debugMode = (e.target as HTMLInputElement).checked;
+                      saveSettings({ debugMode });
+                      (window as any).blinkoRTL?.service?.toggleDebugMode();
+                      window.Blinko.toast.success(debugMode ? 'Debug Mode Enabled' : 'Debug Mode Disabled');
+                  }}
+                  disabled={!settings.enabled}
+                />
+                <span>🐞 Visual Debugger</span>
+              </label>
+
+              {settings.debugMode && (
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer', marginLeft: '30px' }}>
+                    <input
+                      type="checkbox"
+                      checked={settings.showElementNames}
+                      onChange={(e) => {
+                          const showElementNames = (e.target as HTMLInputElement).checked;
+                          saveSettings({ showElementNames });
+                          window.Blinko.toast.success('Settings saved');
+                          // Re-trigger debug mode to update visuals
+                          (window as any).blinkoRTL?.service?.toggleDebugMode();
+                          (window as any).blinkoRTL?.service?.toggleDebugMode();
+                      }}
+                    />
+                    <span>Show Element Names (e.g. "RTL (DIV)")</span>
+                  </label>
+              )}
+          </div>
           <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
             Highlights detected RTL (Red) and LTR (Blue) elements.
           </p>
@@ -798,7 +874,7 @@ export function RTLSetting(): JSX.Element {
               onChange={(e) => {
                   const debugShowElementNames = (e.target as HTMLInputElement).checked;
                   saveSettings({ debugShowElementNames });
-                  (window as any).blinkoRTL?.service?.updateSettings({ debugShowElementNames });
+                  window.blinkoRTL?.service?.updateSettings({ debugShowElementNames });
                   if (window.Blinko) {
                       window.Blinko.toast.success(debugShowElementNames ? 'Element names enabled' : 'Element names disabled');
                   }
@@ -847,7 +923,10 @@ export function RTLSetting(): JSX.Element {
             <input
               type="checkbox"
               checked={settings.manualMode}
-              onChange={(e) => saveSettings({ manualMode: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => {
+                  saveSettings({ manualMode: (e.target as HTMLInputElement).checked });
+                  window.Blinko.toast.success('Settings saved');
+              }}
               disabled={!settings.enabled}
             />
             <span>✋ Manual Mode (Strict Detection)</span>

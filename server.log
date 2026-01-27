@@ -1,5 +1,5 @@
 
-> blinko-plugin-rtl-support@1.0.11 dev
+> blinko-plugin-rtl-support@2.0.0 dev
 > blinko-cli dev server
 
 🚀 Starting Blinko development server...
@@ -17,15 +17,7 @@ transforming...
 ✓ 22 modules transformed.
 rendering chunks...
 computing gzip size...
-dist/style.css           44.91 kB │ gzip:  8.37 kB
-dist/index_s1zbsghb.js  121.79 kB │ gzip: 27.89 kB
-built in 554ms.
-🔄 Build completed, file updated: style.css
-
-build started...
-🔄 Build completed, file updated: style.css
-✓ 1 modules transformed.
-dist/style.css           44.91 kB │ gzip:  8.37 kB
-dist/index_gkci0j7j.js  121.91 kB │ gzip: 27.92 kB
-built in 1550ms.
+dist/style.css           46.08 kB │ gzip:  8.66 kB
+dist/index_4odmve9p.js  117.27 kB │ gzip: 28.24 kB
+built in 817ms.
 🔄 Build completed, file updated: style.css
