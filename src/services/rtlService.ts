@@ -328,7 +328,7 @@ export class RTLService {
 
   private applyUnicodeBidiRTL(element: HTMLElement) {
     element.classList.add('rtl-auto');
-    element.style.unicodeBidi = 'plaintext';
+    element.style.unicodeBidi = 'isolate';
   }
 
   public detectHebrewRegex(text: string): boolean {
@@ -424,8 +424,6 @@ export class RTLService {
     if (manualDir === 'rtl') direction = 'rtl';
     if (manualDir === 'ltr') direction = 'ltr';
 
-    // Log action if direction changed (optimization: only log changes?)
-    // For now log all for transparency
     this.logAction(element, direction);
 
     // Apply RTL using selected method
@@ -587,7 +585,7 @@ export class RTLService {
 
           element.setAttribute('data-rtl-debug', directionLabel);
 
-          if (this.settings.showElementNames) {
+          if (this.settings.debugShowElementNames) {
               const tagName = element.tagName.toLowerCase();
               const id = element.id ? `#${element.id}` : '';
               const nameLabel = `${tagName}${id}`;
