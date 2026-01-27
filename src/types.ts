@@ -47,4 +47,7 @@ export interface RTLSettings {
   enablePasteInterceptor?: boolean;
   mobileViewEnabled?: boolean; // Renaming from mobileView to be more explicit if desired, but sticking to existing mobileView for consistency with settings object
   overrideDirectives?: boolean;
+  showManualToggle?: boolean;
+  enableActionLog?: boolean;
+  debugShowElementNames?: boolean;
 }

@@ -56,6 +56,9 @@ export class RTLService {
   }
 
   private logAction(element: HTMLElement, direction: Direction) {
+      // Check if logging is enabled (optimization and feature request)
+      if (this.settings.enableActionLog === false) return;
+
       const logEntry = {
           timestamp: new Date().toLocaleTimeString(),
           element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
@@ -197,6 +200,9 @@ export class RTLService {
 
       // Safety Mechanism: Append Debug CSS if Debug Mode is ON and missing from user CSS
       if (this.settings.debugMode) {
+          const showNames = this.settings.debugShowElementNames;
+          const nameContent = showNames ? ' attr(data-debug-name)' : '';
+
           // Check if user CSS has debug definitions. If not, append them.
           // Simple check for class existence
           if (!cssContent.includes('.rtl-debug-rtl')) {
@@ -207,7 +213,7 @@ export class RTLService {
     position: relative !important;
 }
 .rtl-debug-rtl::after {
-    content: "RTL";
+    content: "RTL"${nameContent};
     position: absolute;
     top: -15px;
     right: 0;
@@ -229,7 +235,7 @@ export class RTLService {
     position: relative !important;
 }
 .rtl-debug-ltr::after {
-    content: "LTR";
+    content: "LTR"${nameContent};
     position: absolute;
     top: -15px;
     left: 0;
@@ -289,12 +295,12 @@ export class RTLService {
       element.classList.add('blinko-detected-rtl');
       element.style.direction = 'rtl';
       element.style.textAlign = 'right';
-      element.style.unicodeBidi = 'embed';
+      element.style.unicodeBidi = 'isolate';
     } else if (direction === 'ltr') {
       element.classList.remove('blinko-detected-rtl');
       element.style.direction = 'ltr';
       element.style.textAlign = 'left';
-      element.style.unicodeBidi = 'embed';
+      element.style.unicodeBidi = 'isolate';
     } else {
       element.classList.remove('blinko-detected-rtl');
       element.style.removeProperty('direction');
@@ -307,13 +313,10 @@ export class RTLService {
   private applyAttributeRTL(element: HTMLElement, direction: Direction) {
     if (direction === 'rtl') {
       element.setAttribute('dir', 'rtl');
-      element.setAttribute('lang', 'he');
     } else if (direction === 'ltr') {
       element.setAttribute('dir', 'ltr');
-      element.removeAttribute('lang');
     } else {
         element.removeAttribute('dir');
-        element.removeAttribute('lang');
     }
     this.applyDebugVisuals(element, direction);
   }
@@ -356,7 +359,6 @@ export class RTLService {
 
     // Skip disabled selectors
     if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) {
-        // console.log('Skipping disabled element:', element.tagName);
         return;
     }
 
@@ -365,7 +367,6 @@ export class RTLService {
     // or if it's a content element.
 
     const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
-    // console.log('Processing element:', element.tagName, 'Text:', text.substring(0, 10));
 
     // Short text handling
     if (!text.trim() || text.length < this.settings.minRTLChars) {
@@ -467,7 +468,6 @@ export class RTLService {
     activeSelectors.forEach(selector => {
         try {
             const elements = document.querySelectorAll(selector);
-            // console.log(`Processing selector '${selector}': found ${elements.length}`);
             elements.forEach(element => {
                 this.processElement(element as HTMLElement);
             });
@@ -587,10 +587,19 @@ export class RTLService {
               // For now, no visual for neutral
               element.removeAttribute('data-rtl-debug');
           }
+
+          if (this.settings.debugShowElementNames) {
+             const name = element.tagName.toLowerCase() + (element.className ? '.' + element.className.split(' ').join('.') : '');
+             element.setAttribute('data-debug-name', name);
+          } else {
+             element.removeAttribute('data-debug-name');
+          }
+
       } else {
           // Cleanup if debug mode was disabled but we are processing
            element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
            element.removeAttribute('data-rtl-debug');
+           element.removeAttribute('data-debug-name');
       }
   }
 
