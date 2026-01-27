@@ -55,7 +55,7 @@ describe("RTLService", () => {
     service.processElement(el);
 
     expect(el.classList.contains('rtl-debug-rtl')).toBe(true);
-    expect(el.getAttribute('data-rtl-debug')).toBe('RTL Detected');
+    expect(el.getAttribute('data-rtl-debug')).toBe('RTL');
   });
 
   it.skip("removes debug visual classes when debug mode is disabled", () => {

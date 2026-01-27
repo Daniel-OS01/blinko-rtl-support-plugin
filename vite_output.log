@@ -1,0 +1,13 @@
+
+  VITE v4.5.14  ready in 773 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+12:36:55 AM [vite] page reload main.tsx
+12:36:55 AM [vite] verification/vite.config.ts changed, restarting server...
+✘ [ERROR] Could not resolve "/app/verification/vite.config.ts"
+
+failed to load config from /app/verification/vite.config.ts
+12:36:55 AM [vite] Build failed with 1 error:
+error: Could not resolve "/app/verification/vite.config.ts"
+12:36:55 AM [vite] server restart failed

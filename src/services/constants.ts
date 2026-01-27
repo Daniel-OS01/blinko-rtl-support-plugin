@@ -299,6 +299,9 @@ export const DEFAULT_SETTINGS: RTLSettings = {
   enablePasteInterceptor: true,
   mobileView: false,
   overrideDirectives: true,
+  showManualToggle: true,
+  disableActionLog: false,
+  showElementNamesInDebug: false,
   visualStyles: {
     fontFamily: 'inherit',
     lineHeight: 1.5,

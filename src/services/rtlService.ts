@@ -56,6 +56,8 @@ export class RTLService {
   }
 
   private logAction(element: HTMLElement, direction: Direction) {
+      if (this.settings.disableActionLog) return;
+
       const logEntry = {
           timestamp: new Date().toLocaleTimeString(),
           element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
@@ -207,7 +209,7 @@ export class RTLService {
     position: relative !important;
 }
 .rtl-debug-rtl::after {
-    content: "RTL";
+    content: attr(data-rtl-debug);
     position: absolute;
     top: -15px;
     right: 0;
@@ -229,7 +231,7 @@ export class RTLService {
     position: relative !important;
 }
 .rtl-debug-ltr::after {
-    content: "LTR";
+    content: attr(data-rtl-debug);
     position: absolute;
     top: -15px;
     left: 0;
@@ -576,15 +578,32 @@ export class RTLService {
   private applyDebugVisuals(element: HTMLElement, direction: Direction) {
       if (this.settings.debugMode) {
           element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
+
+          let debugLabel = '';
+          if (direction === 'rtl') {
+              debugLabel = 'RTL';
+          } else if (direction === 'ltr') {
+              debugLabel = 'LTR';
+          }
+
+          if (debugLabel) {
+              if (this.settings.showElementNamesInDebug) {
+                  const tagName = element.tagName.toLowerCase();
+                  const id = element.id ? `#${element.id}` : '';
+                  // Simplify class display to first class to avoid clutter
+                  const classes = element.classList.length > 0 ? `.${element.classList[0]}` : '';
+                  debugLabel += `: ${tagName}${id}${classes}`;
+              }
+          }
+
           if (direction === 'rtl') {
               element.classList.add('rtl-debug-rtl');
-              element.setAttribute('data-rtl-debug', 'RTL Detected');
+              element.setAttribute('data-rtl-debug', debugLabel);
           } else if (direction === 'ltr') {
               element.classList.add('rtl-debug-ltr');
-              element.setAttribute('data-rtl-debug', 'LTR Detected');
+              element.setAttribute('data-rtl-debug', debugLabel);
           } else {
-              // Neutral - no visual or maybe a neutral visual?
-              // For now, no visual for neutral
+              // Neutral
               element.removeAttribute('data-rtl-debug');
           }
       } else {
