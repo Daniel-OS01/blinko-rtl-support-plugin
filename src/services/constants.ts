@@ -125,7 +125,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
 .blinko-detected-rtl {
     direction: rtl !important;
     text-align: right !important;
-    unicode-bidi: embed !important;
+    unicode-bidi: isolate !important;
 }
 
 /* Visual Debugger Styles */
@@ -180,7 +180,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
 .vditor-reset .rtl-force {
     direction: rtl !important;
     text-align: right !important;
-    unicode-bidi: embed !important;
+    unicode-bidi: isolate !important;
 }
 
 /* Specific overrides for Inputs and Textareas */
@@ -204,7 +204,7 @@ button.rtl-force,
 .ltr-force {
     direction: ltr !important;
     text-align: left !important;
-    unicode-bidi: embed !important;
+    unicode-bidi: isolate !important;
 }
 `;
 
@@ -299,6 +299,9 @@ export const DEFAULT_SETTINGS: RTLSettings = {
   enablePasteInterceptor: true,
   mobileView: false,
   overrideDirectives: true,
+  showManualToggle: true,
+  enableActionLog: true,
+  debugShowElementNames: false,
   visualStyles: {
     fontFamily: 'inherit',
     lineHeight: 1.5,
