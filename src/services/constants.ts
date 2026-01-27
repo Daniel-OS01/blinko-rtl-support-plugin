@@ -142,7 +142,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
 }
 
 .rtl-debug-mode .rtl-debug-rtl::after {
-    content: "RTL";
+    content: attr(data-rtl-debug);
     position: absolute;
     top: -16px;
     right: 0;
@@ -158,7 +158,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
 }
 
 .rtl-debug-mode .rtl-debug-ltr::after {
-    content: "LTR";
+    content: attr(data-rtl-debug);
     position: absolute;
     top: -16px;
     left: 0;
@@ -299,6 +299,9 @@ export const DEFAULT_SETTINGS: RTLSettings = {
   enablePasteInterceptor: true,
   mobileView: false,
   overrideDirectives: true,
+  enableManualToggleBtn: true,
+  enableActionLog: true,
+  showElementNames: false,
   visualStyles: {
     fontFamily: 'inherit',
     lineHeight: 1.5,

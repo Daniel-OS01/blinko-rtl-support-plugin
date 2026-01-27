@@ -27,6 +27,7 @@ System.register([], (exports) => ({
       if (toggleButton) return;
       
       const settings = rtlService.getSettings();
+      if (settings.enableManualToggleBtn === false) return;
 
       toggleButton = document.createElement('button');
       toggleButton.className = 'rtl-toggle-btn';
@@ -78,6 +79,12 @@ System.register([], (exports) => ({
       window.addEventListener('rtl-settings-changed', (event: any) => {
         const newSettings = event.detail;
         
+        if (newSettings.enableManualToggleBtn === false) {
+             removeToggleButton();
+        } else if (newSettings.enableManualToggleBtn !== false && !toggleButton) {
+             createToggleButton();
+        }
+
         if (toggleButton) {
           if (newSettings.darkMode) {
             toggleButton.classList.add('dark-mode');
