@@ -453,13 +453,22 @@ export function RTLSetting(): JSX.Element {
   const exportSettings = () => {
       const service = (window as any).blinkoRTL?.service;
       if (service) {
-          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(service.exportSettings());
-          const downloadAnchorNode = document.createElement('a');
-          downloadAnchorNode.setAttribute("href", dataStr);
-          downloadAnchorNode.setAttribute("download", `blinko-rtl-settings-v1.json`); // Versioned filename
-          document.body.appendChild(downloadAnchorNode);
-          downloadAnchorNode.click();
-          downloadAnchorNode.remove();
+          try {
+              const jsonStr = service.exportSettings();
+              const blob = new Blob([jsonStr], { type: "application/json" });
+              const url = URL.createObjectURL(blob);
+              const downloadAnchorNode = document.createElement('a');
+              downloadAnchorNode.setAttribute("href", url);
+              downloadAnchorNode.setAttribute("download", `blinko-rtl-settings-v1.json`);
+              document.body.appendChild(downloadAnchorNode);
+              downloadAnchorNode.click();
+              downloadAnchorNode.remove();
+              URL.revokeObjectURL(url);
+              window.Blinko.toast.success('Settings exported successfully!');
+          } catch (e) {
+              console.error('Export error:', e);
+              window.Blinko.toast.error('Export failed: ' + e);
+          }
       } else {
           window.Blinko.toast.error('Export failed: Service not available');
       }
@@ -572,7 +581,9 @@ export function RTLSetting(): JSX.Element {
         overflowY: 'auto'
       }}>
           <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>📜 Real-time Action Log</h3>
-          {actionLog.length === 0 ? (
+          {settings.disableActionLog ? (
+              <p style={{ color: settings.darkMode ? '#aaa' : '#666', fontStyle: 'italic' }}>Action Log is disabled.</p>
+          ) : actionLog.length === 0 ? (
               <p style={{ color: settings.darkMode ? '#aaa' : '#666', fontStyle: 'italic' }}>No actions recorded yet...</p>
           ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', color: settings.darkMode ? '#ccc' : '#000' }}>
@@ -588,7 +599,7 @@ export function RTLSetting(): JSX.Element {
                       {actionLog.map((log, i) => (
                           <tr key={i} style={{ borderBottom: settings.darkMode ? '1px solid #444' : '1px solid #eee' }}>
                               <td style={{ padding: '5px', whiteSpace: 'nowrap' }}>{log.timestamp}</td>
-                              <td style={{ padding: '5px', fontFamily: 'monospace' }} title={log.element}>{log.element.length > 20 ? log.element.substring(0, 20) + '...' : log.element}</td>
+                              <td style={{ padding: '5px', fontFamily: 'monospace' }} title={log.element}>{log.element}</td>
                               <td style={{ padding: '5px', color: log.direction === 'RTL' ? '#28a745' : '#007bff' }}>{log.direction}</td>
                               <td style={{ padding: '5px', color: settings.darkMode ? '#888' : '#666' }}>{log.textPreview}</td>
                           </tr>
@@ -677,6 +688,7 @@ export function RTLSetting(): JSX.Element {
                 if (api && api.isEnabled()) {
                   api.processAll();
                 }
+                window.Blinko.toast.success(manualToggle ? 'Force All RTL Enabled' : 'Force All RTL Disabled');
               }}
               disabled={!settings.enabled}
             />
@@ -685,6 +697,20 @@ export function RTLSetting(): JSX.Element {
           <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
             Forces RTL direction on everything, useful if auto-detection misses something.
           </p>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={settings.showManualToggle !== false}
+              onChange={(e) => {
+                  const show = (e.target as HTMLInputElement).checked;
+                  saveSettings({ showManualToggle: show });
+                  window.Blinko.toast.success('Toggle button visibility updated');
+              }}
+              disabled={!settings.enabled}
+            />
+            <span>Show Manual Toggle Button (Floating)</span>
+          </label>
         </div>
       </div>
       )}
@@ -703,10 +729,29 @@ export function RTLSetting(): JSX.Element {
         <div style={{ display: 'grid', gap: '15px' }}>
 
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+             <span>Min Characters for RTL:</span>
+             <input
+                 type="number"
+                 min="1"
+                 max="20"
+                 value={settings.minRTLChars}
+                 onChange={(e) => saveSettings({ minRTLChars: parseInt((e.target as HTMLInputElement).value, 10) })}
+                 style={{ width: '60px', padding: '5px' }}
+                 disabled={!settings.enabled}
+             />
+          </label>
+           <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+             Minimum number of characters required to trigger RTL detection.
+           </p>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={settings.mobileView}
-              onChange={(e) => saveSettings({ mobileView: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => {
+                  saveSettings({ mobileView: (e.target as HTMLInputElement).checked });
+                  window.Blinko.toast.success('Mobile View settings updated');
+              }}
               disabled={!settings.enabled}
             />
             <span>📱 Mobile Optimization View</span>
@@ -736,6 +781,7 @@ export function RTLSetting(): JSX.Element {
                   const debugMode = (e.target as HTMLInputElement).checked;
                   saveSettings({ debugMode });
                   (window as any).blinkoRTL?.service?.toggleDebugMode();
+                  window.Blinko.toast.success(debugMode ? 'Visual Debugger Enabled' : 'Visual Debugger Disabled');
               }}
               disabled={!settings.enabled}
             />
@@ -744,6 +790,40 @@ export function RTLSetting(): JSX.Element {
           <p style={{ margin: '0 0 0 30px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
             Highlights detected RTL (Red) and LTR (Blue) elements.
           </p>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer', marginLeft: '30px' }}>
+            <input
+                type="checkbox"
+                checked={settings.showElementNamesInDebug}
+                onChange={(e) => {
+                    const checked = (e.target as HTMLInputElement).checked;
+                    saveSettings({ showElementNamesInDebug: checked });
+                    if (settings.debugMode) {
+                        const service = (window as any).blinkoRTL?.service;
+                        if (service) {
+                            service.toggleDebugMode();
+                            setTimeout(() => service.toggleDebugMode(), 50);
+                        }
+                    }
+                    window.Blinko.toast.success('Debug labels updated');
+                }}
+                disabled={!settings.enabled || !settings.debugMode}
+            />
+            <span>Show Element Names in Debugger</span>
+          </label>
+
+           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
+            <input
+                type="checkbox"
+                checked={settings.disableActionLog}
+                onChange={(e) => {
+                    saveSettings({ disableActionLog: (e.target as HTMLInputElement).checked });
+                    window.Blinko.toast.success('Action Log setting updated');
+                }}
+                disabled={!settings.enabled}
+            />
+            <span>🚫 Disable Real-time Action Log</span>
+          </label>
 
            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input

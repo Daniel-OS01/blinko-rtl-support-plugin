@@ -28,6 +28,8 @@ System.register([], (exports) => ({
       
       const settings = rtlService.getSettings();
 
+      if (settings.showManualToggle === false) return;
+
       toggleButton = document.createElement('button');
       toggleButton.className = 'rtl-toggle-btn';
       toggleButton.innerHTML = 'ع/א';
@@ -78,6 +80,12 @@ System.register([], (exports) => ({
       window.addEventListener('rtl-settings-changed', (event: any) => {
         const newSettings = event.detail;
         
+        if (newSettings.showManualToggle === false) {
+          removeToggleButton();
+        } else if (newSettings.showManualToggle !== false && !toggleButton) {
+          createToggleButton();
+        }
+
         if (toggleButton) {
           if (newSettings.darkMode) {
             toggleButton.classList.add('dark-mode');
