@@ -56,9 +56,14 @@ export class RTLService {
   }
 
   private logAction(element: HTMLElement, direction: Direction) {
+      // Filter out internal classes for cleaner log
+      const ignoredClasses = ['rtl-force', 'ltr-force', 'rtl-auto', 'blinko-detected-rtl', 'neutral', 'rtl-debug-rtl', 'rtl-debug-ltr'];
+      const classList = Array.from(element.classList).filter(c => !ignoredClasses.includes(c));
+      const className = classList.length > 0 ? `.${classList.join('.')}` : '';
+
       const logEntry = {
           timestamp: new Date().toLocaleTimeString(),
-          element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
+          element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + className,
           direction: direction.toUpperCase(),
           textPreview: (element.textContent || '')
       };
@@ -198,49 +203,51 @@ export class RTLService {
 
       // Safety Mechanism: Append Debug CSS if Debug Mode is ON and missing from user CSS
       if (this.settings.debugMode) {
-          // Check if user CSS has debug definitions. If not, append them.
-          // Simple check for class existence
-          if (!cssContent.includes('.rtl-debug-rtl')) {
+          // Robust fallback: If user CSS doesn't seem to have the modern debug styles (using .rtl-debug-mode prefix or specific classes), append them.
+          // We check for a unique signature of the new debug css or just append a forced override block.
+          if (!cssContent.includes('.rtl-debug-mode .rtl-debug-rtl')) {
              cssContent += `
-/* Visual Debugger - RTL Detected */
-.rtl-debug-rtl {
-    outline: 2px solid rgba(255, 0, 0, 0.5) !important;
+/* Visual Debugger - RTL Detected (Fallback/Injection) */
+.rtl-debug-mode .rtl-debug-rtl, .rtl-debug-rtl {
+    outline: 2px solid rgba(111, 66, 193, 0.8) !important;
+    box-shadow: 0 0 5px rgba(111, 66, 193, 0.5) !important;
     position: relative !important;
 }
-.rtl-debug-rtl::after {
+.rtl-debug-mode .rtl-debug-rtl::after, .rtl-debug-rtl::after {
     content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
-    top: -15px;
+    top: -16px;
     right: 0;
-    background: red;
+    background: #6f42c1;
     color: white;
-    font-size: 10px;
+    font-size: 9px;
     padding: 1px 3px;
     border-radius: 2px;
-    z-index: 10000;
+    z-index: 2147483647;
     pointer-events: none;
+    line-height: 1;
     white-space: nowrap;
-}`;
-          }
-          if (!cssContent.includes('.rtl-debug-ltr')) {
-              cssContent += `
+}
+
 /* Visual Debugger - LTR Detected */
-.rtl-debug-ltr {
-    outline: 2px solid rgba(0, 0, 255, 0.3) !important;
+.rtl-debug-mode .rtl-debug-ltr, .rtl-debug-ltr {
+    outline: 2px solid rgba(253, 126, 20, 0.8) !important;
+    box-shadow: 0 0 5px rgba(253, 126, 20, 0.5) !important;
     position: relative !important;
 }
-.rtl-debug-ltr::after {
+.rtl-debug-mode .rtl-debug-ltr::after, .rtl-debug-ltr::after {
     content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
-    top: -15px;
+    top: -16px;
     left: 0;
-    background: blue;
+    background: #fd7e14;
     color: white;
-    font-size: 10px;
+    font-size: 9px;
     padding: 1px 3px;
     border-radius: 2px;
-    z-index: 10000;
+    z-index: 2147483647;
     pointer-events: none;
+    line-height: 1;
     white-space: nowrap;
 }`;
           }
@@ -587,10 +594,16 @@ export class RTLService {
 
           element.setAttribute('data-rtl-debug', directionLabel);
 
+          // Correctly handle showElementNames setting
           if (this.settings.showElementNames) {
               const tagName = element.tagName.toLowerCase();
               const id = element.id ? `#${element.id}` : '';
-              const nameLabel = `${tagName}${id}`;
+              // Filter internal classes for debug display too
+              const ignoredClasses = ['rtl-force', 'ltr-force', 'rtl-auto', 'blinko-detected-rtl', 'rtl-debug-rtl', 'rtl-debug-ltr', 'neutral'];
+              const classList = Array.from(element.classList).filter(c => !ignoredClasses.includes(c));
+              const classLabel = classList.length > 0 ? `.${classList.join('.')}` : '';
+
+              const nameLabel = ` <${tagName}${id}${classLabel}>`;
               element.setAttribute('data-debug-name', nameLabel);
           } else {
               element.removeAttribute('data-debug-name');

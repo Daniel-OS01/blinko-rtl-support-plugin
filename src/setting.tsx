@@ -295,7 +295,7 @@ export function RTLSetting(): JSX.Element {
       return openBraces === 0;
   };
 
-  const saveSettings = (newSettings: Partial<RTLSettings>) => {
+  const saveSettings = (newSettings: Partial<RTLSettings>, feedbackMessage?: string) => {
     if (newSettings.dynamicCSS !== undefined) {
         if (!validateCSS(newSettings.dynamicCSS)) {
             setCssError('Invalid CSS: Unbalanced curly braces');
@@ -312,7 +312,9 @@ export function RTLSetting(): JSX.Element {
         (window as any).blinkoRTL.service.updateSettings(newSettings);
 
         // Show feedback for any change
-        window.Blinko.toast.success('Settings updated');
+        if (window.Blinko) {
+            window.Blinko.toast.success(feedbackMessage || 'Settings updated');
+        }
     } else {
         // Fallback or error logging if service is missing
         console.warn('RTL Service not found, settings might not persist correctly via StorageManager');
@@ -675,7 +677,10 @@ export function RTLSetting(): JSX.Element {
             <input
               type="checkbox"
               checked={settings.enabled}
-              onChange={(e) => saveSettings({ enabled: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => {
+                  const enabled = (e.target as HTMLInputElement).checked;
+                  saveSettings({ enabled }, enabled ? 'RTL Support Enabled' : 'RTL Support Disabled');
+              }}
             />
             <span>🔧 Enable RTL Support</span>
           </label>
@@ -684,7 +689,10 @@ export function RTLSetting(): JSX.Element {
             <input
               type="checkbox"
               checked={settings.autoDetect}
-              onChange={(e) => saveSettings({ autoDetect: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => {
+                  const autoDetect = (e.target as HTMLInputElement).checked;
+                  saveSettings({ autoDetect }, autoDetect ? 'Auto-detect Enabled' : 'Auto-detect Disabled');
+              }}
               disabled={!settings.enabled}
             />
             <span>🤖 Auto-detect Content (Recommended)</span>
@@ -699,7 +707,7 @@ export function RTLSetting(): JSX.Element {
               checked={settings.manualToggle}
               onChange={(e) => {
                 const manualToggle = (e.target as HTMLInputElement).checked;
-                saveSettings({ manualToggle });
+                saveSettings({ manualToggle }, manualToggle ? 'Force All RTL Enabled' : 'Force All RTL Disabled');
                 const api = (window as any).blinkoRTL;
                 if (api && api.isEnabled()) {
                   api.processAll();
@@ -752,7 +760,10 @@ export function RTLSetting(): JSX.Element {
             <input
               type="checkbox"
               checked={settings.mobileView}
-              onChange={(e) => saveSettings({ mobileView: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => {
+                  const mobileView = (e.target as HTMLInputElement).checked;
+                  saveSettings({ mobileView }, mobileView ? 'Mobile View Enabled' : 'Mobile View Disabled');
+              }}
               disabled={!settings.enabled}
             />
             <span>📱 Mobile Optimization View</span>
@@ -765,7 +776,10 @@ export function RTLSetting(): JSX.Element {
             <input
               type="checkbox"
               checked={settings.enablePasteInterceptor ?? true}
-              onChange={(e) => saveSettings({ enablePasteInterceptor: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => {
+                  const enablePasteInterceptor = (e.target as HTMLInputElement).checked;
+                  saveSettings({ enablePasteInterceptor }, enablePasteInterceptor ? 'Paste Interceptor Enabled' : 'Paste Interceptor Disabled');
+              }}
               disabled={!settings.enabled}
             />
             <span>📋 Paste Interceptor</span>
@@ -780,7 +794,8 @@ export function RTLSetting(): JSX.Element {
               checked={settings.debugMode}
               onChange={(e) => {
                   const debugMode = (e.target as HTMLInputElement).checked;
-                  saveSettings({ debugMode });
+                  saveSettings({ debugMode }, debugMode ? 'Visual Debugger Enabled' : 'Visual Debugger Disabled');
+                  // Trigger toggle in service
                   (window as any).blinkoRTL?.service?.toggleDebugMode();
               }}
               disabled={!settings.enabled}
@@ -797,11 +812,7 @@ export function RTLSetting(): JSX.Element {
               checked={settings.showElementNames}
               onChange={(e) => {
                   const showElementNames = (e.target as HTMLInputElement).checked;
-                  saveSettings({ showElementNames });
-                  (window as any).blinkoRTL?.service?.updateSettings({ showElementNames });
-                  if (window.Blinko) {
-                      window.Blinko.toast.success(showElementNames ? 'Element names enabled' : 'Element names disabled');
-                  }
+                  saveSettings({ showElementNames }, showElementNames ? 'Element Names Enabled' : 'Element Names Disabled');
               }}
               disabled={!settings.enabled}
             />
@@ -817,10 +828,7 @@ export function RTLSetting(): JSX.Element {
               checked={settings.enableActionLog ?? true}
               onChange={(e) => {
                   const enableActionLog = (e.target as HTMLInputElement).checked;
-                  saveSettings({ enableActionLog });
-                  if (window.Blinko) {
-                      window.Blinko.toast.success(enableActionLog ? 'Action log enabled' : 'Action log disabled');
-                  }
+                  saveSettings({ enableActionLog }, enableActionLog ? 'Action Log Enabled' : 'Action Log Disabled');
               }}
               disabled={!settings.enabled}
             />
@@ -833,10 +841,7 @@ export function RTLSetting(): JSX.Element {
               checked={settings.showManualToggle ?? true}
               onChange={(e) => {
                   const showManualToggle = (e.target as HTMLInputElement).checked;
-                  saveSettings({ showManualToggle });
-                  if (window.Blinko) {
-                      window.Blinko.toast.success(showManualToggle ? 'Toggle button shown' : 'Toggle button hidden');
-                  }
+                  saveSettings({ showManualToggle }, showManualToggle ? 'Toggle Button Shown' : 'Toggle Button Hidden');
               }}
               disabled={!settings.enabled}
             />
