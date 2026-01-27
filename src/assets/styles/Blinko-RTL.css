@@ -2834,7 +2834,7 @@ header {
 }
 
 .rtl-debug-mode .rtl-debug-rtl::after {
-  content: attr(data-rtl-debug) !important;
+  content: attr(data-rtl-debug) " " attr(data-debug-name) !important;
   position: absolute;
   top: 0;
   right: 0;
@@ -2850,7 +2850,7 @@ header {
 }
 
 .rtl-debug-mode .rtl-debug-ltr::after {
-  content: attr(data-rtl-debug) !important;
+  content: attr(data-rtl-debug) " " attr(data-debug-name) !important;
   position: absolute;
   top: 0;
   left: 0;
