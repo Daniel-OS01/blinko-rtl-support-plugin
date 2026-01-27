@@ -56,6 +56,8 @@ export class RTLService {
   }
 
   private logAction(element: HTMLElement, direction: Direction) {
+      if (!this.settings.enableActionLog) return;
+
       const logEntry = {
           timestamp: new Date().toLocaleTimeString(),
           element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
