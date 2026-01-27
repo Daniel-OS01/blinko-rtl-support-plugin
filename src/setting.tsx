@@ -714,6 +714,7 @@ export function RTLSetting(): JSX.Element {
           </p>
 
           <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '4px', marginTop: '10px' }}>
+            {/* Min Character Count Setting */}
             <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '14px', fontWeight: '500' }}>
                 <span>Minimum RTL Characters:</span>
                 <span>{settings.minRTLChars}</span>

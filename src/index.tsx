@@ -51,6 +51,7 @@ System.register([], (exports) => ({
         if (!toggleButton) return;
 
         const settings = rtlService.getSettings();
+        // Respect showManualToggle setting
         if (settings.showManualToggle === false) {
             toggleButton.style.display = 'none';
         } else {
