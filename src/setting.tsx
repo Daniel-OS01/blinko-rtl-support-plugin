@@ -213,7 +213,7 @@ export function RTLSetting(): JSX.Element {
     enablePasteInterceptor: true,
     showManualToggle: true,
     enableActionLog: true,
-    showElementNames: false,
+    debugShowElementNames: false,
     darkMode: false,
     method: 'all',
     customCSS: '',
@@ -794,13 +794,13 @@ export function RTLSetting(): JSX.Element {
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
               type="checkbox"
-              checked={settings.showElementNames}
+              checked={settings.debugShowElementNames}
               onChange={(e) => {
-                  const showElementNames = (e.target as HTMLInputElement).checked;
-                  saveSettings({ showElementNames });
-                  (window as any).blinkoRTL?.service?.updateSettings({ showElementNames });
+                  const debugShowElementNames = (e.target as HTMLInputElement).checked;
+                  saveSettings({ debugShowElementNames });
+                  (window as any).blinkoRTL?.service?.updateSettings({ debugShowElementNames });
                   if (window.Blinko) {
-                      window.Blinko.toast.success(showElementNames ? 'Element names enabled' : 'Element names disabled');
+                      window.Blinko.toast.success(debugShowElementNames ? 'Element names enabled' : 'Element names disabled');
                   }
               }}
               disabled={!settings.enabled}

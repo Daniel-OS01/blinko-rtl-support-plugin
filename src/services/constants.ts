@@ -301,7 +301,7 @@ export const DEFAULT_SETTINGS: RTLSettings = {
   overrideDirectives: true,
   showManualToggle: true,
   enableActionLog: true,
-  showElementNames: false,
+  debugShowElementNames: false,
   visualStyles: {
     fontFamily: 'inherit',
     lineHeight: 1.5,

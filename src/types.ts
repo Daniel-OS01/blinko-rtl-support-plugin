@@ -1,3 +1,6 @@
+import { RTLService } from './services/rtlService';
+import { RTLDetector } from './utils/rtlDetector';
+
 export interface Preset {
   id: string;
   name: string;
@@ -49,5 +52,25 @@ export interface RTLSettings {
   overrideDirectives?: boolean;
   showManualToggle?: boolean;
   enableActionLog?: boolean;
-  showElementNames?: boolean;
+  debugShowElementNames?: boolean;
+}
+
+export interface BlinkoRTL {
+    detector: RTLDetector;
+    service: RTLService;
+    toggle: () => void;
+    enable: () => void;
+    disable: () => void;
+    isEnabled: () => boolean;
+    settings: () => RTLSettings;
+    getSettings: () => RTLSettings;
+    processAll: () => void;
+    processElement: (element: HTMLElement) => void;
+    toggleManual: () => boolean;
+    test: (text: string) => boolean;
+    testHebrew: (text: string) => boolean;
+    testArabic: (text: string) => boolean;
+    getStats: () => number;
+    setSensitivity: (val: number) => void;
+    fixSelection: () => void;
 }

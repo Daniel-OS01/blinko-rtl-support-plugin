@@ -587,7 +587,7 @@ export class RTLService {
 
           element.setAttribute('data-rtl-debug', directionLabel);
 
-          if (this.settings.showElementNames) {
+          if (this.settings.debugShowElementNames) {
               const tagName = element.tagName.toLowerCase();
               const id = element.id ? `#${element.id}` : '';
               const nameLabel = `${tagName}${id}`;
