@@ -63,13 +63,14 @@ export class RTLService {
           textPreview: (element.textContent || '').substring(0, 20) + '...'
       };
 
-      this.actionLog.unshift(logEntry);
-      if (this.actionLog.length > this.MAX_LOG_SIZE) {
-          this.actionLog.pop();
+      if (this.settings.enableActionLog !== false) {
+          this.actionLog.unshift(logEntry);
+          if (this.actionLog.length > this.MAX_LOG_SIZE) {
+              this.actionLog.pop();
+          }
+          // Dispatch event for UI updates
+          window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
       }
-
-      // Dispatch event for UI updates
-      window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
   }
 
   public isEnabled(): boolean {
@@ -576,17 +577,26 @@ export class RTLService {
   private applyDebugVisuals(element: HTMLElement, direction: Direction) {
       if (this.settings.debugMode) {
           element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
+
+          let debugLabel = '';
           if (direction === 'rtl') {
               element.classList.add('rtl-debug-rtl');
-              element.setAttribute('data-rtl-debug', 'RTL Detected');
+              debugLabel = 'RTL';
           } else if (direction === 'ltr') {
               element.classList.add('rtl-debug-ltr');
-              element.setAttribute('data-rtl-debug', 'LTR Detected');
+              debugLabel = 'LTR';
           } else {
-              // Neutral - no visual or maybe a neutral visual?
-              // For now, no visual for neutral
               element.removeAttribute('data-rtl-debug');
+              return;
           }
+
+          if (this.settings.showElementNames) {
+              const tagName = element.tagName.toLowerCase();
+              const id = element.id ? `#${element.id}` : '';
+              debugLabel = `${tagName}${id} ${debugLabel}`;
+          }
+
+          element.setAttribute('data-rtl-debug', debugLabel);
       } else {
           // Cleanup if debug mode was disabled but we are processing
            element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');

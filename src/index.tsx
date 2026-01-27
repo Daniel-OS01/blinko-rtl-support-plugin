@@ -48,6 +48,14 @@ System.register([], (exports) => ({
 
     function updateToggleButtonState() {
         if (!toggleButton) return;
+
+        const settings = rtlService.getSettings();
+        if (settings.showManualToggle === false) {
+            toggleButton.style.display = 'none';
+        } else {
+            toggleButton.style.display = 'flex';
+        }
+
         if (rtlService.isEnabled()) {
             toggleButton.classList.add('active');
         } else {
@@ -83,6 +91,10 @@ System.register([], (exports) => ({
             toggleButton.classList.add('dark-mode');
           } else {
             toggleButton.classList.remove('dark-mode');
+          }
+
+          if (newSettings.showManualToggle !== undefined) {
+              updateToggleButtonState();
           }
         }
 
