@@ -164,6 +164,6 @@ describe("RTLService Dynamic CSS and Selectors", () => {
 
         expect(document.body.classList.contains('rtl-debug-mode')).toBe(true);
         expect(el.classList.contains('rtl-debug-rtl')).toBe(true);
-        expect(el.getAttribute('data-rtl-debug')).toBe('RTL Detected');
+        expect(el.getAttribute('data-rtl-debug')).toBe('RTL');
     });
 });

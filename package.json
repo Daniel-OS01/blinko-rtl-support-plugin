@@ -1,6 +1,6 @@
 {
   "name": "blinko-plugin-rtl-support",
-  "version": "2.0.0",
+  "version": "2.0.3",
   "type": "module",
   "description": "Automatically detects and applies RTL styling for Hebrew, Arabic, and other right-to-left languages in Blinko notes.",
   "author": "Daniel-OS01",
