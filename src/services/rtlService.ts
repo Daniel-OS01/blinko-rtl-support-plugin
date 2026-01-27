@@ -1,8 +1,9 @@
 import { RTLDetector } from '../utils/rtlDetector';
-import { RTLSettings } from '../types';
+import { RTLSettings, Direction } from '../types';
 import { advancedRTLCSS, DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './constants';
 import { debounce } from '../utils/debounce';
 import { PasteInterceptor } from '../utils/pasteInterceptor';
+import { StorageManager } from './storageManager';
 
 export class RTLService {
   private detector: RTLDetector;
@@ -14,6 +15,7 @@ export class RTLService {
   private autoProcessInterval: any = null;
   // Managers
   private pasteInterceptor: PasteInterceptor;
+  private storageManager: StorageManager;
 
   // Optimizations
   private pendingElements: Set<HTMLElement> = new Set();
@@ -54,20 +56,23 @@ export class RTLService {
   }
 
   private logAction(element: HTMLElement, direction: Direction) {
+      if (!this.settings.enableActionLog) return;
+
       const logEntry = {
           timestamp: new Date().toLocaleTimeString(),
           element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
           direction: direction.toUpperCase(),
-          textPreview: (element.textContent || '').substring(0, 20) + '...'
+          textPreview: (element.textContent || '')
       };
 
-      this.actionLog.unshift(logEntry);
-      if (this.actionLog.length > this.MAX_LOG_SIZE) {
-          this.actionLog.pop();
+      if (this.settings.enableActionLog !== false) {
+          this.actionLog.unshift(logEntry);
+          if (this.actionLog.length > this.MAX_LOG_SIZE) {
+              this.actionLog.pop();
+          }
+          // Dispatch event for UI updates
+          window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
       }
-
-      // Dispatch event for UI updates
-      window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
   }
 
   public isEnabled(): boolean {
@@ -90,6 +95,9 @@ export class RTLService {
         if (this.settings.autoDetect === undefined) {
             this.settings.autoDetect = true;
         }
+        if (this.settings.enablePasteInterceptor === undefined) {
+            this.settings.enablePasteInterceptor = true;
+        }
 
         // Apply config to detector
         this.detector.updateConfig({
@@ -104,6 +112,7 @@ export class RTLService {
     } else {
         // No saved settings, default to autoDetect
         this.settings.autoDetect = true;
+        this.settings.enablePasteInterceptor = true;
     }
   }
 
@@ -134,7 +143,16 @@ export class RTLService {
         this.setupObserver();
         this.startAutoProcessing();
         this.debouncedProcessAll();
-        // Managers update implicitly via enabled check or settings usage
+
+        // Update Managers
+        if (this.settings.enablePasteInterceptor !== false) {
+             this.pasteInterceptor.enable();
+        } else {
+             this.pasteInterceptor.disable();
+        }
+
+        // Update Mobile View
+        this.applyMobileView();
     }
 
     // Dispatch event for UI updates
@@ -192,7 +210,7 @@ export class RTLService {
     position: relative !important;
 }
 .rtl-debug-rtl::after {
-    content: "RTL";
+    content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
     top: -15px;
     right: 0;
@@ -214,7 +232,7 @@ export class RTLService {
     position: relative !important;
 }
 .rtl-debug-ltr::after {
-    content: "LTR";
+    content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
     top: -15px;
     left: 0;
@@ -274,12 +292,12 @@ export class RTLService {
       element.classList.add('blinko-detected-rtl');
       element.style.direction = 'rtl';
       element.style.textAlign = 'right';
-      element.style.unicodeBidi = 'embed';
+      element.style.unicodeBidi = 'isolate';
     } else if (direction === 'ltr') {
       element.classList.remove('blinko-detected-rtl');
       element.style.direction = 'ltr';
       element.style.textAlign = 'left';
-      element.style.unicodeBidi = 'embed';
+      element.style.unicodeBidi = 'isolate';
     } else {
       element.classList.remove('blinko-detected-rtl');
       element.style.removeProperty('direction');
@@ -292,13 +310,10 @@ export class RTLService {
   private applyAttributeRTL(element: HTMLElement, direction: Direction) {
     if (direction === 'rtl') {
       element.setAttribute('dir', 'rtl');
-      element.setAttribute('lang', 'he');
     } else if (direction === 'ltr') {
       element.setAttribute('dir', 'ltr');
-      element.removeAttribute('lang');
     } else {
         element.removeAttribute('dir');
-        element.removeAttribute('lang');
     }
     this.applyDebugVisuals(element, direction);
   }
@@ -315,7 +330,7 @@ export class RTLService {
 
   private applyUnicodeBidiRTL(element: HTMLElement) {
     element.classList.add('rtl-auto');
-    element.style.unicodeBidi = 'plaintext';
+    element.style.unicodeBidi = 'isolate';
   }
 
   public detectHebrewRegex(text: string): boolean {
@@ -341,7 +356,6 @@ export class RTLService {
 
     // Skip disabled selectors
     if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) {
-        // console.log('Skipping disabled element:', element.tagName);
         return;
     }
 
@@ -350,7 +364,6 @@ export class RTLService {
     // or if it's a content element.
 
     const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
-    // console.log('Processing element:', element.tagName, 'Text:', text.substring(0, 10));
 
     // Short text handling
     if (!text.trim() || text.length < this.settings.minRTLChars) {
@@ -413,8 +426,6 @@ export class RTLService {
     if (manualDir === 'rtl') direction = 'rtl';
     if (manualDir === 'ltr') direction = 'ltr';
 
-    // Log action if direction changed (optimization: only log changes?)
-    // For now log all for transparency
     this.logAction(element, direction);
 
     // Apply RTL using selected method
@@ -452,7 +463,6 @@ export class RTLService {
     activeSelectors.forEach(selector => {
         try {
             const elements = document.querySelectorAll(selector);
-            // console.log(`Processing selector '${selector}': found ${elements.length}`);
             elements.forEach(element => {
                 this.processElement(element as HTMLElement);
             });
@@ -485,7 +495,12 @@ export class RTLService {
     }
     
     // Enable Managers
-    this.pasteInterceptor.enable();
+    if (this.settings.enablePasteInterceptor !== false) {
+        this.pasteInterceptor.enable();
+    }
+
+    // Apply Mobile View
+    this.applyMobileView();
 
     this.setupObserver();
     this.startAutoProcessing();
@@ -502,12 +517,23 @@ export class RTLService {
     // Disable Managers
     this.pasteInterceptor.disable();
 
+    // Remove Mobile View
+    document.body.classList.remove('blinko-rtl-mobile-view');
+
     this.stopAutoProcessing();
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
     }
     this.pendingElements.clear();
+  }
+
+  private applyMobileView() {
+      if (this.settings.mobileView) {
+          document.body.classList.add('blinko-rtl-mobile-view');
+      } else {
+          document.body.classList.remove('blinko-rtl-mobile-view');
+      }
   }
 
   public toggle() {
@@ -545,21 +571,35 @@ export class RTLService {
   private applyDebugVisuals(element: HTMLElement, direction: Direction) {
       if (this.settings.debugMode) {
           element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
+
+          let directionLabel = '';
           if (direction === 'rtl') {
               element.classList.add('rtl-debug-rtl');
-              element.setAttribute('data-rtl-debug', 'RTL Detected');
+              directionLabel = 'RTL';
           } else if (direction === 'ltr') {
               element.classList.add('rtl-debug-ltr');
-              element.setAttribute('data-rtl-debug', 'LTR Detected');
+              directionLabel = 'LTR';
           } else {
-              // Neutral - no visual or maybe a neutral visual?
-              // For now, no visual for neutral
               element.removeAttribute('data-rtl-debug');
+              element.removeAttribute('data-debug-name');
+              return;
+          }
+
+          element.setAttribute('data-rtl-debug', directionLabel);
+
+          if (this.settings.debugShowElementNames) {
+              const tagName = element.tagName.toLowerCase();
+              const id = element.id ? `#${element.id}` : '';
+              const nameLabel = `${tagName}${id}`;
+              element.setAttribute('data-debug-name', nameLabel);
+          } else {
+              element.removeAttribute('data-debug-name');
           }
       } else {
           // Cleanup if debug mode was disabled but we are processing
            element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
            element.removeAttribute('data-rtl-debug');
+           element.removeAttribute('data-debug-name');
       }
   }
 

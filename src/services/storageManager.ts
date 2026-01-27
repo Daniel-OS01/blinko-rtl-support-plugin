@@ -1,4 +1,5 @@
-import { RTLSettings, DEFAULT_SETTINGS } from './constants';
+import { DEFAULT_SETTINGS } from './constants';
+import { RTLSettings } from '../types';
 
 export interface StorageSchema {
     version: number;

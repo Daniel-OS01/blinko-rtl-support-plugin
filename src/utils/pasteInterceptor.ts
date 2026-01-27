@@ -120,23 +120,39 @@ export class PasteInterceptor {
   private insertText(target: HTMLElement, text: string) {
     if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') {
       const input = target as HTMLInputElement | HTMLTextAreaElement;
-      const start = input.selectionStart || 0;
-      const end = input.selectionEnd || 0;
-      input.value = input.value.substring(0, start) + text + input.value.substring(end);
-      input.selectionStart = input.selectionEnd = start + text.length;
+
+      // Use setRangeText if available (modern browsers)
+      if (typeof input.setRangeText === 'function') {
+          const start = input.selectionStart || 0;
+          const end = input.selectionEnd || 0;
+          input.setRangeText(text, start, end, 'end');
+      } else {
+          // Fallback for older environments
+          const start = input.selectionStart || 0;
+          const end = input.selectionEnd || 0;
+          input.value = input.value.substring(0, start) + text + input.value.substring(end);
+          input.selectionStart = input.selectionEnd = start + text.length;
+      }
       input.dispatchEvent(new Event('input', { bubbles: true }));
     } else {
        target.focus();
-       // Try execCommand first as it handles undo history better
-       const success = document.execCommand('insertText', false, text);
-       if (!success) {
-         const selection = window.getSelection();
-         if (selection && selection.rangeCount > 0) {
+       const selection = window.getSelection();
+       if (selection && selection.rangeCount > 0) {
            const range = selection.getRangeAt(0);
            range.deleteContents();
-           range.insertNode(document.createTextNode(text));
-           range.collapse(false);
-         }
+
+           const textNode = document.createTextNode(text);
+           range.insertNode(textNode);
+
+           // Move cursor to end of inserted text
+           try {
+             range.setStartAfter(textNode);
+             range.setEndAfter(textNode);
+             selection.removeAllRanges();
+             selection.addRange(range);
+           } catch (e) {
+             console.warn('Failed to update cursor position:', e);
+           }
        }
     }
   }

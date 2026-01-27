@@ -1,12 +1,17 @@
+import type { RTLService } from './services/rtlService';
+import type { RTLDetector } from './utils/rtlDetector';
+
 export interface Preset {
   id: string;
   name: string;
   css: string;
-  dynamicCSS?: string; // Added dynamicCSS to presets
-  targetSelectors?: string[]; // Added targetSelectors to presets
-  disabledSelectors?: string[]; // Added disabledSelectors to presets
+  dynamicCSS?: string;
+  targetSelectors?: string[];
+  disabledSelectors?: string[];
   isBuiltIn?: boolean;
 }
+
+export type Direction = 'rtl' | 'ltr' | 'neutral';
 
 export interface RTLSettings {
   enabled: boolean;
@@ -19,17 +24,16 @@ export interface RTLSettings {
   mobileView?: boolean;
   darkMode: boolean;
   method: 'direct' | 'attributes' | 'css' | 'unicode' | 'all';
-  customCSS: string; // Kept for backward compatibility or other uses, but dynamicCSS is the new main one for this feature
-  dynamicCSS: string; // NEW
+  customCSS: string;
+  dynamicCSS: string;
   permanentCSS: boolean;
-  dynamicCSS: string; // New field for user-editable dynamic rules
   visualStyles?: {
     fontFamily: string;
     lineHeight: number;
     paragraphMargin: number;
   };
   targetSelectors: string[];
-  disabledSelectors: string[]; // New field for toggling selectors
+  disabledSelectors: string[];
   minRTLChars: number;
   processInterval: number;
   hebrewRegex: boolean;
@@ -43,4 +47,30 @@ export interface RTLSettings {
   unicodeBidiMode?: string;
   processMixedContent?: boolean;
   debugMode?: boolean;
+  enablePasteInterceptor?: boolean;
+  mobileViewEnabled?: boolean;
+  overrideDirectives?: boolean;
+  showManualToggle?: boolean;
+  enableActionLog?: boolean;
+  debugShowElementNames?: boolean; // Renamed from showElementNames
+}
+
+export interface BlinkoRTL {
+    detector: RTLDetector;
+    service: RTLService;
+    toggle: () => void;
+    enable: () => void;
+    disable: () => void;
+    isEnabled: () => boolean;
+    settings: () => RTLSettings;
+    getSettings: () => RTLSettings;
+    processAll: () => void;
+    processElement: (element: HTMLElement) => void;
+    toggleManual: () => boolean;
+    test: (text: string) => boolean;
+    testHebrew: (text: string) => boolean;
+    testArabic: (text: string) => boolean;
+    getStats: () => number;
+    setSensitivity: (val: number) => void;
+    fixSelection: () => void;
 }

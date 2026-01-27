@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'preact/hooks';
-import type { JSXInternal } from 'preact/src/jsx';
+import { JSX } from 'preact';
 import type { RTLDetector } from './utils/rtlDetector';
+
+declare const __PLUGIN_VERSION__: string;
 
 interface RTLAppProps {
   detector: RTLDetector;
 }
 
-export function RTLApp({ detector }: RTLAppProps): JSXInternal.Element {
+export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const [stats, setStats] = useState({ activeBlocks: 0 });
   const [sensitivity, setSensitivity] = useState(15); // Default 15%
   const [isFixing, setIsFixing] = useState(false);

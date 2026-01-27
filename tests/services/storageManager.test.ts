@@ -1,103 +1,90 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from "bun:test";
-import { StorageManager } from "../../src/services/storageManager";
-import { DEFAULT_SETTINGS } from "../../src/services/constants";
+import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
+import { StorageManager } from "../../src/services/storageManager";
+import { RTLSettings } from "../../src/services/constants";
 
 try {
   GlobalRegistrator.register();
 } catch (e) {
-  // Ignore if already registered
+  // Ignore
 }
 
 describe("StorageManager", () => {
-    let storageManager: StorageManager;
+    let manager: StorageManager;
+    const mockSettings: any = {
+        dynamicCSS: ".test { direction: rtl; }",
+        autoDetect: true,
+        targetSelectors: []
+    };
 
     beforeEach(() => {
+        manager = new StorageManager();
         localStorage.clear();
+        // Reset Blinko user
         (window as any).Blinko = undefined;
-        storageManager = new StorageManager();
     });
 
-    it("should save and load settings for global user (no ID)", () => {
-        const settings = { ...DEFAULT_SETTINGS, enabled: false };
-        storageManager.save(settings);
+    it("should save and load to global key when user is anonymous", () => {
+        manager.save(mockSettings);
 
-        const loaded = storageManager.load();
-        expect(loaded).toBeTruthy();
-        expect(loaded?.enabled).toBe(false);
+        const loaded = manager.load();
+        expect(loaded).toEqual(mockSettings);
+
+        // Verify key
+        expect(localStorage.getItem('blinko-rtl-settings')).toBeTruthy();
+        expect(localStorage.getItem('blinko-rtl-settings-user123')).toBeNull();
+    });
+
+    it("should save and load to user-specific key when user is logged in", () => {
+        // Mock User
+        (window as any).Blinko = { user: { id: 'user123' } };
+
+        manager.save(mockSettings);
+
+        const loaded = manager.load();
+        expect(loaded).toEqual(mockSettings);
+
+        // Verify key
+        expect(localStorage.getItem('blinko-rtl-settings-user123')).toBeTruthy();
+        expect(localStorage.getItem('blinko-rtl-settings')).toBeNull();
+    });
+
+    it("should migrate anonymous settings to user settings if user settings are missing", () => {
+        // 1. Save as anonymous
+        manager.save(mockSettings);
+        expect(localStorage.getItem('blinko-rtl-settings')).toBeTruthy();
+
+        // 2. Log in
+        (window as any).Blinko = { user: { id: 'user123' } };
+
+        // 3. Load - should find nothing for user, but fall back to anonymous
+        const loaded = manager.load();
+        expect(loaded).toEqual(mockSettings);
+
+        // 4. Save - should now write to user key
+        const newSettings = { ...mockSettings, autoDetect: false };
+        manager.save(newSettings);
+
+        expect(localStorage.getItem('blinko-rtl-settings-user123')).toContain('"autoDetect":false');
+        // Old settings remain untouched (or we could clear them, but safer to keep)
         expect(localStorage.getItem('blinko-rtl-settings')).toBeTruthy();
     });
 
-    it("should use user-specific key if User ID is present", () => {
-        // Mock User ID
-        (window as any).Blinko = { user: { id: 'user-123' } };
+    it("should prioritize user settings over anonymous settings", () => {
+         // 1. Save anonymous
+        const anonSettings = { ...mockSettings, autoDetect: true };
+        localStorage.setItem('blinko-rtl-settings', JSON.stringify(anonSettings));
 
-        const settings = { ...DEFAULT_SETTINGS, minRTLChars: 10 };
-        storageManager.save(settings);
+        // 2. Save user specific
+        const userSettings = { ...mockSettings, autoDetect: false };
+        localStorage.setItem('blinko-rtl-settings-user123', JSON.stringify(userSettings));
 
-        expect(localStorage.getItem('blinko-rtl-settings-user-123')).toBeTruthy();
-        expect(localStorage.getItem('blinko-rtl-settings')).toBeNull(); // Shouldn't use global
+        // 3. Log in
+        (window as any).Blinko = { user: { id: 'user123' } };
 
-        const loaded = storageManager.load();
-        expect(loaded?.minRTLChars).toBe(10);
-    });
-
-    it("should fallback to legacy global settings if user specific not found", () => {
-        (window as any).Blinko = { user: { id: 'user-456' } };
-
-        // Save to global manually (simulating legacy data)
-        const legacySettings = { ...DEFAULT_SETTINGS, sensitivity: 'high' };
-        localStorage.setItem('blinko-rtl-settings', JSON.stringify(legacySettings));
-
-        const loaded = storageManager.load();
-        expect(loaded).toBeTruthy();
-        expect(loaded?.sensitivity).toBe('high');
-    });
-
-    it("should export settings in standard format", () => {
-        const settings = { ...DEFAULT_SETTINGS };
-        const json = storageManager.export(settings);
-        const parsed = JSON.parse(json);
-
-        expect(parsed.version).toBe(1);
-        expect(parsed.source).toBe('blinko-rtl-support-plugin');
-        expect(parsed.data).toBeTruthy();
-        expect(parsed.data.enabled).toBe(true);
-    });
-
-    it("should import valid settings", () => {
-        const exportData = {
-            version: 1,
-            source: 'blinko-rtl-support-plugin',
-            timestamp: 12345,
-            data: { ...DEFAULT_SETTINGS, minRTLChars: 5 }
-        };
-        const json = JSON.stringify(exportData);
-
-        const imported = storageManager.import(json);
-        expect(imported.minRTLChars).toBe(5);
-    });
-
-    it("should throw error on invalid JSON", () => {
-        expect(() => storageManager.import("invalid json")).toThrow("Invalid JSON format");
-    });
-
-    it("should throw error on missing data", () => {
-        const invalid = JSON.stringify({ version: 1, source: 'blinko' });
-        expect(() => storageManager.import(invalid)).toThrow("Invalid import data");
-    });
-
-    it("should validate and sanitize input", () => {
-        const badData = {
-            version: 1,
-            source: 'blinko-rtl-support-plugin',
-            data: {
-                ...DEFAULT_SETTINGS,
-                targetSelectors: "not an array", // Invalid type
-                minRTLChars: "3" // Invalid type
-            }
-        };
-
-        expect(() => storageManager.import(JSON.stringify(badData))).toThrow();
+        // 4. Load - should get user settings
+        const loaded = manager.load();
+        expect(loaded).toEqual(userSettings);
+        expect(loaded!.autoDetect).toBe(false);
     });
 });

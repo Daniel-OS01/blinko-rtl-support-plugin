@@ -2875,3 +2875,15 @@ header {
     right: 15px !important;
   }
 }
+
+/* === MOBILE VIEW OPTIMIZATIONS === */
+/* Enabled via Settings > Advanced > Mobile Optimization View */
+body.blinko-rtl-mobile-view {
+    overflow-x: hidden !important; /* Prevent horizontal scroll */
+}
+
+/* Adjust margins/padding in mobile view for better RTL experience */
+body.blinko-rtl-mobile-view .markdown-body {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}

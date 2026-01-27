@@ -1,6 +1,7 @@
 # Blinko RTL Language Support Plugin
 
 Enhanced RTL (Right-to-Left) language support for Blinko with automatic detection, manual controls, mixed content handling, and mobile optimization.
+[![Release Pipeline](https://github.com/Daniel-OS01/blinko-rtl-support-plugin/actions/workflows/release.yml/badge.svg)](https://github.com/Daniel-OS01/blinko-rtl-support-plugin/actions/workflows/release.yml)
 
 <img width="335" height="220" alt="image" src="https://github.com/user-attachments/assets/3ea8530d-060c-48d1-844f-14c50f2612f7" /> <img width="335" height="220" alt="image" src="https://github.com/user-attachments/assets/6e7da3b0-37e8-44a4-9028-6055b583e15d" />
 
@@ -135,17 +136,47 @@ window.blinkoRTL.getStats(); // Get count of active RTL blocks
 ```bash
 git clone https://github.com/Daniel-OS01/blinko-rtl-language-support-plugin.git
 cd blinko-rtl-language-support-plugin
-npm install
-npm run build
+bun install
+bun run build:prod
 ```
 
 ### Development Mode
 ```bash
-npm run dev
+bun run dev
 ```
+
+### Testing & Verification
+
+**Unit Tests**
+The project uses `bun test` for fast unit testing of logic and components.
+```bash
+bun test
+```
+
+**Visual Regression (E2E)**
+A Python-based Playwright script is included to verify UI rendering, mobile responsiveness, and CSS application.
+```bash
+# Prerequisites
+pip install playwright
+playwright install chromium
+
+# Run Verification
+python verification/verify_rtl_ui.py
+```
+This script generates screenshots in `verification/` for visual inspection of:
+- Desktop layout (RTL/LTR).
+- Mobile emulation (iPhone 12 viewport).
+- FAB positioning and responsiveness.
+- Mobile View optimization classes.
+
+### Architecture Notes
+- **Storage Manager**: Automatically handles settings persistence across different login states. It migrates anonymous settings to the user profile upon login.
+- **Paste Interceptor**: Uses modern `Clipboard` and `Selection` APIs to handle mixed-content insertion safely without `execCommand`.
+- **Mobile View**: Toggles a `blinko-rtl-mobile-view` class on `document.body` to apply targeted CSS overrides (e.g., `overflow-x: hidden`).
 
 ### Release
 ```bash
+# Releases are handled via GitHub Actions
 npm run release:publish
 ```
 
