@@ -60,7 +60,7 @@ export class RTLService {
           timestamp: new Date().toLocaleTimeString(),
           element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
           direction: direction.toUpperCase(),
-          textPreview: (element.textContent || '').substring(0, 20) + '...'
+          textPreview: (element.textContent || '')
       };
 
       if (this.settings.enableActionLog !== false) {
@@ -208,7 +208,7 @@ export class RTLService {
     position: relative !important;
 }
 .rtl-debug-rtl::after {
-    content: "RTL";
+    content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
     top: -15px;
     right: 0;
@@ -230,7 +230,7 @@ export class RTLService {
     position: relative !important;
 }
 .rtl-debug-ltr::after {
-    content: "LTR";
+    content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
     top: -15px;
     left: 0;
@@ -290,12 +290,12 @@ export class RTLService {
       element.classList.add('blinko-detected-rtl');
       element.style.direction = 'rtl';
       element.style.textAlign = 'right';
-      element.style.unicodeBidi = 'embed';
+      element.style.unicodeBidi = 'isolate';
     } else if (direction === 'ltr') {
       element.classList.remove('blinko-detected-rtl');
       element.style.direction = 'ltr';
       element.style.textAlign = 'left';
-      element.style.unicodeBidi = 'embed';
+      element.style.unicodeBidi = 'isolate';
     } else {
       element.classList.remove('blinko-detected-rtl');
       element.style.removeProperty('direction');
@@ -308,13 +308,10 @@ export class RTLService {
   private applyAttributeRTL(element: HTMLElement, direction: Direction) {
     if (direction === 'rtl') {
       element.setAttribute('dir', 'rtl');
-      element.setAttribute('lang', 'he');
     } else if (direction === 'ltr') {
       element.setAttribute('dir', 'ltr');
-      element.removeAttribute('lang');
     } else {
         element.removeAttribute('dir');
-        element.removeAttribute('lang');
     }
     this.applyDebugVisuals(element, direction);
   }
@@ -357,7 +354,6 @@ export class RTLService {
 
     // Skip disabled selectors
     if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) {
-        // console.log('Skipping disabled element:', element.tagName);
         return;
     }
 
@@ -366,7 +362,6 @@ export class RTLService {
     // or if it's a content element.
 
     const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
-    // console.log('Processing element:', element.tagName, 'Text:', text.substring(0, 10));
 
     // Short text handling
     if (!text.trim() || text.length < this.settings.minRTLChars) {
@@ -468,7 +463,6 @@ export class RTLService {
     activeSelectors.forEach(selector => {
         try {
             const elements = document.querySelectorAll(selector);
-            // console.log(`Processing selector '${selector}': found ${elements.length}`);
             elements.forEach(element => {
                 this.processElement(element as HTMLElement);
             });
@@ -578,29 +572,34 @@ export class RTLService {
       if (this.settings.debugMode) {
           element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
 
-          let debugLabel = '';
+          let directionLabel = '';
           if (direction === 'rtl') {
               element.classList.add('rtl-debug-rtl');
-              debugLabel = 'RTL';
+              directionLabel = 'RTL';
           } else if (direction === 'ltr') {
               element.classList.add('rtl-debug-ltr');
-              debugLabel = 'LTR';
+              directionLabel = 'LTR';
           } else {
               element.removeAttribute('data-rtl-debug');
+              element.removeAttribute('data-debug-name');
               return;
           }
+
+          element.setAttribute('data-rtl-debug', directionLabel);
 
           if (this.settings.showElementNames) {
               const tagName = element.tagName.toLowerCase();
               const id = element.id ? `#${element.id}` : '';
-              debugLabel = `${tagName}${id} ${debugLabel}`;
+              const nameLabel = `${tagName}${id}`;
+              element.setAttribute('data-debug-name', nameLabel);
+          } else {
+              element.removeAttribute('data-debug-name');
           }
-
-          element.setAttribute('data-rtl-debug', debugLabel);
       } else {
           // Cleanup if debug mode was disabled but we are processing
            element.classList.remove('rtl-debug-rtl', 'rtl-debug-ltr');
            element.removeAttribute('data-rtl-debug');
+           element.removeAttribute('data-debug-name');
       }
   }
 

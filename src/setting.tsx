@@ -11,11 +11,11 @@ const DEFAULT_CSS = `/* Enhanced RTL Support from Blinko-RTL.css */
 }
 
 .markdown-body div, .markdown-body p, .markdown-body span {
-    unicode-bidi: plaintext !important;
+    unicode-bidi: isolate !important;
 }
 
 .vditor-reset, .vditor-reset > div, .vditor-reset > p {
-    unicode-bidi: plaintext !important;
+    unicode-bidi: isolate !important;
 }
 
 .card-masonry-grid .markdown-body {
@@ -457,19 +457,19 @@ export function RTLSetting(): JSX.Element {
   };
 
   const exportSettings = () => {
-      // Use settings from state directly if service export isn't behaving,
-      // but service.exportSettings handles metadata nicely.
-      const service = (window as any).blinkoRTL?.service;
-
-      // Fallback: Manually constructing export data if service fails or for robustness
-      const exportData = service ? service.exportSettings() : JSON.stringify({
-          version: 1,
-          source: 'blinko-rtl-support-plugin',
-          timestamp: Date.now(),
-          data: settings
-      }, null, 2);
-
       try {
+          // Use settings from state directly if service export isn't behaving,
+          // but service.exportSettings handles metadata nicely.
+          const service = (window as any).blinkoRTL?.service;
+
+          // Fallback: Manually constructing export data if service fails or for robustness
+          const exportData = service ? service.exportSettings() : JSON.stringify({
+              version: 1,
+              source: 'blinko-rtl-support-plugin',
+              timestamp: Date.now(),
+              data: settings
+          }, null, 2);
+
           const blob = new Blob([exportData], { type: "application/json" });
           const url = URL.createObjectURL(blob);
           const downloadAnchorNode = document.createElement('a');
@@ -479,10 +479,14 @@ export function RTLSetting(): JSX.Element {
           downloadAnchorNode.click();
           document.body.removeChild(downloadAnchorNode);
           URL.revokeObjectURL(url);
-          window.Blinko.toast.success('Settings exported successfully');
+          if (window.Blinko) {
+              window.Blinko.toast.success('Settings exported successfully');
+          }
       } catch (e) {
           console.error('Export error:', e);
-          window.Blinko.toast.error('Export failed');
+          if (window.Blinko) {
+              window.Blinko.toast.error('Export failed');
+          }
       }
   };
 
@@ -794,6 +798,9 @@ export function RTLSetting(): JSX.Element {
                   const showElementNames = (e.target as HTMLInputElement).checked;
                   saveSettings({ showElementNames });
                   (window as any).blinkoRTL?.service?.updateSettings({ showElementNames });
+                  if (window.Blinko) {
+                      window.Blinko.toast.success(showElementNames ? 'Element names enabled' : 'Element names disabled');
+                  }
               }}
               disabled={!settings.enabled}
             />
@@ -807,7 +814,13 @@ export function RTLSetting(): JSX.Element {
             <input
               type="checkbox"
               checked={settings.enableActionLog ?? true}
-              onChange={(e) => saveSettings({ enableActionLog: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => {
+                  const enableActionLog = (e.target as HTMLInputElement).checked;
+                  saveSettings({ enableActionLog });
+                  if (window.Blinko) {
+                      window.Blinko.toast.success(enableActionLog ? 'Action log enabled' : 'Action log disabled');
+                  }
+              }}
               disabled={!settings.enabled}
             />
             <span>📜 Enable Action Log</span>
@@ -817,7 +830,13 @@ export function RTLSetting(): JSX.Element {
             <input
               type="checkbox"
               checked={settings.showManualToggle ?? true}
-              onChange={(e) => saveSettings({ showManualToggle: (e.target as HTMLInputElement).checked })}
+              onChange={(e) => {
+                  const showManualToggle = (e.target as HTMLInputElement).checked;
+                  saveSettings({ showManualToggle });
+                  if (window.Blinko) {
+                      window.Blinko.toast.success(showManualToggle ? 'Toggle button shown' : 'Toggle button hidden');
+                  }
+              }}
               disabled={!settings.enabled}
             />
             <span>🖲️ Show Manual Toggle Button</span>

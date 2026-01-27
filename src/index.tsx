@@ -8,6 +8,7 @@ import { RTLSetting } from './setting';
 import plugin from '../plugin.json';
 import { RTLDetector } from './utils/rtlDetector';
 import { RTLService } from './services/rtlService';
+import { BlinkoRTL } from './types';
 import './assets/styles/Blinko-RTL.css';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
@@ -30,7 +31,7 @@ System.register([], (exports) => ({
 
       toggleButton = document.createElement('button');
       toggleButton.className = 'rtl-toggle-btn';
-      toggleButton.innerHTML = 'ع/א';
+      toggleButton.textContent = 'ع/א';
       toggleButton.title = 'Toggle RTL Support (Hebrew/Arabic)';
       
       toggleButton.addEventListener('click', () => {
@@ -102,7 +103,7 @@ System.register([], (exports) => ({
       });
 
       // Global API
-      (window as any).blinkoRTL = {
+      const blinkoRTL: BlinkoRTL = {
         detector,
         service: rtlService, // Expose service
         toggle: () => {
@@ -153,6 +154,8 @@ System.register([], (exports) => ({
              }
         }
       };
+
+      (window as any).blinkoRTL = blinkoRTL;
 
       console.log('Advanced Blinko RTL Plugin initialized successfully');
     }

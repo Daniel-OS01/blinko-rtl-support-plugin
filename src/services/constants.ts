@@ -5,13 +5,13 @@ export const advancedRTLCSS = `
 .rtl-force {
     direction: rtl !important;
     text-align: right !important;
-    unicode-bidi: embed !important;
+    unicode-bidi: isolate !important;
 }
 
 .ltr-force {
     direction: ltr !important;
     text-align: left !important;
-    unicode-bidi: embed !important;
+    unicode-bidi: isolate !important;
 }
 
 /* Method 2: Hebrew/Arabic detection */
@@ -125,7 +125,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
 .blinko-detected-rtl {
     direction: rtl !important;
     text-align: right !important;
-    unicode-bidi: embed !important;
+    unicode-bidi: isolate !important;
 }
 
 /* Visual Debugger Styles */
@@ -142,7 +142,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
 }
 
 .rtl-debug-mode .rtl-debug-rtl::after {
-    content: "RTL";
+    content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
     top: -16px;
     right: 0;
@@ -158,7 +158,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
 }
 
 .rtl-debug-mode .rtl-debug-ltr::after {
-    content: "LTR";
+    content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
     top: -16px;
     left: 0;
@@ -180,7 +180,7 @@ export const DEFAULT_DYNAMIC_CSS = `/* Dynamic CSS Rules for RTL Elements */
 .vditor-reset .rtl-force {
     direction: rtl !important;
     text-align: right !important;
-    unicode-bidi: embed !important;
+    unicode-bidi: isolate !important;
 }
 
 /* Specific overrides for Inputs and Textareas */
@@ -204,7 +204,7 @@ button.rtl-force,
 .ltr-force {
     direction: ltr !important;
     text-align: left !important;
-    unicode-bidi: embed !important;
+    unicode-bidi: isolate !important;
 }
 `;
 
