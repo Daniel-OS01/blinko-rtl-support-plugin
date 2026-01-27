@@ -1,9 +1,9 @@
 var Wt = Object.defineProperty;
-var jt = (A, f, D) => f in A ? Wt(A, f, { enumerable: !0, configurable: !0, writable: !0, value: D }) : A[f] = D;
-var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
+var jt = (A, b, D) => b in A ? Wt(A, b, { enumerable: !0, configurable: !0, writable: !0, value: D }) : A[b] = D;
+var y = (A, b, D) => (jt(A, typeof b != "symbol" ? b + "" : b, D), D);
 (function() {
-  var A, f, D, F, ye, ve, xe, Se, se, ae, le, q = {}, ke = [], dt = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, G = Array.isArray;
-  function $(t, e) {
+  var A, b, D, F, ye, ve, xe, Se, se, ae, le, q = {}, ke = [], dt = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, G = Array.isArray;
+  function B(t, e) {
     for (var n in e)
       t[n] = e[n];
     return t;
@@ -22,12 +22,12 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
   }
   function Y(t, e, n, i, r) {
     var s = { type: t, props: e, key: n, ref: i, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: r ?? ++D, __i: -1, __u: 0 };
-    return r == null && f.vnode != null && f.vnode(s), s;
+    return r == null && b.vnode != null && b.vnode(s), s;
   }
   function N(t) {
     return t.children;
   }
-  function I(t, e) {
+  function $(t, e) {
     this.props = t, this.context = e;
   }
   function U(t, e) {
@@ -50,24 +50,24 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
     }
   }
   function Te(t) {
-    (!t.__d && (t.__d = !0) && F.push(t) && !Z.__r++ || ye != f.debounceRendering) && ((ye = f.debounceRendering) || ve)(Z);
+    (!t.__d && (t.__d = !0) && F.push(t) && !Z.__r++ || ye != b.debounceRendering) && ((ye = b.debounceRendering) || ve)(Z);
   }
   function Z() {
     for (var t, e, n, i, r, s, a, c = 1; F.length; )
-      F.length > c && F.sort(xe), t = F.shift(), c = F.length, t.__d && (n = void 0, r = (i = (e = t).__v).__e, s = [], a = [], e.__P && ((n = $({}, i)).__v = i.__v + 1, f.vnode && f.vnode(n), pe(e.__P, n, i, e.__n, e.__P.namespaceURI, 32 & i.__u ? [r] : null, s, r ?? U(i), !!(32 & i.__u), a), n.__v = i.__v, n.__.__k[n.__i] = n, Ae(s, n, a), n.__e != r && we(n)));
+      F.length > c && F.sort(xe), t = F.shift(), c = F.length, t.__d && (n = void 0, r = (i = (e = t).__v).__e, s = [], a = [], e.__P && ((n = B({}, i)).__v = i.__v + 1, b.vnode && b.vnode(n), pe(e.__P, n, i, e.__n, e.__P.namespaceURI, 32 & i.__u ? [r] : null, s, r ?? U(i), !!(32 & i.__u), a), n.__v = i.__v, n.__.__k[n.__i] = n, Ae(s, n, a), n.__e != r && we(n)));
     Z.__r = 0;
   }
-  function Re(t, e, n, i, r, s, a, c, u, l, h) {
-    var d, b, m, x, S, v, g, w = i && i.__k || ke, M = e.length;
-    for (u = ct(n, e, w, u, M), d = 0; d < M; d++)
-      (m = n.__k[d]) != null && (b = m.__i == -1 ? q : w[m.__i] || q, m.__i = d, v = pe(t, m, b, r, s, a, c, u, l, h), x = m.__e, m.ref && b.ref != m.ref && (b.ref && he(b.ref, null, m), h.push(m.ref, m.__c || x, m)), S == null && x != null && (S = x), (g = !!(4 & m.__u)) || b.__k === m.__k ? u = Le(m, u, t, g) : typeof m.type == "function" && v !== void 0 ? u = v : x && (u = x.nextSibling), m.__u &= -7);
+  function Re(t, e, n, i, r, s, a, c, u, d, h) {
+    var l, m, _, x, S, v, f, w = i && i.__k || ke, M = e.length;
+    for (u = ct(n, e, w, u, M), l = 0; l < M; l++)
+      (_ = n.__k[l]) != null && (m = _.__i == -1 ? q : w[_.__i] || q, _.__i = l, v = pe(t, _, m, r, s, a, c, u, d, h), x = _.__e, _.ref && m.ref != _.ref && (m.ref && he(m.ref, null, _), h.push(_.ref, _.__c || x, _)), S == null && x != null && (S = x), (f = !!(4 & _.__u)) || m.__k === _.__k ? u = Le(_, u, t, f) : typeof _.type == "function" && v !== void 0 ? u = v : x && (u = x.nextSibling), _.__u &= -7);
     return n.__e = S, u;
   }
   function ct(t, e, n, i, r) {
-    var s, a, c, u, l, h = n.length, d = h, b = 0;
+    var s, a, c, u, d, h = n.length, l = h, m = 0;
     for (t.__k = new Array(r), s = 0; s < r; s++)
-      (a = e[s]) != null && typeof a != "boolean" && typeof a != "function" ? (u = s + b, (a = t.__k[s] = typeof a == "string" || typeof a == "number" || typeof a == "bigint" || a.constructor == String ? Y(null, a, null, null, null) : G(a) ? Y(N, { children: a }, null, null, null) : a.constructor == null && a.__b > 0 ? Y(a.type, a.props, a.key, a.ref ? a.ref : null, a.__v) : a).__ = t, a.__b = t.__b + 1, c = null, (l = a.__i = pt(a, n, u, d)) != -1 && (d--, (c = n[l]) && (c.__u |= 2)), c == null || c.__v == null ? (l == -1 && (r > h ? b-- : r < h && b++), typeof a.type != "function" && (a.__u |= 4)) : l != u && (l == u - 1 ? b-- : l == u + 1 ? b++ : (l > u ? b-- : b++, a.__u |= 4))) : t.__k[s] = null;
-    if (d)
+      (a = e[s]) != null && typeof a != "boolean" && typeof a != "function" ? (u = s + m, (a = t.__k[s] = typeof a == "string" || typeof a == "number" || typeof a == "bigint" || a.constructor == String ? Y(null, a, null, null, null) : G(a) ? Y(N, { children: a }, null, null, null) : a.constructor == null && a.__b > 0 ? Y(a.type, a.props, a.key, a.ref ? a.ref : null, a.__v) : a).__ = t, a.__b = t.__b + 1, c = null, (d = a.__i = pt(a, n, u, l)) != -1 && (l--, (c = n[d]) && (c.__u |= 2)), c == null || c.__v == null ? (d == -1 && (r > h ? m-- : r < h && m++), typeof a.type != "function" && (a.__u |= 4)) : d != u && (d == u - 1 ? m-- : d == u + 1 ? m++ : (d > u ? m-- : m++, a.__u |= 4))) : t.__k[s] = null;
+    if (l)
       for (s = 0; s < h; s++)
         (c = n[s]) != null && !(2 & c.__u) && (c.__e == i && (i = U(c)), Pe(c, c));
     return i;
@@ -91,12 +91,12 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
     }) : e.push(t)), e;
   }
   function pt(t, e, n, i) {
-    var r, s, a, c = t.key, u = t.type, l = e[n], h = l != null && (2 & l.__u) == 0;
-    if (l === null && t.key == null || h && c == l.key && u == l.type)
+    var r, s, a, c = t.key, u = t.type, d = e[n], h = d != null && (2 & d.__u) == 0;
+    if (d === null && t.key == null || h && c == d.key && u == d.type)
       return n;
     if (i > (h ? 1 : 0)) {
       for (r = n - 1, s = n + 1; r >= 0 || s < e.length; )
-        if ((l = e[a = r >= 0 ? r-- : s++]) != null && !(2 & l.__u) && c == l.key && u == l.type)
+        if ((d = e[a = r >= 0 ? r-- : s++]) != null && !(2 & d.__u) && c == d.key && u == d.type)
           return a;
     }
     return -1;
@@ -140,45 +140,45 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
           e.t = se++;
         else if (e.t < n.u)
           return;
-        return n(f.event ? f.event(e) : e);
+        return n(b.event ? b.event(e) : e);
       }
     };
   }
-  function pe(t, e, n, i, r, s, a, c, u, l) {
-    var h, d, b, m, x, S, v, g, w, M, P, j, z, oe, V, H, K, p = e.type;
+  function pe(t, e, n, i, r, s, a, c, u, d) {
+    var h, l, m, _, x, S, v, f, w, M, P, j, z, oe, V, H, K, p = e.type;
     if (e.constructor != null)
       return null;
-    128 & n.__u && (u = !!(32 & n.__u), s = [c = e.__e = n.__e]), (h = f.__b) && h(e);
+    128 & n.__u && (u = !!(32 & n.__u), s = [c = e.__e = n.__e]), (h = b.__b) && h(e);
     e:
       if (typeof p == "function")
         try {
-          if (g = e.props, w = "prototype" in p && p.prototype.render, M = (h = p.contextType) && i[h.__c], P = h ? M ? M.props.value : h.__ : i, n.__c ? v = (d = e.__c = n.__c).__ = d.__E : (w ? e.__c = d = new p(g, P) : (e.__c = d = new I(g, P), d.constructor = p, d.render = ht), M && M.sub(d), d.props = g, d.state || (d.state = {}), d.context = P, d.__n = i, b = d.__d = !0, d.__h = [], d._sb = []), w && d.__s == null && (d.__s = d.state), w && p.getDerivedStateFromProps != null && (d.__s == d.state && (d.__s = $({}, d.__s)), $(d.__s, p.getDerivedStateFromProps(g, d.__s))), m = d.props, x = d.state, d.__v = e, b)
-            w && p.getDerivedStateFromProps == null && d.componentWillMount != null && d.componentWillMount(), w && d.componentDidMount != null && d.__h.push(d.componentDidMount);
+          if (f = e.props, w = "prototype" in p && p.prototype.render, M = (h = p.contextType) && i[h.__c], P = h ? M ? M.props.value : h.__ : i, n.__c ? v = (l = e.__c = n.__c).__ = l.__E : (w ? e.__c = l = new p(f, P) : (e.__c = l = new $(f, P), l.constructor = p, l.render = ht), M && M.sub(l), l.props = f, l.state || (l.state = {}), l.context = P, l.__n = i, m = l.__d = !0, l.__h = [], l._sb = []), w && l.__s == null && (l.__s = l.state), w && p.getDerivedStateFromProps != null && (l.__s == l.state && (l.__s = B({}, l.__s)), B(l.__s, p.getDerivedStateFromProps(f, l.__s))), _ = l.props, x = l.state, l.__v = e, m)
+            w && p.getDerivedStateFromProps == null && l.componentWillMount != null && l.componentWillMount(), w && l.componentDidMount != null && l.__h.push(l.componentDidMount);
           else {
-            if (w && p.getDerivedStateFromProps == null && g !== m && d.componentWillReceiveProps != null && d.componentWillReceiveProps(g, P), !d.__e && d.shouldComponentUpdate != null && d.shouldComponentUpdate(g, d.__s, P) === !1 || e.__v == n.__v) {
-              for (e.__v != n.__v && (d.props = g, d.state = d.__s, d.__d = !1), e.__e = n.__e, e.__k = n.__k, e.__k.some(function(_) {
-                _ && (_.__ = e);
-              }), j = 0; j < d._sb.length; j++)
-                d.__h.push(d._sb[j]);
-              d._sb = [], d.__h.length && a.push(d);
+            if (w && p.getDerivedStateFromProps == null && f !== _ && l.componentWillReceiveProps != null && l.componentWillReceiveProps(f, P), !l.__e && l.shouldComponentUpdate != null && l.shouldComponentUpdate(f, l.__s, P) === !1 || e.__v == n.__v) {
+              for (e.__v != n.__v && (l.props = f, l.state = l.__s, l.__d = !1), e.__e = n.__e, e.__k = n.__k, e.__k.some(function(g) {
+                g && (g.__ = e);
+              }), j = 0; j < l._sb.length; j++)
+                l.__h.push(l._sb[j]);
+              l._sb = [], l.__h.length && a.push(l);
               break e;
             }
-            d.componentWillUpdate != null && d.componentWillUpdate(g, d.__s, P), w && d.componentDidUpdate != null && d.__h.push(function() {
-              d.componentDidUpdate(m, x, S);
+            l.componentWillUpdate != null && l.componentWillUpdate(f, l.__s, P), w && l.componentDidUpdate != null && l.__h.push(function() {
+              l.componentDidUpdate(_, x, S);
             });
           }
-          if (d.context = P, d.props = g, d.__P = t, d.__e = !1, z = f.__r, oe = 0, w) {
-            for (d.state = d.__s, d.__d = !1, z && z(e), h = d.render(d.props, d.state, d.context), V = 0; V < d._sb.length; V++)
-              d.__h.push(d._sb[V]);
-            d._sb = [];
+          if (l.context = P, l.props = f, l.__P = t, l.__e = !1, z = b.__r, oe = 0, w) {
+            for (l.state = l.__s, l.__d = !1, z && z(e), h = l.render(l.props, l.state, l.context), V = 0; V < l._sb.length; V++)
+              l.__h.push(l._sb[V]);
+            l._sb = [];
           } else
             do
-              d.__d = !1, z && z(e), h = d.render(d.props, d.state, d.context), d.state = d.__s;
-            while (d.__d && ++oe < 25);
-          d.state = d.__s, d.getChildContext != null && (i = $($({}, i), d.getChildContext())), w && !b && d.getSnapshotBeforeUpdate != null && (S = d.getSnapshotBeforeUpdate(m, x)), H = h, h != null && h.type === N && h.key == null && (H = Me(h.props.children)), c = Re(t, G(H) ? H : [H], e, n, i, r, s, a, c, u, l), d.base = e.__e, e.__u &= -161, d.__h.length && a.push(d), v && (d.__E = d.__ = null);
-        } catch (_) {
+              l.__d = !1, z && z(e), h = l.render(l.props, l.state, l.context), l.state = l.__s;
+            while (l.__d && ++oe < 25);
+          l.state = l.__s, l.getChildContext != null && (i = B(B({}, i), l.getChildContext())), w && !m && l.getSnapshotBeforeUpdate != null && (S = l.getSnapshotBeforeUpdate(_, x)), H = h, h != null && h.type === N && h.key == null && (H = Me(h.props.children)), c = Re(t, G(H) ? H : [H], e, n, i, r, s, a, c, u, d), l.base = e.__e, e.__u &= -161, l.__h.length && a.push(l), v && (l.__E = l.__ = null);
+        } catch (g) {
           if (e.__v = null, u || s != null)
-            if (_.then) {
+            if (g.then) {
               for (e.__u |= u ? 160 : 128; c && c.nodeType == 8 && c.nextSibling; )
                 c = c.nextSibling;
               s[s.indexOf(c)] = null, e.__e = c;
@@ -188,12 +188,12 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
               ue(e);
             }
           else
-            e.__e = n.__e, e.__k = n.__k, _.then || ue(e);
-          f.__e(_, e, n);
+            e.__e = n.__e, e.__k = n.__k, g.then || ue(e);
+          b.__e(g, e, n);
         }
       else
-        s == null && e.__v == n.__v ? (e.__k = n.__k, e.__e = n.__e) : c = e.__e = ut(n.__e, e, n, i, r, s, a, u, l);
-    return (h = f.diffed) && h(e), 128 & e.__u ? void 0 : c;
+        s == null && e.__v == n.__v ? (e.__k = n.__k, e.__e = n.__e) : c = e.__e = ut(n.__e, e, n, i, r, s, a, u, d);
+    return (h = b.diffed) && h(e), 128 & e.__u ? void 0 : c;
   }
   function ue(t) {
     t && t.__c && (t.__c.__e = !0), t && t.__k && t.__k.forEach(ue);
@@ -201,57 +201,57 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
   function Ae(t, e, n) {
     for (var i = 0; i < n.length; i++)
       he(n[i], n[++i], n[++i]);
-    f.__c && f.__c(e, t), t.some(function(r) {
+    b.__c && b.__c(e, t), t.some(function(r) {
       try {
         t = r.__h, r.__h = [], t.some(function(s) {
           s.call(r);
         });
       } catch (s) {
-        f.__e(s, r.__v);
+        b.__e(s, r.__v);
       }
     });
   }
   function Me(t) {
-    return typeof t != "object" || t == null || t.__b && t.__b > 0 ? t : G(t) ? t.map(Me) : $({}, t);
+    return typeof t != "object" || t == null || t.__b && t.__b > 0 ? t : G(t) ? t.map(Me) : B({}, t);
   }
   function ut(t, e, n, i, r, s, a, c, u) {
-    var l, h, d, b, m, x, S, v = n.props, g = e.props, w = e.type;
+    var d, h, l, m, _, x, S, v = n.props, f = e.props, w = e.type;
     if (w == "svg" ? r = "http://www.w3.org/2000/svg" : w == "math" ? r = "http://www.w3.org/1998/Math/MathML" : r || (r = "http://www.w3.org/1999/xhtml"), s != null) {
-      for (l = 0; l < s.length; l++)
-        if ((m = s[l]) && "setAttribute" in m == !!w && (w ? m.localName == w : m.nodeType == 3)) {
-          t = m, s[l] = null;
+      for (d = 0; d < s.length; d++)
+        if ((_ = s[d]) && "setAttribute" in _ == !!w && (w ? _.localName == w : _.nodeType == 3)) {
+          t = _, s[d] = null;
           break;
         }
     }
     if (t == null) {
       if (w == null)
-        return document.createTextNode(g);
-      t = document.createElementNS(r, w, g.is && g), c && (f.__m && f.__m(e, s), c = !1), s = null;
+        return document.createTextNode(f);
+      t = document.createElementNS(r, w, f.is && f), c && (b.__m && b.__m(e, s), c = !1), s = null;
     }
     if (w == null)
-      v === g || c && t.data == g || (t.data = g);
+      v === f || c && t.data == f || (t.data = f);
     else {
       if (s = s && A.call(t.childNodes), v = n.props || q, !c && s != null)
-        for (v = {}, l = 0; l < t.attributes.length; l++)
-          v[(m = t.attributes[l]).name] = m.value;
-      for (l in v)
-        if (m = v[l], l != "children") {
-          if (l == "dangerouslySetInnerHTML")
-            d = m;
-          else if (!(l in g)) {
-            if (l == "value" && "defaultValue" in g || l == "checked" && "defaultChecked" in g)
+        for (v = {}, d = 0; d < t.attributes.length; d++)
+          v[(_ = t.attributes[d]).name] = _.value;
+      for (d in v)
+        if (_ = v[d], d != "children") {
+          if (d == "dangerouslySetInnerHTML")
+            l = _;
+          else if (!(d in f)) {
+            if (d == "value" && "defaultValue" in f || d == "checked" && "defaultChecked" in f)
               continue;
-            ee(t, l, null, m, r);
+            ee(t, d, null, _, r);
           }
         }
-      for (l in g)
-        m = g[l], l == "children" ? b = m : l == "dangerouslySetInnerHTML" ? h = m : l == "value" ? x = m : l == "checked" ? S = m : c && typeof m != "function" || v[l] === m || ee(t, l, m, v[l], r);
+      for (d in f)
+        _ = f[d], d == "children" ? m = _ : d == "dangerouslySetInnerHTML" ? h = _ : d == "value" ? x = _ : d == "checked" ? S = _ : c && typeof _ != "function" || v[d] === _ || ee(t, d, _, v[d], r);
       if (h)
-        c || d && (h.__html == d.__html || h.__html == t.innerHTML) || (t.innerHTML = h.__html), e.__k = [];
-      else if (d && (t.innerHTML = ""), Re(e.type == "template" ? t.content : t, G(b) ? b : [b], e, n, i, w == "foreignObject" ? "http://www.w3.org/1999/xhtml" : r, s, a, s ? s[0] : n.__k && U(n, 0), c, u), s != null)
-        for (l = s.length; l--; )
-          de(s[l]);
-      c || (l = "value", w == "progress" && x == null ? t.removeAttribute("value") : x != null && (x !== t[l] || w == "progress" && !x || w == "option" && x != v[l]) && ee(t, l, x, v[l], r), l = "checked", S != null && S != t[l] && ee(t, l, S, v[l], r));
+        c || l && (h.__html == l.__html || h.__html == t.innerHTML) || (t.innerHTML = h.__html), e.__k = [];
+      else if (l && (t.innerHTML = ""), Re(e.type == "template" ? t.content : t, G(m) ? m : [m], e, n, i, w == "foreignObject" ? "http://www.w3.org/1999/xhtml" : r, s, a, s ? s[0] : n.__k && U(n, 0), c, u), s != null)
+        for (d = s.length; d--; )
+          de(s[d]);
+      c || (d = "value", w == "progress" && x == null ? t.removeAttribute("value") : x != null && (x !== t[d] || w == "progress" && !x || w == "option" && x != v[d]) && ee(t, d, x, v[d], r), d = "checked", S != null && S != t[d] && ee(t, d, S, v[d], r));
     }
     return t;
   }
@@ -263,17 +263,17 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
       } else
         t.current = e;
     } catch (r) {
-      f.__e(r, n);
+      b.__e(r, n);
     }
   }
   function Pe(t, e, n) {
     var i, r;
-    if (f.unmount && f.unmount(t), (i = t.ref) && (i.current && i.current != t.__e || he(i, null, e)), (i = t.__c) != null) {
+    if (b.unmount && b.unmount(t), (i = t.ref) && (i.current && i.current != t.__e || he(i, null, e)), (i = t.__c) != null) {
       if (i.componentWillUnmount)
         try {
           i.componentWillUnmount();
         } catch (s) {
-          f.__e(s, e);
+          b.__e(s, e);
         }
       i.base = i.__P = null;
     }
@@ -287,9 +287,9 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
   }
   function gt(t, e, n) {
     var i, r, s, a;
-    e == document && (e = document.documentElement), f.__ && f.__(t, e), r = (i = typeof n == "function") ? null : n && n.__k || e.__k, s = [], a = [], pe(e, t = (!i && n || e).__k = ce(N, null, [t]), r || q, q, e.namespaceURI, !i && n ? [n] : r ? null : e.firstChild ? A.call(e.childNodes) : null, s, !i && n ? n : r ? r.__e : e.firstChild, i, a), Ae(s, t, a);
+    e == document && (e = document.documentElement), b.__ && b.__(t, e), r = (i = typeof n == "function") ? null : n && n.__k || e.__k, s = [], a = [], pe(e, t = (!i && n || e).__k = ce(N, null, [t]), r || q, q, e.namespaceURI, !i && n ? [n] : r ? null : e.firstChild ? A.call(e.childNodes) : null, s, !i && n ? n : r ? r.__e : e.firstChild, i, a), Ae(s, t, a);
   }
-  A = ke.slice, f = { __e: function(t, e, n, i) {
+  A = ke.slice, b = { __e: function(t, e, n, i) {
     for (var r, s, a; e = e.__; )
       if ((r = e.__c) && !r.__)
         try {
@@ -299,12 +299,12 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
           t = c;
         }
     throw t;
-  } }, D = 0, I.prototype.setState = function(t, e) {
+  } }, D = 0, $.prototype.setState = function(t, e) {
     var n;
-    n = this.__s != null && this.__s != this.state ? this.__s : this.__s = $({}, this.state), typeof t == "function" && (t = t($({}, n), this.props)), t && $(n, t), t != null && this.__v && (e && this._sb.push(e), Te(this));
-  }, I.prototype.forceUpdate = function(t) {
+    n = this.__s != null && this.__s != this.state ? this.__s : this.__s = B({}, this.state), typeof t == "function" && (t = t(B({}, n), this.props)), t && B(n, t), t != null && this.__v && (e && this._sb.push(e), Te(this));
+  }, $.prototype.forceUpdate = function(t) {
     this.__v && (this.__e = !0, t && this.__h.push(t), Te(this));
-  }, I.prototype.render = N, F = [], ve = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, xe = function(t, e) {
+  }, $.prototype.render = N, F = [], ve = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, xe = function(t, e) {
     return t.__v.__b - e.__v.__b;
   }, Z.__r = 0, Se = /(PointerCapture)$|Capture$/i, se = 0, ae = Ee(!1), le = Ee(!0);
   var _t = 0;
@@ -314,13 +314,13 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
     if ("ref" in u)
       for (c in u = {}, e)
         c == "ref" ? a = e[c] : u[c] = e[c];
-    var l = { type: t, props: u, key: n, ref: a, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --_t, __i: -1, __u: 0, __source: r, __self: s };
+    var d = { type: t, props: u, key: n, ref: a, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --_t, __i: -1, __u: 0, __source: r, __self: s };
     if (typeof t == "function" && (a = t.defaultProps))
       for (c in a)
         u[c] === void 0 && (u[c] = a[c]);
-    return f.vnode && f.vnode(l), l;
+    return b.vnode && b.vnode(d), d;
   }
-  var te, T, ge, $e, _e = 0, Ie = [], R = f, Be = R.__b, De = R.__r, Fe = R.diffed, Ne = R.__c, ze = R.unmount, He = R.__;
+  var te, T, ge, Be, _e = 0, $e = [], R = b, Ie = R.__b, De = R.__r, Fe = R.diffed, Ne = R.__c, ze = R.unmount, He = R.__;
   function Oe(t, e) {
     R.__h && R.__h(T, t, _e || e), _e = 0;
     var n = T.__H || (T.__H = { __: [], __h: [] });
@@ -332,35 +332,35 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
   function ft(t, e, n) {
     var i = Oe(te++, 2);
     if (i.t = t, !i.__c && (i.__ = [n ? n(e) : We(void 0, e), function(c) {
-      var u = i.__N ? i.__N[0] : i.__[0], l = i.t(u, c);
-      u !== l && (i.__N = [l, i.__[1]], i.__c.setState({}));
+      var u = i.__N ? i.__N[0] : i.__[0], d = i.t(u, c);
+      u !== d && (i.__N = [d, i.__[1]], i.__c.setState({}));
     }], i.__c = T, !T.__f)) {
-      var r = function(c, u, l) {
+      var r = function(c, u, d) {
         if (!i.__c.__H)
           return !0;
-        var h = i.__c.__H.__.filter(function(b) {
-          return !!b.__c;
+        var h = i.__c.__H.__.filter(function(m) {
+          return !!m.__c;
         });
-        if (h.every(function(b) {
-          return !b.__N;
+        if (h.every(function(m) {
+          return !m.__N;
         }))
-          return !s || s.call(this, c, u, l);
-        var d = i.__c.props !== c;
-        return h.forEach(function(b) {
-          if (b.__N) {
-            var m = b.__[0];
-            b.__ = b.__N, b.__N = void 0, m !== b.__[0] && (d = !0);
+          return !s || s.call(this, c, u, d);
+        var l = i.__c.props !== c;
+        return h.forEach(function(m) {
+          if (m.__N) {
+            var _ = m.__[0];
+            m.__ = m.__N, m.__N = void 0, _ !== m.__[0] && (l = !0);
           }
-        }), s && s.call(this, c, u, l) || d;
+        }), s && s.call(this, c, u, d) || l;
       };
       T.__f = !0;
       var s = T.shouldComponentUpdate, a = T.componentWillUpdate;
-      T.componentWillUpdate = function(c, u, l) {
+      T.componentWillUpdate = function(c, u, d) {
         if (this.__e) {
           var h = s;
-          s = void 0, r(c, u, l), s = h;
+          s = void 0, r(c, u, d), s = h;
         }
-        a && a.call(this, c, u, l);
+        a && a.call(this, c, u, d);
       }, T.shouldComponentUpdate = r;
     }
     return i.__N || i.__;
@@ -370,7 +370,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
     !R.__s && yt(n.__H, e) && (n.__ = t, n.u = e, T.__H.__h.push(n));
   }
   function mt() {
-    for (var t; t = Ie.shift(); )
+    for (var t; t = $e.shift(); )
       if (t.__P && t.__H)
         try {
           t.__H.__h.forEach(ne), t.__H.__h.forEach(me), t.__H.__h = [];
@@ -379,7 +379,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
         }
   }
   R.__b = function(t) {
-    T = null, Be && Be(t);
+    T = null, Ie && Ie(t);
   }, R.__ = function(t, e) {
     t && e.__k && e.__k.__m && (t.__m = e.__k.__m), He && He(t, e);
   }, R.__r = function(t) {
@@ -391,7 +391,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
   }, R.diffed = function(t) {
     Fe && Fe(t);
     var e = t.__c;
-    e && e.__H && (e.__H.__h.length && (Ie.push(e) !== 1 && $e === R.requestAnimationFrame || (($e = R.requestAnimationFrame) || bt)(mt)), e.__H.__.forEach(function(n) {
+    e && e.__H && (e.__H.__h.length && ($e.push(e) !== 1 && Be === R.requestAnimationFrame || ((Be = R.requestAnimationFrame) || bt)(mt)), e.__H.__.forEach(function(n) {
       n.u && (n.__H = n.u), n.u = void 0;
     })), ge = T = null;
   }, R.__c = function(t, e) {
@@ -457,15 +457,15 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
   function Ve(t, e) {
     this.props = t, this.context = e;
   }
-  (Ve.prototype = new I()).isPureReactComponent = !0, Ve.prototype.shouldComponentUpdate = function(t, e) {
+  (Ve.prototype = new $()).isPureReactComponent = !0, Ve.prototype.shouldComponentUpdate = function(t, e) {
     return je(this.props, t) || je(this.state, e);
   };
-  var qe = f.__b;
-  f.__b = function(t) {
+  var qe = b.__b;
+  b.__b = function(t) {
     t.type && t.type.__f && t.ref && (t.props.ref = t.ref, t.ref = null), qe && qe(t);
   };
-  var xt = f.__e;
-  f.__e = function(t, e, n, i) {
+  var xt = b.__e;
+  b.__e = function(t, e, n, i) {
     if (t.then) {
       for (var r, s = e; s = s.__; )
         if ((r = s.__c) && r.__c)
@@ -473,7 +473,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
     }
     xt(t, e, n, i);
   };
-  var Ge = f.unmount;
+  var Ge = b.unmount;
   function Je(t, e, n) {
     return t && (t.__c && t.__c.__H && (t.__c.__H.__.forEach(function(i) {
       typeof i.__c == "function" && i.__c();
@@ -496,10 +496,10 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
   function ie() {
     this.i = null, this.l = null;
   }
-  f.unmount = function(t) {
+  b.unmount = function(t) {
     var e = t.__c;
     e && e.__R && e.__R(), e && 32 & t.__u && (t.type = null), Ge && Ge(t);
-  }, (be.prototype = new I()).__c = function(t, e) {
+  }, (be.prototype = new $()).__c = function(t, e) {
     var n = e.__c, i = this;
     i.o == null && (i.o = []), i.o.push(n);
     var r = Xe(i.__v), s = !1, a = function() {
@@ -512,9 +512,9 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
           var u = i.state.__a;
           i.__v.__k[0] = Ke(u, u.__c.__P, u.__c.__O);
         }
-        var l;
-        for (i.setState({ __a: i.__b = null }); l = i.o.pop(); )
-          l.forceUpdate();
+        var d;
+        for (i.setState({ __a: i.__b = null }); d = i.o.pop(); )
+          d.forceUpdate();
       }
     };
     i.__u++ || 32 & e.__u || i.setState({ __a: i.__b = i.__v.__k[0] }), t.then(a, a);
@@ -541,7 +541,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
         t.i = n = n[2];
       }
   };
-  (ie.prototype = new I()).__a = function(t) {
+  (ie.prototype = new $()).__a = function(t) {
     var e = this, n = Xe(e.__v), i = e.l.get(t);
     return i[0]++, function(r) {
       var s = function() {
@@ -568,14 +568,14 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
   function Ze(t, e, n) {
     return e.__k == null && (e.textContent = ""), gt(t, e), typeof n == "function" && n(), t ? t.__c : null;
   }
-  I.prototype.isReactComponent = {}, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t) {
-    Object.defineProperty(I.prototype, t, { configurable: !0, get: function() {
+  $.prototype.isReactComponent = {}, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t) {
+    Object.defineProperty($.prototype, t, { configurable: !0, get: function() {
       return this["UNSAFE_" + t];
     }, set: function(e) {
       Object.defineProperty(this, t, { configurable: !0, writable: !0, value: e });
     } });
   });
-  var Qe = f.event;
+  var Qe = b.event;
   function Ct() {
   }
   function Et() {
@@ -584,13 +584,13 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
   function At() {
     return this.defaultPrevented;
   }
-  f.event = function(t) {
+  b.event = function(t) {
     return Qe && (t = Qe(t)), t.persist = Ct, t.isPropagationStopped = Et, t.isDefaultPrevented = At, t.nativeEvent = t;
   };
   var Mt = { enumerable: !1, configurable: !0, get: function() {
     return this.class;
-  } }, et = f.vnode;
-  f.vnode = function(t) {
+  } }, et = b.vnode;
+  b.vnode = function(t) {
     typeof t.type == "string" && function(e) {
       var n = e.props, i = e.type, r = {}, s = i.indexOf("-") === -1;
       for (var a in n) {
@@ -600,29 +600,29 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
           a === "defaultValue" && "value" in n && n.value == null ? a = "value" : a === "download" && c === !0 ? c = "" : u === "translate" && c === "no" ? c = !1 : u[0] === "o" && u[1] === "n" ? u === "ondoubleclick" ? a = "ondblclick" : u !== "onchange" || i !== "input" && i !== "textarea" || Lt(n.type) ? u === "onfocus" ? a = "onfocusin" : u === "onblur" ? a = "onfocusout" : wt.test(a) && (a = u) : u = a = "oninput" : s && kt.test(a) ? a = a.replace(Tt, "-$&").toLowerCase() : c === null && (c = void 0), u === "oninput" && r[a = u] && (a = "oninputCapture"), r[a] = c;
         }
       }
-      i == "select" && r.multiple && Array.isArray(r.value) && (r.value = Q(n.children).forEach(function(l) {
-        l.props.selected = r.value.indexOf(l.props.value) != -1;
-      })), i == "select" && r.defaultValue != null && (r.value = Q(n.children).forEach(function(l) {
-        l.props.selected = r.multiple ? r.defaultValue.indexOf(l.props.value) != -1 : r.defaultValue == l.props.value;
+      i == "select" && r.multiple && Array.isArray(r.value) && (r.value = Q(n.children).forEach(function(d) {
+        d.props.selected = r.value.indexOf(d.props.value) != -1;
+      })), i == "select" && r.defaultValue != null && (r.value = Q(n.children).forEach(function(d) {
+        d.props.selected = r.multiple ? r.defaultValue.indexOf(d.props.value) != -1 : r.defaultValue == d.props.value;
       })), n.class && !n.className ? (r.class = n.class, Object.defineProperty(r, "className", Mt)) : (n.className && !n.class || n.class && n.className) && (r.class = r.className = n.className), e.props = r;
     }(t), t.$$typeof = St, et && et(t);
   };
-  var tt = f.__r;
-  f.__r = function(t) {
+  var tt = b.__r;
+  b.__r = function(t) {
     tt && tt(t), t.__c;
   };
-  var nt = f.diffed;
-  f.diffed = function(t) {
+  var nt = b.diffed;
+  b.diffed = function(t) {
     nt && nt(t);
     var e = t.props, n = t.__e;
     n != null && t.type === "textarea" && "value" in e && e.value !== n.value && (n.value = e.value == null ? "" : e.value);
   };
   function Pt({ detector: t }) {
-    const [e, n] = E({ activeBlocks: 0 }), [i, r] = E(15), [s, a] = E(!1), [c, u] = E(!1), l = window.Blinko.i18n;
+    const [e, n] = E({ activeBlocks: 0 }), [i, r] = E(15), [s, a] = E(!1), [c, u] = E(!1), d = window.Blinko.i18n;
     fe(() => {
       const x = () => {
-        var g;
-        const v = ((g = window.blinkoRTL) == null ? void 0 : g.getStats()) || 0;
+        var f;
+        const v = ((f = window.blinkoRTL) == null ? void 0 : f.getStats()) || 0;
         n({ activeBlocks: v });
       };
       x();
@@ -650,11 +650,11 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
       a(!0), (x = window.blinkoRTL) == null || x.fixSelection(), setTimeout(() => {
         a(!1), window.Blinko.toast.success("Selection processed");
       }, 500);
-    }, d = (x) => {
+    }, l = (x) => {
       var v;
       const S = parseInt(x.target.value);
       r(S), (v = window.blinkoRTL) == null || v.setSensitivity(S / 100);
-    }, b = (x) => {
+    }, m = (x) => {
       const S = x.target.checked;
       u(S);
       const v = window.blinkoRTL;
@@ -684,7 +684,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
               (S = window.blinkoRTL) == null || S.toggle();
               const x = (v = window.blinkoRTL) == null ? void 0 : v.isEnabled();
               window.Blinko.toast.success(
-                x ? l.t("rtl_enabled") : l.t("rtl_disabled")
+                x ? d.t("rtl_enabled") : d.t("rtl_disabled")
               );
             },
             style: {
@@ -695,7 +695,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
               padding: "4px",
               borderRadius: "4px"
             },
-            title: l.t("manual_toggle"),
+            title: d.t("manual_toggle"),
             children: "🔄"
           }
         )
@@ -744,7 +744,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
             {
               type: "checkbox",
               checked: c,
-              onChange: b,
+              onChange: m,
               style: { marginInlineEnd: "8px" }
             }
           ),
@@ -767,7 +767,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
             min: "1",
             max: "50",
             value: i,
-            onChange: d,
+            onChange: l,
             style: { width: "100%", cursor: "pointer" }
           }
         ),
@@ -779,7 +779,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
       /* @__PURE__ */ o("div", { style: { marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #eee", fontSize: "11px", color: "#888", textAlign: "center" }, children: "Click 'Fix Selected' to force detection on specific text." }),
       /* @__PURE__ */ o("div", { style: { marginTop: "5px", fontSize: "10px", color: "#aaa", textAlign: "center" }, children: [
         "v",
-        "2.0.1"
+        "2.0.2"
       ] })
     ] });
   }
@@ -787,7 +787,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
 .blinko-detected-rtl {
     direction: rtl !important;
     text-align: right !important;
-    unicode-bidi: embed !important;
+    unicode-bidi: isolate !important;
 }
 
 /* Visual Debugger Styles */
@@ -804,7 +804,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
 }
 
 .rtl-debug-mode .rtl-debug-rtl::after {
-    content: "RTL";
+    content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
     top: -16px;
     right: 0;
@@ -820,7 +820,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
 }
 
 .rtl-debug-mode .rtl-debug-ltr::after {
-    content: "LTR";
+    content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
     top: -16px;
     left: 0;
@@ -842,7 +842,7 @@ var y = (A, f, D) => (jt(A, typeof f != "symbol" ? f + "" : f, D), D);
 .vditor-reset .rtl-force {
     direction: rtl !important;
     text-align: right !important;
-    unicode-bidi: embed !important;
+    unicode-bidi: isolate !important;
 }
 
 /* Specific overrides for Inputs and Textareas */
@@ -866,7 +866,7 @@ button.rtl-force,
 .ltr-force {
     direction: ltr !important;
     text-align: left !important;
-    unicode-bidi: embed !important;
+    unicode-bidi: isolate !important;
 }
 `, re = [
     // Content containers
@@ -971,7 +971,7 @@ button.rtl-force,
       paragraphMargin: 10
     }
   };
-  class $t {
+  class Bt {
     constructor(e = {
       sensitivity: "medium",
       minRTLChars: 3,
@@ -1034,7 +1034,7 @@ button.rtl-force,
       this.config = { ...this.config, ...e };
     }
   }
-  class It {
+  class $t {
     constructor(e = !0, n = !0, i = 0.3, r = 3) {
       y(this, "name", "Regex");
       // Hebrew regex range: 0590-05FF, FB1D-FB4F (Presentation forms A), FB50-FBB1 (Presentation forms B - wait, that's Arabic)
@@ -1095,9 +1095,9 @@ button.rtl-force,
         minRTLChars: 3,
         sampleSize: 100,
         ...e
-      }, this.charCodeStrategy = new $t(this.config);
+      }, this.charCodeStrategy = new Bt(this.config);
       const n = this.getThresholdFromSensitivity(this.config.sensitivity);
-      this.regexStrategy = new It(!0, !0, n, this.config.minRTLChars), this.strategy = new rt([
+      this.regexStrategy = new $t(!0, !0, n, this.config.minRTLChars), this.strategy = new rt([
         this.charCodeStrategy,
         this.regexStrategy
       ]);
@@ -1165,11 +1165,11 @@ button.rtl-force,
 }
 
 .markdown-body div, .markdown-body p, .markdown-body span {
-    unicode-bidi: plaintext !important;
+    unicode-bidi: isolate !important;
 }
 
 .vditor-reset, .vditor-reset > div, .vditor-reset > p {
-    unicode-bidi: plaintext !important;
+    unicode-bidi: isolate !important;
 }
 
 .card-masonry-grid .markdown-body {
@@ -1345,7 +1345,7 @@ ul {
       isBuiltIn: !0
     }
   ];
-  function Bt() {
+  function It() {
     const [t, e] = E({
       enabled: !0,
       sensitivity: "medium",
@@ -1380,43 +1380,43 @@ ul {
       savedPresets: []
     }), [n, i] = E("simple");
     E("");
-    const [r, s] = E(""), [a, c] = E(""), [u, l] = E(""), [h, d] = E([]), [b, m] = E(""), [x, S] = E("");
+    const [r, s] = E(""), [a, c] = E(""), [u, d] = E(""), [h, l] = E([]), [m, _] = E(""), [x, S] = E("");
     fe(() => {
       var L, O;
       (() => {
-        var B;
-        const C = (B = window.blinkoRTL) == null ? void 0 : B.settings();
+        var I;
+        const C = (I = window.blinkoRTL) == null ? void 0 : I.settings();
         C && e(C);
       })();
-      const _ = (C) => {
-        e((B) => ({ ...B, ...C.detail }));
+      const g = (C) => {
+        e((I) => ({ ...I, ...C.detail }));
       }, k = (C) => {
-        d((B) => [C.detail, ...B].slice(0, 50));
+        l((I) => [C.detail, ...I].slice(0, 50));
       };
-      return (O = (L = window.blinkoRTL) == null ? void 0 : L.service) != null && O.getActionLog && d(window.blinkoRTL.service.getActionLog()), window.addEventListener("rtl-settings-changed", _), window.addEventListener("rtl-action-logged", k), () => {
-        window.removeEventListener("rtl-settings-changed", _), window.removeEventListener("rtl-action-logged", k);
+      return (O = (L = window.blinkoRTL) == null ? void 0 : L.service) != null && O.getActionLog && l(window.blinkoRTL.service.getActionLog()), window.addEventListener("rtl-settings-changed", g), window.addEventListener("rtl-action-logged", k), () => {
+        window.removeEventListener("rtl-settings-changed", g), window.removeEventListener("rtl-action-logged", k);
       };
     }, []);
     const v = (p) => {
-      let _ = 0;
+      let g = 0;
       for (let k = 0; k < p.length; k++)
-        if (p[k] === "{" && _++, p[k] === "}" && _--, _ < 0)
+        if (p[k] === "{" && g++, p[k] === "}" && g--, g < 0)
           return !1;
-      return _ === 0;
-    }, g = (p) => {
+      return g === 0;
+    }, f = (p) => {
       var k;
-      p.dynamicCSS !== void 0 && (v(p.dynamicCSS) ? m("") : m("Invalid CSS: Unbalanced curly braces"));
-      const _ = { ...t, ...p };
-      e(_), (k = window.blinkoRTL) != null && k.service ? (window.blinkoRTL.service.updateSettings(p), window.Blinko.toast.success("Settings updated")) : (console.warn("RTL Service not found, settings might not persist correctly via StorageManager"), localStorage.setItem("blinko-rtl-settings", JSON.stringify(_)), window.dispatchEvent(
+      p.dynamicCSS !== void 0 && (v(p.dynamicCSS) ? _("") : _("Invalid CSS: Unbalanced curly braces"));
+      const g = { ...t, ...p };
+      e(g), (k = window.blinkoRTL) != null && k.service ? (window.blinkoRTL.service.updateSettings(p), window.Blinko.toast.success("Settings updated")) : (console.warn("RTL Service not found, settings might not persist correctly via StorageManager"), localStorage.setItem("blinko-rtl-settings", JSON.stringify(g)), window.dispatchEvent(
         new CustomEvent("rtl-settings-changed", {
-          detail: _
+          detail: g
         })
       ));
     }, w = () => {
-      var _;
+      var g;
       if (!r.trim())
         return;
-      const p = (_ = window.blinkoRTL) == null ? void 0 : _.detector;
+      const p = (g = window.blinkoRTL) == null ? void 0 : g.detector;
       if (p) {
         const k = p.detectRTL(r);
         c(k ? "RTL" : "LTR");
@@ -1432,18 +1432,18 @@ ul {
     }, P = () => {
       if (!u)
         return;
-      const _ = [...J, ...t.savedPresets || []].find((k) => k.id === u);
-      _ && (g({
-        customCSS: _.css,
-        dynamicCSS: _.dynamicCSS || t.dynamicCSS,
-        targetSelectors: _.targetSelectors || t.targetSelectors,
-        disabledSelectors: _.disabledSelectors || t.disabledSelectors
-      }), window.Blinko.toast.success(`Preset "${_.name}" loaded!`));
+      const g = [...J, ...t.savedPresets || []].find((k) => k.id === u);
+      g && (f({
+        customCSS: g.css,
+        dynamicCSS: g.dynamicCSS || t.dynamicCSS,
+        targetSelectors: g.targetSelectors || t.targetSelectors,
+        disabledSelectors: g.disabledSelectors || t.disabledSelectors
+      }), window.Blinko.toast.success(`Preset "${g.name}" loaded!`));
     }, j = () => {
       const p = prompt("Enter a name for this Full Preset (CSS, Dynamic Rules, Selectors):");
       if (!p)
         return;
-      const _ = {
+      const g = {
         id: `custom-${Date.now()}`,
         name: p,
         css: t.customCSS,
@@ -1452,19 +1452,19 @@ ul {
         disabledSelectors: t.disabledSelectors,
         isBuiltIn: !1
       };
-      g({
-        savedPresets: [...t.savedPresets || [], _]
-      }), l(_.id), window.Blinko.toast.success("Preset saved!");
+      f({
+        savedPresets: [...t.savedPresets || [], g]
+      }), d(g.id), window.Blinko.toast.success("Preset saved!");
     }, z = () => {
       if (!u)
         return;
-      if (J.some((_) => _.id === u)) {
+      if (J.some((g) => g.id === u)) {
         window.Blinko.toast.error("Cannot delete built-in presets.");
         return;
       }
-      confirm("Are you sure you want to delete this preset?") && (g({
-        savedPresets: (t.savedPresets || []).filter((_) => _.id !== u)
-      }), l(""));
+      confirm("Are you sure you want to delete this preset?") && (f({
+        savedPresets: (t.savedPresets || []).filter((g) => g.id !== u)
+      }), d(""));
     }, oe = () => {
       if (confirm("Reset all settings to defaults? This cannot be undone.")) {
         const p = {
@@ -1472,34 +1472,33 @@ ul {
           savedPresets: t.savedPresets || []
           // Preserve user presets
         };
-        g(p), window.Blinko.toast.success("Settings reset to defaults");
+        f(p), window.Blinko.toast.success("Settings reset to defaults");
       }
     }, V = () => {
-      g({ dynamicCSS: W }), window.Blinko.toast.success("Dynamic CSS reset");
+      f({ dynamicCSS: W }), window.Blinko.toast.success("Dynamic CSS reset");
     }, H = () => {
-      var k;
-      const p = (k = window.blinkoRTL) == null ? void 0 : k.service, _ = p ? p.exportSettings() : JSON.stringify({
-        version: 1,
-        source: "blinko-rtl-support-plugin",
-        timestamp: Date.now(),
-        data: t
-      }, null, 2);
+      var p;
       try {
-        const L = new Blob([_], { type: "application/json" }), O = URL.createObjectURL(L), C = document.createElement("a");
-        C.href = O, C.download = `blinko-rtl-settings-v1-${Date.now()}.json`, document.body.appendChild(C), C.click(), document.body.removeChild(C), URL.revokeObjectURL(O), window.Blinko.toast.success("Settings exported successfully");
-      } catch (L) {
-        console.error("Export error:", L), window.Blinko.toast.error("Export failed");
+        const g = (p = window.blinkoRTL) == null ? void 0 : p.service, k = g ? g.exportSettings() : JSON.stringify({
+          version: 1,
+          source: "blinko-rtl-support-plugin",
+          timestamp: Date.now(),
+          data: t
+        }, null, 2), L = new Blob([k], { type: "application/json" }), O = URL.createObjectURL(L), C = document.createElement("a");
+        C.href = O, C.download = `blinko-rtl-settings-v1-${Date.now()}.json`, document.body.appendChild(C), C.click(), document.body.removeChild(C), URL.revokeObjectURL(O), window.Blinko && window.Blinko.toast.success("Settings exported successfully");
+      } catch (g) {
+        console.error("Export error:", g), window.Blinko && window.Blinko.toast.error("Export failed");
       }
     }, K = (p) => {
       var L;
-      const _ = (L = p.target.files) == null ? void 0 : L[0];
-      if (!_)
+      const g = (L = p.target.files) == null ? void 0 : L[0];
+      if (!g)
         return;
       const k = new FileReader();
       k.onload = (O) => {
-        var C, B;
+        var C, I;
         try {
-          const X = (C = O.target) == null ? void 0 : C.result, lt = (B = window.blinkoRTL) == null ? void 0 : B.service;
+          const X = (C = O.target) == null ? void 0 : C.result, lt = (I = window.blinkoRTL) == null ? void 0 : I.service;
           if (lt)
             lt.importSettings(X), S(""), window.Blinko.toast.success("Settings imported successfully!");
           else
@@ -1507,7 +1506,7 @@ ul {
         } catch (X) {
           console.error("Import failed", X), S("Failed to import settings: " + (X instanceof Error ? X.message : "Invalid file")), window.Blinko.toast.error("Import failed");
         }
-      }, k.readAsText(_), p.target.value = "";
+      }, k.readAsText(g), p.target.value = "";
     };
     return /* @__PURE__ */ o(
       "div",
@@ -1590,12 +1589,12 @@ ul {
                 /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Action" }),
                 /* @__PURE__ */ o("th", { style: { padding: "5px" }, children: "Details" })
               ] }) }),
-              /* @__PURE__ */ o("tbody", { children: h.map((p, _) => /* @__PURE__ */ o("tr", { style: { borderBottom: t.darkMode ? "1px solid #444" : "1px solid #eee" }, children: [
+              /* @__PURE__ */ o("tbody", { children: h.map((p, g) => /* @__PURE__ */ o("tr", { style: { borderBottom: t.darkMode ? "1px solid #444" : "1px solid #eee" }, children: [
                 /* @__PURE__ */ o("td", { style: { padding: "5px", whiteSpace: "nowrap" }, children: p.timestamp }),
                 /* @__PURE__ */ o("td", { style: { padding: "5px", fontFamily: "monospace" }, title: p.element, children: p.element }),
                 /* @__PURE__ */ o("td", { style: { padding: "5px", color: p.direction === "RTL" ? "#28a745" : "#007bff" }, children: p.direction }),
                 /* @__PURE__ */ o("td", { style: { padding: "5px", color: t.darkMode ? "#888" : "#666" }, children: p.textPreview })
-              ] }, _)) })
+              ] }, g)) })
             ] })
           ] }),
           /* @__PURE__ */ o("div", { style: { display: "flex", marginBottom: "20px", borderBottom: "1px solid #ddd" }, children: [
@@ -1649,7 +1648,7 @@ ul {
                   {
                     type: "checkbox",
                     checked: t.enabled,
-                    onChange: (p) => g({ enabled: p.target.checked })
+                    onChange: (p) => f({ enabled: p.target.checked })
                   }
                 ),
                 /* @__PURE__ */ o("span", { children: "🔧 Enable RTL Support" })
@@ -1660,7 +1659,7 @@ ul {
                   {
                     type: "checkbox",
                     checked: t.autoDetect,
-                    onChange: (p) => g({ autoDetect: p.target.checked }),
+                    onChange: (p) => f({ autoDetect: p.target.checked }),
                     disabled: !t.enabled
                   }
                 ),
@@ -1674,8 +1673,8 @@ ul {
                     type: "checkbox",
                     checked: t.manualToggle,
                     onChange: (p) => {
-                      const _ = p.target.checked;
-                      g({ manualToggle: _ });
+                      const g = p.target.checked;
+                      f({ manualToggle: g });
                       const k = window.blinkoRTL;
                       k && k.isEnabled() && k.processAll();
                     },
@@ -1697,7 +1696,7 @@ ul {
                     min: "1",
                     max: "20",
                     value: t.minRTLChars,
-                    onChange: (p) => g({ minRTLChars: parseInt(p.target.value) }),
+                    onChange: (p) => f({ minRTLChars: parseInt(p.target.value) }),
                     style: { width: "100%", cursor: "pointer" }
                   }
                 ),
@@ -1724,7 +1723,7 @@ ul {
                   {
                     type: "checkbox",
                     checked: t.mobileView,
-                    onChange: (p) => g({ mobileView: p.target.checked }),
+                    onChange: (p) => f({ mobileView: p.target.checked }),
                     disabled: !t.enabled
                   }
                 ),
@@ -1737,7 +1736,7 @@ ul {
                   {
                     type: "checkbox",
                     checked: t.enablePasteInterceptor ?? !0,
-                    onChange: (p) => g({ enablePasteInterceptor: p.target.checked }),
+                    onChange: (p) => f({ enablePasteInterceptor: p.target.checked }),
                     disabled: !t.enabled
                   }
                 ),
@@ -1752,8 +1751,8 @@ ul {
                     checked: t.debugMode,
                     onChange: (p) => {
                       var k, L;
-                      const _ = p.target.checked;
-                      g({ debugMode: _ }), (L = (k = window.blinkoRTL) == null ? void 0 : k.service) == null || L.toggleDebugMode();
+                      const g = p.target.checked;
+                      f({ debugMode: g }), (L = (k = window.blinkoRTL) == null ? void 0 : k.service) == null || L.toggleDebugMode();
                     },
                     disabled: !t.enabled
                   }
@@ -1769,8 +1768,8 @@ ul {
                     checked: t.showElementNames,
                     onChange: (p) => {
                       var k, L;
-                      const _ = p.target.checked;
-                      g({ showElementNames: _ }), (L = (k = window.blinkoRTL) == null ? void 0 : k.service) == null || L.updateSettings({ showElementNames: _ });
+                      const g = p.target.checked;
+                      f({ showElementNames: g }), (L = (k = window.blinkoRTL) == null ? void 0 : k.service) == null || L.updateSettings({ showElementNames: g }), window.Blinko && window.Blinko.toast.success(g ? "Element names enabled" : "Element names disabled");
                     },
                     disabled: !t.enabled
                   }
@@ -1784,7 +1783,10 @@ ul {
                   {
                     type: "checkbox",
                     checked: t.enableActionLog ?? !0,
-                    onChange: (p) => g({ enableActionLog: p.target.checked }),
+                    onChange: (p) => {
+                      const g = p.target.checked;
+                      f({ enableActionLog: g }), window.Blinko && window.Blinko.toast.success(g ? "Action log enabled" : "Action log disabled");
+                    },
                     disabled: !t.enabled
                   }
                 ),
@@ -1796,7 +1798,10 @@ ul {
                   {
                     type: "checkbox",
                     checked: t.showManualToggle ?? !0,
-                    onChange: (p) => g({ showManualToggle: p.target.checked }),
+                    onChange: (p) => {
+                      const g = p.target.checked;
+                      f({ showManualToggle: g }), window.Blinko && window.Blinko.toast.success(g ? "Toggle button shown" : "Toggle button hidden");
+                    },
                     disabled: !t.enabled
                   }
                 ),
@@ -1808,7 +1813,7 @@ ul {
                   {
                     type: "checkbox",
                     checked: t.manualMode,
-                    onChange: (p) => g({ manualMode: p.target.checked }),
+                    onChange: (p) => f({ manualMode: p.target.checked }),
                     disabled: !t.enabled
                   }
                 ),
@@ -1821,8 +1826,8 @@ ul {
                     type: "checkbox",
                     checked: t.darkMode,
                     onChange: (p) => {
-                      const _ = p.target.checked;
-                      g({ darkMode: _ }), _ ? document.body.classList.add("dark") : document.body.classList.remove("dark");
+                      const g = p.target.checked;
+                      f({ darkMode: g }), g ? document.body.classList.add("dark") : document.body.classList.remove("dark");
                     }
                   }
                 ),
@@ -1844,14 +1849,14 @@ ul {
                 "textarea",
                 {
                   value: t.dynamicCSS,
-                  onChange: (p) => g({ dynamicCSS: p.target.value }),
+                  onChange: (p) => f({ dynamicCSS: p.target.value }),
                   placeholder: "Enter your dynamic CSS rules here...",
                   disabled: !t.enabled,
                   style: {
                     width: "100%",
                     height: "350px",
                     padding: "10px",
-                    border: b ? "2px solid red" : "1px solid #ccc",
+                    border: m ? "2px solid red" : "1px solid #ccc",
                     borderRadius: "4px",
                     fontFamily: "Monaco, Menlo, Ubuntu Mono, monospace",
                     fontSize: "13px",
@@ -1861,7 +1866,7 @@ ul {
                   }
                 }
               ),
-              b && /* @__PURE__ */ o("div", { style: { color: "red", fontSize: "12px", marginTop: "5px" }, children: b })
+              m && /* @__PURE__ */ o("div", { style: { color: "red", fontSize: "12px", marginTop: "5px" }, children: m })
             ] }),
             /* @__PURE__ */ o("div", { style: { display: "flex", gap: "10px", flexWrap: "wrap" }, children: [
               /* @__PURE__ */ o(
@@ -1884,11 +1889,11 @@ ul {
                 "button",
                 {
                   onClick: () => {
-                    if (b) {
+                    if (m) {
                       window.Blinko.toast.error("Please fix CSS errors before saving.");
                       return;
                     }
-                    g({ dynamicCSS: t.dynamicCSS }), window.Blinko.toast.success("Dynamic CSS Settings Saved");
+                    f({ dynamicCSS: t.dynamicCSS }), window.Blinko.toast.success("Dynamic CSS Settings Saved");
                   },
                   disabled: !t.enabled,
                   style: {
@@ -1919,7 +1924,7 @@ ul {
                   {
                     type: "checkbox",
                     checked: t.permanentCSS,
-                    onChange: (p) => g({ permanentCSS: p.target.checked }),
+                    onChange: (p) => f({ permanentCSS: p.target.checked }),
                     disabled: !t.enabled
                   }
                 ),
@@ -1934,7 +1939,7 @@ ul {
                   "select",
                   {
                     value: u,
-                    onChange: (p) => l(p.target.value),
+                    onChange: (p) => d(p.target.value),
                     disabled: !t.enabled,
                     style: {
                       flex: 1,
@@ -1994,7 +1999,7 @@ ul {
                 "textarea",
                 {
                   value: t.customCSS,
-                  onChange: (p) => g({ customCSS: p.target.value }),
+                  onChange: (p) => f({ customCSS: p.target.value }),
                   placeholder: "Enter your permanent custom CSS code here...",
                   disabled: !t.enabled,
                   style: {
@@ -2032,7 +2037,7 @@ ul {
               /* @__PURE__ */ o(
                 "button",
                 {
-                  onClick: () => g({ customCSS: "" }),
+                  onClick: () => f({ customCSS: "" }),
                   disabled: !t.enabled,
                   style: {
                     background: "#dc3545",
@@ -2175,7 +2180,7 @@ ul {
     name: "blinko-plugin-rtl-support",
     author: "Daniel-OS01",
     url: "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
-    version: "2.0.1",
+    version: "2.0.2",
     minAppVersion: "0.0.0",
     displayName: {
       default: "RTL Language Support",
@@ -2453,8 +2458,8 @@ ${r}
         else if (this.settings.forceDirection === "ltr")
           r = "ltr";
         else if (n(e, "pre, code, .code-block, .CodeMirror-line, .notion-code-block")) {
-          const c = (i.match(/[\u0590-\u05FF]/g) || []).length, u = (i.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g) || []).length, l = c + u, h = i.replace(/\s/g, "").length || i.length;
-          l / h > 0.6 ? r = "rtl" : r = "ltr";
+          const c = (i.match(/[\u0590-\u05FF]/g) || []).length, u = (i.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g) || []).length, d = c + u, h = i.replace(/\s/g, "").length || i.length;
+          d / h > 0.6 ? r = "rtl" : r = "ltr";
         } else
           this.detector.detectRTL(i) ? r = "rtl" : /[a-zA-Z]/.test(i) ? r = "ltr" : r = "neutral";
         const s = e.getAttribute("data-manual-dir");
@@ -2507,7 +2512,7 @@ ${r}
         timestamp: (/* @__PURE__ */ new Date()).toLocaleTimeString(),
         element: e.tagName.toLowerCase() + (e.id ? `#${e.id}` : "") + (e.className ? `.${e.className.split(" ").join(".")}` : ""),
         direction: n.toUpperCase(),
-        textPreview: (e.textContent || "").substring(0, 20) + "..."
+        textPreview: e.textContent || ""
       };
       this.settings.enableActionLog !== !1 && (this.actionLog.unshift(i), this.actionLog.length > this.MAX_LOG_SIZE && this.actionLog.pop(), window.dispatchEvent(new CustomEvent("rtl-action-logged", { detail: i })));
     }
@@ -2556,7 +2561,7 @@ ${r}
     position: relative !important;
 }
 .rtl-debug-rtl::after {
-    content: "RTL";
+    content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
     top: -15px;
     right: 0;
@@ -2575,7 +2580,7 @@ ${r}
     position: relative !important;
 }
 .rtl-debug-ltr::after {
-    content: "LTR";
+    content: attr(data-rtl-debug) " " attr(data-debug-name);
     position: absolute;
     top: -15px;
     left: 0;
@@ -2602,10 +2607,10 @@ ${r}
       this.styleElement && (this.styleElement.remove(), this.styleElement = null), this.settings.permanentCSS || this.removePermanentCSS(), this.removeDynamicCSS();
     }
     applyDirectRTL(e, n) {
-      n === "rtl" ? (e.classList.add("blinko-detected-rtl"), e.style.direction = "rtl", e.style.textAlign = "right", e.style.unicodeBidi = "embed") : n === "ltr" ? (e.classList.remove("blinko-detected-rtl"), e.style.direction = "ltr", e.style.textAlign = "left", e.style.unicodeBidi = "embed") : (e.classList.remove("blinko-detected-rtl"), e.style.removeProperty("direction"), e.style.removeProperty("text-align"), e.style.removeProperty("unicode-bidi")), this.applyDebugVisuals(e, n);
+      n === "rtl" ? (e.classList.add("blinko-detected-rtl"), e.style.direction = "rtl", e.style.textAlign = "right", e.style.unicodeBidi = "isolate") : n === "ltr" ? (e.classList.remove("blinko-detected-rtl"), e.style.direction = "ltr", e.style.textAlign = "left", e.style.unicodeBidi = "isolate") : (e.classList.remove("blinko-detected-rtl"), e.style.removeProperty("direction"), e.style.removeProperty("text-align"), e.style.removeProperty("unicode-bidi")), this.applyDebugVisuals(e, n);
     }
     applyAttributeRTL(e, n) {
-      n === "rtl" ? (e.setAttribute("dir", "rtl"), e.setAttribute("lang", "he")) : n === "ltr" ? (e.setAttribute("dir", "ltr"), e.removeAttribute("lang")) : (e.removeAttribute("dir"), e.removeAttribute("lang")), this.applyDebugVisuals(e, n);
+      n === "rtl" ? e.setAttribute("dir", "rtl") : n === "ltr" ? e.setAttribute("dir", "ltr") : e.removeAttribute("dir"), this.applyDebugVisuals(e, n);
     }
     applyCSSClassRTL(e, n) {
       e.classList.remove("rtl-force", "ltr-force", "rtl-auto"), n === "rtl" ? e.classList.add("rtl-force") : n === "ltr" && e.classList.add("ltr-force"), this.applyDebugVisuals(e, n);
@@ -2659,16 +2664,16 @@ ${r}
         else if (n === "ltr")
           e.classList.add("rtl-debug-ltr"), i = "LTR";
         else {
-          e.removeAttribute("data-rtl-debug");
+          e.removeAttribute("data-rtl-debug"), e.removeAttribute("data-debug-name");
           return;
         }
-        if (this.settings.showElementNames) {
-          const r = e.tagName.toLowerCase(), s = e.id ? `#${e.id}` : "";
-          i = `${r}${s} ${i}`;
-        }
-        e.setAttribute("data-rtl-debug", i);
+        if (e.setAttribute("data-rtl-debug", i), this.settings.showElementNames) {
+          const r = e.tagName.toLowerCase(), s = e.id ? `#${e.id}` : "", a = `${r}${s}`;
+          e.setAttribute("data-debug-name", a);
+        } else
+          e.removeAttribute("data-debug-name");
       } else
-        e.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), e.removeAttribute("data-rtl-debug");
+        e.classList.remove("rtl-debug-rtl", "rtl-debug-ltr"), e.removeAttribute("data-rtl-debug"), e.removeAttribute("data-debug-name");
     }
     setupObserver() {
       this.observer && this.observer.disconnect(), this.settings.autoDetect && (this.observer = new MutationObserver((e) => {
@@ -2690,17 +2695,17 @@ ${r}
             a.addedNodes.forEach((c) => {
               if (c.nodeType === Node.ELEMENT_NODE) {
                 const u = c;
-                let l = !1;
+                let d = !1;
                 for (const h of r)
                   if (u.matches(h)) {
-                    l = !0;
+                    d = !0;
                     break;
                   }
-                if (l && (this.pendingElements.add(u), n = !0), s)
+                if (d && (this.pendingElements.add(u), n = !0), s)
                   try {
                     const h = u.querySelectorAll(s);
-                    h.length > 0 && (h.forEach((d) => {
-                      this.pendingElements.add(d);
+                    h.length > 0 && (h.forEach((l) => {
+                      this.pendingElements.add(l);
                     }), n = !0);
                   } catch {
                   }
@@ -2710,9 +2715,9 @@ ${r}
             const c = a.target.nodeType === Node.ELEMENT_NODE ? a.target : a.target.parentElement;
             if (c) {
               let u = !1;
-              for (const l of r)
+              for (const d of r)
                 try {
-                  if (c.matches(l)) {
+                  if (c.matches(d)) {
                     u = !0;
                     break;
                   }
@@ -2797,7 +2802,7 @@ ${r}
         if (i)
           return;
         const u = n.getSettings();
-        i = document.createElement("button"), i.className = "rtl-toggle-btn", i.innerHTML = "ع/א", i.title = "Toggle RTL Support (Hebrew/Arabic)", i.addEventListener("click", () => {
+        i = document.createElement("button"), i.className = "rtl-toggle-btn", i.textContent = "ع/א", i.title = "Toggle RTL Support (Hebrew/Arabic)", i.addEventListener("click", () => {
           n.toggle(), s();
         }), document.body.appendChild(i), u.darkMode && i.classList.add("dark-mode"), s();
       }
@@ -2810,10 +2815,11 @@ ${r}
         i && (i.remove(), i = null);
       }
       function c() {
-        console.log("Initializing Advanced Blinko RTL Plugin..."), r(), localStorage.getItem("blinko-rtl-enabled") === "true" && (n.enable(), s()), window.addEventListener("rtl-settings-changed", (l) => {
-          const h = l.detail;
-          i && (h.darkMode ? i.classList.add("dark-mode") : i.classList.remove("dark-mode"), h.showManualToggle !== void 0 && s());
-        }), window.blinkoRTL = {
+        console.log("Initializing Advanced Blinko RTL Plugin..."), r(), localStorage.getItem("blinko-rtl-enabled") === "true" && (n.enable(), s()), window.addEventListener("rtl-settings-changed", (h) => {
+          const l = h.detail;
+          i && (l.darkMode ? i.classList.add("dark-mode") : i.classList.remove("dark-mode"), l.showManualToggle !== void 0 && s());
+        });
+        const d = {
           detector: e,
           service: n,
           // Expose service
@@ -2833,36 +2839,37 @@ ${r}
           processAll: n.processAllElements,
           processElement: n.processElement,
           toggleManual: () => n.toggleManual(),
-          test: (l) => {
-            const h = e.detectRTL(l), d = n.detectHebrewRegex(l), b = n.detectArabicRegex(l);
-            return console.log(`Text "${l}" -> Original: ${h ? "RTL" : "LTR"}, Hebrew: ${d}, Arabic: ${b}`), h;
+          test: (h) => {
+            const l = e.detectRTL(h), m = n.detectHebrewRegex(h), _ = n.detectArabicRegex(h);
+            return console.log(`Text "${h}" -> Original: ${l ? "RTL" : "LTR"}, Hebrew: ${m}, Arabic: ${_}`), l;
           },
-          testHebrew: (l) => n.detectHebrewRegex(l),
-          testArabic: (l) => n.detectArabicRegex(l),
+          testHebrew: (h) => n.detectHebrewRegex(h),
+          testArabic: (h) => n.detectArabicRegex(h),
           getStats: () => document.querySelectorAll('.rtl-force, .rtl-auto, [dir="rtl"]').length,
-          setSensitivity: (l) => {
-            let h = "medium";
-            l < 0.12 ? h = "high" : l > 0.3 && (h = "low"), n.updateSettings({ threshold: l, sensitivity: h });
+          setSensitivity: (h) => {
+            let l = "medium";
+            h < 0.12 ? l = "high" : h > 0.3 && (l = "low"), n.updateSettings({ threshold: h, sensitivity: l });
           },
           fixSelection: () => {
-            const l = window.getSelection();
-            if (!l || l.rangeCount === 0)
+            const h = window.getSelection();
+            if (!h || h.rangeCount === 0)
               return;
-            let d = l.getRangeAt(0).commonAncestorContainer;
-            if (d.nodeType === Node.TEXT_NODE && (d = d.parentNode), d instanceof HTMLElement) {
-              n.processElement(d);
-              const b = d.closest("p, div, li, td, th");
-              b && n.processElement(b);
+            let m = h.getRangeAt(0).commonAncestorContainer;
+            if (m.nodeType === Node.TEXT_NODE && (m = m.parentNode), m instanceof HTMLElement) {
+              n.processElement(m);
+              const _ = m.closest("p, div, li, td, th");
+              _ && n.processElement(_);
             }
           }
-        }, console.log("Advanced Blinko RTL Plugin initialized successfully");
+        };
+        window.blinkoRTL = d, console.log("Advanced Blinko RTL Plugin initialized successfully");
       }
       t("default", class {
         constructor() {
           y(this, "withSettingPanel", !0);
           y(this, "renderSettingPanel", () => {
-            const l = document.createElement("div");
-            return Ze(/* @__PURE__ */ o(Bt, {}), l), l;
+            const d = document.createElement("div");
+            return Ze(/* @__PURE__ */ o(It, {}), d), d;
           });
           Object.assign(this, st);
         }
@@ -2873,8 +2880,8 @@ ${r}
             placement: "top",
             tooltip: `RTL Language Support (v${st.version}) (ع/א)`,
             content: () => {
-              const l = document.createElement("div");
-              return l.setAttribute("data-plugin", "rtl-support"), Ze(/* @__PURE__ */ o(Pt, { detector: e }), l), l;
+              const d = document.createElement("div");
+              return d.setAttribute("data-plugin", "rtl-support"), Ze(/* @__PURE__ */ o(Pt, { detector: e }), d), d;
             }
           }), window.Blinko.addRightClickMenu({
             name: "rtl-toggle",
@@ -2882,9 +2889,9 @@ ${r}
             icon: "material-symbols:format-textdirection-r-to-l",
             onClick: () => {
               n.toggle(), s();
-              const l = window.Blinko.i18n;
+              const d = window.Blinko.i18n;
               window.Blinko.toast.success(
-                n.isEnabled() ? l.t("rtl_enabled") : l.t("rtl_disabled")
+                n.isEnabled() ? d.t("rtl_enabled") : d.t("rtl_disabled")
               );
             }
           });
