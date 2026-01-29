@@ -19,11 +19,32 @@ jobs:
       with:
         bun-version: latest
 
-    - name: Install Dependencies
-      run: bun install
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
-    - name: Run All Tests
+    - name: Install Dependencies
+      run: |
+        bun install
+        pip install playwright
+        playwright install --with-deps chromium
+
+    - name: Type Check
+      run: bun x tsc --noEmit
+
+    - name: Run Unit Tests
       run: bun test
 
-    - name: Build Check
+    - name: Build Check & Bundle Analysis
       run: bun run build:prod
+
+    - name: Run Visual & Mobile Verification
+      run: python verification/verify_rtl_ui.py
+
+    - name: Upload Verification Artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: verification-screenshots
+        path: verification/*.png

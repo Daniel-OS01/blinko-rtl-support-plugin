@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from "bun:test";
 import { RTLSetting } from "../../src/setting";
-import { render } from "@testing-library/preact";
+import { render, fireEvent, waitFor, act } from "@testing-library/preact";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { h } from "preact";
 import { DEFAULT_TARGET_SELECTORS, DEFAULT_DYNAMIC_CSS } from "../../src/services/constants";
@@ -102,7 +102,8 @@ const mockSettings = {
   }),
 
   service: {
-      updateSettings: jest.fn()
+      updateSettings: jest.fn(),
+      exportSettings: jest.fn(() => JSON.stringify(mockSettings)),
   },
   settings: () => mockSettings,
   getSettings: () => mockSettings,
@@ -134,9 +135,10 @@ describe("RTLSetting Component", () => {
     expect(container.innerHTML).toContain('Fixed RTL Language Support Settings');
   });
 
-  it("renders mobile view toggle", () => {
+  it("renders settings tabs", () => {
     const { container } = render(<RTLSetting />);
-    expect(container.textContent).toContain("Mobile View");
+    expect(container.innerHTML).toContain("Simple");
+    expect(container.innerHTML).toContain("Advanced");
   });
 
   it("saves settings to localStorage on change", () => {
@@ -164,5 +166,45 @@ describe("RTLSetting Component", () => {
 
       // Restore service
       (window as any).blinkoRTL.service = originalService;
+  });
+
+  it("handles export settings click", () => {
+      // Mock URL.createObjectURL and URL.revokeObjectURL
+      const mockCreateObjectURL = jest.fn();
+      const mockRevokeObjectURL = jest.fn();
+      URL.createObjectURL = mockCreateObjectURL;
+      URL.revokeObjectURL = mockRevokeObjectURL;
+
+      const { getByText } = render(<RTLSetting />);
+
+      // Navigate to Advanced
+      // Use querySelector to find the exact button to avoid ambiguity with headings
+      const advancedTab = document.body.querySelector('button:last-child');
+      if (!advancedTab || advancedTab.textContent !== 'Advanced') {
+          // Fallback if structure changes, but try to find by text if possible with specific selector
+      }
+
+      const buttons = document.body.querySelectorAll('button');
+      let foundTab = null;
+      buttons.forEach(btn => {
+          if (btn.textContent === 'Advanced') foundTab = btn;
+      });
+
+      if (foundTab) fireEvent.click(foundTab);
+
+      // Find Export button (regex for flexible matching)
+      // Use getAllByText and pick the first or most specific one to avoid ambiguity if multiple elements match
+      const exportBtns = document.body.querySelectorAll('button');
+      let exportBtn = null;
+      exportBtns.forEach(btn => {
+          if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
+      });
+
+      if (!exportBtn) throw new Error('Export button not found');
+      fireEvent.click(exportBtn);
+
+      expect(mockCreateObjectURL).toHaveBeenCalled();
+      // Check if toast was called - check for "successfully" to match the actual message or loosely match
+      expect((window as any).Blinko.toast.success).toHaveBeenCalled();
   });
 });

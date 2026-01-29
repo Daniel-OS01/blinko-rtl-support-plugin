@@ -1,0 +1,45 @@
+name: Advanced CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Dependency Vulnerability Scan
+        run: |
+          if [ -f package-lock.json ]; then
+            # Install jq for JSON parsing
+            sudo apt-get update -y
+            sudo apt-get install -y jq
+
+            # Run audit and always produce JSON (don't let npm exit non-zero stop the script)
+            npm audit --json > audit.json || true
+
+            # Extract counts (vulnerabilities metadata is present in npm audit JSON)
+            HIGH=$(jq '.metadata.vulnerabilities.high // 0' audit.json)
+            CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' audit.json)
+
+            echo "Vulnerability summary: high=$HIGH critical=$CRITICAL"
+            if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+              echo "High/Critical vulnerabilities found. Full report:"
+              cat audit.json
+              exit 1
+            else
+              echo "No high/critical vulnerabilities found."
+            fi
+          else
+            echo "No package-lock.json found, skipping npm audit."
+          fi
