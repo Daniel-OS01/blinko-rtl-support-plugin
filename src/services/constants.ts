@@ -25,14 +25,7 @@ export const advancedRTLCSS = `
     unicode-bidi: plaintext !important;
 }
 
-/* Method 4: CSS content detection */
-p:has-text(/[\u0590-\u05FF\u0600-\u06FF]/),
-div:has-text(/[\u0590-\u05FF\u0600-\u06FF]/) {
-    direction: rtl !important;
-    text-align: right !important;
-}
-
-/* Method 5: Comprehensive element targeting */
+/* Method 4: Comprehensive element targeting */
 .markdown-body p, .markdown-body div, .markdown-body span,
 .vditor-reset p, .vditor-reset div, .vditor-reset span,
 .card-masonry-grid p, .card-masonry-grid div,
@@ -83,34 +76,34 @@ textarea, [contenteditable], input[type="text"] {
 /* Dark mode for settings */
 .rtl-settings-dark {
     background: #1a1a1a !important;
-    color: #000 !important;
+    color: #eee !important;
     border: 1px solid #555 !important;
 }
 
 .rtl-settings-dark input, .rtl-settings-dark select, .rtl-settings-dark textarea {
     background: #333 !important;
-    color: #000 !important;
+    color: #ddd !important;
     border: 1px solid #555 !important;
 }
 
 .rtl-settings-dark button {
     background: #333 !important;
-    color: #000 !important;
+    color: #ddd !important;
     border: 1px solid #555 !important;
 }
 
 .rtl-settings-dark h2, .rtl-settings-dark h3, .rtl-settings-dark h4,
 .rtl-settings-dark p, .rtl-settings-dark span, .rtl-settings-dark label {
-    color: #000 !important;
+    color: #eee !important;
 }
 
 .rtl-settings-dark code {
     background: #2a2a2a !important;
-    color: #000 !important;
+    color: #98c379 !important;
 }
 
 .rtl-settings-dark small {
-    color: #333 !important;
+    color: #aaa !important;
 }
 
 /* Layout preservation */
@@ -290,7 +283,9 @@ export const DEFAULT_SETTINGS: RTLSettings = {
   targetSelectors: DEFAULT_TARGET_SELECTORS,
   disabledSelectors: [],
   minRTLChars: 2,
-  processInterval: 1000,
+  processInterval: 5000,
+  threshold: 0.15,
+  enableManualToggleBtn: true,
   hebrewRegex: true,
   arabicRegex: true,
   mixedContent: true,

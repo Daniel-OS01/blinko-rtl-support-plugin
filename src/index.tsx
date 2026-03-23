@@ -22,6 +22,8 @@ System.register([], (exports) => ({
   execute: () => {
     const detector = new RTLDetector();
     const rtlService = new RTLService(detector);
+    // Inject base CSS (toggle button styles, layout protection) immediately — always present
+    rtlService.injectBaseCSS();
     let toggleButton: HTMLButtonElement | null = null;
 
     function createToggleButton() {
@@ -78,9 +80,8 @@ System.register([], (exports) => ({
       
       createToggleButton();
       
-      // Check if previously enabled
-      const savedState = localStorage.getItem('blinko-rtl-enabled');
-      if (savedState === 'true') {
+      // Re-enable if settings say enabled (persisted state)
+      if (rtlService.getSettings().enabled) {
         rtlService.enable();
         updateToggleButtonState();
       }

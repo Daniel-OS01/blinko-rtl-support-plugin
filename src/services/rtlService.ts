@@ -8,6 +8,7 @@ import { StorageManager } from './storageManager';
 export class RTLService {
   private detector: RTLDetector;
   private isRTLEnabled: boolean = false;
+  private baseStyleElement: HTMLStyleElement | null = null;
   private styleElement: HTMLStyleElement | null = null;
   private permanentStyleElement: HTMLStyleElement | null = null;
   private dynamicStyleElement: HTMLStyleElement | null = null;
@@ -178,6 +179,14 @@ export class RTLService {
           console.error('Import failed:', e);
           throw e; // Re-throw for UI handling
       }
+  }
+
+  public injectBaseCSS() {
+    if (this.baseStyleElement) return;
+    this.baseStyleElement = document.createElement('style');
+    this.baseStyleElement.id = 'blinko-rtl-base-styles';
+    this.baseStyleElement.textContent = advancedRTLCSS;
+    document.head.appendChild(this.baseStyleElement);
   }
 
   private injectCSS() {
@@ -488,6 +497,8 @@ export class RTLService {
 
   public enable() {
     this.isRTLEnabled = true;
+    this.settings.enabled = true;
+    this.storageManager.save(this.settings);
     this.injectCSS();
     this.injectDynamicCSS(); // Inject dynamic CSS
     if (this.settings.permanentCSS) {
@@ -512,6 +523,8 @@ export class RTLService {
 
   public disable() {
     this.isRTLEnabled = false;
+    this.settings.enabled = false;
+    this.storageManager.save(this.settings);
     this.removeCSS();
     
     // Disable Managers

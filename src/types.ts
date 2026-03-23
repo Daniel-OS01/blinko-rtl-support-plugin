@@ -16,7 +16,8 @@ export type Direction = 'rtl' | 'ltr' | 'neutral';
 export interface RTLSettings {
   enabled: boolean;
   sensitivity: 'high' | 'medium' | 'low';
-  threshold?: number;
+  threshold: number;
+  enableManualToggleBtn?: boolean;
   forceDirection: 'auto' | 'rtl' | 'ltr';
   autoDetect: boolean;
   manualMode: boolean;

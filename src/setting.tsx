@@ -202,36 +202,8 @@ const BUILT_IN_PRESETS: Preset[] = [
 
 export function RTLSetting(): JSX.Element {
   const [settings, setSettings] = useState<RTLSettings>({
-    enabled: true,
-    sensitivity: 'medium',
-    threshold: 0.15,
-    forceDirection: 'auto',
-    autoDetect: true, // Default to true now
-    manualMode: true,
-    manualToggle: false,
-    mobileView: false,
-    enablePasteInterceptor: true,
-    showManualToggle: true,
-    enableActionLog: true,
-    debugShowElementNames: false,
-    darkMode: false,
-    method: 'all',
-    customCSS: '',
-    dynamicCSS: DEFAULT_DYNAMIC_CSS,
-    permanentCSS: false,
-    visualStyles: {
-      fontFamily: 'inherit',
-      lineHeight: 1.5,
-      paragraphMargin: 1
-    },
-    targetSelectors: DEFAULT_TARGET_SELECTORS,
-    disabledSelectors: [],
-    minRTLChars: 3,
-    processInterval: 2000,
-    hebrewRegex: true,
-    arabicRegex: true,
-    mixedContent: true,
-    savedPresets: []
+    ...DEFAULT_SETTINGS,
+    threshold: 0.15, // derived UI field, not stored in DEFAULT_SETTINGS by default
   });
 
   const [activeTab, setActiveTab] = useState<'simple' | 'advanced'>('simple');
@@ -244,22 +216,27 @@ export function RTLSetting(): JSX.Element {
   const [importError, setImportError] = useState('');
 
   useEffect(() => {
-    // Load initial settings
-    const loadInitialSettings = () => {
-        const currentSettings = window.blinkoRTL?.settings();
-        if (currentSettings) {
-            setSettings(currentSettings);
-        } else {
-            // Fallback if global API isn't ready immediately
-            // But we should try to avoid direct localStorage access here if possible
-            // to respect the StorageManager abstraction.
-            // However, RTLService updates the global object.
-            // If the global object isn't ready, we might just wait or use defaults.
-            // Let's rely on RTLService to have initialized correctly.
+    // Load initial settings with retry — window.blinkoRTL is set asynchronously (100ms delay)
+    const loadSettings = () => {
+        const api = (window as any).blinkoRTL;
+        if (api) {
+            const currentSettings = typeof api.settings === 'function' ? api.settings()
+                : typeof api.getSettings === 'function' ? api.getSettings()
+                : null;
+            if (currentSettings) {
+                setSettings(currentSettings);
+                return true;
+            }
         }
+        return false;
     };
 
-    loadInitialSettings();
+    if (!loadSettings()) {
+        const retryInterval = setInterval(() => {
+            if (loadSettings()) clearInterval(retryInterval);
+        }, 100);
+        setTimeout(() => clearInterval(retryInterval), 3000);
+    }
 
     // Listen for settings changes (if triggered externally)
     const handleSettingsChange = (e: CustomEvent) => {
