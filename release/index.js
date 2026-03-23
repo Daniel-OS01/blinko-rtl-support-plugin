@@ -3,7 +3,7 @@ var Vt = (A, _, F) => _ in A ? jt(A, _, { enumerable: !0, configurable: !0, writ
 var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
 (function() {
   var A, _, F, N, ve, xe, Se, ke, oe, se, ae, V = {}, we = [], dt = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, q = Array.isArray;
-  function B(t, e) {
+  function I(t, e) {
     for (var n in e)
       t[n] = e[n];
     return t;
@@ -27,7 +27,7 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
   function z(t) {
     return t.children;
   }
-  function I(t, e) {
+  function $(t, e) {
     this.props = t, this.context = e;
   }
   function O(t, e) {
@@ -54,7 +54,7 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
   }
   function Z() {
     for (var t, e, n, i, r, s, a, c = 1; N.length; )
-      N.length > c && N.sort(Se), t = N.shift(), c = N.length, t.__d && (n = void 0, i = void 0, r = (i = (e = t).__v).__e, s = [], a = [], e.__P && ((n = B({}, i)).__v = i.__v + 1, _.vnode && _.vnode(n), ce(e.__P, n, i, e.__n, e.__P.namespaceURI, 32 & i.__u ? [r] : null, s, r ?? O(i), !!(32 & i.__u), a), n.__v = i.__v, n.__.__k[n.__i] = n, Ae(s, n, a), i.__e = i.__ = null, n.__e != r && Te(n)));
+      N.length > c && N.sort(Se), t = N.shift(), c = N.length, t.__d && (n = void 0, r = (i = (e = t).__v).__e, s = [], a = [], e.__P && ((n = I({}, i)).__v = i.__v + 1, _.vnode && _.vnode(n), ce(e.__P, n, i, e.__n, e.__P.namespaceURI, 32 & i.__u ? [r] : null, s, r ?? O(i), !!(32 & i.__u), a), n.__v = i.__v, n.__.__k[n.__i] = n, Ae(s, n, a), n.__e != r && Te(n)));
     Z.__r = 0;
   }
   function Le(t, e, n, i, r, s, a, c, u, l, g) {
@@ -66,7 +66,7 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
   function ct(t, e, n, i, r) {
     var s, a, c, u, l, g = n.length, d = g, m = 0;
     for (t.__k = new Array(r), s = 0; s < r; s++)
-      (a = e[s]) != null && typeof a != "boolean" && typeof a != "function" ? (typeof a == "string" || typeof a == "number" || typeof a == "bigint" || a.constructor == String ? a = t.__k[s] = Y(null, a, null, null, null) : q(a) ? a = t.__k[s] = Y(z, { children: a }, null, null, null) : a.constructor == null && a.__b > 0 ? a = t.__k[s] = Y(a.type, a.props, a.key, a.ref ? a.ref : null, a.__v) : t.__k[s] = a, u = s + m, a.__ = t, a.__b = t.__b + 1, c = null, (l = a.__i = pt(a, n, u, d)) != -1 && (d--, (c = n[l]) && (c.__u |= 2)), c == null || c.__v == null ? (l == -1 && (r > g ? m-- : r < g && m++), typeof a.type != "function" && (a.__u |= 4)) : l != u && (l == u - 1 ? m-- : l == u + 1 ? m++ : (l > u ? m-- : m++, a.__u |= 4))) : t.__k[s] = null;
+      (a = e[s]) != null && typeof a != "boolean" && typeof a != "function" ? (u = s + m, (a = t.__k[s] = typeof a == "string" || typeof a == "number" || typeof a == "bigint" || a.constructor == String ? Y(null, a, null, null, null) : q(a) ? Y(z, { children: a }, null, null, null) : a.constructor == null && a.__b > 0 ? Y(a.type, a.props, a.key, a.ref ? a.ref : null, a.__v) : a).__ = t, a.__b = t.__b + 1, c = null, (l = a.__i = pt(a, n, u, d)) != -1 && (d--, (c = n[l]) && (c.__u |= 2)), c == null || c.__v == null ? (l == -1 && (r > g ? m-- : r < g && m++), typeof a.type != "function" && (a.__u |= 4)) : l != u && (l == u - 1 ? m-- : l == u + 1 ? m++ : (l > u ? m-- : m++, a.__u |= 4))) : t.__k[s] = null;
     if (d)
       for (s = 0; s < g; s++)
         (c = n[s]) != null && !(2 & c.__u) && (c.__e == i && (i = O(c)), Be(c, c));
@@ -92,7 +92,7 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
   }
   function pt(t, e, n, i) {
     var r, s, a, c = t.key, u = t.type, l = e[n], g = l != null && (2 & l.__u) == 0;
-    if (l === null && c == null || g && c == l.key && u == l.type)
+    if (l === null && t.key == null || g && c == l.key && u == l.type)
       return n;
     if (i > (g ? 1 : 0)) {
       for (r = n - 1, s = n + 1; r >= 0 || s < e.length; )
@@ -145,17 +145,17 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
     };
   }
   function ce(t, e, n, i, r, s, a, c, u, l) {
-    var g, d, m, b, x, k, v, f, w, P, $, W, H, re, j, U, K, p = e.type;
+    var g, d, m, b, x, k, v, f, w, P, B, W, H, re, j, U, K, p = e.type;
     if (e.constructor != null)
       return null;
     128 & n.__u && (u = !!(32 & n.__u), s = [c = e.__e = n.__e]), (g = _.__b) && g(e);
     e:
       if (typeof p == "function")
         try {
-          if (f = e.props, w = "prototype" in p && p.prototype.render, P = (g = p.contextType) && i[g.__c], $ = g ? P ? P.props.value : g.__ : i, n.__c ? v = (d = e.__c = n.__c).__ = d.__E : (w ? e.__c = d = new p(f, $) : (e.__c = d = new I(f, $), d.constructor = p, d.render = ht), P && P.sub(d), d.state || (d.state = {}), d.__n = i, m = d.__d = !0, d.__h = [], d._sb = []), w && d.__s == null && (d.__s = d.state), w && p.getDerivedStateFromProps != null && (d.__s == d.state && (d.__s = B({}, d.__s)), B(d.__s, p.getDerivedStateFromProps(f, d.__s))), b = d.props, x = d.state, d.__v = e, m)
+          if (f = e.props, w = "prototype" in p && p.prototype.render, P = (g = p.contextType) && i[g.__c], B = g ? P ? P.props.value : g.__ : i, n.__c ? v = (d = e.__c = n.__c).__ = d.__E : (w ? e.__c = d = new p(f, B) : (e.__c = d = new $(f, B), d.constructor = p, d.render = ht), P && P.sub(d), d.props = f, d.state || (d.state = {}), d.context = B, d.__n = i, m = d.__d = !0, d.__h = [], d._sb = []), w && d.__s == null && (d.__s = d.state), w && p.getDerivedStateFromProps != null && (d.__s == d.state && (d.__s = I({}, d.__s)), I(d.__s, p.getDerivedStateFromProps(f, d.__s))), b = d.props, x = d.state, d.__v = e, m)
             w && p.getDerivedStateFromProps == null && d.componentWillMount != null && d.componentWillMount(), w && d.componentDidMount != null && d.__h.push(d.componentDidMount);
           else {
-            if (w && p.getDerivedStateFromProps == null && f !== b && d.componentWillReceiveProps != null && d.componentWillReceiveProps(f, $), e.__v == n.__v || !d.__e && d.shouldComponentUpdate != null && d.shouldComponentUpdate(f, d.__s, $) === !1) {
+            if (w && p.getDerivedStateFromProps == null && f !== b && d.componentWillReceiveProps != null && d.componentWillReceiveProps(f, B), !d.__e && d.shouldComponentUpdate != null && d.shouldComponentUpdate(f, d.__s, B) === !1 || e.__v == n.__v) {
               for (e.__v != n.__v && (d.props = f, d.state = d.__s, d.__d = !1), e.__e = n.__e, e.__k = n.__k, e.__k.some(function(h) {
                 h && (h.__ = e);
               }), W = 0; W < d._sb.length; W++)
@@ -163,11 +163,11 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
               d._sb = [], d.__h.length && a.push(d);
               break e;
             }
-            d.componentWillUpdate != null && d.componentWillUpdate(f, d.__s, $), w && d.componentDidUpdate != null && d.__h.push(function() {
+            d.componentWillUpdate != null && d.componentWillUpdate(f, d.__s, B), w && d.componentDidUpdate != null && d.__h.push(function() {
               d.componentDidUpdate(b, x, k);
             });
           }
-          if (d.context = $, d.props = f, d.__P = t, d.__e = !1, H = _.__r, re = 0, w) {
+          if (d.context = B, d.props = f, d.__P = t, d.__e = !1, H = _.__r, re = 0, w) {
             for (d.state = d.__s, d.__d = !1, H && H(e), g = d.render(d.props, d.state, d.context), j = 0; j < d._sb.length; j++)
               d.__h.push(d._sb[j]);
             d._sb = [];
@@ -175,7 +175,7 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
             do
               d.__d = !1, H && H(e), g = d.render(d.props, d.state, d.context), d.state = d.__s;
             while (d.__d && ++re < 25);
-          d.state = d.__s, d.getChildContext != null && (i = B(B({}, i), d.getChildContext())), w && !m && d.getSnapshotBeforeUpdate != null && (k = d.getSnapshotBeforeUpdate(b, x)), U = g, g != null && g.type === z && g.key == null && (U = Pe(g.props.children)), c = Le(t, q(U) ? U : [U], e, n, i, r, s, a, c, u, l), d.base = e.__e, e.__u &= -161, d.__h.length && a.push(d), v && (d.__E = d.__ = null);
+          d.state = d.__s, d.getChildContext != null && (i = I(I({}, i), d.getChildContext())), w && !m && d.getSnapshotBeforeUpdate != null && (k = d.getSnapshotBeforeUpdate(b, x)), U = g, g != null && g.type === z && g.key == null && (U = Pe(g.props.children)), c = Le(t, q(U) ? U : [U], e, n, i, r, s, a, c, u, l), d.base = e.__e, e.__u &= -161, d.__h.length && a.push(d), v && (d.__E = d.__ = null);
         } catch (h) {
           if (e.__v = null, u || s != null)
             if (h.then) {
@@ -212,10 +212,10 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
     });
   }
   function Pe(t) {
-    return typeof t != "object" || t == null || t.__b && t.__b > 0 ? t : q(t) ? t.map(Pe) : B({}, t);
+    return typeof t != "object" || t == null || t.__b && t.__b > 0 ? t : q(t) ? t.map(Pe) : I({}, t);
   }
   function ut(t, e, n, i, r, s, a, c, u) {
-    var l, g, d, m, b, x, k, v = n.props || V, f = e.props, w = e.type;
+    var l, g, d, m, b, x, k, v = n.props, f = e.props, w = e.type;
     if (w == "svg" ? r = "http://www.w3.org/2000/svg" : w == "math" ? r = "http://www.w3.org/1998/Math/MathML" : r || (r = "http://www.w3.org/1999/xhtml"), s != null) {
       for (l = 0; l < s.length; l++)
         if ((b = s[l]) && "setAttribute" in b == !!w && (w ? b.localName == w : b.nodeType == 3)) {
@@ -231,7 +231,7 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
     if (w == null)
       v === f || c && t.data == f || (t.data = f);
     else {
-      if (s = s && A.call(t.childNodes), !c && s != null)
+      if (s = s && A.call(t.childNodes), v = n.props || V, !c && s != null)
         for (v = {}, l = 0; l < t.attributes.length; l++)
           v[(b = t.attributes[l]).name] = b.value;
       for (l in v)
@@ -299,12 +299,12 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
           t = c;
         }
     throw t;
-  } }, F = 0, I.prototype.setState = function(t, e) {
+  } }, F = 0, $.prototype.setState = function(t, e) {
     var n;
-    n = this.__s != null && this.__s != this.state ? this.__s : this.__s = B({}, this.state), typeof t == "function" && (t = t(B({}, n), this.props)), t && B(n, t), t != null && this.__v && (e && this._sb.push(e), Re(this));
-  }, I.prototype.forceUpdate = function(t) {
+    n = this.__s != null && this.__s != this.state ? this.__s : this.__s = I({}, this.state), typeof t == "function" && (t = t(I({}, n), this.props)), t && I(n, t), t != null && this.__v && (e && this._sb.push(e), Re(this));
+  }, $.prototype.forceUpdate = function(t) {
     this.__v && (this.__e = !0, t && this.__h.push(t), Re(this));
-  }, I.prototype.render = z, N = [], xe = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, Se = function(t, e) {
+  }, $.prototype.render = z, N = [], xe = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, Se = function(t, e) {
     return t.__v.__b - e.__v.__b;
   }, Z.__r = 0, ke = /(PointerCapture)$|Capture$/i, oe = 0, se = Me(!1), ae = Me(!0);
   var ft = 0;
@@ -457,7 +457,7 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
   function qe(t, e) {
     this.props = t, this.context = e;
   }
-  (qe.prototype = new I()).isPureReactComponent = !0, qe.prototype.shouldComponentUpdate = function(t, e) {
+  (qe.prototype = new $()).isPureReactComponent = !0, qe.prototype.shouldComponentUpdate = function(t, e) {
     return Ve(this.props, t) || Ve(this.state, e);
   };
   var Ge = _.__b;
@@ -499,7 +499,7 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
   _.unmount = function(t) {
     var e = t.__c;
     e && e.__R && e.__R(), e && 32 & t.__u && (t.type = null), Je && Je(t);
-  }, (be.prototype = new I()).__c = function(t, e) {
+  }, (be.prototype = new $()).__c = function(t, e) {
     var n = e.__c, i = this;
     i.o == null && (i.o = []), i.o.push(n);
     var r = Ye(i.__v), s = !1, a = function() {
@@ -541,7 +541,7 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
         t.i = n = n[2];
       }
   };
-  (ie.prototype = new I()).__a = function(t) {
+  (ie.prototype = new $()).__a = function(t) {
     var e = this, n = Ye(e.__v), i = e.l.get(t);
     return i[0]++, function(r) {
       var s = function() {
@@ -568,8 +568,8 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
   function Qe(t, e, n) {
     return e.__k == null && (e.textContent = ""), gt(t, e), typeof n == "function" && n(), t ? t.__c : null;
   }
-  I.prototype.isReactComponent = {}, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t) {
-    Object.defineProperty(I.prototype, t, { configurable: !0, get: function() {
+  $.prototype.isReactComponent = {}, ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"].forEach(function(t) {
+    Object.defineProperty($.prototype, t, { configurable: !0, get: function() {
       return this["UNSAFE_" + t];
     }, set: function(e) {
       Object.defineProperty(this, t, { configurable: !0, writable: !0, value: e });
@@ -779,7 +779,7 @@ var y = (A, _, F) => (Vt(A, typeof _ != "symbol" ? _ + "" : _, F), F);
       /* @__PURE__ */ o("div", { style: { marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #eee", fontSize: "11px", color: "#888", textAlign: "center" }, children: "Click 'Fix Selected' to force detection on specific text." }),
       /* @__PURE__ */ o("div", { style: { marginTop: "5px", fontSize: "10px", color: "#aaa", textAlign: "center" }, children: [
         "v",
-        "2.0.6"
+        "2.0.8"
       ] })
     ] });
   }
@@ -1525,7 +1525,7 @@ ul {
         }
     }, P = () => {
       window.blinkoRTL && (window.blinkoRTL.processAll(), window.Blinko.toast.success("Content processed!"));
-    }, $ = () => {
+    }, B = () => {
       if (!u)
         return;
       const h = [...J, ...t.savedPresets || []].find((S) => S.id === u);
@@ -2128,7 +2128,7 @@ ul {
                 /* @__PURE__ */ o(
                   "button",
                   {
-                    onClick: $,
+                    onClick: B,
                     disabled: !t.enabled || !u,
                     style: {
                       background: "#17a2b8",
@@ -2348,7 +2348,7 @@ ul {
     name: "blinko-plugin-rtl-support",
     author: "Daniel-OS01",
     url: "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
-    version: "2.0.6",
+    version: "2.0.8",
     minAppVersion: "0.0.0",
     displayName: {
       default: "RTL Language Support",
