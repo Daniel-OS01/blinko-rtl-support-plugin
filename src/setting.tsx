@@ -1172,10 +1172,10 @@ export function RTLSetting(): JSX.Element {
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer', marginLeft: '30px' }}>
                     <input
                       type="checkbox"
-                      checked={settings.showElementNames}
+                      checked={settings.debugShowElementNames}
                       onChange={(e) => {
-                          const showElementNames = (e.target as HTMLInputElement).checked;
-                          saveSettings({ showElementNames });
+                          const debugShowElementNames = (e.target as HTMLInputElement).checked;
+                          saveSettings({ debugShowElementNames });
                           window.Blinko.toast.success('Settings saved');
                           // Re-trigger debug mode to update visuals
                           (window as any).blinkoRTL?.service?.toggleDebugMode();

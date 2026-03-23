@@ -66,14 +66,14 @@ export class RTLService {
           textPreview: (element.textContent || '')
       };
 
-      if (this.settings.enableActionLog !== false) {
-          this.actionLog.unshift(logEntry);
-          if (this.actionLog.length > this.MAX_LOG_SIZE) {
-              this.actionLog.pop();
-          }
-          // Dispatch event for UI updates
-          window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
+      // enableActionLog is guaranteed truthy here — the early-return guard above
+      // already handles the falsy case, so no inner check is needed.
+      this.actionLog.unshift(logEntry);
+      if (this.actionLog.length > this.MAX_LOG_SIZE) {
+          this.actionLog.pop();
       }
+      // Dispatch event for UI updates
+      window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
   }
 
   public isEnabled(): boolean {
