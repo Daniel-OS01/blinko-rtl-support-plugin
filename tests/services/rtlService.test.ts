@@ -70,7 +70,7 @@ describe('Blinko RTL Fixes Verification', () => {
   });
 
   it('should apply dynamic debug labels (RTL)', () => {
-    service.updateSettings({ debugMode: true, showElementNames: false, enabled: true });
+    service.updateSettings({ debugMode: true, debugShowElementNames: false, enabled: true });
 
     const div = document.createElement('div');
     div.textContent = "Hebrew Text \u05D0"; // RTL text
@@ -84,15 +84,16 @@ describe('Blinko RTL Fixes Verification', () => {
     expect(div.classList.contains('rtl-debug-rtl')).toBe(true);
     expect(div.getAttribute('data-rtl-debug')).toBe('RTL');
 
-    // Enable element names
-    service.updateSettings({ showElementNames: true });
+    // Enable element names — stored in separate data-debug-name attribute
+    service.updateSettings({ debugShowElementNames: true });
     service.processElement(div);
 
-    expect(div.getAttribute('data-rtl-debug')).toBe('RTL (DIV)');
+    expect(div.getAttribute('data-rtl-debug')).toBe('RTL');
+    expect(div.getAttribute('data-debug-name')).toBe('div');
   });
 
   it('should apply dynamic debug labels (LTR)', () => {
-    service.updateSettings({ debugMode: true, showElementNames: true, enabled: true, forceDirection: 'ltr' });
+    service.updateSettings({ debugMode: true, debugShowElementNames: true, enabled: true, forceDirection: 'ltr' });
 
     const p = document.createElement('p');
     p.textContent = "English Text";
@@ -101,7 +102,8 @@ describe('Blinko RTL Fixes Verification', () => {
     service.processElement(p);
 
     expect(p.classList.contains('rtl-debug-ltr')).toBe(true);
-    expect(p.getAttribute('data-rtl-debug')).toBe('LTR (P)');
+    expect(p.getAttribute('data-rtl-debug')).toBe('LTR');
+    expect(p.getAttribute('data-debug-name')).toBe('p');
   });
 
   it('should use attr(data-rtl-debug) in DEFAULT_DYNAMIC_CSS', () => {
