@@ -199,6 +199,29 @@ button.rtl-force,
     text-align: left !important;
     unicode-bidi: isolate !important;
 }
+
+/* Task list layout: prevent items collapsing into a horizontal row when RTL is applied */
+ul.vditor-task.rtl-force,
+ul.vditor-task[dir="rtl"],
+[dir="rtl"] ul.vditor-task,
+.rtl-force ul.vditor-task {
+    display: block !important;
+    flex-direction: unset !important;
+}
+
+ul.vditor-task.rtl-force > li,
+ul.vditor-task[dir="rtl"] > li,
+[dir="rtl"] ul.vditor-task > li {
+    display: list-item !important;
+    width: 100% !important;
+}
+
+/* Raw Markdown editor (SV mode) — per-line bidi detection, no forced direction flip */
+.vditor-sv,
+.vditor-sv textarea {
+    unicode-bidi: plaintext !important;
+    direction: ltr !important;
+}
 `;
 
 export const DEFAULT_TARGET_SELECTORS = [
@@ -212,13 +235,25 @@ export const DEFAULT_TARGET_SELECTORS = [
     '.markdown-body td', '.markdown-body th',
     '.markdown-body figcaption',
 
-    // Editor elements
+    // Editor elements (Live Preview / WYSIWYG)
     '.vditor-reset p',
     '.vditor-reset div',
     '.vditor-reset span',
     '.vditor-reset h1', '.vditor-reset h2', '.vditor-reset h3', '.vditor-reset h4', '.vditor-reset h5', '.vditor-reset h6',
     '.vditor-reset li',
+    '.vditor-reset ol',
+    '.vditor-reset ul',
     '.vditor-reset blockquote',
+
+    // Split View Preview elements
+    '.vditor-preview p',
+    '.vditor-preview div',
+    '.vditor-preview li',
+    '.vditor-preview ol',
+    '.vditor-preview ul',
+    '.vditor-preview span',
+    '.vditor-preview h1', '.vditor-preview h2', '.vditor-preview h3', '.vditor-preview h4', '.vditor-preview h5', '.vditor-preview h6',
+    '.vditor-preview blockquote',
 
     // Code blocks (Explicitly requested to be checked)
     'pre',
@@ -281,7 +316,7 @@ export const DEFAULT_SETTINGS: RTLSettings = {
   dynamicCSS: DEFAULT_DYNAMIC_CSS,
   permanentCSS: false,
   targetSelectors: DEFAULT_TARGET_SELECTORS,
-  disabledSelectors: [],
+  disabledSelectors: ['.vditor-sv', '.vditor-sv textarea'],
   minRTLChars: 2,
   processInterval: 5000,
   threshold: 0.15,

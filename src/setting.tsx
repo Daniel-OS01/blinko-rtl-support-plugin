@@ -182,6 +182,144 @@ ul {
     direction: unset;
 }`;
 
+const MINIMAL_RTL_CSS = `/* Minimal RTL — fixes content direction without touching layout */
+[dir="rtl"],
+.rtl-force,
+[lang="he"],
+[lang="ar"],
+[lang="fa"],
+[lang="ur"] {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+/* Keep code blocks LTR */
+pre, code, .code-block, .cm-line, .CodeMirror-line {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: isolate !important;
+}`;
+
+const HEBREW_READING_CSS = `/* Hebrew Long-Form Reading — optimized typography for Hebrew documents */
+.markdown-body,
+.vditor-reset {
+    unicode-bidi: plaintext;
+}
+
+.markdown-body p, .vditor-reset p {
+    direction: rtl;
+    text-align: right;
+    line-height: 1.85;
+    margin-bottom: 14px;
+    font-size: 17px;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3,
+.markdown-body h4, .markdown-body h5, .markdown-body h6,
+.vditor-reset h1, .vditor-reset h2, .vditor-reset h3,
+.vditor-reset h4, .vditor-reset h5, .vditor-reset h6 {
+    direction: rtl;
+    text-align: right;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.markdown-body blockquote, .vditor-reset blockquote {
+    direction: rtl;
+    border-left: none !important;
+    border-right: 4px solid #6f42c1 !important;
+    padding-left: 0 !important;
+    padding-right: 1em !important;
+    font-style: italic;
+    color: inherit;
+}
+
+.markdown-body ul, .markdown-body ol,
+.vditor-reset ul, .vditor-reset ol {
+    direction: rtl;
+    padding-right: 1.8em;
+    padding-left: 0;
+}
+
+/* Keep code blocks LTR */
+pre, code {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: isolate !important;
+}`;
+
+const MIXED_BIDI_CSS = `/* Mixed Hebrew-English BiDi — auto-isolates each paragraph direction */
+.markdown-body p,
+.markdown-body div,
+.markdown-body span,
+.markdown-body li,
+.vditor-reset p,
+.vditor-reset div,
+.vditor-reset span,
+.vditor-reset li,
+.card-masonry-grid .markdown-body p,
+.card-masonry-grid .markdown-body div {
+    unicode-bidi: isolate;
+    direction: rtl;
+    text-align: right;
+}
+
+/* Code blocks always LTR */
+pre, code, .code-block, .cm-line, .CodeMirror-line {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+    text-align: left !important;
+}
+
+/* Input fields: let browser decide per character */
+textarea, input[type="text"], [contenteditable] {
+    unicode-bidi: plaintext !important;
+}
+
+/* Block quotes flip border side */
+blockquote {
+    border-left: none;
+    border-right: 3px solid currentcolor;
+    padding-left: 0;
+    padding-right: 0.9em;
+}`;
+
+const CARD_GRID_RTL_CSS = `/* Card Grid RTL — targets card masonry grid layout specifically */
+.card-masonry-grid .markdown-body,
+.blog-masonry-grid .markdown-body {
+    direction: rtl;
+    unicode-bidi: isolate;
+}
+
+.card-masonry-grid .markdown-body p,
+.card-masonry-grid .markdown-body div,
+.card-masonry-grid .markdown-body span,
+.blog-masonry-grid .markdown-body p,
+.blog-masonry-grid .markdown-body div {
+    direction: rtl;
+    text-align: right;
+    unicode-bidi: isolate;
+    line-height: 1.35;
+}
+
+.card-masonry-grid .markdown-body > div,
+.blog-masonry-grid .markdown-body > div {
+    margin-bottom: 0.3em;
+}
+
+.card-masonry-grid .markdown-body ul,
+.card-masonry-grid .markdown-body ol,
+.blog-masonry-grid .markdown-body ul {
+    direction: rtl;
+    padding-right: 1.5em;
+    padding-left: 0;
+}
+
+/* Protect app shell and non-content areas */
+#page-wrap, header, nav, .sidebar, .toolbar, button, .btn {
+    direction: ltr !important;
+}`;
+
 const BUILT_IN_PRESETS: Preset[] = [
   {
     id: 'default',
@@ -197,6 +335,204 @@ const BUILT_IN_PRESETS: Preset[] = [
     name: 'Enhanced RTL (App Shell & UI)',
     css: APP_SHELL_CSS,
     isBuiltIn: true
+  },
+  {
+    id: 'minimal-rtl',
+    name: 'Minimal RTL (Direction Only)',
+    css: MINIMAL_RTL_CSS,
+    isBuiltIn: true
+  },
+  {
+    id: 'hebrew-reading',
+    name: 'Hebrew Long-Form Reading',
+    css: HEBREW_READING_CSS,
+    isBuiltIn: true
+  },
+  {
+    id: 'mixed-bidi',
+    name: 'Mixed Hebrew-English BiDi',
+    css: MIXED_BIDI_CSS,
+    isBuiltIn: true
+  },
+  {
+    id: 'card-grid-rtl',
+    name: 'Card Grid RTL',
+    css: CARD_GRID_RTL_CSS,
+    isBuiltIn: true
+  }
+];
+
+/* ── Dynamic CSS Presets ── */
+const DYNAMIC_PRESET_MINIMAL = `/* Minimal Dynamic CSS — only defines direction classes */
+.blinko-detected-rtl {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: isolate !important;
+}
+
+.rtl-force {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: isolate !important;
+}
+
+.ltr-force {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: isolate !important;
+}`;
+
+const DYNAMIC_PRESET_STRICT = `/* Strict RTL — high-specificity overrides, includes task list & SV protection */
+.blinko-detected-rtl,
+.rtl-force,
+[dir="rtl"].rtl-force,
+.markdown-body .rtl-force,
+.vditor-reset .rtl-force {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: isolate !important;
+}
+
+input.rtl-force, textarea.rtl-force,
+.rtl-force input, .rtl-force textarea {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+.ltr-force {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: isolate !important;
+}
+
+/* Task list: keep items stacked vertically in RTL */
+ul.vditor-task.rtl-force,
+ul.vditor-task[dir="rtl"],
+[dir="rtl"] ul.vditor-task,
+.rtl-force ul.vditor-task {
+    display: block !important;
+    flex-direction: unset !important;
+}
+
+ul.vditor-task.rtl-force > li,
+ul.vditor-task[dir="rtl"] > li,
+[dir="rtl"] ul.vditor-task > li {
+    display: list-item !important;
+    width: 100% !important;
+}
+
+/* Raw Markdown editor — per-line bidi, no direction flip */
+.vditor-sv, .vditor-sv textarea {
+    unicode-bidi: plaintext !important;
+    direction: ltr !important;
+}`;
+
+const DYNAMIC_PRESET_BIDI_AUTO = `/* Auto BiDi — lets the browser handle direction per paragraph via plaintext */
+.blinko-detected-rtl,
+.rtl-force {
+    unicode-bidi: plaintext !important;
+    /* No forced direction — browser uses the first strong character */
+}
+
+.ltr-force {
+    unicode-bidi: plaintext !important;
+    direction: ltr !important;
+}
+
+/* Task list protection even in auto mode */
+ul.vditor-task.rtl-force,
+ul.vditor-task[dir="rtl"] {
+    display: block !important;
+    flex-direction: unset !important;
+}
+
+ul.vditor-task.rtl-force > li,
+ul.vditor-task[dir="rtl"] > li {
+    display: list-item !important;
+    width: 100% !important;
+}
+
+/* Raw Markdown editor — plaintext bidi, no forced flip */
+.vditor-sv, .vditor-sv textarea {
+    unicode-bidi: plaintext !important;
+    direction: ltr !important;
+}`;
+
+const DYNAMIC_PRESET_DEBUG = `/* Debug Visuals Always On — outlines RTL/LTR elements without toggling debugger */
+.blinko-detected-rtl,
+.rtl-force {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: isolate !important;
+    outline: 2px solid rgba(111, 66, 193, 0.6) !important;
+    box-shadow: 0 0 4px rgba(111, 66, 193, 0.3) !important;
+}
+
+.ltr-force {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: isolate !important;
+    outline: 2px solid rgba(253, 126, 20, 0.5) !important;
+    box-shadow: 0 0 4px rgba(253, 126, 20, 0.3) !important;
+}
+
+/* Task list protection */
+ul.vditor-task.rtl-force,
+ul.vditor-task[dir="rtl"],
+[dir="rtl"] ul.vditor-task {
+    display: block !important;
+    flex-direction: unset !important;
+}
+
+ul.vditor-task.rtl-force > li,
+ul.vditor-task[dir="rtl"] > li {
+    display: list-item !important;
+    width: 100% !important;
+}
+
+/* Raw Markdown editor */
+.vditor-sv, .vditor-sv textarea {
+    unicode-bidi: plaintext !important;
+    direction: ltr !important;
+}`;
+
+interface DynamicCSSPreset {
+  id: string;
+  name: string;
+  description: string;
+  css: string;
+}
+
+const DYNAMIC_CSS_PRESETS: DynamicCSSPreset[] = [
+  {
+    id: 'dynamic-default',
+    name: 'Default (Full RTL)',
+    description: 'Full class definitions with task list & SV protection — the default.',
+    css: DEFAULT_DYNAMIC_CSS
+  },
+  {
+    id: 'dynamic-minimal',
+    name: 'Minimal (Classes Only)',
+    description: 'Just rtl-force / ltr-force classes, no layout overrides.',
+    css: DYNAMIC_PRESET_MINIMAL
+  },
+  {
+    id: 'dynamic-strict',
+    name: 'Strict RTL',
+    description: 'High-specificity overrides covering inputs, tasks, and editors.',
+    css: DYNAMIC_PRESET_STRICT
+  },
+  {
+    id: 'dynamic-bidi-auto',
+    name: 'Auto BiDi (Plaintext)',
+    description: 'Uses unicode-bidi: plaintext — browser picks direction per character.',
+    css: DYNAMIC_PRESET_BIDI_AUTO
+  },
+  {
+    id: 'dynamic-debug',
+    name: 'Debug Visuals Always On',
+    description: 'Outlines RTL/LTR elements with color without enabling the debug toggle.',
+    css: DYNAMIC_PRESET_DEBUG
   }
 ];
 
@@ -211,6 +547,7 @@ export function RTLSetting(): JSX.Element {
   const [testText, setTestText] = useState('');
   const [testResult, setTestResult] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState('');
+  const [selectedDynamicPresetId, setSelectedDynamicPresetId] = useState('');
   const [actionLog, setActionLog] = useState<{ timestamp: string; element: string; direction: string; textPreview: string }[]>([]);
   const [cssError, setCssError] = useState('');
   const [importError, setImportError] = useState('');
@@ -431,6 +768,15 @@ export function RTLSetting(): JSX.Element {
   const resetDynamicCSS = () => {
       saveSettings({ dynamicCSS: DEFAULT_DYNAMIC_CSS });
       window.Blinko.toast.success('Dynamic CSS reset');
+  };
+
+  const loadDynamicPreset = () => {
+    if (!selectedDynamicPresetId) return;
+    const preset = DYNAMIC_CSS_PRESETS.find(p => p.id === selectedDynamicPresetId);
+    if (preset) {
+      saveSettings({ dynamicCSS: preset.css });
+      window.Blinko.toast.success(`Dynamic preset "${preset.name}" loaded!`);
+    }
   };
 
   const exportSettings = () => {
@@ -942,6 +1288,56 @@ export function RTLSetting(): JSX.Element {
             These CSS rules are applied dynamically when RTL or LTR content is detected.
             Customize the class definitions below to control how detected elements are styled.
         </p>
+
+        {/* Dynamic CSS Presets */}
+        <div style={{ marginBottom: '15px', padding: '15px', background: settings.darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
+          <label style={{ display: 'block', fontWeight: '500', marginBottom: '8px', color: settings.darkMode ? '#eee' : '#333' }}>
+            📚 Dynamic CSS Presets:
+          </label>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '8px' }}>
+            <select
+              value={selectedDynamicPresetId}
+              onChange={(e) => setSelectedDynamicPresetId((e.target as HTMLSelectElement).value)}
+              disabled={!settings.enabled}
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                minWidth: '200px',
+                background: settings.darkMode ? '#333' : 'white',
+                color: settings.darkMode ? '#eee' : 'black'
+              }}
+            >
+              <option value="">-- Select a Dynamic Preset --</option>
+              {DYNAMIC_CSS_PRESETS.map(preset => (
+                <option key={preset.id} value={preset.id}>{preset.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={loadDynamicPreset}
+              disabled={!settings.enabled || !selectedDynamicPresetId}
+              style={{
+                background: '#6610f2',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              📥 Load
+            </button>
+          </div>
+          {selectedDynamicPresetId && (() => {
+            const p = DYNAMIC_CSS_PRESETS.find(x => x.id === selectedDynamicPresetId);
+            return p ? (
+              <p style={{ margin: '0', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666', fontStyle: 'italic' }}>
+                {p.description}
+              </p>
+            ) : null;
+          })()}
+        </div>
 
         <div style={{ marginBottom: '15px' }}>
           <textarea
