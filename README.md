@@ -1,285 +1,137 @@
-# Blinko RTL Language Support Plugin
+# Blinko RTL Language Support Plugin (v2.0.7+)
 
-Enhanced RTL (Right-to-Left) language support for Blinko with automatic detection, manual controls, mixed content handling, and mobile optimization.
+The most advanced Right-to-Left (RTL) extension for the [Blinko](https://blinko.mintlify.app/) note-taking application. This plugin provides professional-grade support for Hebrew, Arabic, Persian, and other RTL scripts with dynamic detection, layout-aware styling, and precise editor integration.
+
 [![Release Pipeline](https://github.com/Daniel-OS01/blinko-rtl-support-plugin/actions/workflows/release.yml/badge.svg)](https://github.com/Daniel-OS01/blinko-rtl-support-plugin/actions/workflows/release.yml)
+[![Version](https://img.shields.io/github/v/release/Daniel-OS01/blinko-rtl-support-plugin?label=Version)](https://github.com/Daniel-OS01/blinko-rtl-support-plugin/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-<img width="335" height="220" alt="image" src="https://github.com/user-attachments/assets/3ea8530d-060c-48d1-844f-14c50f2612f7" /> <img width="335" height="220" alt="image" src="https://github.com/user-attachments/assets/6e7da3b0-37e8-44a4-9028-6055b583e15d" />
+<div align="center">
+  <img width="335" alt="Hebrew Support" src="https://github.com/user-attachments/assets/3ea8530d-060c-48d1-844f-14c50f2612f7" /> 
+  <img width="335" alt="Arabic Support" src="https://github.com/user-attachments/assets/6e7da3b0-37e8-44a4-9028-6055b583e15d" />
+</div>
 
+## ✨ Core Features
 
-## ✨ Features
+### 🧠 Intelligent Engine
+- **Strategy Pattern Detection**: Uses a combination of `CharacterCodeStrategy` and `RegexStrategy` for high-accuracy language detection.
+- **Dynamic CSS Presets**: Choose between different styling strategies (Default, Minimal, Strict, Auto-BiDi, or Debug) to suit your workflow.
+- **Auto-Processing**: High-performance mutation observer scans content in real-time without impacting application responsiveness.
 
-- **🔍 Smart Detection**: Advanced Hebrew/Arabic/Persian character detection with configurable sensitivity. Uses a flexible Strategy Pattern (Character Code & Regex).
-- **🎛️ Manual Controls**:
-  - Toggle RTL on/off globally with a floating button.
-  - **Hover Context Manager**: Hover over any text block to see a quick "Switch Direction" button for localized fixes.
-- **📝 Mixed Content Handling**:
-  - **Paste Interceptor**: Detects mixed RTL/LTR content on paste and offers to split blocks or wrap text with Unicode isolation characters.
-  - **Inline Processing**: Wraps LTR segments within RTL blocks for correct bidirectional display.
-- **📱 Mobile Optimized**: Dedicated "Mobile View" setting for seamless usage on smaller screens.
-- **🌙 Dark Mode**: Plugin-specific dark theme with color inversion.
-- **⚡ Auto-Processing**: Continuous content scanning to handle dynamic content loading.
-- **🎯 Precise Targeting**: Focused on Blinko content areas (Markdown, Vditor, etc.) without breaking the application shell.
-- **💾 Settings Persistence**: Remembers all preferences across sessions.
-- **🔧 Advanced Configuration**: Custom CSS injection and permanent styling options.
+### 🎛️ Manual & Granular Controls
+- **Floating Global Toggle (ע/א)**: Instantly enable/disable RTL logic with a single click.
+- **Hover Context Manager**: Hover over any block to reveal the `⇄` button for immediate direction flipping of that specific element.
+- **Context Menu Integration**: Right-click any text block to access localized RTL actions.
 
-<img width="637" height="877" alt="image" src="https://github.com/user-attachments/assets/aa83fc9b-d0dc-4eeb-9dff-848677d89ce6" />
+### 📝 Editor & Mixed Content Mastery
+- **Vditor Optimization**: 
+  - **Task List Protection**: Prevents task items from collapsing into horizontal rows when RTL is applied.
+  - **Raw Markdown (SV Mode)**: Intelligent per-line bidi detection that preserves editor performance and correctly aligns mixed lines.
+  - **Live Preview & Split View**: Deep integration with all Vditor rendering modes.
+- **Smart Paste Interceptor**: Intercepts clipboard events to detect mixed RTL/LTR content, offering to split blocks or wrap segments in Unicode isolation characters (`U+2067`).
 
-## 🌍 Supported Languages
+### 📱 Responsive & Visual UX
+- **Mobile View Mode**: Optimized layouts for smaller screens, ensuring sidebars and headers don't overflow in RTL mode.
+- **Visual Debugger**: Real-time visualization of detected directions and element scopes for advanced troubleshooting.
+- **Dark Mode**: Seamlessly integrates with Blinko's theme, featuring specialized color inversion for RTL indicators.
 
-- **Hebrew** (עברית) - `\u0590-\u05FF`
-- **Arabic** (العربية) - `\u0600-\u06FF`
-- **Persian/Farsi** (فارسی) - `\u0750-\u077F`
-- **Syriac** - `\u0700-\u074F`
-- **Thaana** - `\u0780-\u07BF`
-- **Extended Arabic** - `\u08A0-\u08FF`
+## 🎨 Built-in Style Presets
 
-## 🚀 Quick Start
+The plugin now includes specialized CSS presets for different reading and layout scenarios:
 
-1. **Install Plugin**: Add to your Blinko instance.
-2. **Toggle RTL**: Click the floating ع/א button (top-right) to enable the plugin.
-3. **Configure**: Access settings via the plugin panel or right-click menu to adjust sensitivity or enable features like Mixed Content Handling.
+| Preset | Best For |
+| :--- | :--- |
+| **Default** | Balanced RTL support for general note-taking. |
+| **Hebrew Long-Form** | Optimized typography, line-height (1.85), and font-weight for reading documents. |
+| **Mixed BiDi** | Auto-isolates each paragraph's direction — ideal for technical notes with Hebrew/English. |
+| **Card Grid RTL** | Specifically targets card masonry and grid layouts in the dashboard. |
+| **Minimal RTL** | Pure direction/alignment fixes without any layout modifications. |
 
-## 🎛️ Controls
+## 🚀 Getting Started
 
-### Floating Toggle Button
-- **Location**: Fixed top-right corner.
-- **Function**: Quick RTL on/off toggle.
-- **Visual**: Shows active state (Green = Enabled, Blue = Disabled).
+1. **Install**: Add the plugin to your Blinko instance.
+2. **Enable**: Click the floating **ע/א** button (top-right) to activate the engine.
+3. **Configure**: Open the settings panel to:
+   - Adjust **Sensitivity** (10% to 40% threshold).
+   - Set a **Minimum Character** count for detection.
+   - Choose your preferred **CSS Preset**.
+   - Enable **Mixed Content Handling** for advanced bidirectional text.
 
-### Hover Context Button
-- **Trigger**: Hover over any paragraph or content block.
-- **Function**: Click the "⇄" icon to manually flip the direction of that specific block.
-- **Persistence**: Remembers manual overrides for the session.
+## 🛠️ Configuration & Customization
 
-### Paste Interceptor
-- **Trigger**: Paste text containing both RTL and LTR characters.
-- **Action**: A toast notification appears offering:
-    - **Split Blocks**: Breaks mixed content into separate lines.
-    - **Wrap**: Wraps RTL segments in Unicode Isolate characters.
-    - **Original**: Pastes as is.
+### Detection Sensitivity
+- **High (10%)**: Triggers RTL styling even with a few Hebrew/Arabic words.
+- **Medium (15%)**: Balanced for mixed notes.
+- **Low (25%)**: Only triggers if the block is substantially RTL.
 
-## ⚙️ Configuration Options
+### Dynamic Styling System
+The plugin allows you to customize the CSS classes injected into your notes. You can use the **Dynamic CSS Presets** in the settings panel to switch between:
+- **Strict Mode**: High-specificity overrides for complex layouts.
+- **Auto BiDi (Plaintext)**: Relies on the browser's native `unicode-bidi: plaintext` logic.
+- **Debug Mode**: Highlights RTL blocks with purple outlines for inspection.
 
-### Detection Settings
-- **Sensitivity**: High (10%), Medium (15%), Low (25%) threshold of RTL characters.
-- **Min Characters**: Minimum absolute number of RTL characters to trigger detection.
-- **Mixed Content**: Enable experimental support for handling mixed text within blocks.
+## 🎯 Technical Details
 
-### Mode Options
-- **Manual Mode**: Conservative detection.
-- **Auto-Detect**: Continuous content processing (Recommended).
-- **Manual Toggle**: Force RTL on all content.
-- **Mobile View**: Optimizes UI elements for touch screens.
-- **Dark Mode**: Inverts plugin UI colors.
+### Target Selectors
+The plugin targets the following areas by default:
+- `.markdown-body` (Note Content)
+- `.vditor-reset` (Live Preview/Editor)
+- `.vditor-preview` (Split View Preview)
+- `textarea`, `[contenteditable="true"]` (Input Areas)
+- `li`, `p`, `div`, `blockquote` (Text blocks)
 
-### Advanced Features
-- **Custom CSS**: Inject permanent styling rules (e.g., custom fonts for RTL).
-- **Permanent CSS**: Keep custom styles active even when RTL logic is disabled.
+### Supported Scripts
+- **Hebrew**: `\u0590-\u05FF`
+- **Arabic**: `\u0600-\u06FF`
+- **Persian/Farsi**: `\u0750-\u077F`
+- **Other RTL Scripts**: Syriac, Thaana, N'Ko, and Extended Arabic.
 
-## 🎯 Target Elements
+## 🔧 Developer Reference
 
-Default selectors (Blinko-optimized):
-```css
-.markdown-body p, .markdown-body div, .markdown-body li,
-.vditor-reset p, .vditor-reset div,
-textarea, [contenteditable="true"]
-```
-*Note: You can check `src/services/rtlService.ts` for the full list.*
-
-## 🧪 Testing Examples
-
-### Hebrew Text
-```
-שלום עולם - זהו טקסט בעברית
-עברית Hebrew טקסט
-```
-
-### Arabic Text
-```
-مرحبا بالعالم - هذا نص باللغة العربية
-العربية Arabic نص
-```
-
-### Mixed Content
-```
-Mixed שלום world טקסט
-Hello مرحبا world
-```
-
-## 🔧 API Reference
-
-Global `window.blinkoRTL` object:
+The plugin exposes a global `window.blinkoRTL` object for programmatic control:
 
 ```javascript
-// Test RTL detection
-window.blinkoRTL.test("שלום עולם"); // Returns true/false
+// Test if a string is RTL
+const isHebrew = window.blinkoRTL.test("שלום עולם"); 
 
-// Toggle functions
-window.blinkoRTL.toggle(); // Toggle RTL on/off
-window.blinkoRTL.toggleManual(); // Toggle manual mode
+// Trigger a manual scan of the whole page
+window.blinkoRTL.processAll();
 
-// Processing
-window.blinkoRTL.processAll(); // Process all content
-window.blinkoRTL.processElement(element); // Process single element
+// Check current stats (how many RTL elements are active)
+console.log(window.blinkoRTL.getStats());
 
-// State
-window.blinkoRTL.isEnabled(); // Check if RTL is active
-window.blinkoRTL.getSettings(); // Get current settings
-
-// Stats
-window.blinkoRTL.getStats(); // Get count of active RTL blocks
+// Toggle manual mode programmatically
+window.blinkoRTL.toggleManual();
 ```
 
-## 🛠️ Development
+## 🏗️ Build & Development
 
-### Build from Source
 ```bash
-git clone https://github.com/Daniel-OS01/blinko-rtl-language-support-plugin.git
-cd blinko-rtl-language-support-plugin
+# Clone the repo
+git clone https://github.com/Daniel-OS01/blinko-rtl-support-plugin.git
+cd blinko-rtl-support-plugin
+
+# Install dependencies (requires Bun)
 bun install
+
+# Run dev server
+bun run dev
+
+# Build production bundle (files in release/)
 bun run build:prod
 ```
 
-### Development Mode
-```bash
-bun run dev
-```
+## 🧪 Verification & QA
+We use a comprehensive verification suite:
+- **Bun Test**: Unit testing for detection logic and services.
+- **Playwright (Python)**: Visual regression testing for desktop/mobile layouts (see `verification/` folder).
 
-### Testing & Verification
-
-**Unit Tests**
-The project uses `bun test` for fast unit testing of logic and components.
-```bash
-bun test
-```
-
-**Visual Regression (E2E)**
-A Python-based Playwright script is included to verify UI rendering, mobile responsiveness, and CSS application.
-```bash
-# Prerequisites
-pip install playwright
-playwright install chromium
-
-# Run Verification
-python verification/verify_rtl_ui.py
-```
-This script generates screenshots in `verification/` for visual inspection of:
-- Desktop layout (RTL/LTR).
-- Mobile emulation (iPhone 12 viewport).
-- FAB positioning and responsiveness.
-- Mobile View optimization classes.
-
-### Architecture Notes
-- **Storage Manager**: Automatically handles settings persistence across different login states. It migrates anonymous settings to the user profile upon login.
-- **Paste Interceptor**: Uses modern `Clipboard` and `Selection` APIs to handle mixed-content insertion safely without `execCommand`.
-- **Mobile View**: Toggles a `blinko-rtl-mobile-view` class on `document.body` to apply targeted CSS overrides (e.g., `overflow-x: hidden`).
-
-### Release
-```bash
-# Releases are handled via GitHub Actions
-npm run release:publish
-```
-
-## 🎨 CSS Integration
-
-The plugin includes comprehensive CSS from `Blinko-RTL.css`:
-
-- **Layout Preservation**: Maintains Blinko's flex/grid structure
-- **Content Detection**: Uses `unicode-bidi: plaintext` for automatic detection
-- **RTL Styling**: Proper text alignment and list positioning
-- **Component Protection**: Preserves buttons, navigation, and toolbars
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **RTL Not Working**: 
-   - Check if plugin is enabled
-   - Verify sensitivity settings
-   - Test with detection tool
-
-2. **Layout Breaking**:
-   - Plugin preserves layout containers
-   - Only affects text content areas
-   - Check target selectors
-
-3. **Auto-Detection Issues**:
-   - Disable auto-detect if causing problems
-   - Use manual mode for better control
-   - Adjust minimum character threshold
-
-## 📋 Changelog
-
-### v1.0.9 (Current)
-**Consolidated Update**
-- **Merged PRs**:
-    - Repository structure and release workflow refactor.
-    - Debug & Optimize RTL Engine (Performance improvements).
-    - Unit test coverage improvements.
-    - Architectural refactor to `RTLService`.
-    - Documentation updates.
-- **New Features**:
-    - **Hover Context Manager**: Interactive direction flipping.
-    - **Paste Interceptor**: Smart handling of mixed-content pastes.
-    - **Performance**: Debounced processing and optimized mutation observers.
-
-### v1.0.8 (Latest)
-**Mobile Optimization & Codebase Stability**
-- **📱 New Feature: Mobile View**
-    - Introduced a dedicated toggle for mobile-optimized layouts.
-    - Implemented responsive CSS adaptation for seamless usage on smaller screens.
-    - Optimized the Settings Panel layout for touch interactions.
-- **🏗️ Architecture & Refactoring**
-    - Major refactoring of the core initialization logic (`src/index.tsx`) for better modularity.
-    - Standardized `RTLProcessor` usage across the application.
-- **🛡️ Quality Assurance**
-    - Comprehensive codebase audit completed.
-    - Implemented robust unit testing suite for core detection logic and UI components.
-    - Resolved conflicts with global test environment variables.
-- **🔒 Security**
-    - Verified safety of settings persistence and CSS injection mechanisms.
-
-### v1.0.7
-**Advanced Detection Strategies**
-- **🧠 New Feature: Strategy Pattern**
-    - Implemented a flexible Strategy Pattern for RTL detection.
-    - Added specialized strategies: `CharacterCodeStrategy`, `RegexStrategy`, and `CombinedStrategy`.
-- **🌍 Expanded Language Support**
-    - Improved detection for Syriac and Thaana scripts.
-    - Refined character code ranges for higher accuracy.
-
-### v1.0.6
-**Performance & Stability**
-- **⚡ Improvements**
-    - Optimized auto-detection intervals for better performance.
-    - Enhanced error handling for custom selector injections.
-- **🐛 Bug Fixes**
-    - Fixed minor layout regressions in mixed-content blocks.
-
-### v1.0.5
-**Dark Mode & UX Enhancements**
-- **🌙 Enhancements**
-    - Enhanced dark mode with complete color inversion.
-    - Plugin-specific dark theme (isolated from main application).
-- **⚙️ Improvements**
-    - Fixed auto-detection to continuously process all content.
-    - Improved manual RTL toggle synchronization.
-    - Better settings panel integration.
-
-### v1.0.4
-- ✅ Fixed auto-detection to process all content continuously
-- ✅ Added manual RTL toggle with settings sync
-- ✅ Enhanced dark mode with full color inversion
-- ✅ Improved settings panel with better controls
-- ✅ Added comprehensive CSS from Blinko-RTL.css
-- ✅ Fixed layout preservation for Blinko components
-
-### v1.0.0
-- 🎉 Initial release
-- 🔍 Basic RTL detection
-- ⚙️ Settings panel
-- 🎯 Target selector configuration
+## 📋 Recent Changelog (v2.0.7)
+- **Feature**: Added **Dynamic CSS Presets** system to the settings panel.
+- **Fix**: Resolved Vditor task list collapse issue.
+- **Enhancement**: Improved raw Markdown editor (SV Mode) with per-line bidi protection.
+- **Architecture**: Refactored logic to use a centralized `RTLService` for state management.
+- **UI**: Added specialized "Hebrew Long-Form Reading" and "Card Grid" CSS presets.
 
 ## 📄 License
-
-MIT License - see LICENSE file for details
+MIT License - Developed with ❤️ by [Daniel](https://github.com/Daniel-OS01)
