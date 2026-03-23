@@ -1,0 +1,65 @@
+name: README Auto-Update on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update README files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const release = context.payload.release;
+            const version = release.tag_name.replace(/^v/, '');
+            const body = release.body || 'No release notes provided.';
+
+            // 1. Update README.md (English)
+            if (fs.existsSync('README.md')) {
+              let content = fs.readFileSync('README.md', 'utf8');
+              
+              // Update title version
+              content = content.replace(/(# Blinko RTL Language Support Plugin \(v)[0-9.]*(\+\))/, `$1${version}$2`);
+              
+              // Update Changelog section
+              // Matches "## 📋 Recent Changelog (vX.X.X)" and everything until next section
+              const enRegex = /(## 📋 Recent Changelog \(v)[0-9.]*(\)[\s\S]*?)(?=\n## |$)/;
+              content = content.replace(enRegex, `$1${version}$2\n${body}`);
+              
+              fs.writeFileSync('README.md', content);
+              console.log('Updated README.md');
+            }
+
+            // 2. Update README_he.md (Hebrew)
+            if (fs.existsSync('README_he.md')) {
+              let content = fs.readFileSync('README_he.md', 'utf8');
+              
+              // Update title version
+              content = content.replace(/(# תוסף תמיכה בשפות RTL עבור Blinko \(גרסה )[0-9.]*(\+\))/, `$1${version}$2`);
+              
+              // Update Changelog section
+              // Matches "## 📋 מה חדש (גרסה X.X.X)" and everything until next section
+              const heRegex = /(## 📋 מה חדש \(גרסה )[0-9.]*(\)[\s\S]*?)(?=\n## |$)/;
+              content = content.replace(heRegex, `$1${version}$2\n${body}`);
+              
+              fs.writeFileSync('README_he.md', content);
+              console.log('Updated README_he.md');
+            }
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md README_he.md
+          git commit -m "docs: auto-update README for release ${{ github.event.release.tag_name }}" || echo "No changes to commit"
+          git push origin main
