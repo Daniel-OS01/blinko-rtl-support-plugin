@@ -23,4 +23,7 @@ jobs:
       run: bun install
 
     - name: Run Integration Tests
-      run: bun test tests/integration tests/components tests/renderer.test.ts tests/verify_dynamic_rtl.test.ts
+      # tests/renderer.test.ts is excluded — it imports src/renderer.ts and
+      # src/config.ts which were removed (orphan files). Component tests live
+      # under test-unit.yml; dynamic CSS tests are covered here.
+      run: bun test tests/integration/ tests/verify_dynamic_rtl.test.ts

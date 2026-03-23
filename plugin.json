@@ -2,7 +2,7 @@
   "name": "blinko-plugin-rtl-support",
   "author": "Daniel-OS01",
   "url": "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
-  "version": "2.0.9",
+  "version": "2.1.0",
   "minAppVersion": "0.0.0",
   "displayName": {
     "default": "RTL Language Support",
@@ -20,5 +20,9 @@
     "default": "README.md",
     "zh": "README_zh.md",
     "he": "README_he.md"
-  }
+  },
+  "repository": "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
+  "homepage": "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
+  "keywords": ["blinko", "plugin", "rtl", "hebrew", "arabic", "persian", "i18n", "bidi"],
+  "license": "MIT"
 }

@@ -779,7 +779,7 @@ var b = (D, m, N) => (Jt(D, typeof m != "symbol" ? m + "" : m, N), N);
       /* @__PURE__ */ o("div", { style: { marginTop: "15px", paddingTop: "10px", borderTop: "1px solid #eee", fontSize: "11px", color: "#888", textAlign: "center" }, children: "Click 'Fix Selected' to force detection on specific text." }),
       /* @__PURE__ */ o("div", { style: { marginTop: "5px", fontSize: "10px", color: "#aaa", textAlign: "center" }, children: [
         "v",
-        "2.0.9"
+        "2.1.0"
       ] })
     ] });
   }
@@ -2748,7 +2748,7 @@ ul.vditor-task[dir="rtl"] > li {
     name: "blinko-plugin-rtl-support",
     author: "Daniel-OS01",
     url: "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
-    version: "2.0.9",
+    version: "2.1.0",
     minAppVersion: "0.0.0",
     displayName: {
       default: "RTL Language Support",
@@ -2766,7 +2766,20 @@ ul.vditor-task[dir="rtl"] > li {
       default: "README.md",
       zh: "README_zh.md",
       he: "README_he.md"
-    }
+    },
+    repository: "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
+    homepage: "https://github.com/Daniel-OS01/blinko-rtl-support-plugin",
+    keywords: [
+      "blinko",
+      "plugin",
+      "rtl",
+      "hebrew",
+      "arabic",
+      "persian",
+      "i18n",
+      "bidi"
+    ],
+    license: "MIT"
   };
   function ct(t, e, i = !1) {
     let r = null;
@@ -3318,7 +3331,7 @@ ${n}
       this.autoProcessInterval && (clearInterval(this.autoProcessInterval), this.autoProcessInterval = null);
     }
   }
-  const hi = "", Wt = {
+  const _i = "", Wt = {
     rtl_support: "RTL Support",
     auto_detect: "Auto Detect",
     manual_toggle: "Manual Toggle",
