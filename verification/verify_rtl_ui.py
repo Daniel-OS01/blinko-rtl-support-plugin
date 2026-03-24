@@ -34,11 +34,14 @@ def run():
 
         # 2. Mobile Emulation Test
         print("Running Mobile Test...")
-        # Customize context to ensure stable 1x scaling for pixel assertions
-        iphone_12 = p.devices['iPhone 12'].copy()
-        iphone_12['device_scale_factor'] = 1 # Override default DPR (usually 3.0 for iPhone 12)
-
-        mobile_context = browser.new_context(**iphone_12)
+        # Use a generic 390px-wide Android mobile viewport with 1x DPR for stable pixel assertions
+        mobile_context = browser.new_context(
+            viewport={'width': 390, 'height': 844},
+            device_scale_factor=1,
+            user_agent='Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+            is_mobile=True,
+            has_touch=True,
+        )
         mobile_page = mobile_context.new_page()
         mobile_page.goto(f"file://{file_path}")
 
@@ -79,13 +82,13 @@ def run():
         viewport = mobile_page.viewport_size
         print(f"Viewport: {viewport}")
 
-        # If viewport is correct (iPhone 12 is 390px wide), maybe the style isn't applying.
+        # If viewport is correct (390px wide), maybe the style isn't applying.
         # But we are asserting 36px (mobile) vs 48px (desktop).
         # Let's adjust tolerance if 48px is actually acceptable in some contexts or if we need to fix the test setup.
         # If the test failure says 48px, it means the media query didn't trigger.
 
         # Re-verify media query logic. The css has @media (max-width: 768px).
-        # iPhone 12 width is 390px.
+        # Mobile viewport width is 390px.
         # Maybe device_scale_factor=1 messes up the media query evaluation in Playwright?
         # Let's try to trust the result if it's close to 36, OR if we need to debug.
 
