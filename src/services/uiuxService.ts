@@ -139,16 +139,14 @@ export class UIUXService {
     }
 
     if (!this.settings.singleTapOpenNote) {
-      // Remove all data-single-tap markers
       document
         .querySelectorAll<HTMLElement>('[data-single-tap="true"]')
         .forEach(el => el.removeAttribute('data-single-tap'));
       return;
     }
 
-    // Mark note cards and attach click listeners
     const markAndListen = () => {
-      // Selector covers both Blinko and Blinko Article card types
+      // Use broad selectors to cover Blinko's masonry card variants
       const cards = document.querySelectorAll<HTMLElement>(
         '[class*="note-card"]:not([data-single-tap]), ' +
         '[class*="blinko-card"]:not([data-single-tap]), ' +
@@ -159,17 +157,47 @@ export class UIUXService {
         card.setAttribute('data-single-tap', 'true');
 
         const handler = (e: MouseEvent) => {
-          // Don't intercept clicks on interactive children (buttons, links, etc.)
           const target = e.target as HTMLElement;
-          if (target.closest('button, a, input, textarea, [role="button"]')) return;
 
-          // Simulate an "open note" action by clicking the card's primary action
-          const openBtn = card.querySelector<HTMLElement>(
-            '[class*="open"], [class*="expand"], [class*="title"], h1, h2, h3, p'
+          // Never intercept clicks on genuinely interactive children
+          if (
+            target.closest(
+              'button, a, input, textarea, ' +
+              '[role="button"], [role="menuitem"], [role="menu"], ' +
+              '[class*="tag"], [class*="action"], [class*="menu"], ' +
+              '[class*="more"], [class*="dots"]'
+            )
+          ) return;
+
+          // ── FIX FOR BUG 3: stop other handlers on the same element
+          //    firing (prevents the context menu from opening simultaneously)
+          e.stopImmediatePropagation();
+
+          // ── FIX FOR BUG 2: delegate to the real "open" trigger ──────
+          // Strategy 1 — explicit detail/open anchor or button in the card
+          const detailTarget = card.querySelector<HTMLElement>(
+            'a[href*="/detail"], a[href*="/note/"], ' +
+            '[class*="detail-btn"], [class*="detail-link"], ' +
+            '[class*="expand-btn"], [class*="open-note"], ' +
+            '[data-action="open"], [data-action="detail"], ' +
+            '[aria-label*="detail" i], [aria-label*="view detail" i]'
           );
-          if (openBtn && openBtn !== target) {
-            openBtn.click();
+
+          if (detailTarget && detailTarget !== target) {
+            detailTarget.click();
+            return;
           }
+
+          // Strategy 2 — dispatch a dblclick on the card content body
+          // (Blinko opens notes on double-click in the masonry view)
+          const contentArea = card.querySelector<HTMLElement>(
+            '.markdown-body, [class*="note-content"], ' +
+            '[class*="card-body"], [class*="card-content"]'
+          ) ?? card;
+
+          contentArea.dispatchEvent(
+            new MouseEvent('dblclick', { bubbles: true, cancelable: true, view: window })
+          );
         };
 
         (card as any)._uiuxClickHandler = handler;
@@ -179,7 +207,6 @@ export class UIUXService {
 
     markAndListen();
 
-    // Watch for new cards added to the DOM
     const observer = new MutationObserver(markAndListen);
     observer.observe(document.body, { childList: true, subtree: true });
 
@@ -204,35 +231,74 @@ export class UIUXService {
 
     if (!this.settings.backButtonClosesNote) return;
 
-    const handler = (e: PopStateEvent) => {
-      // Look for any expanded / modal overlay that is currently visible
-      const overlay = document.querySelector<HTMLElement>(
-        '[class*="expanded"]:not([style*="display: none"]), ' +
-        '[class*="modal"]:not([style*="display: none"]), ' +
-        '[class*="overlay"]:not([style*="display: none"]):not([id*="root"])'
+    // ── Detect the active overlay / expanded note ────────────────────
+    const findOverlay = (): HTMLElement | null => {
+      // HeroUI Dialog / Modal (Blinko uses HeroUI components)
+      const heroModal = document.querySelector<HTMLElement>(
+        '[role="dialog"][aria-modal="true"]:not([hidden]), ' +
+        'section[aria-modal="true"]:not([hidden]), ' +
+        '[data-slot="base"][role="dialog"]'
       );
+      if (heroModal) return heroModal;
 
-      if (overlay) {
-        e.preventDefault();
-        // Try to find and click a close button
-        const closeBtn = overlay.querySelector<HTMLElement>(
-          '[class*="close"], [aria-label*="close" i], [aria-label*="dismiss" i], ' +
-          'button[class*="X"], button svg[data-icon="x"]'
-        );
-        if (closeBtn) {
-          closeBtn.click();
-        } else {
-          // Fallback: press Escape
-          overlay.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-        }
+      // Next.js route-based note detail overlay
+      const noteDetail = document.querySelector<HTMLElement>(
+        '[class*="note-detail"]:not([hidden]), ' +
+        '[class*="note-view"]:not([hidden]), ' +
+        '[class*="expanded-note"]:not([hidden]), ' +
+        '[class*="detail-modal"]:not([hidden])'
+      );
+      if (noteDetail) return noteDetail;
 
-        // Push a dummy state so the back button doesn't exit the app
-        history.pushState(null, '', window.location.href);
-      }
+      // Generic accessible dialog fallback
+      return document.querySelector<HTMLElement>(
+        '[role="dialog"]:not([hidden]):not([aria-hidden="true"])'
+      );
     };
 
-    // Push an initial state so there is something to pop back to
-    history.pushState(null, '', window.location.href);
+    // ── Close the overlay by the most reliable mechanism available ───
+    const closeOverlay = (overlay: HTMLElement): void => {
+      // 1. HeroUI / Blinko close button
+      const closeBtn = overlay.querySelector<HTMLElement>(
+        '[data-slot="close-button"], ' +
+        'button[aria-label="Close"], button[aria-label="close"], ' +
+        'button[aria-label="Dismiss"], button[aria-label="dismiss"], ' +
+        '[class*="closeButton"], [class*="close-btn"], [class*="btn-close"]'
+      );
+      if (closeBtn) { closeBtn.click(); return; }
+
+      // 2. Click the backdrop / overlay background
+      const backdrop = document.querySelector<HTMLElement>(
+        '[data-slot="backdrop"], ' +
+        '[class*="backdrop"]:not([hidden]), ' +
+        '[class*="overlay-backdrop"]'
+      );
+      if (backdrop) { backdrop.click(); return; }
+
+      // 3. Dispatch Escape on both the overlay and the document
+      const escOpts: KeyboardEventInit = { key: 'Escape', code: 'Escape', bubbles: true, cancelable: true };
+      overlay.dispatchEvent(new KeyboardEvent('keydown', escOpts));
+      document.dispatchEvent(new KeyboardEvent('keydown', escOpts));
+    };
+
+    const handler = (_e: PopStateEvent) => {
+      const overlay = findOverlay();
+      if (overlay) {
+        closeOverlay(overlay);
+        // Re-absorb the next back press only when an overlay was actually closed
+        history.pushState({ blinkoPlugin: true }, '', window.location.href);
+      }
+      // ── FIX FOR LOGOUT BUG: if there is NO overlay we do NOT re-push.
+      //    This lets the next back press navigate normally (e.g. to /login).
+    };
+
+    // ── FIX: only push the initial sentinel state when not on an auth page.
+    //    Pushing while on /login would trap the user on that page.
+    const isAuthPage = /\/(login|auth|signin|signup|register)/.test(window.location.pathname);
+    if (!isAuthPage) {
+      history.pushState({ blinkoPlugin: true }, '', window.location.href);
+    }
+
     window.addEventListener('popstate', handler);
 
     this.backButtonCleanup = () => {

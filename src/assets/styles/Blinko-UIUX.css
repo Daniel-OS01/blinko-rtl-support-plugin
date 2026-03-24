@@ -252,7 +252,53 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   13. MOBILE TOOLBAR ICON SIZE  (bottom action bar specifically)
+   13. TAG POSITION FIX
+       Blinko's default card layout places tags in a horizontal row
+       alongside the note text (or floated right via margin-left:auto).
+       These rules force tags below the note body text in a left-aligned
+       wrap row, which is the expected UX on both mobile and desktop.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Make the card body a vertical flex column so content stacks */
+.blinko-custom-cards [class*="note-card"] > div,
+.blinko-custom-cards [class*="blinko-card"] > div,
+.blinko-custom-cards .card-masonry-grid > div > div > div:first-child {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+/* Markdown / note text: stretch full width */
+.blinko-custom-cards [class*="note-card"] .markdown-body,
+.blinko-custom-cards [class*="blinko-card"] .markdown-body,
+.blinko-custom-cards [class*="note-content"],
+.blinko-custom-cards [class*="card-content"] {
+  width: 100% !important;
+  flex: 1 1 auto !important;
+}
+
+/* Tag container: full width, wrapping row, left-aligned, below text */
+.blinko-custom-cards [class*="tag-list"],
+.blinko-custom-cards [class*="tag-area"],
+.blinko-custom-cards [class*="tags-container"],
+.blinko-custom-cards [class*="note-tags"],
+.blinko-custom-cards [class*="card-tags"],
+.blinko-custom-cards [class*="note-card"] [class*="tag"],
+.blinko-custom-cards [class*="blinko-card"] [class*="tag"] {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-top: 6px !important;
+  float: none !important;
+  align-self: flex-start !important;
+  justify-content: flex-start !important;
+  order: 99 !important;   /* sink to bottom of any flex container */
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   14. MOBILE TOOLBAR ICON SIZE  (bottom action bar specifically)
    ═══════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {

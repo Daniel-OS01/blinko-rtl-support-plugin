@@ -582,3 +582,164 @@ npx tsc --noEmit  # type-check only (no emit)
 ```
 
 Output: `dist/index.js` (SystemJS bundle) + `dist/plugin.json` copy.
+
+---
+
+## 11. Android Bug Audit — Technical Findings (2026-03-24)
+
+### 11.1 `popstate` Is Non-Cancelable
+
+The most critical discovery: `popstate` is defined in the HTML Living Standard as a
+non-cancelable event. Calling `e.preventDefault()` on it has **no effect** in any
+browser (Chromium, Firefox, Safari, or WebView). This is the entire reason
+BUG-001 existed — the developer intent was clear but the API was wrong.
+
+```ts
+// WRONG — preventDefault is silently ignored
+window.addEventListener('popstate', (e) => {
+  e.preventDefault(); // ← no-op on popstate
+});
+
+// CORRECT — push a new state to "absorb" the pop
+window.addEventListener('popstate', (_e) => {
+  if (shouldIntercept()) {
+    doCloseWork();
+    history.pushState({ sentinel: true }, '', location.href); // re-arm
+  }
+  // if no intercept: do nothing → navigation proceeds normally
+});
+```
+
+**Reference:** https://html.spec.whatwg.org/multipage/browsing-the-web.html#event-popstate
+
+---
+
+### 11.2 `history.pushState` Side Effect on Logout
+
+`history.pushState` inserts an entry into the browser's session history stack.
+Every unconditional call to it (even with the same URL) adds an entry that the
+user must burn through with the back button before leaving the page.
+
+**In the context of a Next.js SPA:**
+- Blinko uses Next.js client-side router (`next/navigation`)
+- `router.push('/login')` after logout inserts a `/login` entry
+- The plugin's sentinel entry was inserted on app init (before logout)
+- History stack at logout time: `[... app-page, sentinel, /login]`
+- On back press: pops to `sentinel` → handler fires, finds no overlay → does nothing
+- On second back press: pops to `app-page` (possibly cached, shows stale auth state)
+
+**Fix principle:** only insert a sentinel entry when you are certain a pop
+should be intercepted. Tie sentinel insertion to overlay open, not to plugin init.
+
+---
+
+### 11.3 `stopImmediatePropagation` vs `stopPropagation`
+
+Both methods exist on `Event`, but they have different scopes:
+
+| Method | Effect |
+|---|---|
+| `stopPropagation()` | Stops the event from bubbling to **parent** elements |
+| `stopImmediatePropagation()` | Also prevents other listeners on the **same** element from running |
+
+Blinko's native card click handler is registered on the **same element** as the plugin's
+handler. `stopPropagation()` alone would not prevent the native handler from firing.
+Only `stopImmediatePropagation()` guarantees mutual exclusion.
+
+**Ordering caveat:** `stopImmediatePropagation` only prevents listeners registered
+*after* ours (or in the same capture/bubble phase). The plugin's listener is added via
+`addEventListener` when cards are first seen — this is typically after React has registered
+Blinko's own handlers. If Blinko's handler was registered first, `stopImmediatePropa-
+gation` stops it correctly. If Blinko registers *after* the plugin, the plugin would
+need to use the `capture: true` option to run first. Empirical testing on an Android
+device should confirm ordering.
+
+---
+
+### 11.4 HeroUI Modal DOM Patterns
+
+Blinko uses the **HeroUI** (formerly NextUI) component library.
+HeroUI modals/dialogs produce the following DOM structure:
+
+```html
+<div data-slot="wrapper" class="...modal-wrapper...">
+  <section
+    role="dialog"
+    aria-modal="true"
+    data-slot="base"
+    class="...modal...">
+    <button
+      data-slot="close-button"
+      aria-label="Close"
+      class="...">✕</button>
+    <!-- content -->
+  </section>
+  <div
+    data-slot="backdrop"
+    class="...backdrop...">
+  </div>
+</div>
+```
+
+**Reliable selectors (stable across HeroUI versions):**
+- `[role="dialog"][aria-modal="true"]` — the modal itself
+- `[data-slot="close-button"]` — the X close button
+- `[data-slot="backdrop"]` — the overlay background (clickable to close)
+- `button[aria-label="Close"]` — fallback close trigger
+
+**Unreliable selectors (will break on Tailwind JIT regeneration):**
+- `[class*="modal"]`, `[class*="expanded"]` — Tailwind class names change between builds
+
+---
+
+### 11.5 Blinko Card Layout and Tag Position
+
+Blinko's masonry card uses a horizontal flex row as the outermost layout unit.
+The rendered structure (inferred from CSS class patterns and Tailwind utilities):
+
+```
+<div class="flex items-start gap-2">       ← card root (row)
+  <div class="flex-1 flex-col">            ← main column
+    <div class="markdown-body">...</div>   ← note text
+    <div class="flex flex-wrap gap-1">     ← tag area (below, ideally)
+      <span class="tag ...">...</span>
+    </div>
+  </div>
+  <div class="flex flex-col items-end">    ← right column (timestamp, actions)
+    <span class="text-xs">2h ago</span>
+    <button ...>⋯</button>
+  </div>
+</div>
+```
+
+In some Blinko versions the tag area is placed **inside the right column** rather than
+the main column, or has `ml-auto` applied, pushing it to the right. This is the layout
+bug. The CSS fix uses `order: 99` to sink the tag container to the bottom of its flex
+parent, and `width: 100%` to break it out of any inline row.
+
+---
+
+### 11.6 Single-Tap "Open Note" Mechanism in Blinko
+
+Blinko's note-opening behaviour:
+- **Single click on note card body:** selects / highlights the card (no navigation)
+- **Double click on note card body:** opens the note detail page (Next.js route push)
+- **Click on "View Detail" button (if present):** opens note detail
+
+The previous plugin implementation used `openBtn.querySelector('h1,h2,h3,p').click()`.
+Synthesising a `click()` on a `<p>` or `<h3>` does not trigger Blinko's note-open path
+because no click handler is registered on those elements.
+
+The correct approach is to synthesise a `dblclick` event on the card body.
+`dblclick` is distinct from two consecutive `click` events — the browser fires it as a
+single composite event, which is exactly what Blinko's component listens for.
+
+```ts
+contentArea.dispatchEvent(
+  new MouseEvent('dblclick', { bubbles: true, cancelable: true, view: window })
+);
+```
+
+**Why `view: window` matters:** Without the `view` option, the synthetic event's
+`event.view` is `null`. Some React event handlers check `event.view` for security.
+Setting `view: window` makes the synthetic event indistinguishable from a real user gesture.

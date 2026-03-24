@@ -253,3 +253,156 @@ bun run build
 #    e. Plugin Settings → "🤖 AI Post" tab → prompt editor present
 #    f. Plugin Settings → UI/UX → "📋 UX Audit" → Aloklok section + 20 new items
 ```
+
+---
+
+## Part 4 — Android Bug Remediation Sprint
+
+**Date:** 2026-03-24
+**Phase 1 (Audit):** Complete
+**Phase 2 (Implementation):** Complete
+**Phase 3 (Docs):** This section + `docs/ERROR_LOGS.md` (new)
+
+---
+
+### 4.1 Scope
+
+Five defects were identified in the `UIUXService` (Navigation features) and in the
+`Blinko-UIUX.css` stylesheet via a systematic QA audit on Android.
+
+| ID | Defect | Files Changed |
+|---|---|---|
+| BUG-001 | Back button does not close notes | `uiuxService.ts` |
+| BUG-002 | Back button blocks logout | `uiuxService.ts` |
+| BUG-003 | Single-tap on note text does nothing | `uiuxService.ts` |
+| BUG-004 | Tap triggers note open AND context menu | `uiuxService.ts` |
+| BUG-005 | Tags positioned on right instead of below text | `Blinko-UIUX.css` |
+
+---
+
+### 4.2 Root Cause Summary
+
+| ID | Root Cause | Category |
+|---|---|---|
+| BUG-001 | `e.preventDefault()` on non-cancelable `popstate` event | Web API misuse |
+| BUG-002 | Unconditional `history.pushState` on plugin init, including auth pages | Logic error |
+| BUG-003 | `openBtn !== target` guard always false when user taps `<p>` text | Logic error |
+| BUG-004 | Missing `e.stopImmediatePropagation()` allows Blinko's handler to co-fire | Missing guard |
+| BUG-005 | No CSS rule for tag container; Blinko default places tags in right column | Missing CSS |
+
+---
+
+### 4.3 Implementation Details
+
+#### `applyBackButton()` — Full Rewrite
+
+**Before:**
+```
+- history.pushState() on every init (unconditional)
+- handler calls e.preventDefault() → silently ignored
+- overlay detector: [class*="expanded"], [class*="modal"] → fragile Tailwind classes
+- close button: [class*="close"], button svg[data-icon="x"] → may not match HeroUI
+- always re-pushes state even when no overlay was found → logout trapped
+```
+
+**After:**
+```
++ isAuthPage guard: skip initial pushState on /login, /auth, /signin pages
++ findOverlay():  [role="dialog"][aria-modal="true"] → semantic, stable ARIA attr
++                 [data-slot="base"][role="dialog"]  → HeroUI-specific, stable slot
++ closeOverlay(): [data-slot="close-button"]         → HeroUI close button
++                 [data-slot="backdrop"] click        → backdrop dismiss
++                 Escape keydown on overlay + document → universal fallback
++ handler: re-pushState ONLY when overlay was closed → logout works naturally
+```
+
+#### `applySingleTap()` — Key Changes
+
+**Before:**
+```
+- openBtn = card.querySelector('h1, h2, h3, p')  ← matches note text
+- if (openBtn && openBtn !== target) openBtn.click()
+  → when user taps <p>, openBtn IS target → condition always false → dead code
+- no stopImmediatePropagation → Blinko menu handler also fires (BUG-004)
+```
+
+**After:**
+```
++ detailTarget = card.querySelector(
+    'a[href*="/detail"], [class*="detail-btn"], [data-action="open"], ...'
+  ) → looks for real Blinko open-note controls
++ if detailTarget found: detailTarget.click() → uses Blinko's own route push
++ if not found: contentArea.dispatchEvent(new MouseEvent('dblclick', ...))
+  → triggers Blinko's native double-click handler (opens detail route)
++ e.stopImmediatePropagation() → fixes BUG-004 simultaneously
++ extended skip guard: also ignores [class*="tag"], [class*="action"], [class*="menu"]
+```
+
+#### `Blinko-UIUX.css` — Section 13 Added
+
+```css
+/* Card body: column direction forces vertical stacking */
+.blinko-custom-cards [class*="note-card"] > div { flex-direction: column !important; }
+
+/* Tag container: break out of right-column placement */
+.blinko-custom-cards [class*="tag-list"],
+.blinko-custom-cards [class*="note-card"] [class*="tag"] {
+  order: 99 !important;        /* sink to bottom */
+  width: 100% !important;      /* full-width row */
+  margin-left: 0 !important;   /* clear ml-auto */
+  float: none !important;      /* clear any float */
+  justify-content: flex-start; /* left-align pills */
+}
+```
+
+Active under `blinko-custom-cards` body class (always applied by `UIUXService.apply()`).
+
+---
+
+### 4.4 Regression Risk Assessment
+
+| Fix | Risk | Mitigation |
+|---|---|---|
+| `popstate` re-push logic | Low | Conditional on `findOverlay()` returning non-null; passthrough otherwise |
+| `isAuthPage` guard | Low | Regex matches standard auth route patterns only |
+| `stopImmediatePropagation` | Medium | May suppress a Blinko handler that does something useful on card click. If regression seen, switch to `stopPropagation` + delay |
+| `dblclick` dispatch | Low | Uses `bubbles:true` + `view:window` to match real gesture; Blinko listens for `dblclick` natively |
+| Tag CSS `order:99` | Low | Only affects `blinko-custom-cards` scope; no global styles modified |
+
+---
+
+### 4.5 Verification Steps (Android Device)
+
+```
+BUG-001
+□ Enable "Back Button Closes Note"
+□ Open any note → back button → note closes, list view returns
+□ Open note, open second nested view → back × 2 → each layer closes
+
+BUG-002
+□ Log out via profile menu → reach /login page
+□ Press hardware back button → navigation proceeds (does not loop)
+□ OR: back button on /login takes the user to the previous page / closes the PWA
+
+BUG-003 + BUG-004
+□ Enable "Single-Tap Open Note"
+□ Tap on the text body of a note
+□ Expected: note detail view opens (not the context menu)
+□ Tap on a tag pill, then on a ⋯ button → context menu opens normally
+
+BUG-005
+□ Create a note with two or more tags
+□ View in masonry list
+□ Expected: tags appear below the note text in a left-aligned row
+□ Tags do NOT appear to the right of the note text
+```
+
+---
+
+### 4.6 Documentation Created / Updated
+
+| File | Action |
+|---|---|
+| `docs/ERROR_LOGS.md` | **Created** — structured bug tracker (append-only) |
+| `docs/RESEARCH_FINDINGS.md` | **Appended** — Section 11: Android audit technical findings |
+| `docs/IMPLEMENTATION_PLAN.md` | **Appended** — Part 4: Android remediation sprint (this section) |
