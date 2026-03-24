@@ -3,13 +3,17 @@
 
 import { render } from 'preact/compat';
 import type { BasePlugin } from 'blinko';
+import type { Note } from 'blinko/dist/types/src/server/types';
 import { RTLApp } from './app';
 import { RTLSetting } from './setting';
 import plugin from '../plugin.json';
 import { RTLDetector } from './utils/rtlDetector';
 import { RTLService } from './services/rtlService';
 import { BlinkoRTL } from './types';
+import { UIUXService } from './services/uiuxService';
+import { AIPostService } from './services/aiPostService';
 import './assets/styles/Blinko-RTL.css';
+import './assets/styles/Blinko-UIUX.css';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
 import he from './locales/he.json';
@@ -22,8 +26,12 @@ System.register([], (exports) => ({
   execute: () => {
     const detector = new RTLDetector();
     const rtlService = new RTLService(detector);
+    const uiuxService = new UIUXService();
+    const aiPostService = new AIPostService();
     // Inject base CSS (toggle button styles, layout protection) immediately — always present
     rtlService.injectBaseCSS();
+    // Apply UI/UX enhancements based on persisted settings
+    uiuxService.apply();
     let toggleButton: HTMLButtonElement | null = null;
 
     function createToggleButton() {
@@ -165,6 +173,8 @@ System.register([], (exports) => ({
       };
 
       window.blinkoRTL = blinkoRTL;
+      // Expose aiPostService for settings panel access
+      (window as any).blinkoAIPost = aiPostService;
 
       console.log('Advanced Blinko RTL Plugin initialized successfully');
     }
@@ -217,6 +227,139 @@ System.register([], (exports) => ({
             );
           }
         });
+
+        // ── AI Post Processing menu item ────────────────────────────────────
+        window.Blinko.addRightClickMenu({
+          name: 'ai-rerun-processing',
+          label: '🤖 Rerun AI Processing',
+          icon: 'material-symbols:auto-fix',
+          onClick: async (note: Note) => {
+            const s = aiPostService.getSettings();
+            if (!s.enabled) {
+              window.Blinko.toast.error('AI Processing is disabled in plugin settings.');
+              return;
+            }
+            if (!note?.id) {
+              window.Blinko.toast.error('Note ID not available.');
+              return;
+            }
+
+            window.Blinko.toast.success('🤖 Processing note with AI…');
+
+            try {
+              const aiContent = await aiPostService.runPostProcessing(note as any);
+              if (!aiContent) {
+                window.Blinko.toast.error('AI returned an empty response.');
+                return;
+              }
+
+              if (s.showPreviewBeforeApply) {
+                // Show a preview dialog before committing the change
+                const container = document.createElement('div');
+                container.style.cssText = 'padding:16px;max-height:70vh;overflow-y:auto;font-family:system-ui,sans-serif;';
+
+                const pre = document.createElement('pre');
+                pre.style.cssText = 'white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.6;margin:0 0 16px;padding:12px;background:#1e1e2e;color:#cdd6f4;border-radius:6px;';
+                pre.textContent = aiContent;
+
+                const applyBtn = document.createElement('button');
+                applyBtn.textContent = '✅ Apply to Note';
+                applyBtn.style.cssText = 'background:#28a745;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px;margin-right:8px;';
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = '✖ Cancel';
+                cancelBtn.style.cssText = 'background:#6c757d;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px;';
+
+                applyBtn.addEventListener('click', async () => {
+                  try {
+                    await aiPostService.updateNoteContent(note.id!, aiContent);
+                    window.Blinko.toast.success('✅ Note updated with AI result!');
+                    window.Blinko.closeDialog?.();
+                  } catch (err) {
+                    window.Blinko.toast.error('Failed to update note: ' + (err as Error).message);
+                  }
+                });
+                cancelBtn.addEventListener('click', () => {
+                  window.Blinko.closeDialog?.();
+                });
+
+                const btnRow = document.createElement('div');
+                btnRow.appendChild(applyBtn);
+                btnRow.appendChild(cancelBtn);
+
+                container.appendChild(pre);
+                container.appendChild(btnRow);
+
+                window.Blinko.showDialog({
+                  title: '🤖 AI Processing Preview',
+                  size: 'xl',
+                  content: () => container,
+                });
+              } else {
+                await aiPostService.updateNoteContent(note.id!, aiContent);
+                window.Blinko.toast.success('✅ Note updated with AI result!');
+              }
+            } catch (err) {
+              window.Blinko.toast.error('AI processing failed: ' + (err as Error).message);
+            }
+          },
+        });
+
+        // ── AI Auto-Tag menu item ──────────────────────────────────────────
+        window.Blinko.addRightClickMenu({
+          name: 'ai-auto-tag',
+          label: '🏷️ AI Auto-Tag',
+          icon: 'material-symbols:label',
+          onClick: async (note: Note) => {
+            const s = aiPostService.getSettings();
+            if (!s.enableAutoTagMenu) return;
+            if (!note?.content) {
+              window.Blinko.toast.error('Note has no content to tag.');
+              return;
+            }
+            window.Blinko.toast.success('🏷️ Generating tags…');
+            try {
+              const tags = await aiPostService.runAutoTag(note as any);
+              if (!tags.length) {
+                window.Blinko.toast.error('No tags suggested.');
+                return;
+              }
+              window.Blinko.toast.success('Tags: ' + tags.join(' · '));
+            } catch (err) {
+              window.Blinko.toast.error('Auto-tag failed: ' + (err as Error).message);
+            }
+          },
+        });
+
+        // ── Copy Note Content menu item ────────────────────────────────────
+        window.Blinko.addRightClickMenu({
+          name: 'copy-note-content',
+          label: '📋 Copy as Markdown',
+          icon: 'material-symbols:content-copy',
+          onClick: async (note: Note) => {
+            const s = aiPostService.getSettings();
+            if (!s.enableCopyMenu) return;
+            try {
+              await aiPostService.copyNoteContent(note as any);
+              window.Blinko.toast.success('📋 Copied to clipboard!');
+            } catch (err) {
+              window.Blinko.toast.error('Copy failed: ' + (err as Error).message);
+            }
+          },
+        });
+
+        // ── Export Note as Markdown menu item ─────────────────────────────
+        window.Blinko.addRightClickMenu({
+          name: 'export-note-md',
+          label: '⬇️ Export as .md',
+          icon: 'material-symbols:download',
+          onClick: (note: Note) => {
+            const s = aiPostService.getSettings();
+            if (!s.enableExportMenu) return;
+            aiPostService.exportNoteAsMarkdown(note as any);
+            window.Blinko.toast.success('⬇️ Note exported!');
+          },
+        });
       }
 
       initI18n() {
@@ -228,6 +371,7 @@ System.register([], (exports) => ({
 
       destroy() {
         rtlService.disable();
+        uiuxService.destroy();
         removeToggleButton();
         console.log('Advanced RTL Plugin destroyed');
       }
