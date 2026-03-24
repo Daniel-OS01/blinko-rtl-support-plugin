@@ -20,6 +20,8 @@ export class UIUXService {
   private settings: UIUXSettings;
   private singleTapCleanup: (() => void) | null = null;
   private backButtonCleanup: (() => void) | null = null;
+  /** Tracks whether we have already pushed the initial sentinel history entry. */
+  private backButtonInitialized = false;
 
   constructor() {
     this.settings = this.load();
@@ -163,13 +165,25 @@ export class UIUXService {
           const target = e.target as HTMLElement;
           if (target.closest('button, a, input, textarea, [role="button"]')) return;
 
-          // Simulate an "open note" action by clicking the card's primary action
+          // Re-entry guard: prevents the synthetic openBtn.click() from
+          // re-triggering this handler and causing dual-event firing.
+          if (card.dataset.opening) return;
+
+          // Find the primary note-opener. Deliberately excludes <p> — paragraphs
+          // are content, not openers; including them caused (a) the target===openBtn
+          // dead-end when tapping text and (b) infinite synthetic-click loops.
           const openBtn = card.querySelector<HTMLElement>(
-            '[class*="open"], [class*="expand"], [class*="title"], h1, h2, h3, p'
+            '[class*="open"], [class*="expand"], [class*="title"], h1, h2, h3'
           );
-          if (openBtn && openBtn !== target) {
+
+          if (openBtn && openBtn !== target && !openBtn.contains(target as Node)) {
+            // Target is content (e.g. <p>) but opener is a heading/title — redirect.
+            card.dataset.opening = 'true';
             openBtn.click();
+            requestAnimationFrame(() => { delete card.dataset.opening; });
           }
+          // If target IS the opener (user tapped the title directly) the native
+          // click already fired; no synthetic click needed.
         };
 
         (card as any)._uiuxClickHandler = handler;
@@ -194,7 +208,7 @@ export class UIUXService {
     };
   }
 
-  // ─── Back button closes note (Android) ───────────────────────────────
+  // ─── Back button closes note (Android / web) ─────────────────────────
 
   private applyBackButton(): void {
     if (this.backButtonCleanup) {
@@ -204,8 +218,22 @@ export class UIUXService {
 
     if (!this.settings.backButtonClosesNote) return;
 
-    const handler = (e: PopStateEvent) => {
-      // Look for any expanded / modal overlay that is currently visible
+    // Push ONE sentinel entry so there is always something to pop back to.
+    // This is intentionally guarded so that repeated apply() / updateSettings()
+    // calls (e.g. on every settings change) do NOT accumulate dummy entries.
+    // Accumulating entries was the root cause of the "logout blocked" defect —
+    // users had to press back N times (one per settings update) before the
+    // browser's real navigation took effect.
+    if (!this.backButtonInitialized) {
+      history.pushState({ blinkoPlugin: true }, '', window.location.href);
+      this.backButtonInitialized = true;
+    }
+
+    const handler = (_e: PopStateEvent) => {
+      // NOTE: popstate is NOT cancelable; e.preventDefault() has no effect and
+      // has been removed to avoid confusion.
+
+      // Look for any expanded / modal overlay that is currently visible.
       const overlay = document.querySelector<HTMLElement>(
         '[class*="expanded"]:not([style*="display: none"]), ' +
         '[class*="modal"]:not([style*="display: none"]), ' +
@@ -213,8 +241,11 @@ export class UIUXService {
       );
 
       if (overlay) {
-        e.preventDefault();
-        // Try to find and click a close button
+        // Re-push the sentinel BEFORE closing the overlay so that the next
+        // back press is also intercepted.
+        history.pushState({ blinkoPlugin: true }, '', window.location.href);
+
+        // Try to find and click a close button.
         const closeBtn = overlay.querySelector<HTMLElement>(
           '[class*="close"], [aria-label*="close" i], [aria-label*="dismiss" i], ' +
           'button[class*="X"], button svg[data-icon="x"]'
@@ -222,21 +253,19 @@ export class UIUXService {
         if (closeBtn) {
           closeBtn.click();
         } else {
-          // Fallback: press Escape
+          // Fallback: dispatch Escape key event.
           overlay.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
         }
-
-        // Push a dummy state so the back button doesn't exit the app
-        history.pushState(null, '', window.location.href);
       }
+      // When no overlay is open the popstate is allowed to proceed normally —
+      // the browser navigates back, enabling logout and regular back-navigation.
     };
 
-    // Push an initial state so there is something to pop back to
-    history.pushState(null, '', window.location.href);
     window.addEventListener('popstate', handler);
 
     this.backButtonCleanup = () => {
       window.removeEventListener('popstate', handler);
+      this.backButtonInitialized = false;
     };
   }
 

@@ -40,11 +40,17 @@
   letter-spacing: -0.01em;
 }
 
-/* Target the note-card metadata row specifically */
-.blinko-compact-datetime .card-masonry-grid [class*="flex"][class*="col"],
+/* Target the note-card metadata row specifically.
+   IMPORTANT: The previous rule used [class*="flex"][class*="col"] which matched
+   Tailwind's "flex flex-col" on the tags container, forcing flex-direction:row
+   and flex-wrap:nowrap — this displaced tags to the right margin (Issue 3B).
+   The rule has been replaced with tightly-scoped meta/time/footer selectors. */
 .blinko-compact-datetime [class*="note-card"] [class*="meta"],
+.blinko-compact-datetime [class*="note-card"] [class*="header"],
 .blinko-compact-datetime [class*="note-item"] [class*="time"],
-.blinko-compact-datetime [class*="blinko-card"] [class*="footer"] {
+.blinko-compact-datetime [class*="note-item"] [class*="date"],
+.blinko-compact-datetime [class*="blinko-card"] [class*="footer"],
+.blinko-compact-datetime [class*="blinko-card"] [class*="timestamp"] {
   flex-direction: row !important;
   align-items: center !important;
   gap: 4px !important;
