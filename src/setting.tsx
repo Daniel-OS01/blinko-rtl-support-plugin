@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'preact/hooks';
 import { JSX } from 'preact';
-import { RTLSettings, Preset, UIUXSettings, DEFAULT_UIUX_SETTINGS } from './types';
+import { RTLSettings, Preset, UIUXSettings, DEFAULT_UIUX_SETTINGS, AIPostSettings, DEFAULT_AI_POST_SETTINGS, DEFAULT_AI_POST_PROMPT } from './types';
 import { DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './services/constants';
 import { RTLDetector } from './utils/rtlDetector';
 import { UIUXService } from './services/uiuxService';
+import { AIPostService } from './services/aiPostService';
 
 const DEFAULT_CSS = `/* Enhanced RTL Support from Blinko-RTL.css */
 *:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"] {
@@ -543,10 +544,19 @@ export function RTLSetting(): JSX.Element {
     threshold: 0.15, // derived UI field, not stored in DEFAULT_SETTINGS by default
   });
 
-  const [activeTab, setActiveTab] = useState<'simple' | 'advanced' | 'uiux'>('simple');
+  const [activeTab, setActiveTab] = useState<'simple' | 'advanced' | 'uiux' | 'aipost'>('simple');
   const [uiuxSettings, setUIUXSettings] = useState<UIUXSettings>({ ...DEFAULT_UIUX_SETTINGS });
   const [uiuxSubTab, setUIUXSubTab] = useState<'typography' | 'navigation' | 'accessibility' | 'layout' | 'analysis'>('typography');
   const [uiuxService] = useState(() => new UIUXService());
+
+  // AI Post Processing state
+  const [aiPostSettings, setAIPostSettings] = useState<AIPostSettings>({ ...DEFAULT_AI_POST_SETTINGS });
+  const [aiPostService] = useState<AIPostService>(() => {
+    const existing = (window as any).blinkoAIPost;
+    return existing instanceof AIPostService ? existing : new AIPostService();
+  });
+  const [aiPostTestResult, setAIPostTestResult] = useState('');
+  const [aiPostTesting, setAIPostTesting] = useState(false);
 
   // Sync uiux service settings into local state on mount
   useEffect(() => {
@@ -554,6 +564,11 @@ export function RTLSetting(): JSX.Element {
     uiuxService.apply();
     return () => { /* keep service alive across re-renders */ };
   }, [uiuxService]);
+
+  // Sync AI post settings into local state on mount
+  useEffect(() => {
+    setAIPostSettings(aiPostService.getSettings());
+  }, [aiPostService]);
 
   const saveUIUX = (partial: Partial<UIUXSettings>) => {
     uiuxService.updateSettings(partial);
@@ -1019,6 +1034,21 @@ export function RTLSetting(): JSX.Element {
           }}
         >
           🎨 UI/UX
+        </button>
+        <button
+          onClick={() => setActiveTab('aipost')}
+          style={{
+            flex: 1,
+            padding: '10px',
+            background: activeTab === 'aipost' ? (settings.darkMode ? '#444' : '#eee') : 'transparent',
+            color: settings.darkMode ? '#fff' : '#333',
+            border: 'none',
+            borderBottom: activeTab === 'aipost' ? '2px solid #6f42c1' : 'none',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          🤖 AI Post
         </button>
       </div>
 
@@ -2064,60 +2094,332 @@ export function RTLSetting(): JSX.Element {
           {/* ── UX AUDIT ── */}
           {uiuxSubTab === 'analysis' && (
             <div style={{ display: 'grid', gap: '16px' }}>
-              <div style={{ padding: '16px', border: '2px solid #28a745', borderRadius: '8px', background: settings.darkMode ? '#1a2e1a' : '#f0fff4' }}>
-                <h3 style={{ margin: '0 0 12px 0', color: '#28a745', fontSize: '15px' }}>
-                  📋 Blinko UI/UX Audit — 15 Identified Issues
-                </h3>
-                <p style={{ margin: '0 0 16px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-                  Findings from cross-platform analysis (Android + Desktop). Items marked ✅ are addressable
-                  via this plugin; items marked ⚙️ require core app changes.
+
+              {/* ── Aloklok Fork Analysis ─────────────────────────── */}
+              <details open style={{ padding: '16px', border: '2px solid #6f42c1', borderRadius: '8px', background: settings.darkMode ? '#1a1a2e' : '#f8f0ff' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: '700', fontSize: '14px', color: '#6f42c1', marginBottom: '12px', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🍴 Aloklok Fork Analysis — 162 Commits Ahead of Upstream
+                  <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: '400', color: settings.darkMode ? '#aaa' : '#888' }}>click to expand/collapse</span>
+                </summary>
+                <p style={{ margin: '0 0 12px', fontSize: '12px', color: settings.darkMode ? '#bbb' : '#555' }}>
+                  Fork: <code>Aloklok/blinko</code> · 162 commits ahead · 18 behind · as of 2026-03-05.
+                  Sorted by integration priority. See <code>docs/RESEARCH_FINDINGS.md</code> for full details.
+                </p>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+                    <thead>
+                      <tr style={{ background: settings.darkMode ? '#2a2050' : '#ede8f8' }}>
+                        {['Priority', 'SHA', 'Date', 'Title', 'Category', 'Action'].map(h => (
+                          <th key={h} style={{ padding: '6px 8px', textAlign: 'left', color: settings.darkMode ? '#ddd' : '#333', borderBottom: `1px solid ${settings.darkMode ? '#444' : '#ccc'}`, whiteSpace: 'nowrap' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { p: '🔴', sha: 'f7026780', date: '2026-03-05', title: 'DeepSeek R1 / thinking mode config', cat: '+ Feature', action: 'PR → daniel-os01/blinko' },
+                        { p: '🔴', sha: '84db3ebd', date: '2026-02-14', title: 'iOS audio truncation fix (timeslice)', cat: '🐛 Fix', action: 'PR → daniel-os01/blinko' },
+                        { p: '🔴', sha: '75cfe7ba', date: '2026-02-20', title: 'iOS Safari blob URL loading error', cat: '🐛 Fix', action: 'PR → daniel-os01/blinko' },
+                        { p: '🟡', sha: 'f4bd0428', date: '2026-02-10', title: 'ARIA labels + rAF interaction perf', cat: '♿ A11y', action: 'CSS/JS partial in plugin' },
+                        { p: '🟡', sha: 'a0869b04', date: '2026-02-20', title: 'Mobile delete icon visibility', cat: '🐛 Fix', action: 'CSS in plugin' },
+                        { p: '🟡', sha: '82c31233', date: '2026-03-05', title: 'Duplicate AI tag polling alerts', cat: '🐛 Fix', action: 'PR → core' },
+                        { p: '🟡', sha: '3900a159', date: '2026-02-19', title: 'AI tag UX: instant feedback + stability', cat: '🟡 UX', action: 'PR → core' },
+                        { p: '🟡', sha: '972c4562', date: '2026-02-15', title: 'AI settings switch & select layout', cat: '🐛 Fix', action: 'CSS in plugin' },
+                        { p: '🟡', sha: '8da45370', date: '2026-02-08', title: 'Tag text/bg color collision', cat: '🐛 Fix', action: 'CSS in plugin' },
+                        { p: '🟡', sha: 'cb12c096', date: '2026-02-08', title: 'Card image + redundant loading states', cat: '🐛 Fix', action: 'CSS in plugin' },
+                        { p: '🟢', sha: 'bbaf5bf7', date: '2026-02-09', title: 'JS vendor split + async icons + DB index', cat: '⚡ Perf', action: 'PR → core (low risk)' },
+                        { p: '🟢', sha: '71897dce', date: '2026-02-10', title: 'Vite chunking + async icon loading', cat: '⚡ Perf', action: 'PR → core' },
+                        { p: '🟢', sha: 'be4fd14e', date: '2026-02-08', title: '@dnd-kit migration (build fix)', cat: '♻️ Refactor', action: 'PR → core' },
+                        { p: '🟢', sha: '1eaed8c3', date: '2026-02-09', title: 'Resource manager + auth cache overhaul', cat: '⚡ Perf', action: 'PR → core' },
+                        { p: '🟢', sha: 'f47932a3', date: '2026-02-08', title: 'Native fetch/lodash + lazy-load heavy libs', cat: '♻️ Refactor', action: 'PR → core' },
+                        { p: '⚪', sha: '~50 total', date: 'Feb 12–14', title: 'Docker/Prisma 7 + Node 22 + Zeabur fixes', cat: '🔧 Infra', action: 'Wait — high risk rebase' },
+                      ].map((row, i) => (
+                        <tr key={i} style={{ background: i % 2 === 0 ? (settings.darkMode ? '#1e1e32' : '#faf8ff') : 'transparent' }}>
+                          <td style={{ padding: '5px 8px', fontSize: '13px' }}>{row.p}</td>
+                          <td style={{ padding: '5px 8px' }}><code style={{ fontSize: '10px', background: settings.darkMode ? '#333' : '#eee', padding: '1px 4px', borderRadius: '3px' }}>{row.sha}</code></td>
+                          <td style={{ padding: '5px 8px', whiteSpace: 'nowrap', color: settings.darkMode ? '#999' : '#666' }}>{row.date}</td>
+                          <td style={{ padding: '5px 8px', color: settings.darkMode ? '#ddd' : '#222' }}>{row.title}</td>
+                          <td style={{ padding: '5px 8px', whiteSpace: 'nowrap' }}><span style={{ fontSize: '10px', background: settings.darkMode ? '#2a2a2a' : '#eee', padding: '1px 5px', borderRadius: '10px' }}>{row.cat}</span></td>
+                          <td style={{ padding: '5px 8px', color: '#6f42c1', fontSize: '11px' }}>{row.action}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p style={{ margin: '10px 0 0', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
+                  🔴 High priority · 🟡 Medium · 🟢 Low · ⚪ Infra only
+                </p>
+              </details>
+
+              {/* ── Original 15 Issues ────────────────────────────── */}
+              <details open style={{ padding: '16px', border: '2px solid #28a745', borderRadius: '8px', background: settings.darkMode ? '#1a2e1a' : '#f0fff4' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: '700', fontSize: '14px', color: '#28a745', marginBottom: '12px', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  📋 Original 15 Issues — Cross-Platform Analysis
+                </summary>
+                <p style={{ margin: '0 0 12px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Findings from Android + Desktop analysis. ✅ = fixable via this plugin · ⚙️ = requires core PR.
                 </p>
                 {[
                   { status: '✅', title: 'Timestamp multi-row wrapping (mobile)', detail: 'Date/time label ("2 hours ago") wraps to 2-3 lines due to oversized font. Fix: enable Compact Date/Time under Typography.' },
-                  { status: '✅', title: 'Double-tap inconsistency (Blinko vs Article)', detail: 'Blinko type notes require a double-tap to expand while Blinko Article opens on single tap. Fix: enable Single-Tap under Navigation.' },
+                  { status: '✅', title: 'Double-tap inconsistency (Blinko vs Article)', detail: 'Blinko type notes require a double-tap to expand while Article opens on single tap. Fix: enable Single-Tap under Navigation.' },
                   { status: '✅', title: 'Android back button exits app', detail: 'Hardware back / swipe-back closes the app instead of the open note overlay. Fix: enable Back Button Closes Note under Navigation.' },
-                  { status: '✅', title: 'Undersized touch targets on mobile', detail: 'Multiple toolbar icons and action buttons are <32 px — below the 48 dp WCAG/Material minimum. Fix: enable Minimum Touch Targets under Accessibility.' },
+                  { status: '✅', title: 'Undersized touch targets on mobile', detail: 'Multiple toolbar icons and buttons are <32 px — below the 48 dp WCAG/Material minimum. Fix: enable Minimum Touch Targets under Accessibility.' },
                   { status: '✅', title: 'Animations on motion-sensitive devices', detail: 'Slide/fade transitions play even on devices flagged with prefers-reduced-motion. Fix: enable Reduce Motion under Accessibility.' },
-                  { status: '✅', title: 'Low information density on wide screens', detail: 'Card padding and toolbar gaps are large, wasting space on desktop. Fix: enable Compact Mode under Layout.' },
+                  { status: '✅', title: 'Low information density on wide screens', detail: 'Card padding and toolbar gaps waste space on desktop. Fix: enable Compact Mode under Layout.' },
                   { status: '✅', title: 'Card corner radius inconsistency', detail: 'Different corner radii across card types break visual rhythm. Fix: use Card Border Radius slider under Layout.' },
                   { status: '✅', title: 'No focus rings for keyboard users', detail: 'Interactive elements have outline: none — breaks keyboard navigation entirely. Fix: enable Always-Visible Focus Rings under Accessibility.' },
-                  { status: '⚙️', title: 'Editor toolbar RTL mirroring', detail: 'The formatting toolbar (B/I/S/Link) stays LTR even when editing RTL content. Align icon order to language direction — requires core change.' },
-                  { status: '⚙️', title: 'Submit button icon mismatch (RTL)', detail: 'The submit arrow button (➤) points left in RTL mode, suggesting "back" rather than "send". CSS transform: scaleX(-1) partial fix possible but fragile.' },
-                  { status: '⚙️', title: 'Masonry grid reflow on note expand', detail: 'Expanding a note causes the masonry grid to reflow and scroll the viewport. Requires virtualised list or position:fixed overlay — core change.' },
-                  { status: '⚙️', title: 'Audio player visualiser is always LTR', detail: 'The waveform / progress bar plays left-to-right even in RTL context. Requires core player component change.' },
-                  { status: '⚙️', title: 'Tag pill overflow truncation', detail: '#Main/Sub/Topic tags overflow card boundaries on narrow screens. Requires text-overflow: ellipsis + tooltip in core card component.' },
+                  { status: '⚙️', title: 'Editor toolbar RTL mirroring', detail: 'The formatting toolbar (B/I/S/Link) stays LTR even when editing RTL content. Requires core change.' },
+                  { status: '⚙️', title: 'Submit button icon mismatch (RTL)', detail: 'The submit arrow (➤) points left in RTL mode, suggesting "back" rather than "send". Core fix needed.' },
+                  { status: '⚙️', title: 'Masonry grid reflow on note expand', detail: 'Expanding a note causes masonry reflow and viewport scroll. Requires virtualised list or position:fixed overlay.' },
+                  { status: '⚙️', title: 'Audio player visualiser is always LTR', detail: 'Waveform/progress bar plays left-to-right even in RTL context. Requires core player change.' },
+                  { status: '⚙️', title: 'Tag pill overflow truncation', detail: '#Main/Sub/Topic tags overflow card boundaries on narrow screens. Needs text-overflow + tooltip in core.' },
                   { status: '⚙️', title: 'No swipe-to-delete on mobile', detail: 'Deleting a note requires navigating a context menu. Native swipe gesture expected by mobile users.' },
                   { status: '⚙️', title: 'Loading skeleton missing on slow networks', detail: 'Cards appear empty before content loads with no placeholder skeleton. Degrades perceived performance.' },
                 ].map((item, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      marginBottom: '10px',
-                      padding: '10px 12px',
-                      border: `1px solid ${settings.darkMode ? '#444' : '#e0e0e0'}`,
-                      borderRadius: '6px',
-                      background: settings.darkMode ? '#2a2a2a' : '#fff',
-                    }}
-                  >
+                  <div key={i} style={{ marginBottom: '8px', padding: '10px 12px', border: `1px solid ${settings.darkMode ? '#444' : '#e0e0e0'}`, borderRadius: '6px', background: settings.darkMode ? '#2a2a2a' : '#fff' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                       <span style={{ fontSize: '16px', flexShrink: 0 }}>{item.status}</span>
                       <div>
-                        <strong style={{ fontSize: '13px', color: settings.darkMode ? '#ddd' : '#222' }}>
-                          {i + 1}. {item.title}
-                        </strong>
-                        <p style={{ margin: '4px 0 0', fontSize: '12px', color: settings.darkMode ? '#999' : '#666', lineHeight: '1.5' }}>
-                          {item.detail}
-                        </p>
+                        <strong style={{ fontSize: '13px', color: settings.darkMode ? '#ddd' : '#222' }}>{i + 1}. {item.title}</strong>
+                        <p style={{ margin: '4px 0 0', fontSize: '12px', color: settings.darkMode ? '#999' : '#666', lineHeight: '1.5' }}>{item.detail}</p>
                       </div>
                     </div>
                   </div>
                 ))}
-                <p style={{ margin: '16px 0 0', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
-                  ✅ = Addressable via plugin CSS/JS &nbsp;|&nbsp; ⚙️ = Requires core application change (submit PR to Daniel-OS01/blinko or Aloklok/blinko)
+              </details>
+
+              {/* ── 20 Extended Recommendations ──────────────────── */}
+              <details open style={{ padding: '16px', border: '2px solid #fd7e14', borderRadius: '8px', background: settings.darkMode ? '#2a1a08' : '#fff8f0' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: '700', fontSize: '14px', color: '#fd7e14', marginBottom: '12px', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ➕ 20 Extended Recommendations — Holistic UX/UI Audit
+                </summary>
+                <p style={{ margin: '0 0 12px', fontSize: '12px', color: settings.darkMode ? '#bbb' : '#555' }}>
+                  Format: <em>Current state</em> → <strong>Proposed enhancement</strong> · Expected benefit · Complexity
                 </p>
-              </div>
+                {[
+                  { status: '✅', src: '🍴', title: 'Mobile delete icons invisible (Aloklok a0869b04)', detail: 'Voice/attachment delete icons have near-zero opacity on mobile → CSS opacity + min-width fix → prevents accidental retained attachments · Low' },
+                  { status: '✅', src: '🍴', title: 'Custom icon input label overlap (Aloklok cd9419b7)', detail: 'Settings icon label overlaps the text input → CSS z-index/position fix → cleaner settings form · Low' },
+                  { status: '✅', src: '🍴', title: 'Tag text clashes with background on custom themes (Aloklok 8da45370)', detail: 'Custom primary colors cause tag text to disappear → CSS --primary-rgb fallback + contrast rule → consistent tag readability · Low' },
+                  { status: '✅', src: '🍴', title: 'Card images show spinner after full load (Aloklok cb12c096)', detail: 'Loaded images continue showing animated spinner → CSS animation kill on loaded state → less visual noise · Low' },
+                  { status: '✅', src: '🍴', title: 'Duplicate / premature AI tag alerts (Aloklok 82c31233)', detail: 'AI auto-tag fires multiple notifications per tagging cycle → JS debounce + timestamp guard → less interruption · Medium' },
+                  { status: '✅', src: '🔍', title: 'No search-term highlighting in results', detail: 'Matched keywords not highlighted in result cards → inject <mark> around matches → faster visual scanning · Medium' },
+                  { status: '⚙️', src: '🔍', title: 'No multi-select for batch operations', detail: 'Deleting/archiving multiple notes requires repeating the action → checkbox overlay + bulk toolbar → major productivity gain · High' },
+                  { status: '✅', src: '🔍', title: 'No offline / connectivity indicator', detail: 'App silently fails when server unreachable → navigator.onLine + CSS status banner → prevents confusion and lost edits · Low' },
+                  { status: '✅', src: '🔍', title: 'No estimated reading time on long notes', detail: 'Users cannot gauge note length → JS word-count badge at 200 wpm → better note triage · Low' },
+                  { status: '✅', src: '🔍', title: 'No keyboard shortcuts (Ctrl+N, Ctrl+Enter, /)', detail: 'No global hotkeys for note creation or search focus → JS keydown listener → power-user productivity · Medium' },
+                  { status: '✅', src: '🔍', title: 'Dark mode not OLED-black', detail: 'Current dark mode uses #1a1a2e instead of #000000 → CSS custom property override for --background, --card → battery saving on AMOLED · Low' },
+                  { status: '⚙️', src: '🔍', title: 'Quick note templates missing', detail: 'No way to start from a structured template → template picker in editor footer → faster structured capture · High' },
+                  { status: '⚙️', src: '🔍', title: 'No file upload progress indicator', detail: 'Attachments appear to hang during upload → progress bar UI → user confidence, prevents duplicate uploads · Medium' },
+                  { status: '✅', src: '🔍', title: 'Empty note list has no onboarding CTA', detail: 'First-time users see a blank page → CSS :empty + JS injection of "Create your first note" → reduces abandonment · Low' },
+                  { status: '⚙️', src: '🔍', title: 'Error messages are generic ("Something went wrong")', detail: 'Backend errors swallowed into a single generic toast → specific, actionable messages with recovery links → less frustration · Medium' },
+                  { status: '⚙️', src: '🔍', title: 'No undo after accidental note delete', detail: 'Recycling a note is immediate with no undo window → toast with Undo action within 5s → prevents data-loss anxiety · Medium' },
+                  { status: '✅', src: '🔍', title: 'Pinned notes visually identical to unpinned', detail: 'No visual distinction between pinned and normal cards → CSS pseudo-element pin badge in card corner → at-a-glance identification · Low' },
+                  { status: '✅', src: '🔍', title: 'Cross-platform font rendering inconsistency', detail: 'Different OS-default fonts shift layout across devices → CSS system-ui font stack normalisation → consistent reading experience · Low' },
+                  { status: '✅', src: '🔍', title: 'No in-note heading outline / jump-to-section', detail: 'Long article notes have no navigation → JS TOC injection (parse ## headings, render sticky list) → fast navigation · Medium' },
+                  { status: '✅', src: '🔍', title: 'Tag hierarchy (#parent/child) not visually distinct', detail: '#Main/Sub/Topic tags display as flat pills → CSS indentation + color-step per slash level → cognitive structure, reduces misreads · Low' },
+                ].map((item, i) => (
+                  <div key={i} style={{ marginBottom: '8px', padding: '10px 12px', border: `1px solid ${settings.darkMode ? '#5a3510' : '#ffd8a8'}`, borderRadius: '6px', background: settings.darkMode ? '#2a1a08' : '#fff' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <span style={{ fontSize: '14px', flexShrink: 0 }}>{item.status}</span>
+                      <span style={{ fontSize: '12px', flexShrink: 0, opacity: 0.6 }} title={item.src === '🍴' ? 'From Aloklok fork' : 'Independent audit'}>{item.src}</span>
+                      <div>
+                        <strong style={{ fontSize: '12px', color: settings.darkMode ? '#ddd' : '#222' }}>{i + 1}. {item.title}</strong>
+                        <p style={{ margin: '3px 0 0', fontSize: '11px', color: settings.darkMode ? '#999' : '#666', lineHeight: '1.5' }}>{item.detail}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <p style={{ margin: '12px 0 0', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
+                  ✅ = Addressable via plugin &nbsp;|&nbsp; ⚙️ = Core app PR required &nbsp;|&nbsp; 🍴 = From Aloklok fork &nbsp;|&nbsp; 🔍 = Independent audit
+                </p>
+              </details>
+
             </div>
           )}
+
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          AI POST PROCESSING TAB
+      ══════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'aipost' && (
+        <div style={{ display: 'grid', gap: '20px' }}>
+
+          {/* Header */}
+          <div style={{ padding: '16px', border: '2px solid #6f42c1', borderRadius: '8px', background: settings.darkMode ? '#1a1a2e' : '#f8f0ff' }}>
+            <h3 style={{ margin: '0 0 8px 0', color: '#6f42c1', fontSize: '15px' }}>🤖 AI Post Processing — Context Menu Actions</h3>
+            <p style={{ margin: 0, fontSize: '12px', color: settings.darkMode ? '#bbb' : '#555', lineHeight: '1.6' }}>
+              Four new items are injected into the note right-click / three-dot menu.
+              Toggle each item on/off below and customise the AI prompt template.
+              The <strong>Rerun AI Processing</strong> action works even when Blinko's built-in
+              "AI Post Processing" auto-trigger is disabled in Settings.
+            </p>
+          </div>
+
+          {/* Menu item toggles */}
+          <div style={{ padding: '16px', border: `1px solid ${settings.darkMode ? '#444' : '#ddd'}`, borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+            <h4 style={{ margin: '0 0 14px', color: settings.darkMode ? '#fff' : '#333', fontSize: '13px' }}>Context Menu Items</h4>
+            {([
+              { key: 'enabled',           emoji: '🤖', label: 'Rerun AI Processing',  desc: 'Runs your full AI prompt on an existing note and offers a preview before saving.' },
+              { key: 'enableAutoTagMenu', emoji: '🏷️', label: 'AI Auto-Tag',           desc: 'Suggests tags for the note using Blinko\'s built-in ai.autoTag endpoint.' },
+              { key: 'enableCopyMenu',    emoji: '📋', label: 'Copy as Markdown',       desc: 'Copies raw note content (Markdown) to the clipboard.' },
+              { key: 'enableExportMenu',  emoji: '⬇️', label: 'Export as .md',          desc: 'Downloads the note as a Markdown file.' },
+            ] as const).map(({ key, emoji, label, desc }) => (
+              <div key={key} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px', paddingBottom: '14px', borderBottom: `1px solid ${settings.darkMode ? '#444' : '#eee'}` }}>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: settings.darkMode ? '#ddd' : '#222' }}>{emoji} {label}</div>
+                  <div style={{ fontSize: '11px', color: settings.darkMode ? '#999' : '#666', marginTop: '2px' }}>{desc}</div>
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', flexShrink: 0 }}>
+                  <input
+                    type="checkbox"
+                    checked={aiPostSettings[key] as boolean}
+                    onChange={(e) => {
+                      const val = (e.target as HTMLInputElement).checked;
+                      const updated = { ...aiPostSettings, [key]: val };
+                      aiPostService.save({ [key]: val });
+                      setAIPostSettings(updated);
+                      // keep the global instance in sync
+                      if ((window as any).blinkoAIPost) (window as any).blinkoAIPost.save({ [key]: val });
+                    }}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#6f42c1' }}
+                  />
+                  <span style={{ fontSize: '12px', color: settings.darkMode ? '#aaa' : '#555' }}>
+                    {aiPostSettings[key] ? 'Enabled' : 'Disabled'}
+                  </span>
+                </label>
+              </div>
+            ))}
+          </div>
+
+          {/* Preview toggle */}
+          <div style={{ padding: '16px', border: `1px solid ${settings.darkMode ? '#444' : '#ddd'}`, borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: settings.darkMode ? '#ddd' : '#222' }}>👁️ Show preview before applying</div>
+                <div style={{ fontSize: '11px', color: settings.darkMode ? '#999' : '#666', marginTop: '3px' }}>
+                  When enabled, the AI result is shown in a dialog so you can review it before overwriting the note.
+                  When disabled, the note is updated immediately (no undo in v1).
+                </div>
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', flexShrink: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={aiPostSettings.showPreviewBeforeApply}
+                  onChange={(e) => {
+                    const val = (e.target as HTMLInputElement).checked;
+                    const updated = { ...aiPostSettings, showPreviewBeforeApply: val };
+                    aiPostService.save({ showPreviewBeforeApply: val });
+                    setAIPostSettings(updated);
+                    if ((window as any).blinkoAIPost) (window as any).blinkoAIPost.save({ showPreviewBeforeApply: val });
+                  }}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#6f42c1' }}
+                />
+                <span style={{ fontSize: '12px', color: settings.darkMode ? '#aaa' : '#555' }}>
+                  {aiPostSettings.showPreviewBeforeApply ? 'Preview on' : 'Auto-apply'}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Prompt editor */}
+          <div style={{ padding: '16px', border: `1px solid ${settings.darkMode ? '#444' : '#ddd'}`, borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+            <h4 style={{ margin: '0 0 6px', color: settings.darkMode ? '#fff' : '#333', fontSize: '13px' }}>📝 AI Prompt Template</h4>
+            <p style={{ margin: '0 0 10px', fontSize: '11px', color: settings.darkMode ? '#999' : '#666' }}>
+              Available variables: <code style={{ background: settings.darkMode ? '#444' : '#eee', padding: '1px 5px', borderRadius: '3px' }}>{'{note}'}</code> — note content &nbsp;·&nbsp;
+              <code style={{ background: settings.darkMode ? '#444' : '#eee', padding: '1px 5px', borderRadius: '3px' }}>{'{tags}'}</code> — current tags
+            </p>
+            <textarea
+              value={aiPostSettings.customPrompt}
+              onChange={(e) => {
+                const val = (e.target as HTMLTextAreaElement).value;
+                setAIPostSettings(prev => ({ ...prev, customPrompt: val }));
+              }}
+              style={{
+                width: '100%',
+                height: '320px',
+                padding: '10px',
+                border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`,
+                borderRadius: '6px',
+                resize: 'vertical',
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                lineHeight: '1.6',
+                background: settings.darkMode ? '#1e1e1e' : '#fff',
+                color: settings.darkMode ? '#e0e0e0' : '#222',
+                boxSizing: 'border-box',
+              }}
+            />
+            <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => {
+                  aiPostService.save({ customPrompt: aiPostSettings.customPrompt });
+                  if ((window as any).blinkoAIPost) (window as any).blinkoAIPost.save({ customPrompt: aiPostSettings.customPrompt });
+                  window.Blinko?.toast?.success('✅ Prompt saved!');
+                }}
+                style={{ background: '#6f42c1', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+              >
+                💾 Save Prompt
+              </button>
+              <button
+                onClick={() => {
+                  setAIPostSettings(prev => ({ ...prev, customPrompt: DEFAULT_AI_POST_PROMPT }));
+                  aiPostService.save({ customPrompt: DEFAULT_AI_POST_PROMPT });
+                  if ((window as any).blinkoAIPost) (window as any).blinkoAIPost.save({ customPrompt: DEFAULT_AI_POST_PROMPT });
+                  window.Blinko?.toast?.success('Prompt reset to default.');
+                }}
+                style={{ background: settings.darkMode ? '#555' : '#e0e0e0', color: settings.darkMode ? '#fff' : '#333', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer', fontSize: '12px' }}
+              >
+                🔄 Reset to Default
+              </button>
+            </div>
+          </div>
+
+          {/* Test runner */}
+          <div style={{ padding: '16px', border: `1px solid ${settings.darkMode ? '#444' : '#ddd'}`, borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+            <h4 style={{ margin: '0 0 10px', color: settings.darkMode ? '#fff' : '#333', fontSize: '13px' }}>🧪 Test on Sample Note</h4>
+            <p style={{ margin: '0 0 10px', fontSize: '11px', color: settings.darkMode ? '#999' : '#666' }}>
+              Sends the prompt with a sample note to the AI and shows the result below.
+              Requires a configured AI provider in Blinko settings.
+            </p>
+            <button
+              disabled={aiPostTesting}
+              onClick={async () => {
+                setAIPostTesting(true);
+                setAIPostTestResult('');
+                try {
+                  const sampleNote = { content: 'Bought groceries. Need to call mom. Fix the lamp. Meeting tomorrow 9am re: budget.', tags: [] };
+                  const result = await aiPostService.runPostProcessing(sampleNote as any);
+                  setAIPostTestResult(result || '(empty response)');
+                } catch (err) {
+                  setAIPostTestResult('Error: ' + (err as Error).message);
+                } finally {
+                  setAIPostTesting(false);
+                }
+              }}
+              style={{ background: aiPostTesting ? '#888' : '#6f42c1', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '5px', cursor: aiPostTesting ? 'wait' : 'pointer', fontSize: '12px', fontWeight: '600' }}
+            >
+              {aiPostTesting ? '⏳ Processing…' : '🧪 Run Test'}
+            </button>
+            {aiPostTestResult && (
+              <pre style={{ marginTop: '14px', padding: '12px', background: settings.darkMode ? '#1e1e1e' : '#f4f4f4', borderRadius: '6px', fontSize: '11px', lineHeight: '1.6', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: settings.darkMode ? '#ddd' : '#222', maxHeight: '300px', overflowY: 'auto' }}>
+                {aiPostTestResult}
+              </pre>
+            )}
+          </div>
+
+          {/* How it works */}
+          <div style={{ padding: '14px 16px', border: `1px solid ${settings.darkMode ? '#3a2a50' : '#d8c8f0'}`, borderRadius: '8px', background: settings.darkMode ? '#1a1228' : '#faf5ff', fontSize: '11px', color: settings.darkMode ? '#bbb' : '#555', lineHeight: '1.7' }}>
+            <strong style={{ display: 'block', marginBottom: '6px', color: settings.darkMode ? '#ddd' : '#333' }}>ℹ️ How Rerun AI Processing works</strong>
+            1. Right-click any note (or tap ⋮) → <strong>🤖 Rerun AI Processing</strong><br/>
+            2. The plugin fills <code>{'{note}'}</code> and <code>{'{tags}'}</code> in your prompt template<br/>
+            3. The filled prompt is sent to Blinko's <code>ai.writing</code> endpoint (streaming)<br/>
+            4. If "Show preview" is on → a dialog shows the result for review before saving<br/>
+            5. On Apply → the note is updated via <code>note.upsert</code><br/>
+            <br/>
+            <strong>Works independently</strong> of Blinko's built-in "Enable AI Post Processing" toggle —
+            you can trigger it on demand even when auto-processing is off.
+          </div>
 
         </div>
       )}
