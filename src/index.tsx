@@ -9,7 +9,9 @@ import plugin from '../plugin.json';
 import { RTLDetector } from './utils/rtlDetector';
 import { RTLService } from './services/rtlService';
 import { BlinkoRTL } from './types';
+import { UIUXService } from './services/uiuxService';
 import './assets/styles/Blinko-RTL.css';
+import './assets/styles/Blinko-UIUX.css';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
 import he from './locales/he.json';
@@ -22,8 +24,11 @@ System.register([], (exports) => ({
   execute: () => {
     const detector = new RTLDetector();
     const rtlService = new RTLService(detector);
+    const uiuxService = new UIUXService();
     // Inject base CSS (toggle button styles, layout protection) immediately — always present
     rtlService.injectBaseCSS();
+    // Apply UI/UX enhancements based on persisted settings
+    uiuxService.apply();
     let toggleButton: HTMLButtonElement | null = null;
 
     function createToggleButton() {
@@ -228,6 +233,7 @@ System.register([], (exports) => ({
 
       destroy() {
         rtlService.disable();
+        uiuxService.destroy();
         removeToggleButton();
         console.log('Advanced RTL Plugin destroyed');
       }

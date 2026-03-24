@@ -56,6 +56,55 @@ export interface RTLSettings {
   debugShowElementNames?: boolean; // Renamed from showElementNames
 }
 
+export interface UIUXSettings {
+  // Typography
+  compactDatetime: boolean;
+  datetimeFontSize: number;
+  noteLineHeight: number;
+  toolbarIconSize: number;
+
+  // Navigation & Interactions
+  singleTapOpenNote: boolean;
+  backButtonClosesNote: boolean;
+
+  // Accessibility
+  reduceMotion: boolean;
+  highContrast: boolean;
+  focusIndicators: boolean;
+
+  // Touch / Mobile
+  minTouchTargets: boolean;
+  touchTargetSize: number;
+
+  // Layout
+  compactMode: boolean;
+  cardBorderRadius: number;
+  shadowIntensity: 'none' | 'subtle' | 'normal' | 'strong';
+
+  // Toolbar
+  showToolbarLabels: boolean;
+  mobileToolbarIconSize: number;
+}
+
+export const DEFAULT_UIUX_SETTINGS: UIUXSettings = {
+  compactDatetime: false,
+  datetimeFontSize: 12,
+  noteLineHeight: 1.5,
+  toolbarIconSize: 16,
+  singleTapOpenNote: false,
+  backButtonClosesNote: false,
+  reduceMotion: false,
+  highContrast: false,
+  focusIndicators: true,
+  minTouchTargets: false,
+  touchTargetSize: 48,
+  compactMode: false,
+  cardBorderRadius: 8,
+  shadowIntensity: 'normal',
+  showToolbarLabels: false,
+  mobileToolbarIconSize: 24,
+};
+
 export interface BlinkoRTL {
     detector: RTLDetector;
     service: RTLService;

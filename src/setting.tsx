@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'preact/hooks';
 import { JSX } from 'preact';
-import { RTLSettings, Preset } from './types';
+import { RTLSettings, Preset, UIUXSettings, DEFAULT_UIUX_SETTINGS } from './types';
 import { DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './services/constants';
 import { RTLDetector } from './utils/rtlDetector';
+import { UIUXService } from './services/uiuxService';
 
 const DEFAULT_CSS = `/* Enhanced RTL Support from Blinko-RTL.css */
 *:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"] {
@@ -542,7 +543,24 @@ export function RTLSetting(): JSX.Element {
     threshold: 0.15, // derived UI field, not stored in DEFAULT_SETTINGS by default
   });
 
-  const [activeTab, setActiveTab] = useState<'simple' | 'advanced'>('simple');
+  const [activeTab, setActiveTab] = useState<'simple' | 'advanced' | 'uiux'>('simple');
+  const [uiuxSettings, setUIUXSettings] = useState<UIUXSettings>({ ...DEFAULT_UIUX_SETTINGS });
+  const [uiuxSubTab, setUIUXSubTab] = useState<'typography' | 'navigation' | 'accessibility' | 'layout' | 'analysis'>('typography');
+  const [uiuxService] = useState(() => new UIUXService());
+
+  // Sync uiux service settings into local state on mount
+  useEffect(() => {
+    setUIUXSettings(uiuxService.getSettings());
+    uiuxService.apply();
+    return () => { /* keep service alive across re-renders */ };
+  }, [uiuxService]);
+
+  const saveUIUX = (partial: Partial<UIUXSettings>) => {
+    uiuxService.updateSettings(partial);
+    setUIUXSettings(uiuxService.getSettings());
+    window.Blinko?.toast?.success('UI/UX settings updated');
+  };
+
   const [customSelector, setCustomSelector] = useState('');
   const [testText, setTestText] = useState('');
   const [testResult, setTestResult] = useState('');
@@ -986,6 +1004,21 @@ export function RTLSetting(): JSX.Element {
           }}
         >
           Advanced
+        </button>
+        <button
+          onClick={() => setActiveTab('uiux')}
+          style={{
+            flex: 1,
+            padding: '10px',
+            background: activeTab === 'uiux' ? (settings.darkMode ? '#444' : '#eee') : 'transparent',
+            color: settings.darkMode ? '#fff' : '#333',
+            border: 'none',
+            borderBottom: activeTab === 'uiux' ? '2px solid #28a745' : 'none',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          🎨 UI/UX
         </button>
       </div>
 
@@ -1674,6 +1707,420 @@ export function RTLSetting(): JSX.Element {
         </div>
         {importError && <p style={{ color: 'red', marginTop: '10px' }}>{importError}</p>}
       </div>
+
+      {/* ══════════════════════════════════════════════════════════════
+          UI/UX SETTINGS TAB
+         ══════════════════════════════════════════════════════════════ */}
+      {activeTab === 'uiux' && (
+        <div>
+          {/* Sub-tab bar */}
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            {(
+              [
+                { id: 'typography',   label: '🔤 Typography'   },
+                { id: 'navigation',   label: '🧭 Navigation'   },
+                { id: 'accessibility',label: '♿ Accessibility' },
+                { id: 'layout',       label: '📐 Layout'       },
+                { id: 'analysis',     label: '📋 UX Audit'     },
+              ] as const
+            ).map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => setUIUXSubTab(id)}
+                style={{
+                  padding: '7px 14px',
+                  border: `1px solid ${uiuxSubTab === id ? '#28a745' : '#ccc'}`,
+                  borderRadius: '20px',
+                  background: uiuxSubTab === id ? '#28a745' : 'transparent',
+                  color: uiuxSubTab === id ? '#fff' : (settings.darkMode ? '#ccc' : '#555'),
+                  cursor: 'pointer',
+                  fontWeight: uiuxSubTab === id ? '600' : '400',
+                  fontSize: '13px',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── TYPOGRAPHY ── */}
+          {uiuxSubTab === 'typography' && (
+            <div style={{ display: 'grid', gap: '20px' }}>
+
+              {/* Compact datetime */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.compactDatetime}
+                    onChange={e => saveUIUX({ compactDatetime: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>📅 Compact Date/Time Display</span>
+                </label>
+                <p style={{ margin: '0 0 10px 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Fixes the "2 hours ago" multi-row timestamp on mobile — forces it onto a single row.
+                </p>
+                {uiuxSettings.compactDatetime && (
+                  <div style={{ marginLeft: '28px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: '500', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span>Font size: {uiuxSettings.datetimeFontSize}px</span>
+                    </label>
+                    <input
+                      type="range" min="9" max="16" step="1"
+                      value={uiuxSettings.datetimeFontSize}
+                      onInput={e => saveUIUX({ datetimeFontSize: parseInt((e.target as HTMLInputElement).value) })}
+                      style={{ width: '100%' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
+                      <span>9px</span><span>16px</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Line height */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ fontSize: '14px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span>📏 Note Body Line Height: {uiuxSettings.noteLineHeight.toFixed(1)}</span>
+                </label>
+                <p style={{ margin: '0 0 10px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Adjusts line spacing in note content. Higher values improve readability for dense text.
+                </p>
+                <input
+                  type="range" min="1.0" max="2.5" step="0.1"
+                  value={uiuxSettings.noteLineHeight}
+                  onInput={e => saveUIUX({ noteLineHeight: parseFloat((e.target as HTMLInputElement).value) })}
+                  style={{ width: '100%' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
+                  <span>1.0 (tight)</span><span>2.5 (spacious)</span>
+                </div>
+              </div>
+
+              {/* Toolbar icon size */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ fontSize: '14px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span>🔧 Editor Toolbar Icon Size: {uiuxSettings.toolbarIconSize}px</span>
+                </label>
+                <p style={{ margin: '0 0 10px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Resize the B/I/S/link icons in the note editor formatting toolbar.
+                </p>
+                <input
+                  type="range" min="12" max="28" step="2"
+                  value={uiuxSettings.toolbarIconSize}
+                  onInput={e => saveUIUX({ toolbarIconSize: parseInt((e.target as HTMLInputElement).value) })}
+                  style={{ width: '100%' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
+                  <span>12px (small)</span><span>28px (large)</span>
+                </div>
+              </div>
+
+              {/* Mobile bottom-bar icon size */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ fontSize: '14px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span>📱 Mobile Bottom-Bar Icon Size: {uiuxSettings.mobileToolbarIconSize}px</span>
+                </label>
+                <p style={{ margin: '0 0 10px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Controls the ⚡ # 🔗 🏷️ ✏️ icons in the bottom action bar on mobile.
+                </p>
+                <input
+                  type="range" min="16" max="36" step="2"
+                  value={uiuxSettings.mobileToolbarIconSize}
+                  onInput={e => saveUIUX({ mobileToolbarIconSize: parseInt((e.target as HTMLInputElement).value) })}
+                  style={{ width: '100%' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
+                  <span>16px</span><span>36px</span>
+                </div>
+              </div>
+
+              {/* Toolbar labels */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.showToolbarLabels}
+                    onChange={e => saveUIUX({ showToolbarLabels: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>🏷️ Show Text Labels on Toolbar Icons</span>
+                </label>
+                <p style={{ margin: '6px 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Displays a small text label beneath toolbar icon buttons (requires icons to carry a data-label attribute).
+                </p>
+              </div>
+
+            </div>
+          )}
+
+          {/* ── NAVIGATION ── */}
+          {uiuxSubTab === 'navigation' && (
+            <div style={{ display: 'grid', gap: '20px' }}>
+
+              {/* Single-tap open */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.singleTapOpenNote}
+                    onChange={e => saveUIUX({ singleTapOpenNote: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>☝️ Single-Tap to Open Notes</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Standardizes all note types (Blinko &amp; Blinko Article) to open with a single tap/click.
+                  Resolves the inconsistency where Blinko notes required a double-tap while articles opened on single tap.
+                </p>
+                <div style={{ margin: '10px 0 0 28px', padding: '8px 12px', borderRadius: '6px', background: settings.darkMode ? '#2c3e50' : '#fff3cd', border: '1px solid #ffc107', fontSize: '12px', color: settings.darkMode ? '#ffd' : '#856404' }}>
+                  ⚠️ This attaches a JavaScript listener that monitors the DOM for note cards.
+                  If a card is already interactive (e.g. Blinko Article), the handler is a no-op.
+                </div>
+              </div>
+
+              {/* Back button closes note */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.backButtonClosesNote}
+                    onChange={e => saveUIUX({ backButtonClosesNote: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>⬅️ Android Back Button Closes Note</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Intercepts the hardware back button / gesture navigation on Android to close the currently
+                  expanded note instead of navigating to a previous section or exiting the app.
+                  Uses the History API — pushes a dummy state when a note overlay is open.
+                </p>
+                <div style={{ margin: '10px 0 0 28px', padding: '8px 12px', borderRadius: '6px', background: settings.darkMode ? '#2c3e50' : '#d1ecf1', border: '1px solid #bee5eb', fontSize: '12px', color: settings.darkMode ? '#9cf' : '#0c5460' }}>
+                  ℹ️ Also applies a stronger CSS visual for the close (×) button when an overlay is open.
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ── ACCESSIBILITY ── */}
+          {uiuxSubTab === 'accessibility' && (
+            <div style={{ display: 'grid', gap: '20px' }}>
+
+              {/* Reduce motion */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.reduceMotion}
+                    onChange={e => saveUIUX({ reduceMotion: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>🎭 Reduce / Disable Animations</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Sets all CSS animation and transition durations to 0.01 ms. Recommended for users with
+                  vestibular disorders, motion sensitivity, or performance-constrained devices.
+                  The OS-level <code>prefers-reduced-motion</code> media query is always respected regardless.
+                </p>
+              </div>
+
+              {/* Min touch targets */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.minTouchTargets}
+                    onChange={e => saveUIUX({ minTouchTargets: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>👆 Enforce Minimum Touch Targets</span>
+                </label>
+                <p style={{ margin: '0 0 10px 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Applies a minimum tap area to all interactive elements. Complies with WCAG 2.5.5 and
+                  Material Design's 48 dp guideline. Fixes undersized buttons on mobile.
+                </p>
+                {uiuxSettings.minTouchTargets && (
+                  <div style={{ marginLeft: '28px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: '500', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span>Target size: {uiuxSettings.touchTargetSize}px</span>
+                    </label>
+                    <input
+                      type="range" min="36" max="64" step="4"
+                      value={uiuxSettings.touchTargetSize}
+                      onInput={e => saveUIUX({ touchTargetSize: parseInt((e.target as HTMLInputElement).value) })}
+                      style={{ width: '100%' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
+                      <span>36px</span><span>64px</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* High contrast */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.highContrast}
+                    onChange={e => saveUIUX({ highContrast: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>🔆 High Contrast Mode</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Boosts colour contrast by 35% using CSS filter. Improves readability for low-vision users.
+                </p>
+              </div>
+
+              {/* Focus indicators */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.focusIndicators}
+                    onChange={e => saveUIUX({ focusIndicators: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>⌨️ Always-Visible Focus Rings</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Shows a blue outline around the focused element for keyboard navigation.
+                  Important for accessibility compliance (WCAG 2.4.7).
+                </p>
+              </div>
+
+            </div>
+          )}
+
+          {/* ── LAYOUT ── */}
+          {uiuxSubTab === 'layout' && (
+            <div style={{ display: 'grid', gap: '20px' }}>
+
+              {/* Compact mode */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.compactMode}
+                    onChange={e => saveUIUX({ compactMode: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>📦 Compact Layout Mode</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Reduces padding and spacing across cards, toolbars, and paragraphs for higher information density.
+                  Ideal for power users on larger screens.
+                </p>
+              </div>
+
+              {/* Card border-radius */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ fontSize: '14px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span>🔲 Card Border Radius: {uiuxSettings.cardBorderRadius}px</span>
+                </label>
+                <p style={{ margin: '0 0 10px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Controls how rounded the note card corners appear. 0 = sharp, 16 = very rounded.
+                </p>
+                <input
+                  type="range" min="0" max="20" step="2"
+                  value={uiuxSettings.cardBorderRadius}
+                  onInput={e => saveUIUX({ cardBorderRadius: parseInt((e.target as HTMLInputElement).value) })}
+                  style={{ width: '100%' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
+                  <span>0 (sharp)</span><span>20 (rounded)</span>
+                </div>
+              </div>
+
+              {/* Shadow intensity */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', display: 'block' }}>
+                  🌑 Card Shadow Intensity
+                </label>
+                <p style={{ margin: '0 0 12px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Controls the depth / elevation of note cards.
+                </p>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {(['none', 'subtle', 'normal', 'strong'] as const).map(level => (
+                    <button
+                      key={level}
+                      onClick={() => saveUIUX({ shadowIntensity: level })}
+                      style={{
+                        padding: '7px 16px',
+                        border: `2px solid ${uiuxSettings.shadowIntensity === level ? '#007bff' : '#ccc'}`,
+                        borderRadius: '6px',
+                        background: uiuxSettings.shadowIntensity === level ? '#007bff' : 'transparent',
+                        color: uiuxSettings.shadowIntensity === level ? '#fff' : (settings.darkMode ? '#ccc' : '#555'),
+                        cursor: 'pointer',
+                        fontWeight: uiuxSettings.shadowIntensity === level ? '600' : '400',
+                        textTransform: 'capitalize',
+                        fontSize: '13px',
+                      }}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ── UX AUDIT ── */}
+          {uiuxSubTab === 'analysis' && (
+            <div style={{ display: 'grid', gap: '16px' }}>
+              <div style={{ padding: '16px', border: '2px solid #28a745', borderRadius: '8px', background: settings.darkMode ? '#1a2e1a' : '#f0fff4' }}>
+                <h3 style={{ margin: '0 0 12px 0', color: '#28a745', fontSize: '15px' }}>
+                  📋 Blinko UI/UX Audit — 15 Identified Issues
+                </h3>
+                <p style={{ margin: '0 0 16px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Findings from cross-platform analysis (Android + Desktop). Items marked ✅ are addressable
+                  via this plugin; items marked ⚙️ require core app changes.
+                </p>
+                {[
+                  { status: '✅', title: 'Timestamp multi-row wrapping (mobile)', detail: 'Date/time label ("2 hours ago") wraps to 2-3 lines due to oversized font. Fix: enable Compact Date/Time under Typography.' },
+                  { status: '✅', title: 'Double-tap inconsistency (Blinko vs Article)', detail: 'Blinko type notes require a double-tap to expand while Blinko Article opens on single tap. Fix: enable Single-Tap under Navigation.' },
+                  { status: '✅', title: 'Android back button exits app', detail: 'Hardware back / swipe-back closes the app instead of the open note overlay. Fix: enable Back Button Closes Note under Navigation.' },
+                  { status: '✅', title: 'Undersized touch targets on mobile', detail: 'Multiple toolbar icons and action buttons are <32 px — below the 48 dp WCAG/Material minimum. Fix: enable Minimum Touch Targets under Accessibility.' },
+                  { status: '✅', title: 'Animations on motion-sensitive devices', detail: 'Slide/fade transitions play even on devices flagged with prefers-reduced-motion. Fix: enable Reduce Motion under Accessibility.' },
+                  { status: '✅', title: 'Low information density on wide screens', detail: 'Card padding and toolbar gaps are large, wasting space on desktop. Fix: enable Compact Mode under Layout.' },
+                  { status: '✅', title: 'Card corner radius inconsistency', detail: 'Different corner radii across card types break visual rhythm. Fix: use Card Border Radius slider under Layout.' },
+                  { status: '✅', title: 'No focus rings for keyboard users', detail: 'Interactive elements have outline: none — breaks keyboard navigation entirely. Fix: enable Always-Visible Focus Rings under Accessibility.' },
+                  { status: '⚙️', title: 'Editor toolbar RTL mirroring', detail: 'The formatting toolbar (B/I/S/Link) stays LTR even when editing RTL content. Align icon order to language direction — requires core change.' },
+                  { status: '⚙️', title: 'Submit button icon mismatch (RTL)', detail: 'The submit arrow button (➤) points left in RTL mode, suggesting "back" rather than "send". CSS transform: scaleX(-1) partial fix possible but fragile.' },
+                  { status: '⚙️', title: 'Masonry grid reflow on note expand', detail: 'Expanding a note causes the masonry grid to reflow and scroll the viewport. Requires virtualised list or position:fixed overlay — core change.' },
+                  { status: '⚙️', title: 'Audio player visualiser is always LTR', detail: 'The waveform / progress bar plays left-to-right even in RTL context. Requires core player component change.' },
+                  { status: '⚙️', title: 'Tag pill overflow truncation', detail: '#Main/Sub/Topic tags overflow card boundaries on narrow screens. Requires text-overflow: ellipsis + tooltip in core card component.' },
+                  { status: '⚙️', title: 'No swipe-to-delete on mobile', detail: 'Deleting a note requires navigating a context menu. Native swipe gesture expected by mobile users.' },
+                  { status: '⚙️', title: 'Loading skeleton missing on slow networks', detail: 'Cards appear empty before content loads with no placeholder skeleton. Degrades perceived performance.' },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      marginBottom: '10px',
+                      padding: '10px 12px',
+                      border: `1px solid ${settings.darkMode ? '#444' : '#e0e0e0'}`,
+                      borderRadius: '6px',
+                      background: settings.darkMode ? '#2a2a2a' : '#fff',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <span style={{ fontSize: '16px', flexShrink: 0 }}>{item.status}</span>
+                      <div>
+                        <strong style={{ fontSize: '13px', color: settings.darkMode ? '#ddd' : '#222' }}>
+                          {i + 1}. {item.title}
+                        </strong>
+                        <p style={{ margin: '4px 0 0', fontSize: '12px', color: settings.darkMode ? '#999' : '#666', lineHeight: '1.5' }}>
+                          {item.detail}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <p style={{ margin: '16px 0 0', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
+                  ✅ = Addressable via plugin CSS/JS &nbsp;|&nbsp; ⚙️ = Requires core application change (submit PR to Daniel-OS01/blinko or Aloklok/blinko)
+                </p>
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
     </div>
   );
 }
