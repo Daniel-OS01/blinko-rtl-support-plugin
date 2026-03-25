@@ -20,6 +20,7 @@ export class UIUXService {
   private settings: UIUXSettings;
   private singleTapCleanup: (() => void) | null = null;
   private backButtonCleanup: (() => void) | null = null;
+  private tapOutsideCleanup: (() => void) | null = null;
   /** Tracks whether we have already pushed the initial sentinel history entry. */
   private backButtonInitialized = false;
 
@@ -70,6 +71,7 @@ export class UIUXService {
     this.applyDynamicStyles();
     this.applySingleTap();
     this.applyBackButton();
+    this.applyTapOutsideClose();
   }
 
   // ─── Body class helpers ──────────────────────────────────────────────
@@ -269,18 +271,107 @@ export class UIUXService {
     };
   }
 
+  // ─── Tap outside closes expanded editor/modal ────────────────────────
+
+  private applyTapOutsideClose(): void {
+    if (this.tapOutsideCleanup) {
+      this.tapOutsideCleanup();
+      this.tapOutsideCleanup = null;
+    }
+
+    const activeClass = 'blinko-tap-outside-close-active';
+    document.body.classList.add(activeClass);
+
+    const clickLikelyInsideEditor = (target: HTMLElement): boolean => {
+      const selectors = [
+        '.ProseMirror',
+        '.vditor',
+        '[contenteditable="true"]',
+        '[role="dialog"]',
+        '[class*="modal"]',
+        '[class*="drawer"]',
+        '[class*="sheet"]',
+        '[class*="expanded"]',
+        '[class*="note-detail"]',
+      ];
+      return Boolean(target.closest(selectors.join(', ')));
+    };
+
+    const clickLikelyOnBackdrop = (target: HTMLElement): boolean => {
+      const selectors = [
+        '[class*="backdrop"]',
+        '[class*="overlay"]',
+        '[class*="mask"]',
+      ];
+      return Boolean(target.closest(selectors.join(', ')));
+    };
+
+    const findActiveOverlay = (): HTMLElement | null =>
+      document.querySelector<HTMLElement>(
+        '[role="dialog"], ' +
+        '[class*="modal"]:not([style*="display: none"]), ' +
+        '[class*="drawer"]:not([style*="display: none"]), ' +
+        '[class*="sheet"]:not([style*="display: none"]), ' +
+        '[class*="expanded"]:not([style*="display: none"]), ' +
+        '[class*="overlay"]:not([style*="display: none"]):not([id*="root"])'
+      );
+
+    const closeViaButtonOrEscape = (scope: HTMLElement): void => {
+      const closeBtn = scope.querySelector<HTMLElement>(
+        '[class*="close"], [aria-label*="close" i], [aria-label*="dismiss" i], ' +
+        'button[class*="X"], button svg[data-icon="x"]'
+      );
+
+      if (closeBtn) {
+        closeBtn.click();
+        return;
+      }
+
+      const escEvt = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+      scope.dispatchEvent(escEvt);
+      document.dispatchEvent(escEvt);
+    };
+
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const activeOverlay = findActiveOverlay();
+      if (!activeOverlay) return;
+
+      const clickedInsideOverlayContent = activeOverlay.contains(target) && clickLikelyInsideEditor(target);
+      if (clickedInsideOverlayContent) return;
+
+      // If we clicked directly on overlay/backdrop OR fully outside the active overlay,
+      // close the current expanded note/modal.
+      const clickedBackdrop = clickLikelyOnBackdrop(target);
+      const clickedOutsideOverlay = !activeOverlay.contains(target);
+      if (clickedBackdrop || clickedOutsideOverlay) {
+        closeViaButtonOrEscape(activeOverlay);
+      }
+    };
+
+    document.addEventListener('mousedown', handler, true);
+
+    this.tapOutsideCleanup = () => {
+      document.removeEventListener('mousedown', handler, true);
+      document.body.classList.remove(activeClass);
+    };
+  }
+
   // ─── Lifecycle ───────────────────────────────────────────────────────
 
   destroy(): void {
     if (this.singleTapCleanup) this.singleTapCleanup();
     if (this.backButtonCleanup) this.backButtonCleanup();
+    if (this.tapOutsideCleanup) this.tapOutsideCleanup();
 
     // Remove all body classes
     const classes = [
       'blinko-compact-datetime', 'blinko-touch-targets', 'blinko-reduce-motion',
       'blinko-high-contrast', 'blinko-focus-indicators', 'blinko-compact-mode',
       'blinko-toolbar-labels', 'blinko-custom-typography', 'blinko-custom-icons',
-      'blinko-custom-cards', 'blinko-back-closes-note',
+      'blinko-custom-cards', 'blinko-back-closes-note', 'blinko-tap-outside-close-active',
     ];
     classes.forEach(c => document.body.classList.remove(c));
 
