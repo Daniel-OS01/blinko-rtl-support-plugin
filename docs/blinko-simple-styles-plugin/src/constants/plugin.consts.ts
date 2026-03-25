@@ -1,0 +1,1 @@
+export const PLUGIN_NAME = "blinko-note-editor-colors"
