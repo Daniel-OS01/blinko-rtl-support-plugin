@@ -275,5 +275,110 @@ Removed the `.card-masonry-grid [class*="flex"][class*="col"]` selector entirely
 
 ---
 
-*Document version: 1.0 — Initial issue log (four issues resolved)*
+### [ISSUE-005] MutationObserver excessive firing / extension feedback loop
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-005 |
+| **Status** | Verified |
+| **Severity** | High |
+| **Component** | `src/services/uiuxService.ts` (`applySingleTap` observer lifecycle) |
+| **Reported by** | Initial audit |
+| **Reported date** | 2026-03-24 |
+| **Plugin version** | 3.0.0 |
+| **Affected platforms** | Android, Web |
+
+#### Description
+`MutationObserver` callbacks for card-list updates were firing excessively during rapid UI changes, creating a plugin-to-DOM feedback loop that repeatedly re-scanned cards and re-bound listener candidates. This caused avoidable CPU churn and intermittent interaction jitter.
+
+#### Root Cause
+The observer callback pattern was too broad for high-frequency subtree changes and did not sufficiently gate repeated processing work in dynamic list states. In practice, layout churn could repeatedly invoke the same attach path faster than user-driven interactions.
+
+#### Resolution Notes
+- Enforced marker-based idempotency (`[data-single-tap]`) so already-initialized cards are skipped.
+- Kept listener attach logic constrained to unmarked cards only.
+- Confirmed observer cleanup (`disconnect`) is executed on feature disable / service teardown to prevent lingering callback loops.
+- Verified no repeated re-binding occurs for stable card nodes after initialization.
+
+---
+
+### [ISSUE-006] Tap outside note editor does not close
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-006 |
+| **Status** | Verified |
+| **Severity** | Medium |
+| **Component** | `src/services/uiuxService.ts` (`applyBackButton` overlay close fallback) |
+| **Reported by** | Initial audit |
+| **Reported date** | 2026-03-24 |
+| **Plugin version** | 3.0.0 |
+| **Affected platforms** | Android, Web |
+
+#### Description
+In overlay editor mode, tapping outside the note surface did not consistently dismiss the open editor. Users were forced to locate and activate a specific close affordance, reducing mobile usability.
+
+#### Root Cause
+Dismiss behavior relied on narrow close-button detection paths and did not always include a robust fallback when the outside-tap path did not bubble into a recognized close target.
+
+#### Resolution Notes
+- Strengthened overlay dismissal logic to prioritize explicit close control detection.
+- Added resilient fallback dismissal behavior (Escape-key dispatch path) when a direct close button is not discoverable.
+- Verified users can exit editor overlays without being trapped in modal state.
+
+---
+
+### [ISSUE-007] Vertical spacing not user-adjustable
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-007 |
+| **Status** | Verified |
+| **Severity** | Medium |
+| **Component** | `src/setting.tsx`, `src/services/uiuxService.ts` (typography density controls) |
+| **Reported by** | Initial audit |
+| **Reported date** | 2026-03-24 |
+| **Plugin version** | 3.0.0 |
+| **Affected platforms** | All |
+
+#### Description
+Users could not tune vertical rhythm (line height / paragraph density) to match reading preferences across device sizes. Dense screens felt cramped while large displays felt overly loose.
+
+#### Root Cause
+Spacing values were effectively fixed at style defaults, with no surfaced control path for user-defined vertical density adjustments in plugin settings.
+
+#### Resolution Notes
+- Added user-facing typography density control for vertical spacing.
+- Wired the control to runtime CSS custom properties so changes apply immediately without reload.
+- Verified persisted settings restore expected spacing across sessions and platforms.
+
+---
+
+### [ISSUE-008] AI 401 errors lack actionable guidance
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-008 |
+| **Status** | Verified |
+| **Severity** | Medium |
+| **Component** | `src/services/aiPostService.ts`, `src/index.tsx` (AI error handling/toasts) |
+| **Reported by** | Initial audit |
+| **Reported date** | 2026-03-24 |
+| **Plugin version** | 3.0.0 |
+| **Affected platforms** | All (AI features) |
+
+#### Description
+When AI endpoints returned `401 Unauthorized`, users received technical failure text without clear next steps, leading to confusion about whether the issue was credentials, login state, or provider configuration.
+
+#### Root Cause
+Error surfacing passed through generic API exception messaging and lacked status-specific remediation hints for authentication failures.
+
+#### Resolution Notes
+- Added explicit handling for authentication-related AI failures.
+- Updated user-visible guidance to explain likely session/auth cause and recovery action (re-authenticate/check active login context).
+- Verified failed AI calls now present actionable, user-oriented remediation instead of opaque errors.
+
+---
+
+*Document version: 1.1 — Historical archive expanded to ISSUE-008 (verified entries)*
 *Template version: 1.0*
