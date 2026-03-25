@@ -1928,6 +1928,22 @@ export function RTLSetting(): JSX.Element {
                 </div>
               </div>
 
+              {/* Intercept AI 401 errors */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.interceptAIErrors}
+                    onChange={e => saveUIUX({ interceptAIErrors: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>🤖 Intercept AI Unauthorized Errors (401)</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Watches AI endpoints (<code>ai.autoTag</code>, <code>ai.writing</code>, <code>/trpc/ai</code>) and
+                  shows an actionable toast when the server returns 401 so you can re-authenticate quickly.
+                </p>
+              </div>
+
             </div>
           )}
 

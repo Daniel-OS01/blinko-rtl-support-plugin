@@ -20,6 +20,8 @@ export class UIUXService {
   private settings: UIUXSettings;
   private singleTapCleanup: (() => void) | null = null;
   private backButtonCleanup: (() => void) | null = null;
+  private originalFetch: typeof window.fetch | null = null;
+  private aiInterceptorActive = false;
   /** Tracks whether we have already pushed the initial sentinel history entry. */
   private backButtonInitialized = false;
 
@@ -70,6 +72,11 @@ export class UIUXService {
     this.applyDynamicStyles();
     this.applySingleTap();
     this.applyBackButton();
+    if (this.settings.interceptAIErrors) {
+      this.applyAIErrorInterceptor();
+    } else {
+      this.restoreAIErrorInterceptor();
+    }
   }
 
   // ─── Body class helpers ──────────────────────────────────────────────
@@ -269,11 +276,57 @@ export class UIUXService {
     };
   }
 
+  // ─── AI 401 interceptor ──────────────────────────────────────────────
+
+  private isAIEndpointUrl(url: string): boolean {
+    const normalized = url.toLowerCase();
+    return (
+      normalized.includes('ai.autotag') ||
+      normalized.includes('ai.writing') ||
+      normalized.includes('/trpc/ai')
+    );
+  }
+
+  private extractFetchUrl(input: RequestInfo | URL): string {
+    if (typeof input === 'string') return input;
+    if (input instanceof URL) return input.toString();
+    if (input instanceof Request) return input.url;
+    return String(input);
+  }
+
+  private applyAIErrorInterceptor(): void {
+    if (this.aiInterceptorActive) return;
+
+    this.originalFetch = window.fetch.bind(window);
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const response = await this.originalFetch!(input, init);
+      const url = this.extractFetchUrl(input);
+
+      if (response.status === 401 && this.isAIEndpointUrl(url)) {
+        window.Blinko?.toast?.error(
+          '🔐 AI request was unauthorized (401). Please sign in again, then retry AI Writing / Auto-Tag.'
+        );
+      }
+
+      return response;
+    };
+
+    this.aiInterceptorActive = true;
+  }
+
+  private restoreAIErrorInterceptor(): void {
+    if (!this.aiInterceptorActive || !this.originalFetch) return;
+    window.fetch = this.originalFetch;
+    this.originalFetch = null;
+    this.aiInterceptorActive = false;
+  }
+
   // ─── Lifecycle ───────────────────────────────────────────────────────
 
   destroy(): void {
     if (this.singleTapCleanup) this.singleTapCleanup();
     if (this.backButtonCleanup) this.backButtonCleanup();
+    this.restoreAIErrorInterceptor();
 
     // Remove all body classes
     const classes = [

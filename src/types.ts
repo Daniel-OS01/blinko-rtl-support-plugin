@@ -66,6 +66,7 @@ export interface UIUXSettings {
   // Navigation & Interactions
   singleTapOpenNote: boolean;
   backButtonClosesNote: boolean;
+  interceptAIErrors: boolean;
 
   // Accessibility
   reduceMotion: boolean;
@@ -93,6 +94,7 @@ export const DEFAULT_UIUX_SETTINGS: UIUXSettings = {
   toolbarIconSize: 16,
   singleTapOpenNote: false,
   backButtonClosesNote: false,
+  interceptAIErrors: true,
   reduceMotion: false,
   highContrast: false,
   focusIndicators: true,
