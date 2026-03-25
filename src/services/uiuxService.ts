@@ -12,6 +12,7 @@
  */
 
 import { UIUXSettings, DEFAULT_UIUX_SETTINGS } from '../types';
+import { debounce } from '../utils/debounce';
 
 const STORAGE_KEY = 'blinko-uiux-settings';
 const STYLE_TAG_ID = 'blinko-uiux-dynamic-styles';
@@ -191,14 +192,17 @@ export class UIUXService {
       });
     };
 
+    const debouncedMarkAndListen = debounce(markAndListen, 150);
+
     markAndListen();
 
     // Watch for new cards added to the DOM
-    const observer = new MutationObserver(markAndListen);
+    const observer = new MutationObserver(() => debouncedMarkAndListen());
     observer.observe(document.body, { childList: true, subtree: true });
 
     this.singleTapCleanup = () => {
       observer.disconnect();
+      debouncedMarkAndListen.cancel?.();
       document.querySelectorAll<HTMLElement>('[data-single-tap="true"]').forEach(card => {
         const handler = (card as any)._uiuxClickHandler;
         if (handler) card.removeEventListener('click', handler);
