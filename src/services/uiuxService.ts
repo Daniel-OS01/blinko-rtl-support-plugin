@@ -14,6 +14,7 @@
  */
 
 import { UIUXSettings, DEFAULT_UIUX_SETTINGS } from '../types';
+import { debounce } from '../utils/debounce';
 
 const STORAGE_KEY = 'blinko-uiux-settings';
 const STYLE_TAG_ID = 'blinko-uiux-dynamic-styles';
@@ -75,7 +76,11 @@ export class UIUXService {
     this.applySingleTap();
     this.applyBackButton();
     this.applyTapOutsideClose();
-    this.applyAIErrorInterceptor();
+    if (this.settings.interceptAIErrors) {
+      this.applyAIErrorInterceptor();
+    } else {
+      this.restoreAIErrorInterceptor();
+    }
   }
 
   // ─── Body class helpers ──────────────────────────────────────────────
@@ -202,20 +207,17 @@ export class UIUXService {
     markAndListen();
 
     // Watch for new cards added to the DOM.
-    // Uses a manual debounce timer to prevent excessive callback firing that
-    // would otherwise trigger browser-extension MutationObserver feedback loops
-    // (e.g. Bitwarden autofill overlay reacting to data-single-tap attribute writes).
-    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-    const debouncedMark = () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(markAndListen, 150);
-    };
+    // Debounced to prevent excessive callback firing that would otherwise
+    // trigger browser-extension MutationObserver feedback loops (e.g. Bitwarden
+    // autofill overlay reacting to data-single-tap attribute writes).
+    // cancel() is called during cleanup to drop any inflight pending call.
+    const debouncedMarkAndListen = debounce(markAndListen, 150);
 
-    const observer = new MutationObserver(debouncedMark);
+    const observer = new MutationObserver(debouncedMarkAndListen);
     observer.observe(document.body, { childList: true, subtree: true });
 
     this.singleTapCleanup = () => {
-      if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
+      debouncedMarkAndListen.cancel();
       observer.disconnect();
       document.querySelectorAll<HTMLElement>('[data-single-tap="true"]').forEach(card => {
         const handler = (card as any)._uiuxClickHandler;
@@ -307,35 +309,42 @@ export class UIUXService {
 
     if (!this.settings.tapOutsideClosesNote) return;
 
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-
-      // Locate the currently open note editor container
-      const editor = document.querySelector<HTMLElement>(
-        '[class*="editor-container"], [class*="note-editor"], [class*="blinko-editor"], ' +
-        '[class*="dialog-content"], [class*="modal-content"]'
+    const findActiveOverlay = (): HTMLElement | null =>
+      document.querySelector<HTMLElement>(
+        '[class*="editor-container"]:not([style*="display: none"]), ' +
+        '[class*="note-editor"]:not([style*="display: none"]), ' +
+        '[class*="blinko-editor"]:not([style*="display: none"]), ' +
+        '[class*="dialog-content"]:not([style*="display: none"]), ' +
+        '[class*="modal-content"]:not([style*="display: none"])'
       );
-      if (!editor) return;
 
-      // Only act when the click is outside the editor
-      if (!editor.contains(target)) {
-        const closeBtn = document.querySelector<HTMLElement>(
-          '[class*="editor"] [class*="close"], ' +
-          '[class*="dialog"] button[class*="close"], ' +
-          '[aria-label*="close" i]:not([class*="editor"] *), ' +
-          'button[data-dismiss], .modal-close'
-        );
-        if (closeBtn) {
-          closeBtn.click();
-        } else {
-          // Fallback: dispatch Escape so the editor's own keydown handler fires
-          editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-        }
+    const closeViaButtonOrEscape = (scope: HTMLElement): void => {
+      const closeBtn =
+        scope.querySelector<HTMLElement>('[class*="close"], [aria-label*="close" i], button[data-dismiss]') ??
+        document.querySelector<HTMLElement>('.modal-close');
+      if (closeBtn) {
+        closeBtn.click();
+      } else {
+        // Fallback: Escape with bubbles:true propagates up from scope to document
+        scope.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      }
+    };
+
+    const handler = (e: MouseEvent): void => {
+      const overlay = findActiveOverlay();
+      if (!overlay) return;
+      if (!overlay.contains(e.target as Node)) {
+        closeViaButtonOrEscape(overlay);
       }
     };
 
     document.addEventListener('mousedown', handler, true);
-    this.tapOutsideCleanup = () => document.removeEventListener('mousedown', handler, true);
+    document.body.classList.add('blinko-tap-outside-close-active');
+
+    this.tapOutsideCleanup = () => {
+      document.removeEventListener('mousedown', handler, true);
+      document.body.classList.remove('blinko-tap-outside-close-active');
+    };
   }
 
   // ─── AI 401 Error Interceptor ────────────────────────────────────────
@@ -351,37 +360,40 @@ export class UIUXService {
   // when a 401 is returned from a known AI endpoint. The response is returned
   // completely untouched — no response body/headers are modified.
 
-  private applyAIErrorInterceptor(): void {
-    // Idempotent — only install once. apply() is called on every updateSettings().
-    if (this.aiInterceptorCleanup) return;
+  private extractFetchUrl(input: RequestInfo | URL): string {
+    if (typeof input === 'string') return input;
+    if (input instanceof Request) return input.url;
+    return String(input);
+  }
 
-    if (!this.settings.interceptAIErrors) return;
+  private isAIEndpointUrl(url: string): boolean {
+    return url.includes('ai.autoTag') || url.includes('ai.writing') || url.includes('/trpc/ai');
+  }
+
+  private restoreAIErrorInterceptor(): void {
+    if (!this.aiInterceptorCleanup) return;
+    this.aiInterceptorCleanup();
+    this.aiInterceptorCleanup = null;
+  }
+
+  private applyAIErrorInterceptor(): void {
+    // Idempotent — only install once per enable-cycle.
+    // apply() is called on every updateSettings(); the caller is responsible
+    // for calling restoreAIErrorInterceptor() when the setting is toggled off.
+    if (this.aiInterceptorCleanup) return;
 
     const originalFetch = window.fetch;
 
     window.fetch = async (...args: Parameters<typeof fetch>) => {
       const response = await originalFetch(...args);
 
-      if (response.status === 401) {
-        const url =
-          typeof args[0] === 'string'
-            ? args[0]
-            : args[0] instanceof Request
-            ? args[0].url
-            : String(args[0]);
-
-        if (
-          url.includes('ai.autoTag') ||
-          url.includes('ai.writing') ||
-          url.includes('/trpc/ai')
-        ) {
-          // Defer to next tick so Blinko's own error handler runs first
-          setTimeout(() => {
-            (window as any).Blinko?.toast?.error?.(
-              'AI feature requires an API key. Go to Settings → AI to configure your provider.'
-            );
-          }, 0);
-        }
+      if (response.status === 401 && this.isAIEndpointUrl(this.extractFetchUrl(args[0]))) {
+        // Defer to next tick so Blinko's own error handler runs first
+        setTimeout(() => {
+          (window as any).Blinko?.toast?.error?.(
+            'AI feature requires an API key. Go to Settings → AI to configure your provider.'
+          );
+        }, 0);
       }
 
       return response;
@@ -406,6 +418,7 @@ export class UIUXService {
       'blinko-high-contrast', 'blinko-focus-indicators', 'blinko-compact-mode',
       'blinko-toolbar-labels', 'blinko-custom-typography', 'blinko-custom-icons',
       'blinko-custom-cards', 'blinko-back-closes-note', 'blinko-reduce-vspacing',
+      'blinko-tap-outside-close-active',
     ];
     classes.forEach(c => document.body.classList.remove(c));
 
