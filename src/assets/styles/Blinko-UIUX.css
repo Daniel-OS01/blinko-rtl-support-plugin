@@ -14,12 +14,21 @@
   .blinko-focus-indicators   → always-visible keyboard focus rings
   .blinko-compact-mode       → denser information layout
   .blinko-toolbar-labels     → show text labels below toolbar icons
+  .blinko-reduce-vspacing    → reduce vertical spacing across note surfaces
+  .blinko-tag-color-fix      → normalize tag chip color contrast
+  .blinko-mobile-action-icons → increase mobile action icon tap size
+  .blinko-oled-dark          → force OLED-friendly pure black dark surfaces
+  .blinko-pinned-badge       → improve pinned badge visibility
+  .blinko-system-fonts       → prefer native system UI font stack
+  .blinko-tag-hierarchy      → visualize nested tag hierarchy levels
+  .blinko-offline-banner     → keep offline indicator sticky and prominent
   --blinko-datetime-fs       → CSS custom prop: datetime font-size (px)
   --blinko-line-height       → CSS custom prop: note body line-height
   --blinko-icon-size         → CSS custom prop: toolbar icon size (px)
   --blinko-touch-size        → CSS custom prop: minimum touch target (px)
   --blinko-card-radius       → CSS custom prop: card border-radius (px)
   --blinko-shadow            → CSS custom prop: card box-shadow value
+  --blinko-v-padding         → CSS custom prop: vertical card spacing (px)
 */
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -268,4 +277,90 @@
     width: var(--blinko-mobile-icon-size, 24px) !important;
     height: var(--blinko-mobile-icon-size, 24px) !important;
   }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   14. REDUCED VERTICAL SPACING
+   ═══════════════════════════════════════════════════════════════════ */
+
+.blinko-reduce-vspacing [class*="card"],
+.blinko-reduce-vspacing [class*="note-item"],
+.blinko-reduce-vspacing .card-masonry-grid > div {
+  padding-top: var(--blinko-v-padding, 6px) !important;
+  padding-bottom: var(--blinko-v-padding, 6px) !important;
+}
+
+.blinko-reduce-vspacing [class*="note-item"] + [class*="note-item"],
+.blinko-reduce-vspacing .card-masonry-grid > div + div {
+  margin-top: var(--blinko-v-padding, 6px) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   15. QUICK-FIX TOGGLES
+   ═══════════════════════════════════════════════════════════════════ */
+
+.blinko-tag-color-fix [class*="tag"],
+.blinko-tag-color-fix [class*="chip"] {
+  color: inherit !important;
+  filter: saturate(0.95) contrast(1.05);
+}
+
+@media (max-width: 768px) {
+  .blinko-mobile-action-icons [class*="action-bar"] button,
+  .blinko-mobile-action-icons [class*="bottom-bar"] button,
+  .blinko-mobile-action-icons [class*="toolbar"] button {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+.blinko-oled-dark.dark,
+.dark .blinko-oled-dark {
+  background-color: #000 !important;
+}
+
+.blinko-oled-dark.dark [class*="card"],
+.dark .blinko-oled-dark [class*="card"],
+.blinko-oled-dark.dark [class*="panel"],
+.dark .blinko-oled-dark [class*="panel"] {
+  background-color: #000 !important;
+}
+
+.blinko-pinned-badge [class*="pin"],
+.blinko-pinned-badge [class*="pinned"] {
+  font-weight: 600 !important;
+  box-shadow: 0 0 0 1px currentColor inset;
+}
+
+.blinko-system-fonts,
+.blinko-system-fonts .markdown-body,
+.blinko-system-fonts input,
+.blinko-system-fonts textarea,
+.blinko-system-fonts button {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+.blinko-tag-hierarchy [data-tag-depth="2"] {
+  margin-inline-start: 8px !important;
+}
+
+.blinko-tag-hierarchy [data-tag-depth="3"] {
+  margin-inline-start: 16px !important;
+}
+
+.blinko-tag-hierarchy [data-tag-depth="4"] {
+  margin-inline-start: 24px !important;
+}
+
+.blinko-tag-hierarchy [data-tag-depth] {
+  border-inline-start: 2px solid rgba(127, 127, 127, 0.35) !important;
+  padding-inline-start: 6px !important;
+}
+
+.blinko-offline-banner [class*="offline"],
+.blinko-offline-banner [data-offline="true"] {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
 }
