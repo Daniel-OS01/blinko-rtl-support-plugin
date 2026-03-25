@@ -12,6 +12,7 @@
  */
 
 import { UIUXSettings, DEFAULT_UIUX_SETTINGS } from '../types';
+import { debounce } from '../utils/debounce';
 
 const STORAGE_KEY = 'blinko-uiux-settings';
 const STYLE_TAG_ID = 'blinko-uiux-dynamic-styles';
@@ -19,7 +20,10 @@ const STYLE_TAG_ID = 'blinko-uiux-dynamic-styles';
 export class UIUXService {
   private settings: UIUXSettings;
   private singleTapCleanup: (() => void) | null = null;
+  private tapOutsideCleanup: (() => void) | null = null;
   private backButtonCleanup: (() => void) | null = null;
+  private originalFetch: typeof window.fetch | null = null;
+  private aiErrorInterceptorActive = false;
   /** Tracks whether we have already pushed the initial sentinel history entry. */
   private backButtonInitialized = false;
 
@@ -69,7 +73,9 @@ export class UIUXService {
     this.applyCustomProperties();
     this.applyDynamicStyles();
     this.applySingleTap();
+    this.applyTapOutsideClose();
     this.applyBackButton();
+    this.applyAIErrorInterceptor();
   }
 
   // ─── Body class helpers ──────────────────────────────────────────────
@@ -91,6 +97,7 @@ export class UIUXService {
     this.toggle('blinko-custom-icons', true);
     this.toggle('blinko-custom-cards', true);
     this.toggle('blinko-back-closes-note', s.backButtonClosesNote);
+    this.toggle('blinko-reduce-vertical-spacing', s.reduceVerticalSpacing);
   }
 
   // ─── CSS custom properties ───────────────────────────────────────────
@@ -104,6 +111,7 @@ export class UIUXService {
     root.style.setProperty('--blinko-mobile-icon-size', `${s.mobileToolbarIconSize}px`);
     root.style.setProperty('--blinko-touch-size', `${s.touchTargetSize}px`);
     root.style.setProperty('--blinko-card-radius', `${s.cardBorderRadius}px`);
+    root.style.setProperty('--blinko-v-padding', s.reduceVerticalSpacing ? '6px' : '12px');
 
     const shadowMap: Record<UIUXSettings['shadowIntensity'], string> = {
       none:   'none',
@@ -192,12 +200,14 @@ export class UIUXService {
     };
 
     markAndListen();
+    const debouncedMarkAndListen = debounce(markAndListen, 120);
 
     // Watch for new cards added to the DOM
-    const observer = new MutationObserver(markAndListen);
+    const observer = new MutationObserver(() => debouncedMarkAndListen());
     observer.observe(document.body, { childList: true, subtree: true });
 
     this.singleTapCleanup = () => {
+      debouncedMarkAndListen.cancel();
       observer.disconnect();
       document.querySelectorAll<HTMLElement>('[data-single-tap="true"]').forEach(card => {
         const handler = (card as any)._uiuxClickHandler;
@@ -205,6 +215,35 @@ export class UIUXService {
         card.removeAttribute('data-single-tap');
         delete (card as any)._uiuxClickHandler;
       });
+    };
+  }
+
+  // ─── Tap outside editor closes expanded note ──────────────────────────
+
+  private applyTapOutsideClose(): void {
+    if (this.tapOutsideCleanup) {
+      this.tapOutsideCleanup();
+      this.tapOutsideCleanup = null;
+    }
+
+    const handler = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      const editorContainer = document.querySelector<HTMLElement>(
+        '[class*="editor"], [class*="note-editor"], [class*="ProseMirror"], [data-testid*="editor"]'
+      );
+      if (!editorContainer || editorContainer.contains(target)) return;
+
+      const closeBtn = document.querySelector<HTMLElement>(
+        '[class*="expanded"] [class*="close"], [class*="modal"] [class*="close"], [aria-label*="close" i], [aria-label*="dismiss" i]'
+      );
+      if (closeBtn) closeBtn.click();
+    };
+
+    document.addEventListener('mousedown', handler, true);
+    this.tapOutsideCleanup = () => {
+      document.removeEventListener('mousedown', handler, true);
     };
   }
 
@@ -269,18 +308,53 @@ export class UIUXService {
     };
   }
 
+  // ─── AI API error interceptor ─────────────────────────────────────────
+
+  private applyAIErrorInterceptor(): void {
+    if (this.aiErrorInterceptorActive) return;
+
+    this.originalFetch = window.fetch.bind(window);
+    const baseFetch = this.originalFetch;
+
+    window.fetch = async (...args: Parameters<typeof fetch>) => {
+      const response = await baseFetch(...args);
+      const input = args[0];
+      const url = typeof input === 'string' ? input : input instanceof Request ? input.url : '';
+
+      if (response.status === 401 && /\/api\/trpc\/ai(\.|\/|$)/i.test(url)) {
+        const toastError = (window as any)?.Blinko?.toast?.error;
+        if (typeof toastError === 'function') {
+          toastError(
+            'AI request unauthorized (401). Please configure your AI provider/API key in Blinko settings and retry.'
+          );
+        }
+      }
+
+      return response;
+    };
+
+    this.aiErrorInterceptorActive = true;
+  }
+
   // ─── Lifecycle ───────────────────────────────────────────────────────
 
   destroy(): void {
     if (this.singleTapCleanup) this.singleTapCleanup();
+    if (this.tapOutsideCleanup) this.tapOutsideCleanup();
     if (this.backButtonCleanup) this.backButtonCleanup();
+
+    if (this.aiErrorInterceptorActive && this.originalFetch) {
+      window.fetch = this.originalFetch;
+    }
+    this.originalFetch = null;
+    this.aiErrorInterceptorActive = false;
 
     // Remove all body classes
     const classes = [
       'blinko-compact-datetime', 'blinko-touch-targets', 'blinko-reduce-motion',
       'blinko-high-contrast', 'blinko-focus-indicators', 'blinko-compact-mode',
       'blinko-toolbar-labels', 'blinko-custom-typography', 'blinko-custom-icons',
-      'blinko-custom-cards', 'blinko-back-closes-note',
+      'blinko-custom-cards', 'blinko-back-closes-note', 'blinko-reduce-vertical-spacing',
     ];
     classes.forEach(c => document.body.classList.remove(c));
 
@@ -288,7 +362,7 @@ export class UIUXService {
     const props = [
       '--blinko-datetime-fs', '--blinko-line-height', '--blinko-icon-size',
       '--blinko-mobile-icon-size', '--blinko-touch-size', '--blinko-card-radius',
-      '--blinko-shadow',
+      '--blinko-shadow', '--blinko-v-padding',
     ];
     props.forEach(p => document.documentElement.style.removeProperty(p));
 
