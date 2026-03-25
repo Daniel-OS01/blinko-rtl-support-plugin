@@ -66,6 +66,8 @@ export interface UIUXSettings {
   // Navigation & Interactions
   singleTapOpenNote: boolean;
   backButtonClosesNote: boolean;
+  tapOutsideClosesNote: boolean;
+  interceptAIErrors: boolean;
 
   // Accessibility
   reduceMotion: boolean;
@@ -78,6 +80,8 @@ export interface UIUXSettings {
 
   // Layout
   compactMode: boolean;
+  reduceVerticalSpacing: boolean;
+  noteListPadding: number;
   cardBorderRadius: number;
   shadowIntensity: 'none' | 'subtle' | 'normal' | 'strong';
 
@@ -93,12 +97,16 @@ export const DEFAULT_UIUX_SETTINGS: UIUXSettings = {
   toolbarIconSize: 16,
   singleTapOpenNote: false,
   backButtonClosesNote: false,
+  tapOutsideClosesNote: false,
+  interceptAIErrors: true,
   reduceMotion: false,
   highContrast: false,
   focusIndicators: true,
   minTouchTargets: false,
   touchTargetSize: 48,
   compactMode: false,
+  reduceVerticalSpacing: false,
+  noteListPadding: 8,
   cardBorderRadius: 8,
   shadowIntensity: 'normal',
   showToolbarLabels: false,

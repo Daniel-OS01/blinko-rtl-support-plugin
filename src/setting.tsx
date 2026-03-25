@@ -546,7 +546,7 @@ export function RTLSetting(): JSX.Element {
 
   const [activeTab, setActiveTab] = useState<'simple' | 'advanced' | 'uiux' | 'aipost'>('simple');
   const [uiuxSettings, setUIUXSettings] = useState<UIUXSettings>({ ...DEFAULT_UIUX_SETTINGS });
-  const [uiuxSubTab, setUIUXSubTab] = useState<'typography' | 'navigation' | 'accessibility' | 'layout' | 'analysis'>('typography');
+  const [uiuxSubTab, setUIUXSubTab] = useState<'typography' | 'navigation' | 'accessibility' | 'layout' | 'fixes' | 'analysis'>('typography');
   const [uiuxService] = useState(() => new UIUXService());
 
   // AI Post Processing state
@@ -1751,6 +1751,7 @@ export function RTLSetting(): JSX.Element {
                 { id: 'navigation',   label: '🧭 Navigation'   },
                 { id: 'accessibility',label: '♿ Accessibility' },
                 { id: 'layout',       label: '📐 Layout'       },
+                { id: 'fixes',        label: '🔧 Quick Fixes'  },
                 { id: 'analysis',     label: '📋 UX Audit'     },
               ] as const
             ).map(({ id, label }) => (
@@ -1928,6 +1929,36 @@ export function RTLSetting(): JSX.Element {
                 </div>
               </div>
 
+              {/* Tap outside closes note */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.tapOutsideClosesNote}
+                    onChange={e => saveUIUX({ tapOutsideClosesNote: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>🖱️ Tap Outside Overlay to Close Note</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Allows closing an expanded note by tapping/clicking outside the note surface on the overlay backdrop.
+                </p>
+              </div>
+
+              {/* Intercept AI errors */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.interceptAIErrors}
+                    onChange={e => saveUIUX({ interceptAIErrors: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>🤖 Intercept AI Runtime Errors</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Catches noisy AI UI errors and prevents them from breaking the note page interaction flow.
+                </p>
+              </div>
+
             </div>
           )}
 
@@ -2038,6 +2069,37 @@ export function RTLSetting(): JSX.Element {
                 </p>
               </div>
 
+              {/* Reduce vertical spacing */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.reduceVerticalSpacing}
+                    onChange={e => saveUIUX({ reduceVerticalSpacing: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>↕️ Reduce Vertical Spacing</span>
+                </label>
+                <p style={{ margin: '0 0 10px 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Tightens vertical gaps in note lists and cards for a denser scrolling experience.
+                </p>
+                {uiuxSettings.reduceVerticalSpacing && (
+                  <div style={{ marginLeft: '28px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: '500', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span>Note list padding: {uiuxSettings.noteListPadding}px</span>
+                    </label>
+                    <input
+                      type="range" min="0" max="20" step="1"
+                      value={uiuxSettings.noteListPadding}
+                      onInput={e => saveUIUX({ noteListPadding: parseInt((e.target as HTMLInputElement).value) })}
+                      style={{ width: '100%' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
+                      <span>0px</span><span>20px</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Card border-radius */}
               <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
                 <label style={{ fontSize: '14px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -2088,6 +2150,66 @@ export function RTLSetting(): JSX.Element {
                 </div>
               </div>
 
+            </div>
+          )}
+
+          {/* ── QUICK FIXES ── */}
+          {uiuxSubTab === 'fixes' && (
+            <div style={{ display: 'grid', gap: '20px' }}>
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.tapOutsideClosesNote}
+                    onChange={e => saveUIUX({ tapOutsideClosesNote: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>🖱️ Tap Outside Closes Note</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Close expanded notes by tapping the backdrop outside the modal.
+                </p>
+              </div>
+
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.interceptAIErrors}
+                    onChange={e => saveUIUX({ interceptAIErrors: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>🤖 Intercept AI Errors</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Guards against AI runtime errors that can block normal UI interactions.
+                </p>
+              </div>
+
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.reduceVerticalSpacing}
+                    onChange={e => saveUIUX({ reduceVerticalSpacing: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>↕️ Reduce Vertical Spacing</span>
+                </label>
+                <p style={{ margin: '0 0 10px 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Compresses vertical rhythm for denser card/list presentation.
+                </p>
+                {uiuxSettings.reduceVerticalSpacing && (
+                  <div style={{ marginLeft: '28px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: '500', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span>Note list padding: {uiuxSettings.noteListPadding}px</span>
+                    </label>
+                    <input
+                      type="range" min="0" max="20" step="1"
+                      value={uiuxSettings.noteListPadding}
+                      onInput={e => saveUIUX({ noteListPadding: parseInt((e.target as HTMLInputElement).value) })}
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
