@@ -269,3 +269,32 @@
     height: var(--blinko-mobile-icon-size, 24px) !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   14. REDUCE VERTICAL SPACING
+       Adjustable top/bottom margins and padding for the note list,
+       individual cards, and page-level containers.
+       Controlled by --blinko-v-padding custom property (0–20 px).
+   ═══════════════════════════════════════════════════════════════════ */
+
+.blinko-reduce-vspacing [class*="note-list"],
+.blinko-reduce-vspacing [class*="card-list"],
+.blinko-reduce-vspacing .card-masonry-grid {
+  padding-top: var(--blinko-v-padding, 12px) !important;
+  padding-bottom: var(--blinko-v-padding, 12px) !important;
+}
+
+.blinko-reduce-vspacing [class*="note-card"],
+.blinko-reduce-vspacing [class*="blinko-card"],
+.blinko-reduce-vspacing .card-masonry-grid > div > div {
+  margin-top: calc(var(--blinko-v-padding, 12px) / 2) !important;
+  margin-bottom: calc(var(--blinko-v-padding, 12px) / 2) !important;
+}
+
+/* Page-level top/bottom breathing room */
+.blinko-reduce-vspacing [class*="page-wrap"],
+.blinko-reduce-vspacing main,
+.blinko-reduce-vspacing [class*="content-area"] {
+  padding-top: var(--blinko-v-padding, 12px) !important;
+  padding-bottom: var(--blinko-v-padding, 12px) !important;
+}

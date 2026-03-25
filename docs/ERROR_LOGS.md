@@ -275,5 +275,120 @@ Removed the `.card-masonry-grid [class*="flex"][class*="col"]` selector entirely
 
 ---
 
-*Document version: 1.0 — Initial issue log (four issues resolved)*
+---
+
+### [ISSUE-005] MutationObserver fires excessively, triggering browser extension feedback loop
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-005 |
+| **Status** | Verified |
+| **Severity** | Medium |
+| **Component** | `uiuxService.ts` → `applySingleTap()` |
+| **Reported by** | Console log analysis (session 2026-03-25) |
+| **Reported date** | 2026-03-25 |
+| **Plugin version** | 2.2.1 |
+| **Affected platforms** | All (visible in browser DevTools console) |
+
+#### Description
+The `MutationObserver` attached in `applySingleTap()` observed `document.body` with `{ childList: true, subtree: true }` and called `markAndListen()` on every DOM mutation. Because `markAndListen()` itself writes `data-single-tap` attributes to DOM nodes, it triggered the observer again, creating a feedback loop. Browser extension autofill overlays (Bitwarden, 1Password) caught this cascade and logged errors from `__bootstrap-autofill-overlay.js`, polluting the DevTools console with a deep React call stack trace.
+
+#### Reproduction Steps
+1. Install a password manager extension (Bitwarden / 1Password)
+2. Enable "Single-Tap to Open Notes"
+3. Open DevTools Console
+4. Navigate to the Blinko notes list
+5. **Expected:** Console is clean
+6. **Actual:** `__bootstrap-autofill-overlay.js` errors appear, with a deep React call stack
+
+#### Root Cause
+No debounce on the MutationObserver callback. Each `data-single-tap` attribute write triggered a new mutation which re-fired the callback.
+
+#### Resolution
+Replaced `new MutationObserver(markAndListen)` with a manual debounce timer pattern (150ms delay). The cleanup function now also clears any pending debounce timer on disable. No external debounce utility needed — approach is self-contained inside `applySingleTap()`.
+
+**Fix committed:** session 2026-03-25, branch `claude/blinko-ui-ux-enhancements-gfN4H`
+**Files changed:** `src/services/uiuxService.ts`
+
+---
+
+### [ISSUE-006] Blinko note editor does not close when tapping outside it
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-006 |
+| **Status** | Verified |
+| **Severity** | Medium |
+| **Component** | `uiuxService.ts` → new `applyTapOutsideClose()` |
+| **Reported by** | User request (session 2026-03-25) |
+| **Reported date** | 2026-03-25 |
+| **Plugin version** | 2.2.1 |
+| **Affected platforms** | Android, Web, Windows |
+
+#### Description
+The Blinko note editor (dialog with toolbar, audio, X button at top-right) does not close when the user taps/clicks outside the editor area. The Blinko Article note type already provides this behavior. Users expect parity.
+
+#### Reproduction Steps
+1. Open any Blinko note (not article type)
+2. Click/tap anywhere on the backdrop outside the editor
+3. **Expected:** Editor closes
+4. **Actual:** Nothing happens; editor remains open
+
+#### Resolution
+Implemented `applyTapOutsideClose()` in `UIUXService`. Uses a capture-phase `mousedown` listener on `document`. When a mousedown event lands outside the detected editor container (`[class*="editor-container"]` etc.), the close button is clicked or an Escape keydown is dispatched. Feature is opt-in via the new `tapOutsideClosesNote` setting (default: `false`).
+
+**Files changed:** `src/services/uiuxService.ts`, `src/types.ts`, `src/setting.tsx`
+
+---
+
+### [ISSUE-007] Vertical spacing not user-adjustable; excess padding on mobile
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-007 |
+| **Status** | Verified |
+| **Severity** | Low |
+| **Component** | `uiuxService.ts`, `Blinko-UIUX.css`, `types.ts` |
+| **Reported by** | User request (session 2026-03-25) |
+| **Reported date** | 2026-03-25 |
+| **Plugin version** | 2.2.1 |
+| **Affected platforms** | Android (mobile), Web |
+
+#### Description
+The note list and page-level containers have fixed top/bottom padding/margin with no user-adjustable option, reducing usable screen real estate — especially noticeable on small mobile displays.
+
+#### Resolution
+Added `reduceVerticalSpacing: boolean` and `noteListPadding: number` (0–20px, default 12) to `UIUXSettings`. When enabled, body class `blinko-reduce-vspacing` is toggled and CSS custom property `--blinko-v-padding` drives CSS section 14 in `Blinko-UIUX.css`. A slider control is exposed in the Layout sub-tab.
+
+**Files changed:** `src/types.ts`, `src/services/uiuxService.ts`, `src/assets/styles/Blinko-UIUX.css`, `src/setting.tsx`
+
+---
+
+### [ISSUE-008] AI 401 errors show no actionable guidance to the user
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-008 |
+| **Status** | Verified |
+| **Severity** | Medium |
+| **Component** | `uiuxService.ts` → new `applyAIErrorInterceptor()` |
+| **Reported by** | Console log + user report (session 2026-03-25) |
+| **Reported date** | 2026-03-25 |
+| **Plugin version** | 2.2.1 |
+| **Affected platforms** | All |
+
+#### Description
+Blinko's AI features (Auto-Tag, Rerun AI Processing) fail with `401 Unauthorized` when the AI provider API key is not configured in Blinko Settings → AI. The built-in error toast is generic ("Auto-tag failed: tRPC ai.autoTag failed: 401") and gives users no guidance on how to resolve the issue.
+
+#### Root Cause
+The 401 is a server-side authentication failure on Blinko's tRPC AI endpoints — not a plugin bug. The plugin cannot fix the auth issue directly but can intercept the response and show a more helpful message.
+
+#### Resolution
+Implemented `applyAIErrorInterceptor()` which wraps `window.fetch`. When a 401 is returned from a URL matching `ai.autoTag`, `ai.writing`, or `/trpc/ai`, an additional guidance toast is shown after a 0ms timeout (so Blinko's own handler runs first). The response is returned completely untouched. Feature is opt-in via `interceptAIErrors` (default: `true`). `destroy()` restores the original `window.fetch`.
+
+**Files changed:** `src/types.ts`, `src/services/uiuxService.ts`, `src/setting.tsx`
+
+---
+
+*Document version: 1.1 — Added ISSUE-005 through ISSUE-008 (session 2026-03-25)*
 *Template version: 1.0*

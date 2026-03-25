@@ -9,6 +9,8 @@
  *    Blinko-UIUX.css
  *  - Attach / detach single-tap note-open listeners
  *  - Intercept the Android hardware back button to close expanded notes
+ *  - Close note editor when clicking outside it (tap-outside)
+ *  - Intercept AI 401 errors and show actionable guidance toasts
  */
 
 import { UIUXSettings, DEFAULT_UIUX_SETTINGS } from '../types';
@@ -20,6 +22,8 @@ export class UIUXService {
   private settings: UIUXSettings;
   private singleTapCleanup: (() => void) | null = null;
   private backButtonCleanup: (() => void) | null = null;
+  private tapOutsideCleanup: (() => void) | null = null;
+  private aiInterceptorCleanup: (() => void) | null = null;
   /** Tracks whether we have already pushed the initial sentinel history entry. */
   private backButtonInitialized = false;
 
@@ -70,6 +74,8 @@ export class UIUXService {
     this.applyDynamicStyles();
     this.applySingleTap();
     this.applyBackButton();
+    this.applyTapOutsideClose();
+    this.applyAIErrorInterceptor();
   }
 
   // ─── Body class helpers ──────────────────────────────────────────────
@@ -91,6 +97,7 @@ export class UIUXService {
     this.toggle('blinko-custom-icons', true);
     this.toggle('blinko-custom-cards', true);
     this.toggle('blinko-back-closes-note', s.backButtonClosesNote);
+    this.toggle('blinko-reduce-vspacing', s.reduceVerticalSpacing);
   }
 
   // ─── CSS custom properties ───────────────────────────────────────────
@@ -104,6 +111,7 @@ export class UIUXService {
     root.style.setProperty('--blinko-mobile-icon-size', `${s.mobileToolbarIconSize}px`);
     root.style.setProperty('--blinko-touch-size', `${s.touchTargetSize}px`);
     root.style.setProperty('--blinko-card-radius', `${s.cardBorderRadius}px`);
+    root.style.setProperty('--blinko-v-padding', `${s.noteListPadding}px`);
 
     const shadowMap: Record<UIUXSettings['shadowIntensity'], string> = {
       none:   'none',
@@ -193,11 +201,21 @@ export class UIUXService {
 
     markAndListen();
 
-    // Watch for new cards added to the DOM
-    const observer = new MutationObserver(markAndListen);
+    // Watch for new cards added to the DOM.
+    // Uses a manual debounce timer to prevent excessive callback firing that
+    // would otherwise trigger browser-extension MutationObserver feedback loops
+    // (e.g. Bitwarden autofill overlay reacting to data-single-tap attribute writes).
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const debouncedMark = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(markAndListen, 150);
+    };
+
+    const observer = new MutationObserver(debouncedMark);
     observer.observe(document.body, { childList: true, subtree: true });
 
     this.singleTapCleanup = () => {
+      if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
       observer.disconnect();
       document.querySelectorAll<HTMLElement>('[data-single-tap="true"]').forEach(card => {
         const handler = (card as any)._uiuxClickHandler;
@@ -216,14 +234,18 @@ export class UIUXService {
       this.backButtonCleanup = null;
     }
 
-    if (!this.settings.backButtonClosesNote) return;
+    if (!this.settings.backButtonClosesNote) {
+      // Feature explicitly disabled — reset so re-enabling pushes sentinel again.
+      this.backButtonInitialized = false;
+      return;
+    }
 
     // Push ONE sentinel entry so there is always something to pop back to.
-    // This is intentionally guarded so that repeated apply() / updateSettings()
-    // calls (e.g. on every settings change) do NOT accumulate dummy entries.
-    // Accumulating entries was the root cause of the "logout blocked" defect —
-    // users had to press back N times (one per settings update) before the
-    // browser's real navigation took effect.
+    // Guarded by backButtonInitialized so repeated apply() / updateSettings() calls
+    // (triggered by any settings change) do NOT accumulate dummy entries.
+    // The flag is intentionally NOT reset in backButtonCleanup — resetting it there
+    // would cause a new pushState on every settings save, which was the original
+    // "logout blocked" defect.
     if (!this.backButtonInitialized) {
       history.pushState({ blinkoPlugin: true }, '', window.location.href);
       this.backButtonInitialized = true;
@@ -265,7 +287,108 @@ export class UIUXService {
 
     this.backButtonCleanup = () => {
       window.removeEventListener('popstate', handler);
-      this.backButtonInitialized = false;
+    };
+  }
+
+  // ─── Tap outside to close note ───────────────────────────────────────
+  //
+  // Closes the Blinko note editor when the user clicks/taps outside the
+  // editor container — replicating the behavior already present on the
+  // Blinko Article note type.
+  //
+  // Uses 'mousedown' (capture phase) to match how most modal libraries
+  // implement outside-click detection.
+
+  private applyTapOutsideClose(): void {
+    if (this.tapOutsideCleanup) {
+      this.tapOutsideCleanup();
+      this.tapOutsideCleanup = null;
+    }
+
+    if (!this.settings.tapOutsideClosesNote) return;
+
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Locate the currently open note editor container
+      const editor = document.querySelector<HTMLElement>(
+        '[class*="editor-container"], [class*="note-editor"], [class*="blinko-editor"], ' +
+        '[class*="dialog-content"], [class*="modal-content"]'
+      );
+      if (!editor) return;
+
+      // Only act when the click is outside the editor
+      if (!editor.contains(target)) {
+        const closeBtn = document.querySelector<HTMLElement>(
+          '[class*="editor"] [class*="close"], ' +
+          '[class*="dialog"] button[class*="close"], ' +
+          '[aria-label*="close" i]:not([class*="editor"] *), ' +
+          'button[data-dismiss], .modal-close'
+        );
+        if (closeBtn) {
+          closeBtn.click();
+        } else {
+          // Fallback: dispatch Escape so the editor's own keydown handler fires
+          editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handler, true);
+    this.tapOutsideCleanup = () => document.removeEventListener('mousedown', handler, true);
+  }
+
+  // ─── AI 401 Error Interceptor ────────────────────────────────────────
+  //
+  // The errors "Auto-tag failed: tRPC ai.autoTag failed: 401" and
+  // "AI processing failed: AI writing API error: 401" originate from
+  // Blinko's core tRPC endpoints — they are NOT plugin calls.
+  //
+  // Root cause: AI provider API key is not configured in Blinko Settings → AI,
+  // or the key has expired / been revoked.
+  //
+  // This interceptor wraps window.fetch and shows an actionable guidance toast
+  // when a 401 is returned from a known AI endpoint. The response is returned
+  // completely untouched — no response body/headers are modified.
+
+  private applyAIErrorInterceptor(): void {
+    // Idempotent — only install once. apply() is called on every updateSettings().
+    if (this.aiInterceptorCleanup) return;
+
+    if (!this.settings.interceptAIErrors) return;
+
+    const originalFetch = window.fetch;
+
+    window.fetch = async (...args: Parameters<typeof fetch>) => {
+      const response = await originalFetch(...args);
+
+      if (response.status === 401) {
+        const url =
+          typeof args[0] === 'string'
+            ? args[0]
+            : args[0] instanceof Request
+            ? args[0].url
+            : String(args[0]);
+
+        if (
+          url.includes('ai.autoTag') ||
+          url.includes('ai.writing') ||
+          url.includes('/trpc/ai')
+        ) {
+          // Defer to next tick so Blinko's own error handler runs first
+          setTimeout(() => {
+            (window as any).Blinko?.toast?.error?.(
+              'AI feature requires an API key. Go to Settings → AI to configure your provider.'
+            );
+          }, 0);
+        }
+      }
+
+      return response;
+    };
+
+    this.aiInterceptorCleanup = () => {
+      window.fetch = originalFetch;
     };
   }
 
@@ -274,13 +397,15 @@ export class UIUXService {
   destroy(): void {
     if (this.singleTapCleanup) this.singleTapCleanup();
     if (this.backButtonCleanup) this.backButtonCleanup();
+    if (this.tapOutsideCleanup) this.tapOutsideCleanup();
+    if (this.aiInterceptorCleanup) { this.aiInterceptorCleanup(); this.aiInterceptorCleanup = null; }
 
     // Remove all body classes
     const classes = [
       'blinko-compact-datetime', 'blinko-touch-targets', 'blinko-reduce-motion',
       'blinko-high-contrast', 'blinko-focus-indicators', 'blinko-compact-mode',
       'blinko-toolbar-labels', 'blinko-custom-typography', 'blinko-custom-icons',
-      'blinko-custom-cards', 'blinko-back-closes-note',
+      'blinko-custom-cards', 'blinko-back-closes-note', 'blinko-reduce-vspacing',
     ];
     classes.forEach(c => document.body.classList.remove(c));
 
@@ -288,7 +413,7 @@ export class UIUXService {
     const props = [
       '--blinko-datetime-fs', '--blinko-line-height', '--blinko-icon-size',
       '--blinko-mobile-icon-size', '--blinko-touch-size', '--blinko-card-radius',
-      '--blinko-shadow',
+      '--blinko-shadow', '--blinko-v-padding',
     ];
     props.forEach(p => document.documentElement.style.removeProperty(p));
 
