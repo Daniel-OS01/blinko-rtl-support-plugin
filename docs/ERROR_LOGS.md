@@ -275,5 +275,139 @@ Removed the `.card-masonry-grid [class*="flex"][class*="col"]` selector entirely
 
 ---
 
-*Document version: 1.0 — Initial issue log (four issues resolved)*
+### [ISSUE-005] MutationObserver feedback loop causes repeated re-application
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-005 |
+| **Status** | Verified |
+| **Severity** | High |
+| **Component** | `uiuxService.ts` (DOM observers) |
+| **Reported by** | Initial audit |
+| **Reported date** | 2026-03-24 |
+| **Plugin version** | 2.2.1 |
+| **Affected platforms** | All |
+
+#### Description
+A MutationObserver feedback loop was detected in the UI/UX patching flow. Plugin-driven DOM updates retriggered observers, which repeatedly re-ran patch logic. This caused redundant processing, unnecessary CPU activity, and intermittent UI jitter.
+
+#### Reproduction Steps
+1. Enable UI/UX features that rely on DOM observation and dynamic patching
+2. Navigate between notes and trigger multiple UI updates in quick succession
+3. Observe repeated observer callbacks and recurring patch passes
+4. **Expected:** One stable patch pass per meaningful DOM change
+5. **Actual:** Cascading re-entry where plugin changes trigger additional observer cycles
+
+#### Root Cause
+Observer callbacks processed plugin-originated mutations without an idempotent guard/debounce boundary, allowing self-triggered mutation chains.
+
+#### Resolution
+Added guard logic so observer callbacks ignore or coalesce plugin-originated/duplicate mutations. Patch application now executes as a bounded, idempotent pass.
+
+**Fix commit:** See branch `claude/blinko-ui-ux-enhancements-gfN4H`
+**Files changed:** `src/services/uiuxService.ts`
+
+---
+
+### [ISSUE-006] Tapping outside note editor does not close expanded editor view
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-006 |
+| **Status** | Verified |
+| **Severity** | High |
+| **Component** | `uiuxService.ts` (outside-click handling) |
+| **Reported by** | Initial audit |
+| **Reported date** | 2026-03-24 |
+| **Plugin version** | 2.2.1 |
+| **Affected platforms** | Android, Web |
+
+#### Description
+When a note editor is expanded, tapping/clicking outside the editor surface does not dismiss or close the editor. Users remain trapped in edit context unless they use alternative controls.
+
+#### Reproduction Steps
+1. Open a note in expanded editor mode
+2. Tap/click in non-editor background area
+3. **Expected:** Editor closes (or exits expanded mode)
+4. **Actual:** No dismissal action occurs
+
+#### Root Cause
+Outside-click detection did not consistently evaluate editor container boundaries and therefore missed valid background interactions.
+
+#### Resolution
+Updated outside-click handling to detect interactions outside the active editor container and invoke the correct close/dismiss action.
+
+**Fix commit:** See branch `claude/blinko-ui-ux-enhancements-gfN4H`
+**Files changed:** `src/services/uiuxService.ts`
+
+---
+
+### [ISSUE-007] Vertical spacing setting not adjustable in note layout
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-007 |
+| **Status** | Verified |
+| **Severity** | Medium |
+| **Component** | `setting.tsx`, `Blinko-UIUX.css` |
+| **Reported by** | Initial audit |
+| **Reported date** | 2026-03-24 |
+| **Plugin version** | 2.2.1 |
+| **Affected platforms** | All |
+
+#### Description
+The vertical spacing control was present but ineffective: changing its value produced no visible layout difference in note cards.
+
+#### Reproduction Steps
+1. Open plugin settings
+2. Modify vertical spacing to minimum and maximum values
+3. Return to note list
+4. **Expected:** Noticeable change in inter-element/card vertical spacing
+5. **Actual:** Spacing appears unchanged
+
+#### Root Cause
+Configured spacing value was not reliably propagated to the CSS variable/rule path used by rendered note layout.
+
+#### Resolution
+Wired vertical spacing setting updates to the correct style variable and selector path so runtime changes apply immediately and persist correctly.
+
+**Fix commit:** See branch `claude/blinko-ui-ux-enhancements-gfN4H`
+**Files changed:** `src/settings/setting.tsx`, `src/assets/styles/Blinko-UIUX.css`
+
+---
+
+### [ISSUE-008] AI 401 error messaging lacks actionable user guidance
+
+| Field | Value |
+|-------|-------|
+| **ID** | ISSUE-008 |
+| **Status** | Verified |
+| **Severity** | Medium |
+| **Component** | AI integration UX / error messaging |
+| **Reported by** | Initial audit |
+| **Reported date** | 2026-03-24 |
+| **Plugin version** | 2.2.1 |
+| **Affected platforms** | All |
+
+#### Description
+When AI requests fail with HTTP 401 (unauthorized), users see a generic error state without clear remediation steps. This increased support friction and delayed self-recovery.
+
+#### Reproduction Steps
+1. Configure AI with an invalid/expired credential
+2. Trigger any AI-assisted action
+3. **Expected:** Error message explains likely cause and next steps
+4. **Actual:** Generic 401 failure with no actionable instructions
+
+#### Root Cause
+Error handling surfaced status code context but did not map authentication failures to user-facing guidance.
+
+#### Resolution
+Enhanced 401 messaging with actionable instructions (e.g., verify API key/token, provider endpoint, and credential scope) and directed users to settings where corrections can be made.
+
+**Fix commit:** See branch `claude/blinko-ui-ux-enhancements-gfN4H`
+**Files changed:** AI integration error-handling UI
+
+---
+
+*Document version: 1.1 — Initial archive extended to eight verified issues*
 *Template version: 1.0*
