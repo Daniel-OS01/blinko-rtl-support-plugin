@@ -1928,6 +1928,47 @@ export function RTLSetting(): JSX.Element {
                 </div>
               </div>
 
+              {/* Tap outside to close note */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.tapOutsideClosesNote}
+                    onChange={e => saveUIUX({ tapOutsideClosesNote: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>👆 Tap Outside to Close Note</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Closes the Blinko note editor when tapping outside the editor area — replicating
+                  the behavior already present on the Blinko Article note type.
+                </p>
+                <div style={{ margin: '10px 0 0 28px', padding: '8px 12px', borderRadius: '6px', background: settings.darkMode ? '#2c3e50' : '#fff3cd', border: '1px solid #ffc107', fontSize: '12px', color: settings.darkMode ? '#ffd' : '#856404' }}>
+                  ⚠️ Uses a capture-phase mousedown listener. Disable if it interferes with other
+                  interactive overlays or drag-and-drop interactions.
+                </div>
+              </div>
+
+              {/* AI 401 error interceptor */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.interceptAIErrors}
+                    onChange={e => saveUIUX({ interceptAIErrors: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>🤖 AI Error Guidance (401 Intercept)</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  When Blinko AI features (Auto-Tag, Rerun AI) fail with a 401 Unauthorized error,
+                  shows a helpful toast pointing you to <strong>Settings → AI</strong> to configure
+                  your AI provider API key. Enable this if you see repeated AI 401 errors.
+                </p>
+                <div style={{ margin: '10px 0 0 28px', padding: '8px 12px', borderRadius: '6px', background: settings.darkMode ? '#1a1a2e' : '#e8f4f8', border: '1px solid #17a2b8', fontSize: '12px', color: settings.darkMode ? '#9cf' : '#0c5460' }}>
+                  ℹ️ The interceptor wraps <code>window.fetch</code> — it only adds a toast notification and
+                  never modifies requests or responses.
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -2086,6 +2127,39 @@ export function RTLSetting(): JSX.Element {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Reduce vertical spacing */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.reduceVerticalSpacing}
+                    onChange={e => saveUIUX({ reduceVerticalSpacing: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>↕️ Reduce Vertical Spacing</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Reduces top and bottom padding/margin on note cards, the note list, and page-level
+                  containers to maximize screen real estate — especially useful on mobile.
+                </p>
+                {uiuxSettings.reduceVerticalSpacing && (
+                  <div style={{ margin: '12px 0 0 28px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span>List / Card Padding</span>
+                      <span style={{ color: '#007bff' }}>{uiuxSettings.noteListPadding}px</span>
+                    </label>
+                    <input
+                      type="range" min="0" max="20" step="2"
+                      value={uiuxSettings.noteListPadding}
+                      onInput={e => saveUIUX({ noteListPadding: parseInt((e.target as HTMLInputElement).value) })}
+                      style={{ width: '100%' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: settings.darkMode ? '#888' : '#999', marginTop: '4px' }}>
+                      <span>0 (no padding)</span><span>20 (default)</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>
