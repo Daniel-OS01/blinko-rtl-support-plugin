@@ -2038,6 +2038,37 @@ export function RTLSetting(): JSX.Element {
                 </p>
               </div>
 
+              {/* Reduce vertical spacing */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.reduceVerticalSpacing}
+                    onChange={e => saveUIUX({ reduceVerticalSpacing: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>↕️ Reduce Vertical Spacing</span>
+                </label>
+                <p style={{ margin: '0 0 10px 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Compacts top and bottom spacing in note cards, list content, and page containers for denser scanning.
+                </p>
+                {uiuxSettings.reduceVerticalSpacing && (
+                  <div style={{ marginLeft: '28px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: '500', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span>Note list vertical padding: {uiuxSettings.noteListPadding}px</span>
+                    </label>
+                    <input
+                      type="range" min="0" max="20" step="1"
+                      value={uiuxSettings.noteListPadding}
+                      onInput={e => saveUIUX({ noteListPadding: parseInt((e.target as HTMLInputElement).value) })}
+                      style={{ width: '100%' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
+                      <span>0px (tight)</span><span>20px (airy)</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Card border-radius */}
               <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
                 <label style={{ fontSize: '14px', fontWeight: '600', display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>

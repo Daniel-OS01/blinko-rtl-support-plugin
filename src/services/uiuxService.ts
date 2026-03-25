@@ -86,6 +86,7 @@ export class UIUXService {
     this.toggle('blinko-high-contrast', s.highContrast);
     this.toggle('blinko-focus-indicators', s.focusIndicators);
     this.toggle('blinko-compact-mode', s.compactMode);
+    this.toggle('blinko-reduce-vspacing', s.reduceVerticalSpacing);
     this.toggle('blinko-toolbar-labels', s.showToolbarLabels);
     this.toggle('blinko-custom-typography', true); // always; values driven by props
     this.toggle('blinko-custom-icons', true);
@@ -103,6 +104,7 @@ export class UIUXService {
     root.style.setProperty('--blinko-icon-size', `${s.toolbarIconSize}px`);
     root.style.setProperty('--blinko-mobile-icon-size', `${s.mobileToolbarIconSize}px`);
     root.style.setProperty('--blinko-touch-size', `${s.touchTargetSize}px`);
+    root.style.setProperty('--blinko-v-padding', `${s.noteListPadding}px`);
     root.style.setProperty('--blinko-card-radius', `${s.cardBorderRadius}px`);
 
     const shadowMap: Record<UIUXSettings['shadowIntensity'], string> = {
@@ -279,7 +281,7 @@ export class UIUXService {
     const classes = [
       'blinko-compact-datetime', 'blinko-touch-targets', 'blinko-reduce-motion',
       'blinko-high-contrast', 'blinko-focus-indicators', 'blinko-compact-mode',
-      'blinko-toolbar-labels', 'blinko-custom-typography', 'blinko-custom-icons',
+      'blinko-reduce-vspacing', 'blinko-toolbar-labels', 'blinko-custom-typography', 'blinko-custom-icons',
       'blinko-custom-cards', 'blinko-back-closes-note',
     ];
     classes.forEach(c => document.body.classList.remove(c));
@@ -287,7 +289,7 @@ export class UIUXService {
     // Remove CSS custom properties
     const props = [
       '--blinko-datetime-fs', '--blinko-line-height', '--blinko-icon-size',
-      '--blinko-mobile-icon-size', '--blinko-touch-size', '--blinko-card-radius',
+      '--blinko-mobile-icon-size', '--blinko-touch-size', '--blinko-v-padding', '--blinko-card-radius',
       '--blinko-shadow',
     ];
     props.forEach(p => document.documentElement.style.removeProperty(p));

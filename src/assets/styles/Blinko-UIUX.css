@@ -269,3 +269,33 @@
     height: var(--blinko-mobile-icon-size, 24px) !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   14. REDUCE VERTICAL SPACING  (list/card/page top-bottom compaction)
+   Driven by --blinko-v-padding
+   ═══════════════════════════════════════════════════════════════════ */
+
+.blinko-reduce-vspacing [class*="note-card"],
+.blinko-reduce-vspacing [class*="note-item"],
+.blinko-reduce-vspacing [class*="blinko-card"],
+.blinko-reduce-vspacing .card-masonry-grid > div > div {
+  padding-top: var(--blinko-v-padding, 8px) !important;
+  padding-bottom: var(--blinko-v-padding, 8px) !important;
+}
+
+.blinko-reduce-vspacing .markdown-body p,
+.blinko-reduce-vspacing .markdown-body ul,
+.blinko-reduce-vspacing .markdown-body ol,
+.blinko-reduce-vspacing .vditor-reset p,
+.blinko-reduce-vspacing .vditor-reset ul,
+.blinko-reduce-vspacing .vditor-reset ol {
+  margin-top: calc(var(--blinko-v-padding, 8px) * 0.5) !important;
+  margin-bottom: calc(var(--blinko-v-padding, 8px) * 0.5) !important;
+}
+
+.blinko-reduce-vspacing [class*="page"],
+.blinko-reduce-vspacing [class*="container"],
+.blinko-reduce-vspacing [class*="content"] {
+  padding-top: var(--blinko-v-padding, 8px) !important;
+  padding-bottom: var(--blinko-v-padding, 8px) !important;
+}

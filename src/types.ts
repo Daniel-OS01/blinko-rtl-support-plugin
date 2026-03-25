@@ -78,6 +78,8 @@ export interface UIUXSettings {
 
   // Layout
   compactMode: boolean;
+  reduceVerticalSpacing: boolean;
+  noteListPadding: number;
   cardBorderRadius: number;
   shadowIntensity: 'none' | 'subtle' | 'normal' | 'strong';
 
@@ -99,6 +101,8 @@ export const DEFAULT_UIUX_SETTINGS: UIUXSettings = {
   minTouchTargets: false,
   touchTargetSize: 48,
   compactMode: false,
+  reduceVerticalSpacing: false,
+  noteListPadding: 8,
   cardBorderRadius: 8,
   shadowIntensity: 'normal',
   showToolbarLabels: false,
