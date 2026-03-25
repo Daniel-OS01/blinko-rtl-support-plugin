@@ -66,6 +66,8 @@ export interface UIUXSettings {
   // Navigation & Interactions
   singleTapOpenNote: boolean;
   backButtonClosesNote: boolean;
+  tapOutsideClosesNote: boolean;
+  interceptAIErrors: boolean;
 
   // Accessibility
   reduceMotion: boolean;
@@ -78,8 +80,19 @@ export interface UIUXSettings {
 
   // Layout
   compactMode: boolean;
+  reduceVerticalSpacing: boolean;
+  noteListPadding: number;
   cardBorderRadius: number;
   shadowIntensity: 'none' | 'subtle' | 'normal' | 'strong';
+
+  // Quick fixes
+  tagColorFix: boolean;
+  mobileActionIcons: boolean;
+  oledDark: boolean;
+  pinnedBadge: boolean;
+  systemFonts: boolean;
+  tagHierarchy: boolean;
+  offlineIndicator: boolean;
 
   // Toolbar
   showToolbarLabels: boolean;
@@ -93,14 +106,25 @@ export const DEFAULT_UIUX_SETTINGS: UIUXSettings = {
   toolbarIconSize: 16,
   singleTapOpenNote: false,
   backButtonClosesNote: false,
+  tapOutsideClosesNote: false,
+  interceptAIErrors: false,
   reduceMotion: false,
   highContrast: false,
   focusIndicators: true,
   minTouchTargets: false,
   touchTargetSize: 48,
   compactMode: false,
+  reduceVerticalSpacing: false,
+  noteListPadding: 12,
   cardBorderRadius: 8,
   shadowIntensity: 'normal',
+  tagColorFix: true,
+  mobileActionIcons: true,
+  oledDark: false,
+  pinnedBadge: true,
+  systemFonts: false,
+  tagHierarchy: false,
+  offlineIndicator: true,
   showToolbarLabels: false,
   mobileToolbarIconSize: 24,
 };
