@@ -1,0 +1,164 @@
+---
+title: 'Install'
+description: 'Start installing Blinko under 5 minutes'
+icon: 'screwdriver-wrench'
+---
+
+## Deploy on PikaPods Directly
+
+PIKAPODS starts at a minimum of \$1.5 per month.
+ Additionally, PIKAPODS will provide all new users with an experience credit of $5 upon sign-up! And 20% of the fees generated from deploying to PIKAPODS will be donated to Blinko. Come and support us!
+
+[![Run on PikaPods](https://www.pikapods.com/static/run-button.svg)](https://www.pikapods.com/pods?run=blinko)
+
+
+## Prerequisites
+<AccordionGroup>
+  <Accordion icon="docker" title="Docker">
+    Docker is required to run Blinko.Visit [Docker](https://www.docker.com/) to install Docker.
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+**Security Warning**: You must change the `NEXTAUTH_SECRET` value in all installation methods below. Using the default value poses a significant security risk. Generate a strong random string for production use.
+
+Example of generating a secure secret:
+```bash
+openssl rand -base64 32
+# or
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+</Warning>
+
+## Bash Script Installation
+The **install.sh** use docker run to deploy Blinko.If you feel it's not safe, you can use the other method below.
+<AccordionGroup>
+  <Accordion icon="square-terminal" title="install.sh">
+    ```bash 
+    curl -o install.sh https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh && bash install.sh
+    ```
+  </Accordion>
+</AccordionGroup>
+
+
+## Docker Installation
+<Warning>
+1. Must mount the data volume of **postgres** or your data will be lost
+2. Replace `NEXTAUTH_SECRET=my_ultra_secure_nextauth_secret` with your own secure secret key
+</Warning>
+
+<AccordionGroup>
+  <Accordion icon="chart-network" title="Step 1: Create the custom Docker network" defaultOpen>
+    ```bash 
+    docker network create blinko-network
+    ```
+  </Accordion>
+  <Accordion icon="database" title="Step 2: Run the PostgreSQL database container" defaultOpen>
+    ```bash 
+   docker run -d \
+    --name blinko-postgres \
+    --network blinko-network \
+    -v <your-path>:/var/lib/postgresql/data \
+    -p 5435:5432 \
+    -e POSTGRES_DB=postgres \
+    -e POSTGRES_USER=postgres \
+    -e POSTGRES_PASSWORD=mysecretpassword \
+    -e TZ=Asia/Shanghai \
+    --restart always \
+    postgres:14
+    ```
+  </Accordion>
+   <Accordion icon="ghost" title="Step 3: Run the Blinko website container" defaultOpen>
+    ```bash 
+    docker run -d \
+    --name blinko-website \
+    --network blinko-network \
+    -v <your-path>:/app/.blinko \
+    -p 1111:1111 \
+    -e NODE_ENV=production \
+    -e NEXTAUTH_URL=http://localhost:1111 \
+    -e NEXT_PUBLIC_BASE_URL=http://localhost:1111 \
+    -e NEXTAUTH_SECRET=my_ultra_secure_nextauth_secret \
+    -e DATABASE_URL=postgresql://postgres:mysecretpassword@blinko-postgres:5432/postgres \
+    --restart always \
+    blinkospace/blinko:latest
+    ```
+  </Accordion>
+</AccordionGroup>
+
+
+
+### Docker Compose Installation
+To deploy Blinko using docker compose, create a docker-compose.yml file with the following configuration:
+<AccordionGroup>
+  <Accordion icon="docker" title="Step 1: Create docker-compose.yml" >
+    ```yml
+      networks:
+        blinko-network:
+          driver: bridge
+
+      services:
+        blinko-website:
+          image: blinkospace/blinko:latest
+          container_name: blinko-website
+          environment:
+            NODE_ENV: production
+            # NEXTAUTH_URL: http://localhost:1111
+            # IMPORTANT: If you want to use sso, you must set NEXTAUTH_URL to your own domain
+            # NEXT_PUBLIC_BASE_URL: http://localhost:1111
+            # IMPORTANT: Replace this with your own secure secret key!
+            NEXTAUTH_SECRET: my_ultra_secure_nextauth_secret
+            DATABASE_URL: postgresql://postgres:mysecretpassword@postgres:5432/postgres
+          depends_on:
+            postgres:
+              condition: service_healthy
+          # Make sure you have enough permissions.
+          # volumes:
+            # - ~/your-name/.blinko:/app/.blinko 
+          restart: always
+          logging:
+            options:
+              max-size: "10m"
+              max-file: "3"
+          ports:
+            - 1111:1111
+          healthcheck:
+            test: ["CMD", "wget", "--spider", "-q", "http://blinko-website:1111/"]
+            interval: 30s 
+            timeout: 10s   
+            retries: 5     
+            start_period: 30s 
+          networks:
+            - blinko-network
+
+        postgres:
+          image: postgres:14
+          container_name: blinko-postgres
+          restart: always
+          ports:
+            - 5435:5432
+          environment:
+            POSTGRES_DB: postgres
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: mysecretpassword
+            TZ: Asia/Shanghai
+          # Persisting container data
+          # Make sure you have enough permissions.
+          # volumes:
+            # - ~/your-name/.db:/var/lib/postgresql/data
+          healthcheck:
+            test:
+              ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
+            interval: 5s
+            timeout: 10s
+            retries: 5
+          networks:
+            - blinko-network
+    ```
+  </Accordion>
+  <Accordion icon="rectangle-terminal" title="Step 2: Execute docker-compose command to initiate Blinko">
+    ```bash
+    docker-compose -f docker-compose.yml up -d
+    ```
+  </Accordion>
+</AccordionGroup>

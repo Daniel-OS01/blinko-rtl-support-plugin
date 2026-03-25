@@ -1,0 +1,122 @@
+---
+title: 'Store System'
+description: 'Blinko provides a powerful store system for state management. You can access it through `window.Blinko.store`.'
+icon: "store"
+---
+
+## Store Structure
+
+```typescript
+interface Window {
+  Blinko: {
+    store: {
+      // Base Store Types
+      StorageState: typeof StorageState;        // Persistent storage state
+      PromiseState: typeof PromiseState;        // Async operation state
+      PromisePageState: typeof PromisePageState;  // Paginated async state
+      
+      // Store Instances
+      blinkoStore: BlinkoStore;    // Core functionality store
+      baseStore: BaseStore;        // Base application store
+      hubStore: HubStore;          // Sync and connection store
+      resourceStore: ResourceStore; // Resource management store
+    }
+  }
+}
+```
+
+## Base Store Types
+
+### StorageState
+For managing persistent state with subscription support.
+
+```typescript
+class StorageState<T> {
+  // Get current value
+  get(): T;
+  
+  // Update value
+  set(value: T): void;
+  
+  // Subscribe to changes
+  subscribe(callback: (value: T) => void): () => void;
+}
+
+// Example usage
+const settings = window.Blinko.store.blinkoStore.settings;
+settings.subscribe((newSettings) => {
+  console.log('Settings changed:', newSettings);
+});
+```
+
+
+## Store Instances
+
+### BlinkoStore
+Core functionality store for notes, tags, and settings.
+
+```typescript
+interface BlinkoStore {
+  notes: {
+    list: PromisePageState<Note[]>;
+    detail: PromiseState<Note>;
+    // ... other note operations
+  };
+  tags: {
+    list: PromiseState<Tag[]>;
+    // ... tag operations
+  };
+  settings: StorageState<Settings>;
+  // ... other core features
+}
+```
+
+### BaseStore
+Base application store for fundamental operations.
+
+```typescript
+interface BaseStore {
+  // Application state
+  initialized: boolean;
+  loading: boolean;
+  
+  // User session
+  session: StorageState<Session>;
+  
+  // Core operations
+  initialize(): Promise<void>;
+  reset(): Promise<void>;
+}
+```
+
+### HubStore
+Manages synchronization and connections.
+
+```typescript
+interface HubStore {
+  // Connection state
+  connected: boolean;
+  connecting: boolean;
+  
+  // Sync operations
+  sync(): Promise<void>;
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+}
+```
+
+### ResourceStore
+Handles file and resource management.
+
+```typescript
+interface ResourceStore {
+  // Resource operations
+  upload(file: File): Promise<string>;
+  download(url: string): Promise<Blob>;
+  delete(url: string): Promise<void>;
+  
+  // Resource information
+  getInfo(url: string): Promise<ResourceInfo>;
+  list(): Promise<ResourceInfo[]>;
+}
+```
