@@ -292,7 +292,7 @@ export class UIUXService {
 
         // Try to find and click a close button.
         const closeBtn = overlay.querySelector<HTMLElement>(
-          '[class*="close"], [aria-label*="close" i], [aria-label*="dismiss" i], ' +
+          '[class*="close"], [aria-label*="close"], [aria-label*="Close"], [aria-label*="dismiss"], [aria-label*="Dismiss"], ' +
           'button[class*="X"], button svg[data-icon="x"]'
         );
         if (closeBtn) {
@@ -341,7 +341,7 @@ export class UIUXService {
 
     const closeViaButtonOrEscape = (scope: HTMLElement): void => {
       const closeBtn =
-        scope.querySelector<HTMLElement>('[class*="close"], [aria-label*="close" i], button[data-dismiss]') ??
+        scope.querySelector<HTMLElement>('[class*="close"], [aria-label*="close"], [aria-label*="Close"], button[data-dismiss]') ??
         document.querySelector<HTMLElement>('.modal-close');
       if (closeBtn) {
         closeBtn.click();

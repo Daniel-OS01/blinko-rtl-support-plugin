@@ -158,7 +158,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          bun test tests/unit/ tests/integration/ tests/services/ tests/utils/ tests/components/ tests/strategies.test.ts tests/strategies_extra.test.ts tests/regex_config.test.ts tests/verify_dynamic_rtl.test.ts --reporter junit > test-results/junit.xml 2>&1 || true
+          mkdir -p test-results && bun test tests/unit/ tests/integration/ tests/services/ tests/utils/ tests/components/ tests/strategies.test.ts tests/strategies_extra.test.ts tests/regex_config.test.ts tests/verify_dynamic_rtl.test.ts --reporter junit > test-results/junit.xml 2>&1 || true
 
       - name: Upload Coverage Report
         if: always()
@@ -230,8 +230,8 @@ jobs:
       - name: Check Bundle Size
         shell: bash
         run: |
-          JS_SIZE=$(stat -c%s dist/*.js 2>/dev/null || stat -f%z dist/*.js)
-          CSS_SIZE=$(stat -c%s dist/*.css 2>/dev/null || stat -f%z dist/*.css)
+          JS_SIZE=$(stat -c%s release/*.js 2>/dev/null || stat -f%z release/*.js)
+          CSS_SIZE=$(stat -c%s release/*.css 2>/dev/null || stat -f%z release/*.css)
           echo "JS bundle: ${JS_SIZE} bytes"
           echo "CSS bundle: ${CSS_SIZE} bytes"
           # Fail if JS bundle exceeds 400 kB uncompressed (current ~228 kB)
@@ -245,7 +245,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ github.run_id }}
-          path: dist/
+          path: release/
           retention-days: 7
 
   # ─── Job 4: Visual Verification (optional, non-blocking) ──────────────────

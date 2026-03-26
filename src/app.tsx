@@ -13,7 +13,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const [sensitivity, setSensitivity] = useState(15); // Default 15%
   const [isFixing, setIsFixing] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
-  const i18n = window.Blinko.i18n;
+  const i18n = window.Blinko?.i18n || { t: (key: string) => key };
 
   // Poll for stats
   useEffect(() => {
@@ -68,7 +68,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
     (window as any).blinkoRTL?.fixSelection();
     setTimeout(() => {
       setIsFixing(false);
-      window.Blinko.toast.success('Selection processed');
+      window.Blinko?.toast?.success?.('Selection processed');
     }, 500);
   };
 
@@ -90,7 +90,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const toggleRTL = () => {
     (window as any).blinkoRTL?.toggle();
     const isEnabled = (window as any).blinkoRTL?.isEnabled();
-    window.Blinko.toast.success(
+    window.Blinko?.toast?.success?.(
       isEnabled ? i18n.t('rtl_enabled') : i18n.t('rtl_disabled')
     );
   };
