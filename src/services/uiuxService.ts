@@ -271,11 +271,19 @@ export class UIUXService {
       // has been removed to avoid confusion.
 
       // Look for any expanded / modal overlay that is currently visible.
-      const overlay = document.querySelector<HTMLElement>(
-        '[class*="expanded"]:not([style*="display: none"]), ' +
-        '[class*="modal"]:not([style*="display: none"]), ' +
-        '[class*="overlay"]:not([style*="display: none"]):not([id*="root"])'
-      );
+      // Visibility is checked in JS (not CSS :not([style*="..."])) for broad
+      // selector-engine compatibility (happy-dom, jsdom, older browsers).
+      const findVisibleOverlay = (): HTMLElement | null => {
+        const candidates = document.querySelectorAll<HTMLElement>(
+          '[class*="expanded"], [class*="modal"], [class*="overlay"]:not([id*="root"])'
+        );
+        for (const el of Array.from(candidates)) {
+          if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
+          return el;
+        }
+        return null;
+      };
+      const overlay = findVisibleOverlay();
 
       if (overlay) {
         // Re-push the sentinel BEFORE closing the overlay so that the next

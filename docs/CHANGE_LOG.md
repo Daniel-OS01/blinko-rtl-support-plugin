@@ -267,10 +267,144 @@ type DebouncedFn<T extends (...args: any[]) => void> = ((...args: Parameters<T>)
 
 ---
 
-## Previous Session Changes (Reference)
+---
 
-Changes from earlier sessions on `claude/blinko-ui-ux-enhancements-gfN4H` are documented in `IMPLEMENTATION_PLAN.md` (Part A Phase 2) and `ERROR_LOGS.md` (ISSUE-001 through ISSUE-008).
+## Session 2 Changes (2026-03-25) — branch `claude/review-rtl-plugin-prs-OMCOM`
+
+These changes were made in session 2 following the initial PR archive and first bug-fix pass. They address issues discovered after PR #78 was merged.
 
 ---
 
-*Document version: 1.0 — Created 2026-03-26, covers all sessions on `claude/review-rtl-plugin-prs-OMCOM`*
+### [CL-S2-004] Restructure applyTapOutsideClose() with helpers and body class
+
+**Date:** 2026-03-25
+**Branch:** `claude/review-rtl-plugin-prs-OMCOM`
+
+**Files modified:**
+- `src/services/uiuxService.ts` — `applyTapOutsideClose()` rewritten
+
+**Changes:**
+- Extracted `findActiveOverlay()` inner helper — returns the currently visible editor element using `querySelectorAll` + JS visibility filter (same pattern later applied to `applyBackButton()`)
+- Extracted `closeViaButtonOrEscape()` inner helper — tries to click a `[class*="close"]` button first; falls back to dispatching `KeyboardEvent('keydown', { key: 'Escape' })` on the editor
+- Added `blinko-tap-outside-close-active` body class on enable; removed on disable/destroy — allows CSS to suppress pointer-events on the backdrop if needed
+- Uses capture-phase `mousedown` listener on `document` for reliable outside-click detection before React's synthetic event system can process it
+
+**Rationale:** Original implementation was a single monolithic closure. Extracting helpers makes the logic independently testable and mirrors how `applyBackButton()` was restructured.
+
+---
+
+### [CL-S2-003] Integrate debounce() utility into applySingleTap()
+
+**Date:** 2026-03-25
+**Branch:** `claude/review-rtl-plugin-prs-OMCOM`
+
+**Files modified:**
+- `src/services/uiuxService.ts` — `applySingleTap()` observer callback
+
+**Changes:**
+```typescript
+// Before — inline manual timer (no cancel support)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+const debouncedMarkAndListen = () => {
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(markAndListen, 150);
+};
+// cleanup: if (debounceTimer) clearTimeout(debounceTimer);
+
+// After — typed DebouncedFn with cancel()
+const debouncedMarkAndListen = debounce(markAndListen, 150);
+const observer = new MutationObserver(debouncedMarkAndListen);
+// cleanup: debouncedMarkAndListen.cancel();
+```
+
+**Rationale:** The upgraded `debounce()` utility (CL-S2-002) provides a typed `.cancel()` method that is semantically clearer and cleaner than storing a raw timer reference in the surrounding closure.
+
+---
+
+### [CL-S2-002] Add DebouncedFn<T> type with cancel() to debounce utility
+
+**Date:** 2026-03-25
+**Branch:** `claude/review-rtl-plugin-prs-OMCOM`
+
+**Files modified:**
+- `src/utils/debounce.ts` — added `DebouncedFn<T>` generic type, added `debounced.cancel()` method
+
+**Changes:**
+```typescript
+// Added type
+type DebouncedFn<T extends (...args: any[]) => void> =
+  ((...args: Parameters<T>) => void) & { cancel: () => void };
+
+// Added method on returned function
+debounced.cancel = () => {
+  if (!timeout) return;
+  clearTimeout(timeout);
+  timeout = null;
+};
+```
+
+**Rationale:** `applySingleTap()` cleanup needed to cancel any pending debounced `markAndListen()` call when the feature is disabled. Without `.cancel()`, a queued call could fire after cleanup, re-attaching event listeners to already-cleaned-up cards.
+
+---
+
+### [CL-S2-001] Fix AI error interceptor one-way install bug
+
+**Date:** 2026-03-25
+**Branch:** `claude/review-rtl-plugin-prs-OMCOM`
+
+**Files modified:**
+- `src/services/uiuxService.ts` — `apply()`, `applyAIErrorInterceptor()`, new `restoreAIErrorInterceptor()`
+
+**Changes:**
+
+```typescript
+// Before — unconditional call; once installed, setting toggle had no effect
+apply(): void {
+  // ...
+  this.applyAIErrorInterceptor();  // always called
+}
+applyAIErrorInterceptor(): void {
+  if (this.aiInterceptorCleanup) return;  // guard prevented re-entry but also prevented uninstall
+  if (!this.settings.interceptAIErrors) return;
+  // ... install
+}
+
+// After — apply() owns install/uninstall branching
+apply(): void {
+  // ...
+  if (this.settings.interceptAIErrors) {
+    this.applyAIErrorInterceptor();
+  } else {
+    this.restoreAIErrorInterceptor();
+  }
+}
+// New method: restoreAIErrorInterceptor() calls cleanup and nulls it
+```
+
+**Rationale:** The first guard `if (this.aiInterceptorCleanup) return` combined with an unconditional caller created a one-way latch. Once installed, toggling `interceptAIErrors` off never reached the setting check. Fix: move conditional logic to the caller; see `DECISION_LOG.md DEC-005`.
+
+---
+
+### [CL-S2-000] Fix back button, single-tap body text, dual-event, and tag CSS (session 1 follow-up)
+
+**Date:** 2026-03-24 to 2026-03-25
+**Branch:** `claude/blinko-ui-ux-enhancements-gfN4H` (earlier branch, context reference)
+
+**Summary of changes in the earlier branch** (detailed in `IMPLEMENTATION_PLAN.md Part A` and `ERROR_LOGS.md ISSUE-001 through ISSUE-004`):
+
+| Change | File | Root cause fixed |
+|--------|------|-----------------|
+| `history.pushState` one-time guard | `uiuxService.ts` | Logout blocked by accumulated history entries |
+| Remove `p` from opener selector | `uiuxService.ts` | `<p>` tap created `target === openBtn` dead-end |
+| Add `card.dataset.opening` re-entry guard | `uiuxService.ts` | Synthetic click triggered context menu |
+| Narrow compact-datetime CSS selector | `Blinko-UIUX.css` | Tags displaced to right margin |
+
+---
+
+## Previous Session Changes (Reference)
+
+Full detail for session 1 changes is in `IMPLEMENTATION_PLAN.md` (Part A Phase 2) and `ERROR_LOGS.md` (ISSUE-001 through ISSUE-008).
+
+---
+
+*Document version: 2.0 — Updated 2026-03-26 (added session 2 change entries CL-S2-000 through CL-S2-004)*

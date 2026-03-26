@@ -1,7 +1,7 @@
 # Documentation Protocol — Universal Implementation Guide
 
 > **Document type:** Reusable project-agnostic protocol for coding agents and developers
-> **Version:** 1.0
+> **Version:** 2.0
 > **Transferability:** This document can be copied to any software repository unchanged.
 > **Last updated:** 2026-03-26
 
@@ -27,6 +27,7 @@ This protocol defines the documentation standards, triggers, templates, and qual
 6. [Pre-Work Checklist](#6-pre-work-checklist)
 7. [Post-Work Checklist](#7-post-work-checklist)
 8. [Agent-Specific Instructions](#8-agent-specific-instructions)
+9. [Multi-Agent & Multi-Provider Guidance](#9-multi-agent--multi-provider-guidance)
 
 ---
 
@@ -34,31 +35,59 @@ This protocol defines the documentation standards, triggers, templates, and qual
 
 All documentation lives in the `/docs` folder at the repository root. Never place documentation in source code directories.
 
-### Artifact Registry
+### Core Artifacts (Required in Every Repository)
+
+These six files form the minimum viable documentation set. Every repository must have all of them.
 
 | File | Purpose | Update Frequency |
 |------|---------|-----------------|
 | `USER_REQUIREMENTS.md` | Original requests, interpreted requirements, acceptance criteria | On each new user request |
-| `IMPLEMENTATION_PLAN.md` | Architecture, execution strategy, milestones | Before starting work; update if plan changes |
-| `CHANGE_LOG.md` | Chronological record of every modification | After each change |
-| `ERROR_RESOLUTION.md` | Error catalog, root causes, resolutions, lessons learned | When an error is encountered and resolved |
-| `OUTCOME_SUMMARY.md` | What succeeded, what failed, deviations, recommendations | After completing a body of work |
-| `DOCUMENTATION_PROTOCOL.md` | This file — protocol and templates | When protocol evolves |
+| `IMPLEMENTATION_PLAN.md` | Architecture, execution strategy, milestones, rollback procedures | Before starting work; update if plan changes |
+| `CHANGE_LOG.md` | Chronological record of every modification with before/after code | After each logical change |
+| `ERROR_RESOLUTION.md` | Error catalog, root causes, unsuccessful attempts, resolutions, lessons learned | When an error is encountered and resolved |
+| `OUTCOME_SUMMARY.md` | What succeeded, what failed, deviations, build results, recommendations | After completing a body of work |
+| `DOCUMENTATION_PROTOCOL.md` | This file — protocol, templates, granularity guide | When protocol evolves |
 
-### Artifact Dependencies
+### Extended Artifacts (Add When Relevant)
+
+Create these files when the project reaches the complexity threshold described for each.
+
+| File | Purpose | Create When |
+|------|---------|-------------|
+| `ARCHITECTURE.md` | System design, component relationships, data flows, build system | Project has ≥2 services or ≥1 external API integration |
+| `DECISION_LOG.md` | Architectural decisions — context, alternatives, rationale (ADR format) | A non-obvious technical choice is made that future devs might reverse |
+| `API_REFERENCE.md` | External API endpoints, request/response contracts, auth patterns | Project calls any external HTTP API |
+| `TESTING_GUIDE.md` | How to run tests, test patterns, environment limitations, authoring guide | Project has ≥10 tests or a non-trivial test environment |
+| `SECURITY.md` | Auth token storage, known vulnerabilities, threat model, future hardening | Project handles credentials, tokens, or PII |
+| `TROUBLESHOOTING.md` | Common failure modes, diagnostic steps, user-facing error guide | Project is deployed to production users |
+| `RELEASE_NOTES.md` | User-facing changelog per version | Project has versioned releases |
+| `DEPENDENCY_MAP.md` | All external dependencies, versions, purpose, last-updated date | Project has ≥5 external dependencies or a complex build chain |
+
+### Artifact Flow Diagram
 
 ```
-User message
+User message / new request
     │
     ▼
-USER_REQUIREMENTS.md  →  IMPLEMENTATION_PLAN.md
-                                │
-                                ▼ (during implementation)
-                         CHANGE_LOG.md
-                         ERROR_RESOLUTION.md
-                                │
-                                ▼ (after implementation)
-                         OUTCOME_SUMMARY.md
+USER_REQUIREMENTS.md    ──────────────►  IMPLEMENTATION_PLAN.md
+  (capture verbatim)                       (plan before coding)
+                                                  │
+                              ┌───────────────────┴─────────────────────┐
+                              │ during implementation                   │
+                              ▼                                         ▼
+                       CHANGE_LOG.md                          ERROR_RESOLUTION.md
+                    (after each change)                    (when errors occur)
+                              │
+                              └──────────────────┬──────────────────────┘
+                                                 │ after completing work
+                                                 ▼
+                                        OUTCOME_SUMMARY.md
+                                      (post-implementation)
+                                                 │
+                                    ┌────────────┤ also update if relevant
+                                    ▼            ▼
+                            DECISION_LOG.md   ARCHITECTURE.md
+                           (if key decision)  (if structure changed)
 ```
 
 ---
@@ -438,5 +467,181 @@ Use these definitions consistently across `ERROR_RESOLUTION.md` and `USER_REQUIR
 
 ---
 
-*Document version: 1.0 — Created 2026-03-26*
+## 9. Multi-Agent & Multi-Provider Guidance
+
+This section contains additional instructions for AI coding agents from different providers (Claude Code, GitHub Copilot, Cursor, Gemini CLI, etc.) to ensure consistent documentation behavior regardless of which tool is working on the repository.
+
+### Universal Behaviors (All Agents)
+
+1. **Never start coding without reading** — use the equivalent of `Read`/`cat`/file-read before any edit
+2. **Capture the user's request verbatim** in `USER_REQUIREMENTS.md` before interpreting it
+3. **Document while context is fresh** — write `ERROR_RESOLUTION.md` entries while debugging, not after
+4. **One CHANGE_LOG entry per logical change** — changes to 3 files for one requirement = 1 entry
+5. **Mark deferred tasks explicitly** — anything not completed must appear in `OUTCOME_SUMMARY.md`
+
+### Claude Code Specifics
+
+- Use `TodoWrite` to track progress across multi-step implementations
+- Run `bun run build` before committing — never commit broken builds
+- Use `Grep` and `Read` tools for code searches, not Bash `grep`/`cat`
+- Commit source + documentation in the same commit when possible
+
+### GitHub Copilot / Copilot Chat
+
+- After generating code, explicitly generate documentation entries for each changed file
+- Use the CHANGE_LOG template from Section 3 verbatim — do not summarize
+- Copilot does not auto-read files; always include `@workspace` or explicit file references in prompts
+- After completing a PR, write the `OUTCOME_SUMMARY.md` entry before merging
+
+### Cursor
+
+- Cursor's agent mode auto-reads open files; still verify the correct file was read before editing
+- Use `/docs/DOCUMENTATION_PROTOCOL.md` as a reference in the Cursor chat window when asking it to document
+- After applying a diff, immediately update `CHANGE_LOG.md` in the same edit session
+
+### Gemini CLI / Gemini in IDEs
+
+- Gemini's context window is large — provide the full `DOCUMENTATION_PROTOCOL.md` as context when documenting
+- Use structured prompts: "Update CHANGE_LOG.md with entry for: [description of change]"
+- After any error encounter, add to `ERROR_RESOLUTION.md` with the exact error text pasted verbatim
+
+### Session Handoff Protocol
+
+When switching between AI coding tools (e.g., Claude Code → Copilot), the outgoing agent must:
+
+1. Write `OUTCOME_SUMMARY.md` with a "Handoff" section listing:
+   - Files modified in this session (with brief descriptions)
+   - Tests that were added or changed
+   - Any failing tests and their known root causes
+   - Next highest-priority tasks in priority order
+2. Commit all documentation before ending the session
+3. Ensure the build is passing (`bun run build` or equivalent)
+
+The incoming agent must:
+1. Read `OUTCOME_SUMMARY.md` → `CHANGE_LOG.md` → `IMPLEMENTATION_PLAN.md` in that order
+2. Run the test suite before making any changes to establish a baseline
+3. Do NOT make changes until the above reading is complete
+
+### Preventing Documentation Drift
+
+Documentation drift occurs when code and docs diverge. Signs of drift:
+- `CHANGE_LOG.md` last updated more than 1 session ago
+- `ARCHITECTURE.md` references files that no longer exist
+- `ERROR_RESOLUTION.md` has no entries despite known bugs
+
+**Recovery:** Before starting new work, run a "documentation audit":
+1. Check that every `src/**/*.ts` change since the last doc update has a `CHANGE_LOG.md` entry
+2. Verify `ARCHITECTURE.md` file paths still exist (`ls src/services/`, `ls src/utils/`)
+3. Check that all `OUTCOME_SUMMARY.md` deferred items are either in the backlog or completed
+
+---
+
+## Appendix C — Extended Artifact Templates
+
+### ARCHITECTURE.md Template
+
+```markdown
+# Architecture — [Project Name]
+
+> **Version:** 1.0 | **Last updated:** YYYY-MM-DD
+
+## Overview
+[2-3 sentence description of what the system does and how it's structured]
+
+## File Structure
+[Directory tree with brief descriptions]
+
+## Core Components
+[One section per major service/module with:
+- Responsibility description
+- Key methods and their purpose
+- Data flow (input → processing → output)]
+
+## Data Flow: [Key Scenario]
+[Step-by-step data flow for the most important user-facing operation]
+
+## External Dependencies
+[Table: Dependency | Version | Purpose | Auth required]
+
+## Build System
+[Commands, outputs, key config files]
+```
+
+---
+
+### DECISION_LOG.md Entry Template (ADR format)
+
+```markdown
+### DEC-NNN — Short decision title
+
+**Date:** YYYY-MM-DD
+**Status:** Proposed | Accepted | Superseded by DEC-XXX | Deprecated
+
+**Context:**
+What situation or problem drove this decision? What constraints existed?
+
+**Alternatives Considered:**
+1. Option A — why it was rejected
+2. Option B — why it was rejected
+3. **Chosen: Option C** — full rationale
+
+**Consequences:**
+- Positive: what this enables
+- Negative: what this makes harder or impossible
+- Neutral: what changes without being better or worse
+```
+
+---
+
+### TESTING_GUIDE.md Template
+
+```markdown
+# Testing Guide — [Project Name]
+
+## Running Tests
+[Commands for: all tests, single file, specific describe block, with flags]
+
+## Test Architecture
+[Environment setup, test runner, DOM environment if applicable]
+
+## Common Patterns
+[Code examples for: async timing, event dispatch, mock setup, teardown]
+
+## Known Limitations
+[Environment-specific issues (e.g. happy-dom CSS selector compat)]
+
+## Writing New Tests
+[Checklist for new test files]
+```
+
+---
+
+### API_REFERENCE.md Entry Template
+
+```markdown
+### `METHOD /path/to/endpoint`
+
+**Auth:** Bearer token | Session cookie | None
+**Content-Type:** application/json
+
+**Request:**
+\`\`\`json
+{ "field": "value" }
+\`\`\`
+
+**Success Response (200):**
+\`\`\`json
+{ "result": "..." }
+\`\`\`
+
+**Error Responses:**
+| Status | Meaning | Action |
+|--------|---------|--------|
+
+**Implementation:** `src/services/xxx.ts` → `methodName()`
+```
+
+---
+
+*Document version: 2.0 — Updated 2026-03-26 (added extended artifacts, multi-provider guidance, section 9, appendix C)*
 *Transferable to any software repository without modification.*
