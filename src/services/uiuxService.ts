@@ -182,21 +182,34 @@ export class UIUXService {
           // re-triggering this handler and causing dual-event firing.
           if (card.dataset.opening) return;
 
-          // Find the primary note-opener. Deliberately excludes <p> — paragraphs
-          // are content, not openers; including them caused (a) the target===openBtn
-          // dead-end when tapping text and (b) infinite synthetic-click loops.
+          // Find the primary note-opener.
+          // Blinko Article notes (type 1) have h1/h2/h3 headings or elements with
+          // "title"/"open"/"expand" class names.
+          // Blinko quick notes (type 0) have only paragraph text — no heading
+          // elements. For those we fall back to dispatching a synthetic click on
+          // the card itself so Blinko's React onClick handler fires.
+          // Next.js <Link> renders as <a href> — include it as an opener too.
           const openBtn = card.querySelector<HTMLElement>(
-            '[class*="open"], [class*="expand"], [class*="title"], h1, h2, h3'
+            'a[href]:not([href="#"]), [class*="open"], [class*="expand"], [class*="title"], h1, h2, h3'
           );
 
           if (openBtn && openBtn !== target && !openBtn.contains(target as Node)) {
-            // Target is content (e.g. <p>) but opener is a heading/title — redirect.
+            // Target is content (e.g. <p>) but opener is a heading/link — redirect.
             card.dataset.opening = 'true';
             openBtn.click();
             requestAnimationFrame(() => { delete card.dataset.opening; });
+          } else if (!openBtn) {
+            // Blinko quick note: no opener element found.
+            // Dispatch a synthetic click on the card so Blinko's React onClick
+            // (which handles note detail navigation) fires.
+            // The re-entry guard (card.dataset.opening) prevents this handler
+            // from processing the synthetic event again.
+            card.dataset.opening = 'true';
+            card.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+            requestAnimationFrame(() => { delete card.dataset.opening; });
           }
-          // If target IS the opener (user tapped the title directly) the native
-          // click already fired; no synthetic click needed.
+          // If target IS the opener (user tapped the title/link directly) the
+          // native click already fired; no synthetic click needed.
         };
 
         (card as any)._uiuxClickHandler = handler;
@@ -258,11 +271,19 @@ export class UIUXService {
       // has been removed to avoid confusion.
 
       // Look for any expanded / modal overlay that is currently visible.
-      const overlay = document.querySelector<HTMLElement>(
-        '[class*="expanded"]:not([style*="display: none"]), ' +
-        '[class*="modal"]:not([style*="display: none"]), ' +
-        '[class*="overlay"]:not([style*="display: none"]):not([id*="root"])'
-      );
+      // Visibility is checked in JS (not CSS :not([style*="..."])) for broad
+      // selector-engine compatibility (happy-dom, jsdom, older browsers).
+      const findVisibleOverlay = (): HTMLElement | null => {
+        const candidates = document.querySelectorAll<HTMLElement>(
+          '[class*="expanded"], [class*="modal"], [class*="overlay"]:not([id*="root"])'
+        );
+        for (const el of Array.from(candidates)) {
+          if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
+          return el;
+        }
+        return null;
+      };
+      const overlay = findVisibleOverlay();
 
       if (overlay) {
         // Re-push the sentinel BEFORE closing the overlay so that the next

@@ -64,6 +64,12 @@ async function collectWritingStream(prompt: string): Promise<string> {
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error(
+        'AI feature requires an API key. In Blinko → Settings → AI, configure your ' +
+        'AI provider (OpenAI, Anthropic, Ollama, etc.) and save. Then retry this action.'
+      );
+    }
     throw new Error(`AI writing API error: ${res.status} ${res.statusText}`);
   }
 
@@ -190,14 +196,43 @@ export class AIPostService {
   async runAutoTag(note: NoteRef): Promise<string[]> {
     const content = (note.content ?? '').trim();
     if (!content) return [];
-    const result = await trpcMutate<string[]>('ai.autoTag', { content });
-    return Array.isArray(result) ? result : [];
+    try {
+      const result = await trpcMutate<string[]>('ai.autoTag', { content });
+      return Array.isArray(result) ? result : [];
+    } catch (err: any) {
+      if (err?.message?.includes('401') || err?.message?.toLowerCase().includes('unauthorized')) {
+        throw new Error(
+          'AI auto-tag requires an API key. In Blinko → Settings → AI, configure your ' +
+          'AI provider (OpenAI, Anthropic, Ollama, etc.) and save. Then retry this action.'
+        );
+      }
+      throw err;
+    }
   }
 
   /**
-   * Overwrite an existing note's content via note.upsert.
+   * Overwrite an existing note's content.
+   * Uses the Blinko REST API v1 with Bearer token when credentials are configured,
+   * falling back to the tRPC session-cookie path.
    */
   async updateNoteContent(noteId: number, content: string): Promise<void> {
+    const s = this.getSettings();
+    if (s.blinkoApiUrl && s.blinkoApiToken) {
+      const url = `${s.blinkoApiUrl.replace(/\/$/, '')}/api/v1/note/upsert`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${s.blinkoApiToken}`,
+        },
+        body: JSON.stringify({ id: noteId, content }),
+      });
+      if (!res.ok) {
+        throw new Error(`REST API note update failed: ${res.status} ${res.statusText}`);
+      }
+      return;
+    }
+    // Fallback: tRPC session-cookie path
     await trpcMutate('note.upsert', { id: noteId, content });
   }
 

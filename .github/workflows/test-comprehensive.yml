@@ -1,69 +1,205 @@
 name: Comprehensive Tests
 
 on:
+  push:
+    branches: [ "main", "claude/**", "feature/**" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
 
+# Cancel any in-progress run for the same branch/PR to avoid wasted minutes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test-all:
+  # ─── Job 1: TypeScript type-check ─────────────────────────────────────────
+  typecheck:
+    name: TypeScript Type Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.5"
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
 
-    - name: Install Dependencies
-      run: |
-        bun install
-        pip install playwright
-        playwright install --with-deps chromium
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
 
-    - name: Type Check
-      run: bun x tsc --noEmit
+      - name: Type Check
+        run: bun x tsc --noEmit
 
-    - name: Run All Tests (excluding orphan renderer tests)
-      # tests/renderer.test.ts is excluded — it imports src/renderer.ts and
-      # src/config.ts which were removed as unused orphan files. All other
-      # test directories and files are included.
-      run: |
-        bun test \
-          tests/unit/ \
-          tests/integration/ \
-          tests/services/ \
-          tests/utils/ \
-          tests/components/ \
-          tests/strategies.test.ts \
-          tests/strategies_extra.test.ts \
-          tests/regex_config.test.ts \
-          tests/verify_dynamic_rtl.test.ts
+  # ─── Job 2: Unit + Service + Integration Tests ────────────────────────────
+  test:
+    name: Run All Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Run after typecheck so we don't waste test minutes on type-broken code
+    needs: typecheck
 
-    - name: Build Check & Bundle Analysis
-      run: bun run build:prod
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: Run Visual & Mobile Verification
-      # continue-on-error: visual verification needs a display/browser environment
-      # which may not be available in all CI contexts; don't fail the whole suite.
-      continue-on-error: true
-      run: |
-        if [ -f "verification/verify_rtl_ui.py" ]; then
-          python verification/verify_rtl_ui.py
-        else
-          echo "Verification script not found, skipping."
-        fi
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.5"
 
-    - name: Upload Verification Artifacts
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: verification-screenshots
-        path: verification/*.png
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run All Tests (excluding orphan renderer tests)
+        # tests/renderer.test.ts is excluded — it imports src/renderer.ts and
+        # src/config.ts which were removed as unused orphan files. All other
+        # test directories and files are included.
+        run: |
+          bun test \
+            tests/unit/ \
+            tests/integration/ \
+            tests/services/ \
+            tests/utils/ \
+            tests/components/ \
+            tests/strategies.test.ts \
+            tests/strategies_extra.test.ts \
+            tests/regex_config.test.ts \
+            tests/verify_dynamic_rtl.test.ts \
+            --timeout 30000
+
+      - name: Upload Test Results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-failure-logs-${{ github.run_id }}
+          path: |
+            *.log
+            test-results/
+          retention-days: 7
+
+  # ─── Job 3: Build ─────────────────────────────────────────────────────────
+  build:
+    name: Build & Bundle Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: typecheck
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.5"
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Production Build
+        run: bun run build:prod
+
+      - name: Check Bundle Size
+        run: |
+          JS_SIZE=$(stat -c%s dist/*.js 2>/dev/null || stat -f%z dist/*.js)
+          CSS_SIZE=$(stat -c%s dist/*.css 2>/dev/null || stat -f%z dist/*.css)
+          echo "JS bundle: ${JS_SIZE} bytes"
+          echo "CSS bundle: ${CSS_SIZE} bytes"
+          # Fail if JS bundle exceeds 400 kB uncompressed (current ~228 kB)
+          if [ "$JS_SIZE" -gt 409600 ]; then
+            echo "::error::JS bundle ${JS_SIZE} bytes exceeds 400 kB limit"
+            exit 1
+          fi
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.run_id }}
+          path: dist/
+          retention-days: 7
+
+  # ─── Job 4: Visual Verification (optional, non-blocking) ──────────────────
+  visual:
+    name: Visual & Mobile Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+    # Non-blocking — visual tests require a browser display which may be absent
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.5"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
+      - name: Install Dependencies
+        run: |
+          bun install --frozen-lockfile
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Run Visual Verification
+        run: |
+          if [ -f "verification/verify_rtl_ui.py" ]; then
+            python verification/verify_rtl_ui.py
+          else
+            echo "Verification script not found, skipping."
+          fi
+
+      - name: Upload Verification Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-screenshots-${{ github.run_id }}
+          path: verification/*.png
+          retention-days: 7
+          if-no-files-found: ignore

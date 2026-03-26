@@ -622,3 +622,139 @@ bun run build
 #    e. Plugin Settings → "🤖 AI Post" tab → prompt editor present
 #    f. Plugin Settings → UI/UX → "📋 UX Audit" → Aloklok section + 20 new items
 ```
+
+---
+
+---
+
+# Session 3 — Bug Fixes + REST API v1 + Documentation
+
+**Branch:** `claude/review-rtl-plugin-prs-OMCOM`
+**Date:** 2026-03-26
+**Scope:** Fix single-tap for Blinko quick notes; add REST API v1 note update path; improve AI 401 errors; add API Connection settings UI; create full documentation suite
+
+---
+
+## Problem Statement
+
+After PR #78 was merged, the user reported that features still did not work:
+
+1. **Single tap on Blinko quick notes (NoteType=0) silently does nothing** — quick notes have no heading elements, so the opener selector returns `null` and the handler exits without action
+2. **AI 401 errors are opaque** — `AI writing API error: 401` gives no path to resolution
+3. **Note updates can fail if tRPC session auth is unavailable** — user needs a REST API v1 Bearer token path
+4. **No UI to configure API credentials** — users cannot enter their Blinko instance URL or Bearer token without developer tools
+
+---
+
+## Dependency Map
+
+```
+REQ-05 (types.ts fields)
+    │
+    ├── REQ-03 (aiPostService.ts REST path)  — needs blinkoApiUrl + blinkoApiToken fields
+    └── REQ-04 (setting.tsx API Connection)  — needs blinkoApiUrl + blinkoApiToken fields
+
+REQ-01 (uiuxService.ts quick note fix) — fully independent
+REQ-02 (aiPostService.ts 401 messages) — fully independent
+```
+
+---
+
+## Execution Plan (Completed)
+
+### Step 1 — `src/types.ts` — Add API fields
+
+**Files:** `src/types.ts`
+**Change:** Add `blinkoApiUrl: string` and `blinkoApiToken: string` to `AIPostSettings` interface and `DEFAULT_AI_POST_SETTINGS` constant
+**Default values:** Empty string `''` — ensures no behavior change for existing installations
+**Risk:** None — additive change, backward-compatible
+
+---
+
+### Step 2 — `src/services/uiuxService.ts` — Fix quick note single-tap
+
+**Files:** `src/services/uiuxService.ts`
+**Change:** Expand opener selector; add `else if (!openBtn)` fallback branch
+
+**Detailed approach:**
+
+1. Add `a[href]:not([href="#"])` to the opener selector so Next.js `<Link>` elements (which render as `<a>`) are detected as openers
+2. Add `else if (!openBtn)` branch that dispatches `new MouseEvent('click', { bubbles: true, cancelable: true })` on the card element itself
+3. Apply existing re-entry guard pattern (`card.dataset.opening`) in the fallback branch
+
+**Risk:** Medium — changes behavior for quick notes (previously did nothing; now dispatches a card click). The re-entry guard prevents recursion.
+
+**Rollback:** Remove the `else if (!openBtn)` block; behavior degrades to previous (does nothing for quick notes)
+
+---
+
+### Step 3 — `src/services/aiPostService.ts` — Improve error messages + add REST v1
+
+**Files:** `src/services/aiPostService.ts`
+**Changes:**
+
+A. `collectWritingStream()`: Add `if (res.status === 401)` branch with actionable error message
+B. `runAutoTag()`: Wrap `trpcMutate` in try/catch; detect 401 via string matching; rethrow with actionable message
+C. `updateNoteContent()`: Check `s.blinkoApiUrl && s.blinkoApiToken`; use REST v1 path with `Authorization: Bearer`; fall through to tRPC if credentials absent
+
+**Risk:** Low for A+B (error message improvements only); Medium for C (new code path, new network call)
+
+---
+
+### Step 4 — `src/setting.tsx` — Add API Connection section
+
+**Files:** `src/setting.tsx`
+**Changes:**
+
+A. Add three `useState` hooks: `apiConnTestResult`, `apiConnTesting`, `showApiToken`
+B. Add "🔗 API Connection (Optional)" section to the AI Post tab:
+   - URL text input (persisted via `aiPostService.save()` on keystroke)
+   - Token password input with show/hide toggle
+   - Test Connection button (dry-run POST to `/api/v1/note/upsert` with `id: -99999`)
+   - Inline result display
+
+**Test button HTTP response interpretation:**
+- 200 / 400 / 404 → ✅ Auth succeeded (note not found is acceptable)
+- 401 / 403 → ❌ Auth failed
+- Network error → ❌ Error with message
+- Other status → ⚠️ Unexpected
+
+**Risk:** Low — purely additive UI; no changes to existing settings
+
+---
+
+### Step 5 — Build + Commit + Push
+
+**Command:** `bun run build`
+**Expected:** Zero TypeScript errors; bundle ≤ 250 kB uncompressed
+**Commit message:** Descriptive multi-line message covering all 4 changes
+**Branch:** `claude/review-rtl-plugin-prs-OMCOM`
+
+---
+
+## Acceptance Criteria (from USER_REQUIREMENTS.md)
+
+- [ ] Single-tap works on Blinko quick notes (NoteType=0)
+- [ ] AI 401 error messages include actionable guidance
+- [ ] `updateNoteContent()` uses REST v1 when credentials are set
+- [ ] API Connection section present in AI Post tab
+- [ ] Test Connection button correctly identifies valid/invalid credentials
+- [ ] Build passes with zero errors
+- [ ] All changes committed and pushed
+
+**Completion status:** All criteria met. Commit `874f07f` pushed 2026-03-26.
+
+---
+
+## File Change Manifest
+
+| File | Type | Changes |
+|------|------|---------|
+| `src/types.ts` | Modified | Added `blinkoApiUrl`, `blinkoApiToken` to `AIPostSettings` + defaults |
+| `src/services/uiuxService.ts` | Modified | Expanded opener selector + `else if (!openBtn)` fallback in `applySingleTap()` |
+| `src/services/aiPostService.ts` | Modified | 401 error messages in `collectWritingStream()` + `runAutoTag()`; REST v1 path in `updateNoteContent()` |
+| `src/setting.tsx` | Modified | 3 new `useState` hooks; API Connection section with URL/token inputs + test button |
+
+---
+
+*Plan version: 3.0 — Session 3, 2026-03-26*

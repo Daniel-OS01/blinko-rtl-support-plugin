@@ -237,6 +237,47 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
 
     expect(headingClickSpy).not.toHaveBeenCalled();
   });
+
+  // ── Quick note (NoteType=0) — no heading elements ──────────────────────────
+
+  it('dispatches card-level click for quick notes that have no heading (NoteType=0)', () => {
+    // Blinko quick notes have only <p> content — no h1/h2/h3 or opener element.
+    // The plugin must fall back to dispatching a synthetic click on the card so
+    // Blinko's React onClick handler fires.
+    const card = makeCard({ heading: false, paragraph: true });
+    service.updateSettings({ singleTapOpenNote: true });
+
+    const p = card.querySelector('p')!;
+
+    // Count clicks whose target IS the card itself — these are the synthetic
+    // dispatches from the plugin fallback, not the original <p> event bubbling up.
+    let syntheticCardClicks = 0;
+    card.addEventListener('click', (e) => {
+      if (e.target === card) syntheticCardClicks++;
+    });
+
+    p.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    // Plugin must dispatch exactly one synthetic card click
+    expect(syntheticCardClicks).toBe(1);
+  });
+
+  it('re-entry guard prevents loop when quick note card-click bubbles back', async () => {
+    // If the re-entry guard is missing, the synthetic card click would bubble back
+    // to the handler, which would dispatch another click, ad infinitum → stack overflow.
+    const card = makeCard({ heading: false, paragraph: true });
+    service.updateSettings({ singleTapOpenNote: true });
+
+    const p = card.querySelector('p')!;
+
+    expect(() => {
+      p.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }).not.toThrow();
+
+    // After the rAF cleanup window, dataset.opening must be cleared
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    expect(card.dataset.opening).toBeUndefined();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
