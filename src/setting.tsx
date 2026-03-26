@@ -557,6 +557,9 @@ export function RTLSetting(): JSX.Element {
   });
   const [aiPostTestResult, setAIPostTestResult] = useState('');
   const [aiPostTesting, setAIPostTesting] = useState(false);
+  const [apiConnTestResult, setApiConnTestResult] = useState('');
+  const [apiConnTesting, setApiConnTesting] = useState(false);
+  const [showApiToken, setShowApiToken] = useState(false);
 
   // Sync uiux service settings into local state on mount
   useEffect(() => {
@@ -2480,6 +2483,105 @@ export function RTLSetting(): JSX.Element {
                 {aiPostTestResult}
               </pre>
             )}
+          </div>
+
+          {/* API Connection */}
+          <div style={{ padding: '16px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, borderRadius: '8px', background: settings.darkMode ? '#1a1a2e' : '#f9f9ff' }}>
+            <h4 style={{ margin: '0 0 6px 0', fontSize: '13px', color: settings.darkMode ? '#c9b0ff' : '#5a2d9b' }}>🔗 API Connection (Optional)</h4>
+            <p style={{ margin: '0 0 12px 0', fontSize: '11px', color: settings.darkMode ? '#aaa' : '#555', lineHeight: '1.6' }}>
+              Configure Blinko REST API v1 credentials to use Bearer-token auth for note updates
+              instead of session cookies. Required if note saves fail with a 401 error.
+              Find your token at: <strong>Blinko → Settings → API Keys</strong>.
+            </p>
+
+            {/* Blinko Instance URL */}
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '4px', color: settings.darkMode ? '#ccc' : '#333' }}>
+                Blinko Instance URL
+              </label>
+              <input
+                type="text"
+                placeholder="https://blink.psy-tech.link"
+                value={aiPostSettings.blinkoApiUrl}
+                onChange={(e) => {
+                  const val = (e.target as HTMLInputElement).value;
+                  const updated = { ...aiPostSettings, blinkoApiUrl: val };
+                  setAIPostSettings(updated);
+                  aiPostService.save({ blinkoApiUrl: val });
+                  if ((window as any).blinkoAIPost) (window as any).blinkoAIPost.save({ blinkoApiUrl: val });
+                }}
+                style={{ width: '100%', padding: '7px 10px', borderRadius: '5px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, background: settings.darkMode ? '#222' : '#fff', color: settings.darkMode ? '#eee' : '#222', fontSize: '12px', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            {/* Bearer Token */}
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '4px', color: settings.darkMode ? '#ccc' : '#333' }}>
+                Bearer Token
+              </label>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input
+                  type={showApiToken ? 'text' : 'password'}
+                  placeholder="Paste your API token here"
+                  value={aiPostSettings.blinkoApiToken}
+                  onChange={(e) => {
+                    const val = (e.target as HTMLInputElement).value;
+                    const updated = { ...aiPostSettings, blinkoApiToken: val };
+                    setAIPostSettings(updated);
+                    aiPostService.save({ blinkoApiToken: val });
+                    if ((window as any).blinkoAIPost) (window as any).blinkoAIPost.save({ blinkoApiToken: val });
+                  }}
+                  style={{ flex: 1, padding: '7px 10px', borderRadius: '5px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, background: settings.darkMode ? '#222' : '#fff', color: settings.darkMode ? '#eee' : '#222', fontSize: '12px' }}
+                />
+                <button
+                  onClick={() => setShowApiToken(v => !v)}
+                  style={{ padding: '6px 10px', borderRadius: '5px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, background: settings.darkMode ? '#333' : '#f0f0f0', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+                >
+                  {showApiToken ? '🙈 Hide' : '👁 Show'}
+                </button>
+              </div>
+            </div>
+
+            {/* Test Connection */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                disabled={apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken}
+                onClick={async () => {
+                  setApiConnTesting(true);
+                  setApiConnTestResult('');
+                  try {
+                    const baseUrl = aiPostSettings.blinkoApiUrl.replace(/\/$/, '');
+                    const res = await fetch(`${baseUrl}/api/v1/note/upsert`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${aiPostSettings.blinkoApiToken}`,
+                      },
+                      body: JSON.stringify({ id: -99999, content: '__connection_test__' }),
+                    });
+                    if (res.ok || res.status === 404 || res.status === 400) {
+                      setApiConnTestResult('✅ Connection successful — credentials are valid!');
+                    } else if (res.status === 401 || res.status === 403) {
+                      setApiConnTestResult('❌ Auth failed (401/403) — check your Bearer token.');
+                    } else {
+                      setApiConnTestResult(`⚠️ Unexpected response: ${res.status} ${res.statusText}`);
+                    }
+                  } catch (err: any) {
+                    setApiConnTestResult(`❌ Error: ${err?.message ?? String(err)}`);
+                  } finally {
+                    setApiConnTesting(false);
+                  }
+                }}
+                style={{ background: apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? '#888' : '#5a2d9b', color: '#fff', border: 'none', padding: '7px 14px', borderRadius: '5px', cursor: apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: '600' }}
+              >
+                {apiConnTesting ? '⏳ Testing…' : '🧪 Test Connection'}
+              </button>
+              {apiConnTestResult && (
+                <span style={{ fontSize: '12px', color: apiConnTestResult.startsWith('✅') ? '#22a55a' : '#c0392b' }}>
+                  {apiConnTestResult}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* How it works */}

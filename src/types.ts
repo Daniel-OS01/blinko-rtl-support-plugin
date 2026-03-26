@@ -160,6 +160,10 @@ export interface AIPostSettings {
   customPrompt: string;
   /** When true, show a preview dialog before overwriting the note */
   showPreviewBeforeApply: boolean;
+  /** Blinko instance base URL for REST API v1 (no trailing slash), e.g. "https://blink.psy-tech.link" */
+  blinkoApiUrl: string;
+  /** Bearer token from Blinko Settings → API Keys */
+  blinkoApiToken: string;
 }
 
 export const DEFAULT_AI_POST_SETTINGS: AIPostSettings = {
@@ -169,6 +173,8 @@ export const DEFAULT_AI_POST_SETTINGS: AIPostSettings = {
   enableExportMenu: true,
   customPrompt: DEFAULT_AI_POST_PROMPT,
   showPreviewBeforeApply: true,
+  blinkoApiUrl: '',
+  blinkoApiToken: '',
 };
 
 // ─── BlinkoRTL public API ─────────────────────────────────────────────────────
