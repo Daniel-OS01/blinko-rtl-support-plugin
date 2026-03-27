@@ -2,7 +2,8 @@
 
 > **Document type:** Chronological change record
 > **Format:** Most recent changes first
-> **Scope:** All sessions on branch `claude/review-rtl-plugin-prs-OMCOM`
+> **Scope:** All sessions — latest branch `claude/fix-hebrew-text-note-focus-ddReT`
+> **Last updated:** 2026-03-27
 
 ---
 
@@ -20,6 +21,229 @@ Rationale: why the change was made
 ---
 
 ## Change Log
+
+---
+
+## Session 5 Changes — 2026-03-27 (branch: `claude/fix-hebrew-text-note-focus-ddReT`)
+
+---
+
+### [CL-S5-001] Fix RTL typing flicker — skip characterData mutations on editable elements
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/services/rtlService.ts` — `setupObserver()` characterData branch
+
+**Changes:**
+
+```typescript
+// Before — characterData mutations on editable elements were processed like any other:
+} else if (mutation.type === 'characterData' || mutation.type === 'attributes') {
+  const target = ...;
+  if (target) {
+    let matched = false;
+    for (const s of safeSelectors) { ... }
+    if (matched) {
+      this.pendingElements.add(target);
+      hasRelevantMutation = true;
+    }
+  }
+}
+
+// After — added early-return guard for editable elements on characterData:
+} else if (mutation.type === 'characterData' || mutation.type === 'attributes') {
+  const target = ...;
+  if (target) {
+    if (mutation.type === 'characterData') {
+      const isEditable =
+        target.isContentEditable ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'INPUT' ||
+        !!target.closest('[contenteditable="true"], [contenteditable]');
+      if (isEditable) return; // browser handles BiDi via unicode-bidi:plaintext
+    }
+    // ... rest unchanged
+  }
+}
+```
+
+**Rationale:** The mutation observer was re-processing editable elements on every keypress, toggling `rtl-force`/`ltr-force` CSS classes which caused a visible LTR↔RTL jump. Editable elements already carry `unicode-bidi: plaintext` via injected CSS, so per-character BiDi is handled by the browser natively. Addresses REQ-07. See also `DECISION_LOG.md DEC-011`.
+
+---
+
+### [CL-S5-002] Improve single-tap card selectors and click dispatch
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/services/uiuxService.ts` — `applySingleTap()` / `markAndListen()`
+
+**Changes:**
+
+```typescript
+// Before — narrow selectors, fragile openBtn heuristic:
+const cards = document.querySelectorAll<HTMLElement>(
+  '[class*="note-card"]:not([data-single-tap]), ' +
+  '[class*="blinko-card"]:not([data-single-tap]), ' +
+  '.card-masonry-grid > div > div:not([data-single-tap])'
+);
+// handler: find openBtn (a, heading, [class*=open]) → click it OR dispatch on card
+
+// After — broadened selectors, direct click on tapped element:
+const cards = document.querySelectorAll<HTMLElement>(
+  '[class*="note-card"]:not([data-single-tap]), ' +
+  '[class*="blinko-card"]:not([data-single-tap]), ' +
+  '[class*="blinko-note"]:not([data-single-tap]), ' +
+  '[class*="note-item"]:not([data-single-tap]), ' +
+  '.card-masonry-grid > div > div:not([data-single-tap]), ' +
+  '.blog-masonry-grid > div > div:not([data-single-tap])'
+);
+// handler: skip interactive controls; dispatch click on tapped element (bubbles to React onClick)
+```
+
+**Rationale:** The previous `openBtn`-search heuristic failed when body text (`<p>`) was tapped in a card that also had a heading — it redirected the click to the heading, which might not be the React-managed opener. The new approach dispatches directly on the tapped element, relying on React event bubbling to reach the card's onClick. Addresses REQ-08. See `DECISION_LOG.md DEC-012`.
+
+---
+
+### [CL-S5-003] Update default settings (minRTLChars, darkMode, UIUX flags)
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/services/constants.ts` — `DEFAULT_SETTINGS`
+- `src/types.ts` — `DEFAULT_UIUX_SETTINGS`
+
+**Changes:**
+
+```typescript
+// constants.ts — DEFAULT_SETTINGS:
+// Before: minRTLChars: 2, darkMode: false
+// After:  minRTLChars: 1, darkMode: true
+
+// types.ts — DEFAULT_UIUX_SETTINGS:
+// Before: compactDatetime: false, singleTapOpenNote: false,
+//         backButtonClosesNote: false, tapOutsideClosesNote: false, reduceMotion: false
+// After:  compactDatetime: true,  singleTapOpenNote: true,
+//         backButtonClosesNote: true,  tapOutsideClosesNote: true,  reduceMotion: true
+```
+
+**Rationale:** User reported that defaults did not match expected behaviour. `minRTLChars: 1` ensures the first Hebrew character triggers RTL detection (with `minRTLChars: 2`, a single character produced no RTL class, contributing to flicker). Addresses REQ-09.
+
+---
+
+### [CL-S5-004] Add 🧪 Tools tab; move 4 sections out of always-visible position
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/setting.tsx` — tab type, tab button bar, section wrappers
+
+**Changes:**
+
+```typescript
+// Tab type widened:
+// Before: 'simple' | 'advanced' | 'uiux' | 'aipost'
+// After:  'simple' | 'advanced' | 'uiux' | 'aipost' | 'testing'
+
+// New tab button added (orange bottom-border colour #fd7e14).
+
+// The following sections were previously always-rendered (no tab wrapper).
+// They are now wrapped in {activeTab === 'testing' && (<div>...</div>)}:
+//   - 🎨 Dynamic CSS Rules
+//   - 📌 Permanent CSS Settings
+//   - 🧪 Test RTL Detection
+//   - 🔧 Advanced Actions (reset / export / import)
+```
+
+**Rationale:** The four sections were always rendered regardless of active tab, cluttering the panel and contributing to a long scroll. A dedicated Tools tab groups diagnostic and power-user controls in one place. Addresses REQ-10.
+
+---
+
+### [CL-S5-005] Fix AI SSE chunk extraction + add x-trpc-source header
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/services/aiPostService.ts` — `collectWritingStream()`, `trpcMutate()`
+
+**Changes:**
+
+```typescript
+// collectWritingStream — chunk extraction:
+// Before (wrong path — silently returns empty string):
+const chunk =
+  (data?.result as any)?.data?.json?.chunk ??
+  (data?.result as any)?.data?.chunk ??
+  (data as any)?.chunk ??
+  (data as any)?.data?.chunk;
+if (chunk?.type === 'text-delta' && typeof chunk.textDelta === 'string') {
+  fullText += chunk.textDelta;
+}
+
+// After (matches API_REFERENCE.md documented format):
+const chunk =
+  (data?.result as any)?.data ??
+  (data?.result as any)?.data?.json?.chunk ??
+  (data as any)?.data ??
+  (data as any)?.chunk;
+if (chunk?.type === 'text_delta' && typeof chunk.value === 'string') {
+  fullText += chunk.value;                            // primary path
+} else if (chunk?.type === 'text-delta' && typeof chunk.textDelta === 'string') {
+  fullText += chunk.textDelta;                        // legacy fallback
+}
+
+// Added x-trpc-source header to both collectWritingStream and trpcMutate:
+headers: {
+  'Content-Type': 'application/json',
+  'x-trpc-source': 'blinko-rtl-plugin',
+  // ...
+}
+```
+
+**Rationale:** `API_REFERENCE.md` documents the SSE envelope as `{"result":{"data":{"type":"text_delta","value":"..."}}}`. The previous code was looking for `.data.json.chunk.textDelta` — a different path that silently matched nothing, returning empty strings for all AI responses. Addresses REQ-11.
+
+---
+
+### [CL-S5-006] Fix connection test: use GET /api/v1/note/list instead of POST id:-99999
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/setting.tsx` — `onClick` handler of Test Connection button
+
+**Changes:**
+
+```typescript
+// Before — POST to note/upsert with invalid ID:
+const res = await fetch(`${baseUrl}/api/v1/note/upsert`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+  body: JSON.stringify({ id: -99999, content: '__connection_test__' }),
+});
+if (res.ok || res.status === 404 || res.status === 400) { /* success */ }
+
+// After — GET to note/list (read-only):
+const res = await fetch(`${baseUrl}/api/v1/note/list?page=1&pageSize=1`, {
+  method: 'GET',
+  headers: { 'Authorization': `Bearer ${token}` },
+});
+if (res.ok) { /* success */ }
+```
+
+**Rationale:** Blinko returns HTTP 500 for `id: -99999` (invalid negative ID), not 400 or 404 as expected. The test logic correctly identified 500 as unexpected and showed a warning. Switching to a read-only GET request eliminates the dependency on Blinko's write-path error handling and is safer (no accidental mutations). Addresses REQ-12. See `DECISION_LOG.md DEC-013`.
 
 ---
 

@@ -1,9 +1,9 @@
 # Error Resolution — Blinko RTL Support Plugin
 
 > **Document type:** Comprehensive error catalog with root cause analysis and resolutions
-> **Version:** 1.0
-> **Branch:** `claude/review-rtl-plugin-prs-OMCOM`
-> **Last updated:** 2026-03-26
+> **Version:** 1.1
+> **Branch:** `claude/fix-hebrew-text-note-focus-ddReT` (latest)
+> **Last updated:** 2026-03-27
 >
 > **Note:** Issues 001–008 are also tracked in `ERROR_LOGS.md` with full reproduction details.
 > This document adds root-cause analysis depth, unsuccessful approaches, and lessons learned.
@@ -18,6 +18,9 @@
 | [ERR-002](#err-002) | `tsc: Cannot find type definition file for 'node'` | High | Resolved | 2026-03-25 |
 | [ERR-003](#err-003) | Single-tap silently does nothing on Blinko quick notes | Critical | Resolved | 2026-03-26 |
 | [ERR-004](#err-004) | AI writing/autotag fails with opaque 401 error | High | Resolved | 2026-03-26 |
+| [ERR-010](#err-010) | RTL text flickers LTR↔RTL on every Hebrew keypress | Critical | Resolved | 2026-03-27 |
+| [ERR-011](#err-011) | AI `🧪 Run Test` returns empty string despite valid AI config | Critical | Resolved | 2026-03-27 |
+| [ERR-012](#err-012) | Connection test returns `⚠️ Unexpected response: 500` | High | Resolved | 2026-03-27 |
 | [ERR-005](#err-005) | AI error interceptor one-way install bug | Medium | Resolved | 2026-03-25 |
 | [ERR-006](#err-006) | MutationObserver feedback loop with browser extensions | Medium | Resolved | 2026-03-25 |
 | [ERR-007](#err-007) | Back button history entry accumulation | Critical | Resolved | 2026-03-24 |
@@ -332,6 +335,105 @@ Any `MutationObserver` that modifies the DOM in its callback must be debounced. 
 
 ---
 
+---
+
+## ERR-010
+
+### RTL text flickers LTR↔RTL on every Hebrew keypress
+
+**Date:** 2026-03-27
+**Severity:** Critical
+**Component:** `src/services/rtlService.ts` — `setupObserver()`
+**Status:** Resolved
+
+#### Error Message / Behavior
+
+When typing Hebrew characters one by one in the Blinko Vditor editor, the text visibly jumps between LTR and RTL on each keystroke.
+
+#### Root Cause Analysis
+
+The `MutationObserver` callback observes `characterData` mutations (which fire on every keypress). The callback adds the mutated element to `pendingElements`, which is processed by `debouncedProcessQueue` (50ms debounce). `processElement()` applies `rtl-force` or `ltr-force` CSS classes based on the current text content. Toggling these classes causes a visible layout reflow. With `minRTLChars: 2`, the first Hebrew character left the element classless (LTR-rendered), the second caused `rtl-force` to be applied — one visible jump per two characters.
+
+#### Unsuccessful Approaches
+
+- Increasing debounce time alone — delays the jump but does not prevent it
+
+#### Successful Resolution
+
+Added an early-return guard for `characterData` mutations when the target is editable (`isContentEditable`, `TEXTAREA`, `INPUT`, or inside `[contenteditable]`). Editable elements already have `unicode-bidi: plaintext` in injected CSS; the browser handles per-character BiDi natively. Also set `minRTLChars` default to `1`. See `CHANGE_LOG.md CL-S5-001` and `DECISION_LOG.md DEC-011`.
+
+#### Lesson Learned
+
+MutationObserver `characterData` events must not trigger CSS class changes on actively-edited elements. Rely on `unicode-bidi: plaintext` for in-editor rendering; class-based direction is for static read-only content.
+
+---
+
+## ERR-011
+
+### AI `🧪 Run Test` returns empty string (no output despite valid AI config)
+
+**Date:** 2026-03-27
+**Severity:** Critical
+**Component:** `src/services/aiPostService.ts` — `collectWritingStream()`
+**Status:** Resolved
+
+#### Error Message / Behavior
+
+`🧪 Run Test` shows `(empty response)`. The user confirmed that Blinko's built-in AI auto-tag works correctly, so the AI provider IS configured.
+
+#### Root Cause Analysis
+
+`collectWritingStream()` extracted SSE chunk data from `result.data.json.chunk.textDelta`. Per `API_REFERENCE.md`, Blinko's actual SSE envelope format is `{"result":{"data":{"type":"text_delta","value":"..."}}}`. The correct extraction is `result.data.value`. The previous path always resolved to `undefined`, so `fullText` remained empty for every chunk.
+
+#### Unsuccessful Approaches
+
+- N/A — root cause was deterministic from API spec
+
+#### Successful Resolution
+
+Fixed chunk extraction to `(data?.result as any)?.data` with `chunk.type === 'text_delta'` and `chunk.value`. Added `text-delta`/`textDelta` as legacy fallbacks. Also added `x-trpc-source: blinko-rtl-plugin` header. See `CHANGE_LOG.md CL-S5-005`.
+
+#### Lesson Learned
+
+Always verify streaming parsers against actual API spec. Silent empty returns are the hardest failure mode — build in visible indicators (`(empty response)` label) so this class of bug surfaces immediately.
+
+---
+
+## ERR-012
+
+### Connection test returns `⚠️ Unexpected response: 500`
+
+**Date:** 2026-03-27
+**Severity:** High
+**Component:** `src/setting.tsx` — Test Connection button handler
+**Status:** Resolved
+
+#### Error Message / Behavior
+
+```
+⚠️ Unexpected response: 500
+```
+
+Shown even when Blinko URL and Bearer token are both valid.
+
+#### Root Cause Analysis
+
+The test used `POST /api/v1/note/upsert` with `{ id: -99999 }`. Expectation (per `DEC-010`) was that Blinko would return 400/404 (auth passes, note not found). Instead Blinko returns HTTP 500 for negative IDs — an unhandled server exception on invalid input rather than a clean validation error. The test logic did not include 500 in the "auth valid" set.
+
+#### Unsuccessful Approaches
+
+- Adding 500 to "auth valid" set — ambiguous; a real server error also returns 500
+
+#### Successful Resolution
+
+Replaced with `GET /api/v1/note/list?page=1&pageSize=1` — a read-only request returning 200 on valid credentials, no write-path validation involved. See `CHANGE_LOG.md CL-S5-006` and `DECISION_LOG.md DEC-013`.
+
+#### Lesson Learned
+
+Connection tests should use the simplest available read-only endpoint. Write-path dry-runs depend on the server's auth-before-validation ordering, which is not guaranteed across API versions.
+
+---
+
 ## Lessons Learned Summary
 
 | # | Lesson | Applicable Context |
@@ -346,7 +448,10 @@ Any `MutationObserver` that modifies the DOM in its callback must be debounced. 
 | 8 | CSS substring selectors (`[class*="flex"]`) are dangerous with utility-class frameworks (Tailwind) | CSS architecture |
 | 9 | tRPC wraps HTTP errors as strings; detect status codes via `err.message.includes('401')` | tRPC error handling |
 | 10 | `history.pushState` guards must be tied to feature state, not call count | History API management |
+| 11 | MutationObserver `characterData` events must not trigger CSS class changes on editable elements | DOM mutation + editor BiDi |
+| 12 | Always verify SSE/streaming parsers against the actual API spec; silent empty returns are the hardest failures to diagnose | API integration |
+| 13 | Connection tests must use read-only endpoints; write-path dry-runs depend on unguaranteed server auth-before-validation ordering | API / connection testing |
 
 ---
 
-*Document version: 1.0 — Created 2026-03-26*
+*Document version: 1.1 — Updated 2026-03-27 (added ERR-010 through ERR-012; updated index; added lessons 11–13)*
