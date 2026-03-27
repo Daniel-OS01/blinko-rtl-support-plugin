@@ -544,7 +544,7 @@ export function RTLSetting(): JSX.Element {
     threshold: 0.15, // derived UI field, not stored in DEFAULT_SETTINGS by default
   });
 
-  const [activeTab, setActiveTab] = useState<'simple' | 'advanced' | 'uiux' | 'aipost'>('simple');
+  const [activeTab, setActiveTab] = useState<'simple' | 'advanced' | 'uiux' | 'aipost' | 'testing'>('simple');
   const [uiuxSettings, setUIUXSettings] = useState<UIUXSettings>({ ...DEFAULT_UIUX_SETTINGS });
   const [uiuxSubTab, setUIUXSubTab] = useState<'typography' | 'navigation' | 'accessibility' | 'layout' | 'analysis'>('typography');
   const [uiuxService] = useState(() => new UIUXService());
@@ -1053,6 +1053,21 @@ export function RTLSetting(): JSX.Element {
         >
           🤖 AI Post
         </button>
+        <button
+          onClick={() => setActiveTab('testing')}
+          style={{
+            flex: 1,
+            padding: '10px',
+            background: activeTab === 'testing' ? (settings.darkMode ? '#444' : '#eee') : 'transparent',
+            color: settings.darkMode ? '#fff' : '#333',
+            border: 'none',
+            borderBottom: activeTab === 'testing' ? '2px solid #fd7e14' : 'none',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          🧪 Tools
+        </button>
       </div>
 
       {/* Simple Settings */}
@@ -1340,6 +1355,10 @@ export function RTLSetting(): JSX.Element {
         </div>
       </div>
       )}
+
+      {/* ── Testing & Tools Tab ──────────────────────────────────────── */}
+      {activeTab === 'testing' && (
+      <div>
 
       {/* Dynamic CSS Rules Section */}
       <div style={{
@@ -1740,6 +1759,9 @@ export function RTLSetting(): JSX.Element {
         </div>
         {importError && <p style={{ color: 'red', marginTop: '10px' }}>{importError}</p>}
       </div>
+
+      </div>
+      )} {/* end testing tab */}
 
       {/* ══════════════════════════════════════════════════════════════
           UI/UX SETTINGS TAB
@@ -2551,15 +2573,15 @@ export function RTLSetting(): JSX.Element {
                   setApiConnTestResult('');
                   try {
                     const baseUrl = aiPostSettings.blinkoApiUrl.replace(/\/$/, '');
-                    const res = await fetch(`${baseUrl}/api/v1/note/upsert`, {
-                      method: 'POST',
+                    // Use a read-only GET request so we never create or modify data.
+                    // A 200 response means credentials are valid; 401/403 means bad token.
+                    const res = await fetch(`${baseUrl}/api/v1/note/list?page=1&pageSize=1`, {
+                      method: 'GET',
                       headers: {
-                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${aiPostSettings.blinkoApiToken}`,
                       },
-                      body: JSON.stringify({ id: -99999, content: '__connection_test__' }),
                     });
-                    if (res.ok || res.status === 404 || res.status === 400) {
+                    if (res.ok) {
                       setApiConnTestResult('✅ Connection successful — credentials are valid!');
                     } else if (res.status === 401 || res.status === 403) {
                       setApiConnTestResult('❌ Auth failed (401/403) — check your Bearer token.');

@@ -686,6 +686,20 @@ export class RTLService {
                     : mutation.target.parentElement;
 
                   if (target) {
+                      // Skip editable elements during characterData mutations (user is actively
+                      // typing). Toggling rtl-force/ltr-force classes on every keypress causes
+                      // the visible LTR↔RTL flicker in the editor. These elements already have
+                      // `unicode-bidi: plaintext` via injected CSS so the browser handles BiDi
+                      // per-character without explicit direction classes.
+                      if (mutation.type === 'characterData') {
+                          const isEditable =
+                              target.isContentEditable ||
+                              target.tagName === 'TEXTAREA' ||
+                              target.tagName === 'INPUT' ||
+                              !!target.closest('[contenteditable="true"], [contenteditable]');
+                          if (isEditable) return;
+                      }
+
                       let matched = false;
                       for (const s of safeSelectors) {
                            try {
