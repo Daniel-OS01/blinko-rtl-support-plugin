@@ -38,7 +38,23 @@ export class UIUXService {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        return { ...DEFAULT_UIUX_SETTINGS, ...JSON.parse(raw) };
+        const stored = JSON.parse(raw) as Partial<UIUXSettings> & { _settingsVersion?: number };
+        const merged = { ...DEFAULT_UIUX_SETTINGS, ...stored };
+
+        // v1→v2 migration: force-enable flags that defaulted to false before v2.
+        // Existing users have these stored as false, which overrides the new defaults.
+        if (!stored._settingsVersion || stored._settingsVersion < 2) {
+          merged.compactDatetime = true;
+          merged.singleTapOpenNote = true;
+          merged.backButtonClosesNote = true;
+          merged.tapOutsideClosesNote = true;
+          merged.reduceMotion = true;
+          merged.interceptAIErrors = true;
+          merged._settingsVersion = 2;
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
+        }
+
+        return merged;
       }
     } catch {
       // ignore parse errors
@@ -147,73 +163,77 @@ export class UIUXService {
   // ─── Single-tap note open ────────────────────────────────────────────
 
   private applySingleTap(): void {
-    // Clean up existing listener first
     if (this.singleTapCleanup) {
       this.singleTapCleanup();
       this.singleTapCleanup = null;
     }
 
     if (!this.settings.singleTapOpenNote) {
-      // Remove all data-single-tap markers
       document
         .querySelectorAll<HTMLElement>('[data-single-tap="true"]')
         .forEach(el => el.removeAttribute('data-single-tap'));
       return;
     }
 
-    // Mark note cards and attach click listeners
-    const markAndListen = () => {
-      // Broad selector covers Blinko quick-note cards, article cards, and any
-      // wrapper divs inside the masonry grids.  The `:not([data-single-tap])`
-      // guard prevents duplicate handler attachment on already-processed cards.
-      const cards = document.querySelectorAll<HTMLElement>(
-        '[class*="note-card"]:not([data-single-tap]), ' +
-        '[class*="blinko-card"]:not([data-single-tap]), ' +
-        '[class*="blinko-note"]:not([data-single-tap]), ' +
-        '[class*="note-item"]:not([data-single-tap]), ' +
-        '.card-masonry-grid > div > div:not([data-single-tap]), ' +
-        '.blog-masonry-grid > div > div:not([data-single-tap])'
-      );
+    // Plain selector — `:not([data-single-tap])` combined attribute pseudo-classes
+    // are not reliably supported in all test environments (e.g. happy-dom).
+    // Re-processing is guarded in JS via the _uiuxClickHandler property check.
+    const CARD_SELECTOR =
+      '[class*="note-card"], [class*="blinko-card"], ' +
+      '[class*="blinko-note"], [class*="note-item"], ' +
+      '.card-masonry-grid > div > div, ' +
+      '.blog-masonry-grid > div > div';
 
-      cards.forEach(card => {
+    const IGNORE_SELECTOR =
+      'button, a[href], input, textarea, select, ' +
+      '[role="button"], [role="menuitem"], [role="menu"], ' +
+      '[class*="action"], [class*="toolbar"], [class*="menu"], ' +
+      '[class*="tag"], [class*="more"], [class*="dropdown"], [class*="icon"]';
+
+    const markAndListen = () => {
+      document.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach(card => {
+        // Skip cards already processed — JS guard replaces CSS :not([data-single-tap])
+        if ((card as any)._uiuxClickHandler) return;
         card.setAttribute('data-single-tap', 'true');
 
         const handler = (e: MouseEvent) => {
           const target = e.target as HTMLElement;
 
-          // Don't intercept clicks on interactive elements — let them handle
-          // themselves. Also skip action bars, toolbars, and context menus.
-          if (target.closest(
-            'button, a, input, textarea, select, ' +
-            '[role="button"], [role="menuitem"], [role="menu"], ' +
-            '[class*="action"], [class*="toolbar"], [class*="menu"], ' +
-            '[class*="tag"], [class*="more"], [class*="dropdown"]'
-          )) return;
+          // Skip clicks on interactive elements that are INSIDE the card.
+          // The check is scoped to descendants of the card to avoid false positives
+          // from body/root classes (e.g. blinko-custom-icons matches [class*="icon"]).
+          const ignoreMatch = target.closest(IGNORE_SELECTOR);
+          if (ignoreMatch && card.contains(ignoreMatch)) return;
 
-          // Re-entry guard — prevents our synthetic click from re-triggering
-          // this handler and causing a double-open.
+          // Re-entry guard: prevents our synthetic click from re-triggering
+          // this handler (the click bubbles back through the card).
           if (card.dataset.opening) return;
           card.dataset.opening = 'true';
 
-          // Strategy: always dispatch the click on the most specific element
-          // the user actually tapped, letting React's event bubbling carry it
-          // up through the card's onClick handler.  This works for both
-          // quick-notes (type 0, no heading) and article notes (type 1, has
-          // heading/link opener) because the React onClick is on an ancestor
-          // that receives the bubbled event regardless.
-          const reactTarget =
-            (target.nodeType === Node.TEXT_NODE ? target.parentElement : target) ?? card;
+          // Find the element that navigates to the note detail view.
+          // Priority: heading element > heading/title link > any valid href.
+          // Article notes (type 1) have a heading that serves as the navigation
+          // target. Quick notes (type 0) have no heading.
+          const opener =
+            card.querySelector<HTMLElement>('h1, h2, h3, h4') ??
+            card.querySelector<HTMLElement>(
+              'a[href]:not([href="#"]):not([href^="javascript"])'
+            );
 
-          const syntheticClick = new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            composed: true,
-          });
+          if (opener && opener.contains(target)) {
+            // User tapped directly on the opener element — native click already fired; skip.
+            requestAnimationFrame(() => { delete card.dataset.opening; });
+            return;
+          }
 
-          if (reactTarget !== card && card.contains(reactTarget)) {
-            reactTarget.dispatchEvent(syntheticClick);
+          if (opener) {
+            opener.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
           } else {
-            card.dispatchEvent(syntheticClick);
+            // Quick note: dispatch on the card component so the React onClick
+            // fires and triggers navigation.
+            card.dispatchEvent(
+              new MouseEvent('click', { bubbles: true, cancelable: true, composed: true })
+            );
           }
 
           requestAnimationFrame(() => { delete card.dataset.opening; });
@@ -226,13 +246,10 @@ export class UIUXService {
 
     markAndListen();
 
-    // Watch for new cards added to the DOM.
-    // Debounced to prevent excessive callback firing that would otherwise
-    // trigger browser-extension MutationObserver feedback loops (e.g. Bitwarden
-    // autofill overlay reacting to data-single-tap attribute writes).
-    // cancel() is called during cleanup to drop any inflight pending call.
+    // Watch for new cards added to the DOM. Debounced to prevent excessive
+    // callback firing (e.g. Bitwarden autofill overlay reacting to attribute
+    // writes). cancel() is called during cleanup to drop inflight calls.
     const debouncedMarkAndListen = debounce(markAndListen, 150);
-
     const observer = new MutationObserver(debouncedMarkAndListen);
     observer.observe(document.body, { childList: true, subtree: true });
 
@@ -244,6 +261,7 @@ export class UIUXService {
         if (handler) card.removeEventListener('click', handler);
         card.removeAttribute('data-single-tap');
         delete (card as any)._uiuxClickHandler;
+        delete card.dataset.opening;
       });
     };
   }

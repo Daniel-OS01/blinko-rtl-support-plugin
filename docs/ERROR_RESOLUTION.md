@@ -21,6 +21,8 @@
 | [ERR-010](#err-010) | RTL text flickers LTR↔RTL on every Hebrew keypress | Critical | Resolved | 2026-03-27 |
 | [ERR-011](#err-011) | AI `🧪 Run Test` returns empty string despite valid AI config | Critical | Resolved | 2026-03-27 |
 | [ERR-012](#err-012) | Connection test returns `⚠️ Unexpected response: 500` | High | Resolved | 2026-03-27 |
+| [ERR-013](#err-013) | Default settings ignored for existing users (no migration) | Critical | Resolved | 2026-03-27 |
+| [ERR-014](#err-014) | Single-tap never fires — IGNORE_SELECTOR false-positive on body class | Critical | Resolved | 2026-03-27 |
 | [ERR-005](#err-005) | AI error interceptor one-way install bug | Medium | Resolved | 2026-03-25 |
 | [ERR-006](#err-006) | MutationObserver feedback loop with browser extensions | Medium | Resolved | 2026-03-25 |
 | [ERR-007](#err-007) | Back button history entry accumulation | Critical | Resolved | 2026-03-24 |
@@ -451,7 +453,49 @@ Connection tests should use the simplest available read-only endpoint. Write-pat
 | 11 | MutationObserver `characterData` events must not trigger CSS class changes on editable elements | DOM mutation + editor BiDi |
 | 12 | Always verify SSE/streaming parsers against the actual API spec; silent empty returns are the hardest failures to diagnose | API integration |
 | 13 | Connection tests must use read-only endpoints; write-path dry-runs depend on unguaranteed server auth-before-validation ordering | API / connection testing |
+| 14 | Settings merging (`{ ...defaults, ...stored }`) always lets stored win; add a version-stamped migration block to force-apply corrected defaults | Settings persistence |
+| 15 | `target.closest(selector)` for IGNORE checks must be scoped to the feature's DOM subtree; unscoped closest() can match ancestor body/root classes | Event handling |
 
 ---
 
-*Document version: 1.1 — Updated 2026-03-27 (added ERR-010 through ERR-012; updated index; added lessons 11–13)*
+## ERR-013
+
+### Default settings ignored for existing users (no migration)
+
+**Severity:** Critical
+**Status:** Resolved (Session 6, 2026-03-27)
+**Affected files:** `src/types.ts`, `src/services/uiuxService.ts`, `src/services/rtlService.ts`
+
+**Symptom:** After changing multiple defaults in Session 5 (`singleTapOpenNote: true`, `backButtonClosesNote: true`, etc.), users who had previously loaded the plugin saw no change — the new defaults had no effect.
+
+**Root cause:** `UIUXService.load()` merges settings as `{ ...DEFAULT_UIUX_SETTINGS, ...stored }`. Since `stored` is the full saved object, every field in it overrides the default — including fields that were intentionally changed. There was no version guard to detect "old storage format" and apply new defaults.
+
+**Fix:** Added `_settingsVersion: 2` to `DEFAULT_UIUX_SETTINGS` and `UIUXSettings`. In `load()`, if `stored._settingsVersion` is absent or `< 2`, force-set all five UIUX flags to `true` and write back. Same pattern in `RTLService.loadSettings()` for `minRTLChars` and `darkMode`. See `CHANGE_LOG.md CL-S6-001` and `DECISION_LOG.md DEC-015`.
+
+---
+
+## ERR-014
+
+### Single-tap never fires — IGNORE_SELECTOR false-positive on body class
+
+**Severity:** Critical
+**Status:** Resolved (Session 6, 2026-03-27)
+**Affected files:** `src/services/uiuxService.ts`
+
+**Symptom:** After Session 5 / Session 6 fixes, all single-tap tests failed with "Expected 1, Received 0" — the heading click spy was never called even though the card was found and the handler was attached.
+
+**Root cause (primary):** `IGNORE_SELECTOR` contained `[class*="icon"]`. `applyBodyClasses()` adds class `blinko-custom-icons` to `document.body`. `target.closest(IGNORE_SELECTOR)` walks up from the clicked `<p>` through the card to the body, matches `body.blinko-custom-icons`, and returns body. The truthy result causes the handler to return early — every tap was silently ignored.
+
+**Root cause (secondary):** When the user tapped directly on the heading element (opener), the handler still found it as `opener` and dispatched a second synthetic click, firing the heading listener twice.
+
+**Fix:**
+1. Scoped IGNORE check: `if (ignoreMatch && card.contains(ignoreMatch)) return;` — only exits if the matching element is inside the card, not a body/root ancestor.
+2. Added `a[href]` to IGNORE_SELECTOR — anchor clicks are let through by the browser natively.
+3. Added opener-contains-target early return: `if (opener && opener.contains(target)) { /* clear guard */ return; }` — prevents re-dispatching when the user clicks the opener directly.
+4. Replaced CSS `:not([data-single-tap])` in `querySelectorAll` with JS `_uiuxClickHandler` property check — avoids happy-dom's compound attribute pseudo-class limitation.
+
+See `CHANGE_LOG.md CL-S6-003` and `DECISION_LOG.md DEC-016`.
+
+---
+
+*Document version: 1.2 — Updated 2026-03-27 (added ERR-013, ERR-014; updated index; added lessons 14–15)*

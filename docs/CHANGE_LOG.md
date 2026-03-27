@@ -24,6 +24,136 @@ Rationale: why the change was made
 
 ---
 
+## Session 6 Changes — 2026-03-27 (branch: `claude/fix-hebrew-text-note-focus-ddReT`)
+
+---
+
+### [CL-S6-001] Add v1→v2 settings migration to UIUXService and RTLService
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+
+**Files modified:**
+- `src/types.ts` — `UIUXSettings` interface, `DEFAULT_UIUX_SETTINGS`
+- `src/services/uiuxService.ts` — `load()`
+- `src/services/rtlService.ts` — `loadSettings()`
+
+**Changes:**
+
+```typescript
+// types.ts: added version field
+export interface UIUXSettings {
+  // ... existing fields ...
+  _settingsVersion?: number;   // NEW
+}
+export const DEFAULT_UIUX_SETTINGS = {
+  // ...
+  _settingsVersion: 2,   // NEW
+};
+
+// uiuxService.ts — load(): added migration block
+if (!stored._settingsVersion || stored._settingsVersion < 2) {
+  merged.compactDatetime = true;
+  merged.singleTapOpenNote = true;
+  merged.backButtonClosesNote = true;
+  merged.tapOutsideClosesNote = true;
+  merged.reduceMotion = true;
+  merged.interceptAIErrors = true;
+  merged._settingsVersion = 2;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+}
+
+// rtlService.ts — loadSettings(): added migration block
+const storedVersion = (loadedSettings as any)._settingsVersion ?? 0;
+if (storedVersion < 2) {
+  this.settings.minRTLChars = 1;
+  this.settings.darkMode = true;
+  (this.settings as any)._settingsVersion = 2;
+  this.storageManager.save(this.settings);
+}
+```
+
+**Rationale:** `load()` used `{ ...DEFAULT_UIUX_SETTINGS, ...stored }` where stored JSON always won. Existing users had `singleTapOpenNote: false` (old default) stored, which overrode the new `true` default. The v1→v2 migration force-applies corrected defaults and persists the updated version stamp. Addresses ERR-013. See `DECISION_LOG.md DEC-015`.
+
+---
+
+### [CL-S6-002] Add childList editor-focus guard to RTL MutationObserver
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+
+**Files modified:**
+- `src/services/rtlService.ts` — `setupObserver()` childList mutation handler
+
+**Changes:**
+
+```typescript
+// Before — childList mutations inside an active editor triggered RTL re-classification:
+if (node.nodeType === Node.ELEMENT_NODE) {
+  // process element ...
+}
+
+// After — added early return if mutation is inside a focused editable:
+if (node.nodeType === Node.ELEMENT_NODE) {
+  const activeEl = document.activeElement as HTMLElement | null;
+  if (activeEl) {
+    const editingRoot =
+      activeEl.isContentEditable
+        ? (activeEl.closest('[contenteditable]') ?? activeEl)
+        : activeEl.closest('[contenteditable]') ??
+          (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT' ? activeEl : null);
+    if (editingRoot && editingRoot.contains(element)) return;
+  }
+  // process element ...
+}
+```
+
+**Rationale:** Vditor WYSIWYG mode generates `childList` mutations on every keypress (adds/removes formatting spans). These bypassed the existing `characterData` guard, re-classified direction, and toggled `rtl-force`/`ltr-force` classes — causing visible LTR↔RTL flicker. The editor-focus guard suppresses re-classification while an editable area is active.
+
+---
+
+### [CL-S6-003] Fix single-tap IGNORE_SELECTOR false-positive and heading double-fire
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+
+**Files modified:**
+- `src/services/uiuxService.ts` — `applySingleTap()` handler logic
+
+**Root cause:** Two bugs in the single-tap click handler:
+1. `IGNORE_SELECTOR` included `[class*="icon"]` which matched `document.body` (body has `blinko-custom-icons` from `applyBodyClasses()`). `target.closest(IGNORE_SELECTOR)` walked up to body, matched, and bailed out — meaning NO card tap was ever processed.
+2. When the user clicked directly on the heading element (opener), the handler found the same element as opener and dispatched a second synthetic click, firing the heading handler twice.
+
+**Changes:**
+
+```typescript
+// Before — IGNORE check walked all the way up to document/body:
+if (target.closest(IGNORE_SELECTOR)) return;
+
+// After — scoped to card descendants only; anchor links skipped:
+// IGNORE_SELECTOR now includes a[href]
+const ignoreMatch = target.closest(IGNORE_SELECTOR);
+if (ignoreMatch && card.contains(ignoreMatch)) return;
+
+// Before — no check; dispatched on opener even when user tapped it directly:
+if (opener) {
+  opener.dispatchEvent(new MouseEvent('click', ...));
+}
+
+// After — skip re-dispatch when target is the opener itself:
+if (opener && opener.contains(target)) {
+  requestAnimationFrame(() => { delete card.dataset.opening; });
+  return;
+}
+if (opener) {
+  opener.dispatchEvent(new MouseEvent('click', ...));
+}
+```
+
+Also replaced CSS `:not([data-single-tap])` in `querySelectorAll` with a JS `_uiuxClickHandler` property check (avoiding happy-dom compound attribute pseudo-class issues). Replaced `opener.click()` with `opener.dispatchEvent(new MouseEvent('click', ...))` for reliable dispatch in test environments. Addresses ERR-014. See `DECISION_LOG.md DEC-016`.
+
+---
+
 ## Session 5 Changes — 2026-03-27 (branch: `claude/fix-hebrew-text-note-focus-ddReT`)
 
 ---

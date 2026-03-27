@@ -12,6 +12,8 @@
 
 | ID | Title | Date | Status |
 |----|-------|------|--------|
+| [DEC-015](#dec-015) | Version-stamped settings migration (v1→v2) instead of re-setting defaults | 2026-03-27 | Accepted |
+| [DEC-016](#dec-016) | Scope IGNORE_SELECTOR check to card descendants; add opener-contains-target guard | 2026-03-27 | Accepted |
 | [DEC-001](#dec-001) | Use JS visibility filter instead of CSS `:not()` pseudo-class | 2026-03-26 | Accepted |
 | [DEC-011](#dec-011) | Skip characterData mutations for editable elements to prevent RTL flicker | 2026-03-27 | Accepted |
 | [DEC-012](#dec-012) | Dispatch click on tapped element (not openBtn heuristic) for single-tap | 2026-03-27 | Accepted |
@@ -352,4 +354,55 @@ Some Blinko deployments have middleware that validates or logs the `x-trpc-sourc
 
 ---
 
-*Document version: 1.1 — Updated 2026-03-27 (added DEC-011 through DEC-014; updated index)*
+---
+
+## DEC-015
+
+### Version-stamped settings migration (v1→v2) instead of re-setting defaults
+
+**Date:** 2026-03-27
+**Status:** Accepted
+
+**Context:** Session 5 changed five `UIUXSettings` boolean defaults from `false` to `true` and two RTL defaults. The naive merge `{ ...DEFAULT, ...stored }` means stored values always win, so existing users were unaffected by the new defaults.
+
+**Decision:** Add `_settingsVersion?: number` to the settings type and `_settingsVersion: 2` to `DEFAULT_UIUX_SETTINGS`. In `load()` / `loadSettings()`, if stored version < 2, force-apply the corrected defaults and write back the updated version stamp.
+
+**Alternatives considered:**
+- **Wipe and re-load:** Discard all stored settings if version doesn't match → loses all user customizations (unacceptable).
+- **No migration, document only:** Users must manually reset settings → confusing UX, reported as bug.
+- **Per-key default injection:** For each key, check if value matches old default and replace with new default → fragile, hard to maintain as defaults change again in the future.
+
+**Why chosen:** Version stamp is a standard pattern (used by browsers, databases, Electron apps). It allows surgical migration of only the changed fields while preserving user customizations for unchanged fields.
+
+**Trade-offs:**
+- The migration runs once and writes back to localStorage — negligible performance cost.
+- Future sessions need to increment `_settingsVersion` and add a migration block — minimal maintenance overhead.
+
+---
+
+## DEC-016
+
+### Scope IGNORE_SELECTOR check to card descendants; add opener-contains-target guard
+
+**Date:** 2026-03-27
+**Status:** Accepted
+
+**Context:** `applySingleTap()` used `target.closest(IGNORE_SELECTOR)` to skip clicks on buttons, menus, etc. The selector included `[class*="icon"]`. `applyBodyClasses()` adds `blinko-custom-icons` to `document.body`. `target.closest('[class*="icon"]')` walked up to body, matched, returned body as truthy — so EVERY tap was silently ignored (handler returned early immediately).
+
+A second bug: when the user clicked the heading element directly, `opener === target`, and the handler dispatched a synthetic click on it anyway, calling the heading listener a second time.
+
+**Decision:**
+1. Scope ignore check: `const ignoreMatch = target.closest(IGNORE_SELECTOR); if (ignoreMatch && card.contains(ignoreMatch)) return;` — only bails out if the match is inside the card.
+2. Add `a[href]` to IGNORE_SELECTOR — anchor links navigate naturally, no synthetic re-dispatch needed.
+3. Add opener guard: `if (opener && opener.contains(target)) { /* clear guard */ return; }` — no re-dispatch when user tapped the opener directly.
+4. Replace CSS `:not([data-single-tap])` with JS `_uiuxClickHandler` property check (same pattern as DEC-001 for overlay detection).
+
+**Alternatives considered:**
+- **Remove `[class*="icon"]` from IGNORE_SELECTOR entirely:** Would allow clicks on icon buttons to bubble through and open notes accidentally.
+- **Rename body classes to avoid "icon":** Would require changing CSS class conventions globally.
+
+**Why chosen:** Scoping to `card.contains()` is precise and self-documenting. It makes the intent clear: "skip interactive elements within the card, not anywhere in the DOM."
+
+---
+
+*Document version: 1.2 — Updated 2026-03-27 (added DEC-015, DEC-016; updated index)*

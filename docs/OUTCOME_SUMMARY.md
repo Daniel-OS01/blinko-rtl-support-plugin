@@ -194,6 +194,29 @@ Build passed. All existing tests passed. No new test failures introduced.
 
 ---
 
+## 6b. Session 6 Outcomes (2026-03-27) — Settings Migration & Single-tap Fix
+
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+
+### What Succeeded
+
+| Item | Root cause fixed | Evidence |
+|------|-----------------|---------|
+| Settings migration v1→v2 | `{ ...DEFAULT, ...stored }` always let stored win; no version guard existed | Migration block force-applies 5 UIUX flags + minRTLChars + darkMode when stored version < 2 |
+| Single-tap works after <p> click | IGNORE_SELECTOR `[class*="icon"]` matched `blinko-custom-icons` on body → every tap silently ignored | Scoped check to `card.contains(ignoreMatch)`; all 3 failing single-tap tests now pass |
+| Heading not double-clicked | Handler dispatched synthetic click even when user tapped heading directly | Added `opener.contains(target)` guard before dispatch |
+| Anchor links skipped correctly | `a[href]` was not in IGNORE_SELECTOR | Added `a[href]` to IGNORE_SELECTOR |
+| childList editor guard | Vditor childList mutations during typing bypassed characterData guard | Editor-focus guard added to childList branch |
+| Test improvement | Baseline 13 fail / 1 error → 9 fail / 1 error | +4 test fixes (3 single-tap + 1 re-entry guard) |
+| Build clean | — | `✓ built in 445ms`, 231.62 kB, no TS errors |
+
+### Key Technical Decisions
+
+- **DEC-015:** Version-stamped migration — surgical per-version field overrides preserve user customizations for unchanged settings
+- **DEC-016:** `card.contains(ignoreMatch)` scope + `opener.contains(target)` guard — prevents ancestor body class false-positive and heading double-dispatch
+
+---
+
 ## 7. What Failed or Was Deferred (All Sessions)
 
 | Item | Session | Status | Risk | Recommendation |

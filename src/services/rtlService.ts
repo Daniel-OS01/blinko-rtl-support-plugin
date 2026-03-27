@@ -86,6 +86,17 @@ export class RTLService {
         // Merge with default settings
         this.settings = { ...this.settings, ...loadedSettings };
 
+        // v1→v2 migration: apply corrected defaults for existing installs.
+        // Before v2, minRTLChars defaulted to 2 and darkMode to false.
+        // Stored values override defaults, so migration is required to update them.
+        const storedVersion = (loadedSettings as any)._settingsVersion ?? 0;
+        if (storedVersion < 2) {
+            this.settings.minRTLChars = 1;
+            this.settings.darkMode = true;
+            (this.settings as any)._settingsVersion = 2;
+            this.storageManager.save(this.settings);
+        }
+
         // Ensure critical fields are initialized
         if (!this.settings.dynamicCSS) {
             this.settings.dynamicCSS = DEFAULT_DYNAMIC_CSS;
@@ -649,6 +660,22 @@ export class RTLService {
                  mutation.addedNodes.forEach(node => {
                      if (node.nodeType === Node.ELEMENT_NODE) {
                          const element = node as HTMLElement;
+
+                         // Skip mutations inside a currently-focused editable area.
+                         // Vditor modifies the DOM on every keypress (adds/removes
+                         // formatting spans). Re-classifying those elements causes
+                         // the visible LTR↔RTL flicker. The browser handles BiDi
+                         // automatically via `unicode-bidi: plaintext` while editing.
+                         const activeEl = document.activeElement as HTMLElement | null;
+                         if (activeEl) {
+                             const editingRoot: HTMLElement | null =
+                                 activeEl.isContentEditable
+                                     ? ((activeEl.closest('[contenteditable]') as HTMLElement) ?? activeEl)
+                                     : ((activeEl.closest('[contenteditable]') as HTMLElement | null) ??
+                                        (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT'
+                                            ? activeEl : null));
+                             if (editingRoot && editingRoot.contains(element)) return;
+                         }
 
                          // Check individual matches safely
                          let matched = false;

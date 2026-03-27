@@ -88,6 +88,9 @@ export interface UIUXSettings {
   // Toolbar
   showToolbarLabels: boolean;
   mobileToolbarIconSize: number;
+
+  // Internal — settings schema version for migration
+  _settingsVersion?: number;
 }
 
 export const DEFAULT_UIUX_SETTINGS: UIUXSettings = {
@@ -111,6 +114,7 @@ export const DEFAULT_UIUX_SETTINGS: UIUXSettings = {
   noteListPadding: 12,
   showToolbarLabels: false,
   mobileToolbarIconSize: 24,
+  _settingsVersion: 2,
 };
 
 // ─── AI Post Processing ───────────────────────────────────────────────────────
