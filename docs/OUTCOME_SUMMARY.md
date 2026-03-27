@@ -1,9 +1,9 @@
 # Outcome Summary — Blinko RTL Support Plugin
 
 > **Document type:** Implementation outcome analysis
-> **Version:** 2.0
-> **Branch:** `claude/review-rtl-plugin-prs-OMCOM`
-> **Last updated:** 2026-03-26
+> **Version:** 2.1
+> **Branch:** `claude/fix-hebrew-text-note-focus-ddReT` (latest)
+> **Last updated:** 2026-03-27
 
 ---
 
@@ -14,9 +14,10 @@
 3. [Session 2 Outcomes (2026-03-25)](#3-session-2-outcomes-2026-03-25)
 4. [Session 3 Outcomes (2026-03-26)](#4-session-3-outcomes-2026-03-26)
 5. [Session 4 Outcomes (2026-03-26) — Tests + Docs](#5-session-4-outcomes-2026-03-26--tests--docs)
-6. [What Failed or Was Deferred (All Sessions)](#6-what-failed-or-was-deferred-all-sessions)
-7. [Build & Test Results](#7-build--test-results)
-8. [Recommendations for Future Iterations](#8-recommendations-for-future-iterations)
+6. [Session 5 Outcomes (2026-03-27) — Bug Fixes & Reorganisation](#6-session-5-outcomes-2026-03-27--bug-fixes--reorganisation)
+7. [What Failed or Was Deferred (All Sessions)](#7-what-failed-or-was-deferred-all-sessions)
+8. [Build & Test Results](#8-build--test-results)
+9. [Recommendations for Future Iterations](#9-recommendations-for-future-iterations)
 
 ---
 
@@ -159,19 +160,79 @@ Build passed. All existing tests passed. No new test failures introduced.
 
 ---
 
-## 6. What Failed or Was Deferred (All Sessions)
+## 6. Session 5 Outcomes (2026-03-27) — Bug Fixes & Reorganisation
+
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+**Files changed:** 6 source files, 6 documentation files
+
+### What Succeeded
+
+| Item | Requirement | Evidence |
+|------|-------------|---------|
+| RTL typing flicker eliminated | REQ-07 | `characterData` guard added; editable elements no longer re-processed on keypress |
+| Single-tap full card area | REQ-08 | Click dispatched on tapped element, bubbles to React onClick; broadened card selectors |
+| Default settings corrected | REQ-09 | `minRTLChars=1`, `darkMode=true`, all 5 UIUX flags set to `true` |
+| New 🧪 Tools tab | REQ-10 | Fifth tab present; 4 sections (Dynamic CSS, Permanent CSS, Test RTL, Advanced Actions) moved inside it |
+| AI SSE parsing fixed | REQ-11 | Chunk extraction path corrected from `result.data.json.chunk.textDelta` to `result.data.value`; `x-trpc-source` header added |
+| Connection test fixed | REQ-12 | Replaced `POST id:-99999` (returned 500) with `GET /api/v1/note/list` (read-only, clean 200/401) |
+| Build clean | — | `✓ built in 538ms`, no TypeScript errors, no bundle size regression |
+
+### Deviations from Plan
+
+| Planned | Actual | Reason |
+|---------|--------|--------|
+| Use `bun run build` | Used `bun install && bun run build` | Dependencies not installed in fresh env; `bun install` is always safe to re-run |
+| Tab named "Testing & Settings" | Tab named "🧪 Tools" | Shorter label fits the tab bar without wrapping; functionality is identical |
+
+### Key Technical Decisions (summary)
+
+- **DEC-011:** Skip `characterData` mutations on editable elements — browser BiDi via `unicode-bidi: plaintext` handles in-editor direction
+- **DEC-012:** Dispatch click on `e.target` (bubbles to React onClick) instead of searching for an opener element
+- **DEC-013:** `GET /api/v1/note/list` for connection test (read-only, predictable 200/401)
+- **DEC-014:** Add `x-trpc-source: blinko-rtl-plugin` to tRPC requests for middleware compatibility
+
+---
+
+## 6b. Session 6 Outcomes (2026-03-27) — Settings Migration & Single-tap Fix
+
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+
+### What Succeeded
+
+| Item | Root cause fixed | Evidence |
+|------|-----------------|---------|
+| Settings migration v1→v2 | `{ ...DEFAULT, ...stored }` always let stored win; no version guard existed | Migration block force-applies 5 UIUX flags + minRTLChars + darkMode when stored version < 2 |
+| Single-tap works after <p> click | IGNORE_SELECTOR `[class*="icon"]` matched `blinko-custom-icons` on body → every tap silently ignored | Scoped check to `card.contains(ignoreMatch)`; all 3 failing single-tap tests now pass |
+| Heading not double-clicked | Handler dispatched synthetic click even when user tapped heading directly | Added `opener.contains(target)` guard before dispatch |
+| Anchor links skipped correctly | `a[href]` was not in IGNORE_SELECTOR | Added `a[href]` to IGNORE_SELECTOR |
+| childList editor guard | Vditor childList mutations during typing bypassed characterData guard | Editor-focus guard added to childList branch |
+| Test improvement | Baseline 13 fail / 1 error → 9 fail / 1 error | +4 test fixes (3 single-tap + 1 re-entry guard) |
+| Build clean | — | `✓ built in 445ms`, 231.62 kB, no TS errors |
+
+### Key Technical Decisions
+
+- **DEC-015:** Version-stamped migration — surgical per-version field overrides preserve user customizations for unchanged settings
+- **DEC-016:** `card.contains(ignoreMatch)` scope + `opener.contains(target)` guard — prevents ancestor body class false-positive and heading double-dispatch
+
+---
+
+## 7. What Failed or Was Deferred (All Sessions)
 
 | Item | Session | Status | Risk | Recommendation |
 |------|---------|--------|------|----------------|
 | End-to-end test in live Blinko | 3 | Deferred | Medium — synthetic click behavior depends on React version | Deploy to test instance and tap a quick note |
-| Opener selector Blinko version coverage | 3 | Partial | Low-Medium | Periodic selector audit after Blinko updates |
+| Opener selector Blinko version coverage | 3 → 5 | Resolved in S5 | — | DEC-012 removes dependency on opener selector entirely |
 | Token storage security | 3 | Accepted risk | Low (user controls instance) | Future: offer `sessionStorage` option |
 | Auto-tag 401 detection via string matching | 3 | Fragile | Low (degrades gracefully) | Modify `trpcMutate` to expose numeric status code |
 | `bun.lockb` not updated in workflow | 4 | Outstanding | Low | Run `bun install` locally and commit updated lockfile if `--frozen-lockfile` fails in CI |
+| AI SSE empty response (silent parser bug) | 3–4 | Resolved in S5 | — | CL-S5-005 fixed chunk extraction path |
+| Connection test 500 error | 3–4 | Resolved in S5 | — | CL-S5-006: switched to GET /api/v1/note/list |
+| RTL typing flicker | — | Resolved in S5 | — | CL-S5-001: skip characterData mutations on editable elements |
 
 ---
 
-## 7. Build & Test Results
+## 8. Build & Test Results
 
 ### Session 3 Build (commit `874f07f`)
 ```
@@ -185,7 +246,17 @@ Build re-run after overlay detection fix and new tests. See current commit for o
 
 ---
 
-## 8. Recommendations for Future Iterations
+### Session 5 Build (commit `95afdc4`)
+```
+✓ built in 538ms
+dist/style.css           51.59 kB │ gzip:  9.66 kB
+dist/index_6y7gqd75.js  230.47 kB │ gzip: 50.50 kB
+```
+No TypeScript errors. Bundle size unchanged (< 1% delta).
+
+---
+
+## 9. Recommendations for Future Iterations
 
 ### High Priority
 
@@ -206,4 +277,4 @@ Build re-run after overlay detection fix and new tests. See current commit for o
 
 ---
 
-*Document version: 2.0 — Updated 2026-03-26 (added sessions 1–4; consolidated sections)*
+*Document version: 2.1 — Updated 2026-03-27 (added Session 5; updated deferred table; added S5 build result; renumbered sections 6–9)*

@@ -2,7 +2,8 @@
 
 > **Document type:** Chronological change record
 > **Format:** Most recent changes first
-> **Scope:** All sessions on branch `claude/review-rtl-plugin-prs-OMCOM`
+> **Scope:** All sessions — latest branch `claude/fix-hebrew-text-note-focus-ddReT`
+> **Last updated:** 2026-03-27
 
 ---
 
@@ -20,6 +21,359 @@ Rationale: why the change was made
 ---
 
 ## Change Log
+
+---
+
+## Session 6 Changes — 2026-03-27 (branch: `claude/fix-hebrew-text-note-focus-ddReT`)
+
+---
+
+### [CL-S6-001] Add v1→v2 settings migration to UIUXService and RTLService
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+
+**Files modified:**
+- `src/types.ts` — `UIUXSettings` interface, `DEFAULT_UIUX_SETTINGS`
+- `src/services/uiuxService.ts` — `load()`
+- `src/services/rtlService.ts` — `loadSettings()`
+
+**Changes:**
+
+```typescript
+// types.ts: added version field
+export interface UIUXSettings {
+  // ... existing fields ...
+  _settingsVersion?: number;   // NEW
+}
+export const DEFAULT_UIUX_SETTINGS = {
+  // ...
+  _settingsVersion: 2,   // NEW
+};
+
+// uiuxService.ts — load(): added migration block
+if (!stored._settingsVersion || stored._settingsVersion < 2) {
+  merged.compactDatetime = true;
+  merged.singleTapOpenNote = true;
+  merged.backButtonClosesNote = true;
+  merged.tapOutsideClosesNote = true;
+  merged.reduceMotion = true;
+  merged.interceptAIErrors = true;
+  merged._settingsVersion = 2;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+}
+
+// rtlService.ts — loadSettings(): added migration block
+const storedVersion = (loadedSettings as any)._settingsVersion ?? 0;
+if (storedVersion < 2) {
+  this.settings.minRTLChars = 1;
+  this.settings.darkMode = true;
+  (this.settings as any)._settingsVersion = 2;
+  this.storageManager.save(this.settings);
+}
+```
+
+**Rationale:** `load()` used `{ ...DEFAULT_UIUX_SETTINGS, ...stored }` where stored JSON always won. Existing users had `singleTapOpenNote: false` (old default) stored, which overrode the new `true` default. The v1→v2 migration force-applies corrected defaults and persists the updated version stamp. Addresses ERR-013. See `DECISION_LOG.md DEC-015`.
+
+---
+
+### [CL-S6-002] Add childList editor-focus guard to RTL MutationObserver
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+
+**Files modified:**
+- `src/services/rtlService.ts` — `setupObserver()` childList mutation handler
+
+**Changes:**
+
+```typescript
+// Before — childList mutations inside an active editor triggered RTL re-classification:
+if (node.nodeType === Node.ELEMENT_NODE) {
+  // process element ...
+}
+
+// After — added early return if mutation is inside a focused editable:
+if (node.nodeType === Node.ELEMENT_NODE) {
+  const activeEl = document.activeElement as HTMLElement | null;
+  if (activeEl) {
+    const editingRoot =
+      activeEl.isContentEditable
+        ? (activeEl.closest('[contenteditable]') ?? activeEl)
+        : activeEl.closest('[contenteditable]') ??
+          (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT' ? activeEl : null);
+    if (editingRoot && editingRoot.contains(element)) return;
+  }
+  // process element ...
+}
+```
+
+**Rationale:** Vditor WYSIWYG mode generates `childList` mutations on every keypress (adds/removes formatting spans). These bypassed the existing `characterData` guard, re-classified direction, and toggled `rtl-force`/`ltr-force` classes — causing visible LTR↔RTL flicker. The editor-focus guard suppresses re-classification while an editable area is active.
+
+---
+
+### [CL-S6-003] Fix single-tap IGNORE_SELECTOR false-positive and heading double-fire
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+
+**Files modified:**
+- `src/services/uiuxService.ts` — `applySingleTap()` handler logic
+
+**Root cause:** Two bugs in the single-tap click handler:
+1. `IGNORE_SELECTOR` included `[class*="icon"]` which matched `document.body` (body has `blinko-custom-icons` from `applyBodyClasses()`). `target.closest(IGNORE_SELECTOR)` walked up to body, matched, and bailed out — meaning NO card tap was ever processed.
+2. When the user clicked directly on the heading element (opener), the handler found the same element as opener and dispatched a second synthetic click, firing the heading handler twice.
+
+**Changes:**
+
+```typescript
+// Before — IGNORE check walked all the way up to document/body:
+if (target.closest(IGNORE_SELECTOR)) return;
+
+// After — scoped to card descendants only; anchor links skipped:
+// IGNORE_SELECTOR now includes a[href]
+const ignoreMatch = target.closest(IGNORE_SELECTOR);
+if (ignoreMatch && card.contains(ignoreMatch)) return;
+
+// Before — no check; dispatched on opener even when user tapped it directly:
+if (opener) {
+  opener.dispatchEvent(new MouseEvent('click', ...));
+}
+
+// After — skip re-dispatch when target is the opener itself:
+if (opener && opener.contains(target)) {
+  requestAnimationFrame(() => { delete card.dataset.opening; });
+  return;
+}
+if (opener) {
+  opener.dispatchEvent(new MouseEvent('click', ...));
+}
+```
+
+Also replaced CSS `:not([data-single-tap])` in `querySelectorAll` with a JS `_uiuxClickHandler` property check (avoiding happy-dom compound attribute pseudo-class issues). Replaced `opener.click()` with `opener.dispatchEvent(new MouseEvent('click', ...))` for reliable dispatch in test environments. Addresses ERR-014. See `DECISION_LOG.md DEC-016`.
+
+---
+
+## Session 5 Changes — 2026-03-27 (branch: `claude/fix-hebrew-text-note-focus-ddReT`)
+
+---
+
+### [CL-S5-001] Fix RTL typing flicker — skip characterData mutations on editable elements
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/services/rtlService.ts` — `setupObserver()` characterData branch
+
+**Changes:**
+
+```typescript
+// Before — characterData mutations on editable elements were processed like any other:
+} else if (mutation.type === 'characterData' || mutation.type === 'attributes') {
+  const target = ...;
+  if (target) {
+    let matched = false;
+    for (const s of safeSelectors) { ... }
+    if (matched) {
+      this.pendingElements.add(target);
+      hasRelevantMutation = true;
+    }
+  }
+}
+
+// After — added early-return guard for editable elements on characterData:
+} else if (mutation.type === 'characterData' || mutation.type === 'attributes') {
+  const target = ...;
+  if (target) {
+    if (mutation.type === 'characterData') {
+      const isEditable =
+        target.isContentEditable ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'INPUT' ||
+        !!target.closest('[contenteditable="true"], [contenteditable]');
+      if (isEditable) return; // browser handles BiDi via unicode-bidi:plaintext
+    }
+    // ... rest unchanged
+  }
+}
+```
+
+**Rationale:** The mutation observer was re-processing editable elements on every keypress, toggling `rtl-force`/`ltr-force` CSS classes which caused a visible LTR↔RTL jump. Editable elements already carry `unicode-bidi: plaintext` via injected CSS, so per-character BiDi is handled by the browser natively. Addresses REQ-07. See also `DECISION_LOG.md DEC-011`.
+
+---
+
+### [CL-S5-002] Improve single-tap card selectors and click dispatch
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/services/uiuxService.ts` — `applySingleTap()` / `markAndListen()`
+
+**Changes:**
+
+```typescript
+// Before — narrow selectors, fragile openBtn heuristic:
+const cards = document.querySelectorAll<HTMLElement>(
+  '[class*="note-card"]:not([data-single-tap]), ' +
+  '[class*="blinko-card"]:not([data-single-tap]), ' +
+  '.card-masonry-grid > div > div:not([data-single-tap])'
+);
+// handler: find openBtn (a, heading, [class*=open]) → click it OR dispatch on card
+
+// After — broadened selectors, direct click on tapped element:
+const cards = document.querySelectorAll<HTMLElement>(
+  '[class*="note-card"]:not([data-single-tap]), ' +
+  '[class*="blinko-card"]:not([data-single-tap]), ' +
+  '[class*="blinko-note"]:not([data-single-tap]), ' +
+  '[class*="note-item"]:not([data-single-tap]), ' +
+  '.card-masonry-grid > div > div:not([data-single-tap]), ' +
+  '.blog-masonry-grid > div > div:not([data-single-tap])'
+);
+// handler: skip interactive controls; dispatch click on tapped element (bubbles to React onClick)
+```
+
+**Rationale:** The previous `openBtn`-search heuristic failed when body text (`<p>`) was tapped in a card that also had a heading — it redirected the click to the heading, which might not be the React-managed opener. The new approach dispatches directly on the tapped element, relying on React event bubbling to reach the card's onClick. Addresses REQ-08. See `DECISION_LOG.md DEC-012`.
+
+---
+
+### [CL-S5-003] Update default settings (minRTLChars, darkMode, UIUX flags)
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/services/constants.ts` — `DEFAULT_SETTINGS`
+- `src/types.ts` — `DEFAULT_UIUX_SETTINGS`
+
+**Changes:**
+
+```typescript
+// constants.ts — DEFAULT_SETTINGS:
+// Before: minRTLChars: 2, darkMode: false
+// After:  minRTLChars: 1, darkMode: true
+
+// types.ts — DEFAULT_UIUX_SETTINGS:
+// Before: compactDatetime: false, singleTapOpenNote: false,
+//         backButtonClosesNote: false, tapOutsideClosesNote: false, reduceMotion: false
+// After:  compactDatetime: true,  singleTapOpenNote: true,
+//         backButtonClosesNote: true,  tapOutsideClosesNote: true,  reduceMotion: true
+```
+
+**Rationale:** User reported that defaults did not match expected behaviour. `minRTLChars: 1` ensures the first Hebrew character triggers RTL detection (with `minRTLChars: 2`, a single character produced no RTL class, contributing to flicker). Addresses REQ-09.
+
+---
+
+### [CL-S5-004] Add 🧪 Tools tab; move 4 sections out of always-visible position
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/setting.tsx` — tab type, tab button bar, section wrappers
+
+**Changes:**
+
+```typescript
+// Tab type widened:
+// Before: 'simple' | 'advanced' | 'uiux' | 'aipost'
+// After:  'simple' | 'advanced' | 'uiux' | 'aipost' | 'testing'
+
+// New tab button added (orange bottom-border colour #fd7e14).
+
+// The following sections were previously always-rendered (no tab wrapper).
+// They are now wrapped in {activeTab === 'testing' && (<div>...</div>)}:
+//   - 🎨 Dynamic CSS Rules
+//   - 📌 Permanent CSS Settings
+//   - 🧪 Test RTL Detection
+//   - 🔧 Advanced Actions (reset / export / import)
+```
+
+**Rationale:** The four sections were always rendered regardless of active tab, cluttering the panel and contributing to a long scroll. A dedicated Tools tab groups diagnostic and power-user controls in one place. Addresses REQ-10.
+
+---
+
+### [CL-S5-005] Fix AI SSE chunk extraction + add x-trpc-source header
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/services/aiPostService.ts` — `collectWritingStream()`, `trpcMutate()`
+
+**Changes:**
+
+```typescript
+// collectWritingStream — chunk extraction:
+// Before (wrong path — silently returns empty string):
+const chunk =
+  (data?.result as any)?.data?.json?.chunk ??
+  (data?.result as any)?.data?.chunk ??
+  (data as any)?.chunk ??
+  (data as any)?.data?.chunk;
+if (chunk?.type === 'text-delta' && typeof chunk.textDelta === 'string') {
+  fullText += chunk.textDelta;
+}
+
+// After (matches API_REFERENCE.md documented format):
+const chunk =
+  (data?.result as any)?.data ??
+  (data?.result as any)?.data?.json?.chunk ??
+  (data as any)?.data ??
+  (data as any)?.chunk;
+if (chunk?.type === 'text_delta' && typeof chunk.value === 'string') {
+  fullText += chunk.value;                            // primary path
+} else if (chunk?.type === 'text-delta' && typeof chunk.textDelta === 'string') {
+  fullText += chunk.textDelta;                        // legacy fallback
+}
+
+// Added x-trpc-source header to both collectWritingStream and trpcMutate:
+headers: {
+  'Content-Type': 'application/json',
+  'x-trpc-source': 'blinko-rtl-plugin',
+  // ...
+}
+```
+
+**Rationale:** `API_REFERENCE.md` documents the SSE envelope as `{"result":{"data":{"type":"text_delta","value":"..."}}}`. The previous code was looking for `.data.json.chunk.textDelta` — a different path that silently matched nothing, returning empty strings for all AI responses. Addresses REQ-11.
+
+---
+
+### [CL-S5-006] Fix connection test: use GET /api/v1/note/list instead of POST id:-99999
+
+**Date:** 2026-03-27
+**Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+**Commit:** `95afdc4`
+
+**Files modified:**
+- `src/setting.tsx` — `onClick` handler of Test Connection button
+
+**Changes:**
+
+```typescript
+// Before — POST to note/upsert with invalid ID:
+const res = await fetch(`${baseUrl}/api/v1/note/upsert`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+  body: JSON.stringify({ id: -99999, content: '__connection_test__' }),
+});
+if (res.ok || res.status === 404 || res.status === 400) { /* success */ }
+
+// After — GET to note/list (read-only):
+const res = await fetch(`${baseUrl}/api/v1/note/list?page=1&pageSize=1`, {
+  method: 'GET',
+  headers: { 'Authorization': `Bearer ${token}` },
+});
+if (res.ok) { /* success */ }
+```
+
+**Rationale:** Blinko returns HTTP 500 for `id: -99999` (invalid negative ID), not 400 or 404 as expected. The test logic correctly identified 500 as unexpected and showed a warning. Switching to a read-only GET request eliminates the dependency on Blinko's write-path error handling and is safer (no accidental mutations). Addresses REQ-12. See `DECISION_LOG.md DEC-013`.
 
 ---
 

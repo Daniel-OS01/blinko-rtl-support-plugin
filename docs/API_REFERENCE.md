@@ -1,8 +1,8 @@
 # API Reference — Blinko RTL Support Plugin
 
 > **Document type:** External API endpoints, request/response contracts, and auth patterns
-> **Version:** 1.0
-> **Last updated:** 2026-03-26
+> **Version:** 1.1
+> **Last updated:** 2026-03-27
 
 ---
 
@@ -43,6 +43,8 @@ data: {"result":{"data":{"type":"text_delta","value":" more text..."}}}
 ```
 
 Parse chunks by splitting on `\n`, filtering lines starting with `data: `, stripping the prefix, parsing JSON, and extracting `result.data.value` for `type === "text_delta"`.
+
+> **2026-03-27 bug fix:** The plugin's SSE parser previously looked for `result.data.json.chunk.textDelta` (wrong path — silently returned empty strings). The correct path is `result.data.value`. See `ERROR_RESOLUTION.md ERR-011` and `CHANGE_LOG.md CL-S5-005`.
 
 **Error conditions:**
 | Status | Meaning | Plugin behavior |
@@ -147,8 +149,10 @@ Parse chunks by splitting on `\n`, filtering lines starting with `data: `, strip
 
 **Implementation:** `aiPostService.ts` → `updateNoteContent()` primary branch
 
-**Test Connection (dry-run):**
-The Settings panel "🧪 Test Connection" button POSTs `{ id: -99999, content: '__connection_test__' }`. Since no real note has ID `-99999`, a 400 or 404 response indicates auth passed (credentials are valid). Only 401/403 indicate bad credentials.
+**Test Connection:**
+The Settings panel "🧪 Test Connection" button sends `GET ${blinkoApiUrl}/api/v1/note/list?page=1&pageSize=1`. A 200 response indicates credentials are valid. 401/403 indicate bad token. Other status codes show a warning.
+
+> **Note (2026-03-27):** The previous dry-run used `POST /api/v1/note/upsert` with `{ id: -99999 }`, which caused Blinko to return HTTP 500 (unhandled exception on negative ID) instead of the expected 400/404. Replaced with this read-only GET request. See `ERROR_RESOLUTION.md ERR-012` and `DECISION_LOG.md DEC-013`.
 
 ---
 
@@ -175,7 +179,9 @@ Internal utility used throughout `aiPostService.ts`:
 async function trpcMutate<T>(procedure: string, input: unknown): Promise<T>
 ```
 
-Constructs the tRPC request URL, POSTs with `credentials: 'include'`, parses the JSON envelope, and returns `result.data`. Throws on non-2xx responses.
+Constructs the tRPC request URL, POSTs with `credentials: 'include'` and `x-trpc-source: blinko-rtl-plugin`, parses the JSON envelope, and returns `result.data`. Throws on non-2xx responses.
+
+> **2026-03-27:** Added `x-trpc-source: blinko-rtl-plugin` header to all tRPC requests (including `collectWritingStream`) to satisfy any Blinko middleware that validates this header. See `DECISION_LOG.md DEC-014`.
 
 ---
 
@@ -218,4 +224,4 @@ interface NoteRef {
 
 ---
 
-*Document version: 1.0 — Created 2026-03-26*
+*Document version: 1.1 — Updated 2026-03-27 (fixed SSE format note; updated Test Connection endpoint; added x-trpc-source header note)*

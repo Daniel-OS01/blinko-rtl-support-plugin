@@ -1,8 +1,8 @@
 # Decision Log — Blinko RTL Support Plugin
 
 > **Document type:** Architectural decision record (ADR)
-> **Version:** 1.0
-> **Last updated:** 2026-03-26
+> **Version:** 1.1
+> **Last updated:** 2026-03-27
 >
 > Each entry records a significant technical or design decision, the context that drove it, the alternatives considered, and the rationale for the chosen approach. Future developers can understand WHY things are the way they are, not just what they are.
 
@@ -12,7 +12,13 @@
 
 | ID | Title | Date | Status |
 |----|-------|------|--------|
+| [DEC-015](#dec-015) | Version-stamped settings migration (v1→v2) instead of re-setting defaults | 2026-03-27 | Accepted |
+| [DEC-016](#dec-016) | Scope IGNORE_SELECTOR check to card descendants; add opener-contains-target guard | 2026-03-27 | Accepted |
 | [DEC-001](#dec-001) | Use JS visibility filter instead of CSS `:not()` pseudo-class | 2026-03-26 | Accepted |
+| [DEC-011](#dec-011) | Skip characterData mutations for editable elements to prevent RTL flicker | 2026-03-27 | Accepted |
+| [DEC-012](#dec-012) | Dispatch click on tapped element (not openBtn heuristic) for single-tap | 2026-03-27 | Accepted |
+| [DEC-013](#dec-013) | Replace POST id:-99999 with GET /api/v1/note/list for connection test | 2026-03-27 | Accepted |
+| [DEC-014](#dec-014) | Add x-trpc-source header to all plugin tRPC requests | 2026-03-27 | Accepted |
 | [DEC-002](#dec-002) | Debounce MutationObserver callback to 150ms | 2026-03-25 | Accepted |
 | [DEC-003](#dec-003) | Use `card.dispatchEvent` (not `openBtn.click`) for quick note fallback | 2026-03-26 | Accepted |
 | [DEC-004](#dec-004) | REST API v1 opt-in via settings, tRPC remains default | 2026-03-26 | Accepted |
@@ -257,4 +263,146 @@ The "Test Connection" button needs to verify that the provided URL and Bearer to
 
 ---
 
-*Document version: 1.0 — Created 2026-03-26*
+## DEC-011
+
+### Skip characterData mutations for editable elements to prevent RTL flicker
+
+**Date:** 2026-03-27
+**Status:** Accepted
+
+**Context:**
+The `MutationObserver` in `rtlService.ts` observed `characterData` mutations (every keypress) and added the target element to `pendingElements` for direction-class processing. Toggling `rtl-force`/`ltr-force` on every keypress caused a visible LTR↔RTL jump while typing Hebrew. The reporter described this as text "flickering" on every letter.
+
+**Alternatives Considered:**
+1. **Increase debounce time** — reduces frequency of jumps but doesn't prevent them; adds input lag
+2. **Process on blur only** — direction is only set when user leaves the field; classes would be wrong while typing
+3. **Apply `unicode-bidi: plaintext` inline via JS** — achieves the same goal but adds a JS path for what CSS already handles
+4. **Chosen: Skip editable elements in `characterData` handler entirely** — no processing, no class toggle, no flicker. `unicode-bidi: plaintext` in the injected CSS already handles per-character BiDi in the browser natively.
+
+**Consequences:**
+- Positive: Zero flicker while typing; zero processing overhead on keystrokes
+- Positive: Consistent with how browser-native BiDi is supposed to work
+- Neutral: Editable element direction classes are updated on `childList` mutations (new paragraphs) and on the periodic `processAllElements()` interval, just not on every keypress
+- Negative: If a user pastes a large block of text and immediately blurs, the direction may take up to `processInterval` (5 s) to update. Acceptable.
+
+---
+
+## DEC-012
+
+### Dispatch click on tapped element (not openBtn heuristic) for single-tap
+
+**Date:** 2026-03-27
+**Status:** Accepted — supersedes DEC-003
+
+**Context:**
+The original single-tap handler searched for an "opener element" (`a[href]`, `h1–h3`, `[class*="open"]`) and redirected the click there. When the user tapped `<p>` body text in a card that also had a heading, the handler clicked the heading — which did not reliably navigate in all Blinko card variants. Users reported that clicking text in the note card did not open the note.
+
+**Alternatives Considered:**
+1. **Broaden the openBtn selector** — tried in DEC-003; still fragile across Blinko versions
+2. **Use `card.click()` unconditionally** — ignores the specific element tapped; may not trigger React's synthetic event path correctly
+3. **Chosen: Dispatch click on `e.target` (or its nearest element ancestor)** — the click bubbles up through the React tree naturally. React's `onClick` on the card's ancestor receives it regardless of where in the card the user tapped.
+
+**Consequences:**
+- Positive: Works for all card types without needing to know the opener element's selector
+- Positive: React event bubbling is a stable, well-defined mechanism
+- Neutral: The re-entry guard (`card.dataset.opening`) must still prevent infinite loops
+- Negative: If Blinko stops propagation somewhere inside the card, the click won't reach the handler — but this is equally true of any click-dispatch strategy
+
+---
+
+## DEC-013
+
+### Replace POST id:-99999 with GET /api/v1/note/list for connection test
+
+**Date:** 2026-03-27
+**Status:** Accepted — supersedes DEC-010
+
+**Context:**
+`DEC-010` chose `POST /api/v1/note/upsert` with `id: -99999` as a dry-run connection test. The expectation was that Blinko would return 400/404 (auth passes, note not found). In practice, Blinko returns HTTP 500 for negative IDs. The test logic treated 500 as unexpected, showing a warning even when credentials were valid.
+
+**Alternatives Considered:**
+1. **Add 500 to "auth valid" set** — ambiguous; a real server error also returns 500, making false positives undetectable
+2. **Use a different nonexistent positive ID** — depends on Blinko server behavior; still a write-path request
+3. **Chosen: GET /api/v1/note/list?page=1&pageSize=1** — read-only, no write path, predictable 200/401/403 responses
+
+**Consequences:**
+- Positive: No dependency on Blinko's write-path input validation behavior
+- Positive: No accidental data mutations during testing
+- Positive: Clean 200 = valid, 401/403 = invalid auth mapping
+- Neutral: If Blinko changes the list endpoint path in a future version, this test would break — but that is equally true of any specific endpoint
+
+---
+
+## DEC-014
+
+### Add x-trpc-source header to all plugin tRPC requests
+
+**Date:** 2026-03-27
+**Status:** Accepted
+
+**Context:**
+Some Blinko deployments have middleware that validates or logs the `x-trpc-source` header. Plugin tRPC requests arrived without this header, which could cause the middleware to reject them with 401 (depending on configuration). Blinko's own frontend sends this header on all tRPC calls.
+
+**Alternatives Considered:**
+1. **Do not add the header** — works on Blinko instances without strict middleware; fails on others
+2. **Chosen: Add `x-trpc-source: blinko-rtl-plugin`** — harmless on instances that don't check it; satisfies middleware on instances that do
+
+**Consequences:**
+- Positive: Broader compatibility with Blinko deployment configurations
+- Positive: Makes plugin requests identifiable in server logs (useful for debugging)
+- Neutral: No security implications; the header is not a secret
+
+---
+
+---
+
+## DEC-015
+
+### Version-stamped settings migration (v1→v2) instead of re-setting defaults
+
+**Date:** 2026-03-27
+**Status:** Accepted
+
+**Context:** Session 5 changed five `UIUXSettings` boolean defaults from `false` to `true` and two RTL defaults. The naive merge `{ ...DEFAULT, ...stored }` means stored values always win, so existing users were unaffected by the new defaults.
+
+**Decision:** Add `_settingsVersion?: number` to the settings type and `_settingsVersion: 2` to `DEFAULT_UIUX_SETTINGS`. In `load()` / `loadSettings()`, if stored version < 2, force-apply the corrected defaults and write back the updated version stamp.
+
+**Alternatives considered:**
+- **Wipe and re-load:** Discard all stored settings if version doesn't match → loses all user customizations (unacceptable).
+- **No migration, document only:** Users must manually reset settings → confusing UX, reported as bug.
+- **Per-key default injection:** For each key, check if value matches old default and replace with new default → fragile, hard to maintain as defaults change again in the future.
+
+**Why chosen:** Version stamp is a standard pattern (used by browsers, databases, Electron apps). It allows surgical migration of only the changed fields while preserving user customizations for unchanged fields.
+
+**Trade-offs:**
+- The migration runs once and writes back to localStorage — negligible performance cost.
+- Future sessions need to increment `_settingsVersion` and add a migration block — minimal maintenance overhead.
+
+---
+
+## DEC-016
+
+### Scope IGNORE_SELECTOR check to card descendants; add opener-contains-target guard
+
+**Date:** 2026-03-27
+**Status:** Accepted
+
+**Context:** `applySingleTap()` used `target.closest(IGNORE_SELECTOR)` to skip clicks on buttons, menus, etc. The selector included `[class*="icon"]`. `applyBodyClasses()` adds `blinko-custom-icons` to `document.body`. `target.closest('[class*="icon"]')` walked up to body, matched, returned body as truthy — so EVERY tap was silently ignored (handler returned early immediately).
+
+A second bug: when the user clicked the heading element directly, `opener === target`, and the handler dispatched a synthetic click on it anyway, calling the heading listener a second time.
+
+**Decision:**
+1. Scope ignore check: `const ignoreMatch = target.closest(IGNORE_SELECTOR); if (ignoreMatch && card.contains(ignoreMatch)) return;` — only bails out if the match is inside the card.
+2. Add `a[href]` to IGNORE_SELECTOR — anchor links navigate naturally, no synthetic re-dispatch needed.
+3. Add opener guard: `if (opener && opener.contains(target)) { /* clear guard */ return; }` — no re-dispatch when user tapped the opener directly.
+4. Replace CSS `:not([data-single-tap])` with JS `_uiuxClickHandler` property check (same pattern as DEC-001 for overlay detection).
+
+**Alternatives considered:**
+- **Remove `[class*="icon"]` from IGNORE_SELECTOR entirely:** Would allow clicks on icon buttons to bubble through and open notes accidentally.
+- **Rename body classes to avoid "icon":** Would require changing CSS class conventions globally.
+
+**Why chosen:** Scoping to `card.contains()` is precise and self-documenting. It makes the intent clear: "skip interactive elements within the card, not anywhere in the DOM."
+
+---
+
+*Document version: 1.2 — Updated 2026-03-27 (added DEC-015, DEC-016; updated index)*

@@ -1,9 +1,9 @@
 # User Requirements — Blinko RTL Support Plugin
 
 > **Document type:** Requirements specification & acceptance criteria
-> **Version:** 2.0
-> **Branch:** `claude/review-rtl-plugin-prs-OMCOM`
-> **Last updated:** 2026-03-26
+> **Version:** 3.0
+> **Branch:** `claude/fix-hebrew-text-note-focus-ddReT`
+> **Last updated:** 2026-03-27
 
 ---
 
@@ -27,6 +27,17 @@
 ### Session 2 — Bug Fix & Feature Request (2026-03-25, after PR archival)
 
 > "almost all if not all the features you implemented last commit dont work: [PR summary describing 4 bug fixes / features]... try change maybe those will work: [table of archived PRs]"
+
+### Session 5 — Multi-Bug Fix + UI Reorganisation (2026-03-27)
+
+> "fix, improve and enhance: there are still issues,
+> 1. when typeing in hebrew the text flikers and jumps LTR than RTL on every letter.
+> 2. clicking outside the note closing the note, it works, but pressing one time on the note not working, it should work when pressing on the text and in all the area in where i marked red in the image
+> 3. the defaults should be: Minimum RTL Characters: 1 / Advanced Configuration > Dark Mode Plugin UI on > all other off / Compact Date/Time Display on / Single-Tap to Open Notes on / Android Back Button Closes Note on / Tap Outside to Close Note on / AI Error Guidance (401 Intercept) on / Reduce / Disable Animations on
+> 4. Dynamic CSS Rules and Permanent CSS Settings and Test RTL Detection and Advanced Actions should not be in UI/UX and AI Post tabs — add another tab only for testing and export and import settings
+> 5. ai not workig even when all configured and build in ai tag works [test returning empty + 500 on connection test]"
+
+---
 
 ### Session 3 — Detailed Bug Report + API Credentials (2026-03-25)
 
@@ -109,6 +120,77 @@ Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3VwZXJhZG1pbiIsIm5hbWUi
 
 ---
 
+### REQ-07 — Fix RTL Text Flickering During Hebrew Typing
+
+**Source:** Session 5
+**Priority:** Critical
+**Summary:** When typing Hebrew characters one by one in the Blinko Vditor editor, the text visibly jumps between LTR and RTL on every keypress. The `MutationObserver` fires a `characterData` mutation on each keystroke, triggering `processElement()` which toggles `rtl-force`/`ltr-force` CSS classes, causing a visible layout reflow.
+
+**Interpreted requirement:** RTL class toggling must NOT fire on every keypress inside editable elements (`[contenteditable]`, `textarea`, `input`). These elements have `unicode-bidi: plaintext` via injected CSS, so the browser handles per-character BiDi natively without requiring direction class changes.
+
+---
+
+### REQ-08 — Single-Tap Note Open Covers Full Card Area
+
+**Source:** Session 5 — "pressing one time on the note not working, it should work when pressing on the text and in all the area"
+**Priority:** Critical
+**Summary:** The `singleTapOpenNote` feature did not reliably open notes when the user tapped on body text (`<p>` elements) within the card. The previous implementation tried to find a dedicated "opener element" (heading, link) and redirect the click there — which could silently fail for several card layouts.
+
+**Interpreted requirement:** Clicking anywhere on the card that is not an interactive control (button, link, input, action toolbar) must reliably open the note. The mechanism must work for both quick-note (NoteType=0) and article (NoteType=1) card types. Broader card selectors must also be used to cover all Blinko card class variants.
+
+---
+
+### REQ-09 — Update Plugin Default Settings
+
+**Source:** Session 5 — explicit list of expected defaults
+**Priority:** High
+**Summary:** Multiple default settings were incorrect. Users who clear storage or install fresh get wrong defaults.
+
+**Interpreted requirement:** The following defaults must be applied in `DEFAULT_SETTINGS` and `DEFAULT_UIUX_SETTINGS`:
+
+| Setting | Old default | New default |
+|---------|------------|------------|
+| `minRTLChars` | 2 | 1 |
+| `darkMode` (plugin UI) | false | true |
+| `compactDatetime` | false | true |
+| `singleTapOpenNote` | false | true |
+| `backButtonClosesNote` | false | true |
+| `tapOutsideClosesNote` | false | true |
+| `reduceMotion` | false | true |
+| `interceptAIErrors` | true | true (unchanged) |
+
+---
+
+### REQ-10 — New "Tools" Tab for Testing, CSS, and Export/Import
+
+**Source:** Session 5 — "Dynamic CSS Rules and Permanent CSS Settings and Test RTL Detection and Advanced Actions should not be in UI/UX and AI Post tabs — add another tab only for testing and export and import settings"
+**Priority:** High
+**Summary:** Four heavyweight sections (Dynamic CSS Rules, Permanent CSS Settings, Test RTL Detection, Advanced Actions with export/import) were rendered outside any tab wrapper, always visible. This cluttered the settings panel. The user wants a dedicated tab for these power-user and diagnostic tools.
+
+**Interpreted requirement:** Create a fifth `🧪 Tools` tab in `setting.tsx`. Move all four sections into it. The Advanced and AI Post tabs must not contain these sections.
+
+---
+
+### REQ-11 — Fix AI Post-Processing (SSE Response Parsing)
+
+**Source:** Session 5 — "ai not working even when all configured and built-in ai tag works"
+**Priority:** High
+**Summary:** The `collectWritingStream()` function was extracting SSE chunk data from the wrong field path (`result.data.json.chunk.textDelta`) instead of the documented path (`result.data.type/value` per `API_REFERENCE.md`). This caused all AI responses to return empty strings silently.
+
+**Interpreted requirement:** The SSE parser must extract text from `result.data.type === 'text_delta'` and `result.data.value`. Legacy fallback paths (`text-delta/textDelta`) should be retained for backward compatibility. Add `x-trpc-source` header to all tRPC requests to satisfy any server-side middleware guards.
+
+---
+
+### REQ-12 — Fix Connection Test (500 Error)
+
+**Source:** Session 5 — "⚠️ Unexpected response: 500" on Test Connection button
+**Priority:** High
+**Summary:** The "Test Connection" button POSTed to `/api/v1/note/upsert` with `id: -99999`. Blinko returned HTTP 500 for this invalid ID instead of 400. The test logic treated 500 as an unexpected failure, displaying a warning even when credentials were correct.
+
+**Interpreted requirement:** Replace the POST dry-run with a read-only `GET /api/v1/note/list?page=1&pageSize=1` request. A 200 response confirms valid credentials. Only 401/403 indicates auth failure. This eliminates the server-side 500 caused by invalid input and avoids any risk of accidental data mutation.
+
+---
+
 ## 3. Scope Boundaries & Assumptions
 
 | Boundary | Decision |
@@ -118,8 +200,9 @@ Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3VwZXJhZG1pbiIsIm5hbWUi
 | **Auth mechanism** | REST API v1 Bearer token is opt-in; session-cookie tRPC remains the default fallback. |
 | **AI provider** | 401 errors on AI endpoints indicate Blinko server misconfiguration, not a plugin bug. Plugin can only display better error messages. |
 | **Token storage** | Bearer token stored in `localStorage` via the existing `blinko-ai-post-settings` key — same as all other plugin settings. No additional encryption implemented (token is already in user's browser). |
-| **Dry-run test ID** | Test Connection uses `id: -99999` as a non-existent note ID. A 404/400 response is treated as auth-success (auth passed, note not found). |
-| **Quick note fallback** | Dispatching `new MouseEvent('click', { bubbles: true })` on the card itself. Re-entry guard (`card.dataset.opening`) prevents handler recursion. |
+| **Connection test endpoint** | Test Connection now uses `GET /api/v1/note/list?page=1&pageSize=1` (read-only). 200 = auth valid; 401/403 = bad token. The previous `id:-99999` POST approach was retired after it produced HTTP 500 (see REQ-12). |
+| **Quick note click dispatch** | Single-tap now dispatches the click on the element the user actually tapped (bubbling up to the card's React onClick). The previous openBtn-search heuristic was fragile and is removed. |
+| **Editable element BiDi** | Direction classes are NOT applied to `[contenteditable]`, `textarea`, or `input` elements during `characterData` mutations. The browser handles per-character BiDi via `unicode-bidi: plaintext` (REQ-07). |
 
 ---
 
@@ -165,6 +248,37 @@ Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3VwZXJhZG1pbiIsIm5hbWUi
 - [ ] All 13 PRs (#65–#77) have archive/close comments explaining the PR #78 situation
 - [ ] No live PRs remain open that duplicate merged work
 
+### AC-07 — RTL Typing (no flicker)
+
+- [ ] Typing Hebrew characters one by one in the Blinko editor does not cause a visible LTR↔RTL jump per keystroke
+- [ ] After typing stops and the editor loses focus, direction classes are still applied correctly when `processAllElements()` runs
+
+### AC-08 — Single-Tap Full Card Area
+
+- [ ] Tapping the body text (`<p>`) of a quick note opens the note — not just the heading/title area
+- [ ] Tapping outside interactive controls (buttons, menus, tags) on any card type opens the note
+- [ ] Re-entry guard still prevents double-open
+
+### AC-09 — Default Settings Applied
+
+- [ ] Fresh install (no localStorage) defaults: `minRTLChars=1`, `darkMode=true`, `compactDatetime=true`, `singleTapOpenNote=true`, `backButtonClosesNote=true`, `tapOutsideClosesNote=true`, `reduceMotion=true`, `interceptAIErrors=true`
+
+### AC-10 — Tools Tab
+
+- [ ] Settings panel has 5 tabs: Simple, Advanced, UI/UX, AI Post, 🧪 Tools
+- [ ] Dynamic CSS Rules, Permanent CSS Settings, Test RTL Detection, Advanced Actions are ONLY in the Tools tab
+- [ ] Export and Import settings buttons are present in Tools tab
+
+### AC-11 — AI Post-Processing Works
+
+- [ ] `🧪 Run Test` button returns AI-generated text (not empty string, not 401 error) when AI provider is configured in Blinko
+- [ ] SSE chunk extraction reads `result.data.value` field
+
+### AC-12 — Connection Test Passes
+
+- [ ] `🧪 Test Connection` shows ✅ when URL and token are valid (HTTP 200 from GET `/api/v1/note/list`)
+- [ ] Shows ❌ on 401/403; shows ⚠️ on other unexpected status codes
+
 ---
 
 ## 5. Out-of-Scope Items
@@ -186,3 +300,4 @@ Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3VwZXJhZG1pbiIsIm5hbWUi
 |---------|------|--------|---------|
 | 1.0 | 2026-03-24 | Claude Code | Initial requirements from PR audit session |
 | 2.0 | 2026-03-26 | Claude Code | Added REQ-01 through REQ-05 from bug report session; added API credentials; added acceptance criteria |
+| 3.0 | 2026-03-27 | Claude Code | Added Session 5 verbatim request; REQ-07 through REQ-12; updated scope boundaries; added AC-07 through AC-12; branch updated to `claude/fix-hebrew-text-note-focus-ddReT` |
