@@ -304,7 +304,7 @@ export const DEFAULT_SETTINGS: RTLSettings = {
   autoDetect: true,
   manualMode: false,
   manualToggle: false,
-  darkMode: false,
+  darkMode: true,
   method: 'all',
   customCSS: `
 /* Default RTL Styles */
@@ -317,7 +317,7 @@ export const DEFAULT_SETTINGS: RTLSettings = {
   permanentCSS: false,
   targetSelectors: DEFAULT_TARGET_SELECTORS,
   disabledSelectors: ['.vditor-sv', '.vditor-sv textarea'],
-  minRTLChars: 2,
+  minRTLChars: 1,
   processInterval: 5000,
   threshold: 0.15,
   enableManualToggleBtn: true,

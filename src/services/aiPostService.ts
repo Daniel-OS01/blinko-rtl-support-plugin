@@ -32,7 +32,10 @@ async function trpcMutate<T = unknown>(
 ): Promise<T> {
   const res = await fetch(`/api/trpc/${procedure}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-trpc-source': 'blinko-rtl-plugin',
+    },
     credentials: 'include',
     body: JSON.stringify({ json: input }),
   });
@@ -58,6 +61,9 @@ async function collectWritingStream(prompt: string): Promise<string> {
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'text/event-stream, application/json',
+      // Include tRPC source header so Blinko's middleware recognises this as a
+      // legitimate plugin request (some Blinko versions gate on this header).
+      'x-trpc-source': 'blinko-rtl-plugin',
     },
     credentials: 'include',
     body: JSON.stringify({ json: { question: prompt, type: 'custom' } }),
@@ -96,14 +102,20 @@ async function collectWritingStream(prompt: string): Promise<string> {
         if (!jsonStr || jsonStr === '[DONE]') continue;
         try {
           const data = JSON.parse(jsonStr) as Record<string, unknown>;
-          // Handle different tRPC streaming envelope shapes
+          // Blinko SSE envelope (per API_REFERENCE.md):
+          //   {"result":{"data":{"type":"text_delta","value":"..."}}}
+          // Also handle legacy / alternate shapes as fallbacks.
           const chunk =
+            (data?.result as any)?.data ??
             (data?.result as any)?.data?.json?.chunk ??
-            (data?.result as any)?.data?.chunk ??
-            (data as any)?.chunk ??
-            (data as any)?.data?.chunk;
+            (data as any)?.data ??
+            (data as any)?.chunk;
 
-          if (chunk?.type === 'text-delta' && typeof chunk.textDelta === 'string') {
+          if (chunk?.type === 'text_delta' && typeof chunk.value === 'string') {
+            // Primary format (Blinko API_REFERENCE.md spec)
+            fullText += chunk.value;
+          } else if (chunk?.type === 'text-delta' && typeof chunk.textDelta === 'string') {
+            // Legacy format fallback
             fullText += chunk.textDelta;
           } else if (chunk?.type === 'text' && typeof chunk.text === 'string') {
             fullText += chunk.text;

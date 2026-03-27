@@ -163,53 +163,60 @@ export class UIUXService {
 
     // Mark note cards and attach click listeners
     const markAndListen = () => {
-      // Selector covers both Blinko and Blinko Article card types
+      // Broad selector covers Blinko quick-note cards, article cards, and any
+      // wrapper divs inside the masonry grids.  The `:not([data-single-tap])`
+      // guard prevents duplicate handler attachment on already-processed cards.
       const cards = document.querySelectorAll<HTMLElement>(
         '[class*="note-card"]:not([data-single-tap]), ' +
         '[class*="blinko-card"]:not([data-single-tap]), ' +
-        '.card-masonry-grid > div > div:not([data-single-tap])'
+        '[class*="blinko-note"]:not([data-single-tap]), ' +
+        '[class*="note-item"]:not([data-single-tap]), ' +
+        '.card-masonry-grid > div > div:not([data-single-tap]), ' +
+        '.blog-masonry-grid > div > div:not([data-single-tap])'
       );
 
       cards.forEach(card => {
         card.setAttribute('data-single-tap', 'true');
 
         const handler = (e: MouseEvent) => {
-          // Don't intercept clicks on interactive children (buttons, links, etc.)
           const target = e.target as HTMLElement;
-          if (target.closest('button, a, input, textarea, [role="button"]')) return;
 
-          // Re-entry guard: prevents the synthetic openBtn.click() from
-          // re-triggering this handler and causing dual-event firing.
+          // Don't intercept clicks on interactive elements — let them handle
+          // themselves. Also skip action bars, toolbars, and context menus.
+          if (target.closest(
+            'button, a, input, textarea, select, ' +
+            '[role="button"], [role="menuitem"], [role="menu"], ' +
+            '[class*="action"], [class*="toolbar"], [class*="menu"], ' +
+            '[class*="tag"], [class*="more"], [class*="dropdown"]'
+          )) return;
+
+          // Re-entry guard — prevents our synthetic click from re-triggering
+          // this handler and causing a double-open.
           if (card.dataset.opening) return;
+          card.dataset.opening = 'true';
 
-          // Find the primary note-opener.
-          // Blinko Article notes (type 1) have h1/h2/h3 headings or elements with
-          // "title"/"open"/"expand" class names.
-          // Blinko quick notes (type 0) have only paragraph text — no heading
-          // elements. For those we fall back to dispatching a synthetic click on
-          // the card itself so Blinko's React onClick handler fires.
-          // Next.js <Link> renders as <a href> — include it as an opener too.
-          const openBtn = card.querySelector<HTMLElement>(
-            'a[href]:not([href="#"]), [class*="open"], [class*="expand"], [class*="title"], h1, h2, h3'
-          );
+          // Strategy: always dispatch the click on the most specific element
+          // the user actually tapped, letting React's event bubbling carry it
+          // up through the card's onClick handler.  This works for both
+          // quick-notes (type 0, no heading) and article notes (type 1, has
+          // heading/link opener) because the React onClick is on an ancestor
+          // that receives the bubbled event regardless.
+          const reactTarget =
+            (target.nodeType === Node.TEXT_NODE ? target.parentElement : target) ?? card;
 
-          if (openBtn && openBtn !== target && !openBtn.contains(target as Node)) {
-            // Target is content (e.g. <p>) but opener is a heading/link — redirect.
-            card.dataset.opening = 'true';
-            openBtn.click();
-            requestAnimationFrame(() => { delete card.dataset.opening; });
-          } else if (!openBtn) {
-            // Blinko quick note: no opener element found.
-            // Dispatch a synthetic click on the card so Blinko's React onClick
-            // (which handles note detail navigation) fires.
-            // The re-entry guard (card.dataset.opening) prevents this handler
-            // from processing the synthetic event again.
-            card.dataset.opening = 'true';
-            card.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-            requestAnimationFrame(() => { delete card.dataset.opening; });
+          const syntheticClick = new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+          });
+
+          if (reactTarget !== card && card.contains(reactTarget)) {
+            reactTarget.dispatchEvent(syntheticClick);
+          } else {
+            card.dispatchEvent(syntheticClick);
           }
-          // If target IS the opener (user tapped the title/link directly) the
-          // native click already fired; no synthetic click needed.
+
+          requestAnimationFrame(() => { delete card.dataset.opening; });
         };
 
         (card as any)._uiuxClickHandler = handler;

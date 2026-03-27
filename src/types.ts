@@ -91,15 +91,15 @@ export interface UIUXSettings {
 }
 
 export const DEFAULT_UIUX_SETTINGS: UIUXSettings = {
-  compactDatetime: false,
+  compactDatetime: true,
   datetimeFontSize: 12,
   noteLineHeight: 1.5,
   toolbarIconSize: 16,
-  singleTapOpenNote: false,
-  backButtonClosesNote: false,
-  tapOutsideClosesNote: false,
+  singleTapOpenNote: true,
+  backButtonClosesNote: true,
+  tapOutsideClosesNote: true,
   interceptAIErrors: true,
-  reduceMotion: false,
+  reduceMotion: true,
   highContrast: false,
   focusIndicators: true,
   minTouchTargets: false,
