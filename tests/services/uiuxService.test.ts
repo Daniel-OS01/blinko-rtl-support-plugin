@@ -705,6 +705,8 @@ describe('UIUXService — Lifecycle: destroy() cleans up all state', () => {
     for (const cls of classes) {
       expect(document.body.classList.contains(cls)).toBe(false);
     }
+    // Fixed: cleanup service instance
+    service.destroy();
   });
 
   it('persists settings to localStorage', () => {
