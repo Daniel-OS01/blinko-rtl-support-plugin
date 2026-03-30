@@ -1,0 +1,3 @@
+## 2024-05-18 - MutationObserver Configuration Performance
+**Learning:** Performing array filtering (`filter`, `includes`), validation (`try/catch`), and DOM queries (`document.querySelector`) within a `MutationObserver` callback is a significant performance anti-pattern. Because mutations fire frequently (often multiple times per keystroke in an editor), any operations that are relatively static should be computed outside the observer's callback, even if they depend on configurable settings.
+**Action:** Always extract configuration-dependent, non-mutation-specific calculations (like building lists of safe selectors) out of the `MutationObserver` callback. If settings change, the observer can be disconnected and re-setup to use the new values.
