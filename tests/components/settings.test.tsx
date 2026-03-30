@@ -194,6 +194,14 @@ describe("RTLSetting Component", () => {
 
       // Find Export button (regex for flexible matching)
       // Use getAllByText and pick the first or most specific one to avoid ambiguity if multiple elements match
+      // Navigate to tools tab first
+      const buttons2 = document.body.querySelectorAll('button');
+      let foundToolsTab = null;
+      buttons2.forEach(btn => {
+          if (btn.textContent?.includes('Tools')) foundToolsTab = btn;
+      });
+      if (foundToolsTab) fireEvent.click(foundToolsTab);
+
       const exportBtns = document.body.querySelectorAll('button');
       let exportBtn = null;
       exportBtns.forEach(btn => {

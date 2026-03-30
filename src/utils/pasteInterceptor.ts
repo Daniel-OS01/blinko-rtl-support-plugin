@@ -57,18 +57,56 @@ export class PasteInterceptor {
 
     const toast = document.createElement('div');
     toast.className = 'rtl-paste-toast';
-    toast.innerHTML = `
-      <div style="margin-bottom: 10px;">
-        <strong style="display: block; margin-bottom: 5px;">Mixed content detected</strong>
-        <p style="margin: 0; font-size: 0.9em; opacity: 0.8;">How would you like to paste this text?</p>
-      </div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button id="rtl-btn-split" style="flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-primary, #007bff); color: white; cursor: pointer;">Split Blocks</button>
-        <button id="rtl-btn-wrap" style="flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-secondary, #6c757d); color: white; cursor: pointer;">Wrap (Isolation)</button>
-        <button id="rtl-btn-original" style="flex: 1; padding: 6px 12px; border: 1px solid var(--b3-theme-surface-lighter, #ccc); border-radius: 4px; background: transparent; color: inherit; cursor: pointer;">Original</button>
-      </div>
-      <button class="rtl-toast-close" style="position: absolute; top: 5px; right: 5px; border: none; background: transparent; cursor: pointer; font-size: 16px;">&times;</button>
-    `;
+    // Secure DOM construction replacing innerHTML to prevent XSS
+    const headerDiv = document.createElement('div');
+    headerDiv.style.marginBottom = '10px';
+
+    const strongEl = document.createElement('strong');
+    strongEl.style.display = 'block';
+    strongEl.style.marginBottom = '5px';
+    strongEl.textContent = 'Mixed content detected';
+
+    const pEl = document.createElement('p');
+    pEl.style.margin = '0';
+    pEl.style.fontSize = '0.9em';
+    pEl.style.opacity = '0.8';
+    pEl.textContent = 'How would you like to paste this text?';
+
+    headerDiv.appendChild(strongEl);
+    headerDiv.appendChild(pEl);
+
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.style.display = 'flex';
+    buttonsDiv.style.gap = '8px';
+    buttonsDiv.style.flexWrap = 'wrap';
+
+    const btnSplit = document.createElement('button');
+    btnSplit.id = 'rtl-btn-split';
+    btnSplit.style.cssText = 'flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-primary, #007bff); color: white; cursor: pointer;';
+    btnSplit.textContent = 'Split Blocks';
+
+    const btnWrap = document.createElement('button');
+    btnWrap.id = 'rtl-btn-wrap';
+    btnWrap.style.cssText = 'flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-secondary, #6c757d); color: white; cursor: pointer;';
+    btnWrap.textContent = 'Wrap (Isolation)';
+
+    const btnOriginal = document.createElement('button');
+    btnOriginal.id = 'rtl-btn-original';
+    btnOriginal.style.cssText = 'flex: 1; padding: 6px 12px; border: 1px solid var(--b3-theme-surface-lighter, #ccc); border-radius: 4px; background: transparent; color: inherit; cursor: pointer;';
+    btnOriginal.textContent = 'Original';
+
+    buttonsDiv.appendChild(btnSplit);
+    buttonsDiv.appendChild(btnWrap);
+    buttonsDiv.appendChild(btnOriginal);
+
+    const btnClose = document.createElement('button');
+    btnClose.className = 'rtl-toast-close';
+    btnClose.style.cssText = 'position: absolute; top: 5px; right: 5px; border: none; background: transparent; cursor: pointer; font-size: 16px;';
+    btnClose.textContent = '×';
+
+    toast.appendChild(headerDiv);
+    toast.appendChild(buttonsDiv);
+    toast.appendChild(btnClose);
 
     // Apply styles
     Object.assign(toast.style, {
