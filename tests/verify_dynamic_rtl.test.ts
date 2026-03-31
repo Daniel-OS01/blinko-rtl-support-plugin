@@ -21,7 +21,8 @@ describe("RTLService Dynamic CSS and Selectors", () => {
 
         // Mock Blinko API for toast
         window.Blinko = {
-            toast: { success: jest.fn(), error: jest.fn() }
+            toast: { success: jest.fn(), error: jest.fn() },
+            i18n: { t: (key: string) => key }
         } as any;
 
         detector = new RTLDetector();

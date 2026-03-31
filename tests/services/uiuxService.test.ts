@@ -66,7 +66,10 @@ function makeEditor(): { backdrop: HTMLDivElement; editor: HTMLDivElement; close
 // ─── Mock Blinko toast ────────────────────────────────────────────────────────
 
 const mockToast = { success: jest.fn(), error: jest.fn() };
-(window as any).Blinko = { toast: mockToast };
+(window as any).Blinko = {
+  toast: mockToast,
+  i18n: { t: (key: string) => key }
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 1 — Regression tests for Issues 1–4 (prior session fixes)
@@ -81,6 +84,14 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     document.body.className = '';
     jest.clearAllMocks();
     service = new UIUXService();
+
+    // reset history length to 1 because history isn't fully reset by innerHTML
+    if (window.history.length > 1) {
+       let numToPop = window.history.length - 1;
+       while(numToPop--) {
+          window.history.back();
+       }
+    }
   });
 
   afterEach(() => {

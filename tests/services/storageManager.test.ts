@@ -21,7 +21,7 @@ describe("StorageManager", () => {
         manager = new StorageManager();
         localStorage.clear();
         // Reset Blinko user
-        (window as any).Blinko = undefined;
+        (window as any).Blinko = { i18n: { t: (key: string) => key } };
     });
 
     it("should save and load to global key when user is anonymous", () => {
@@ -37,7 +37,7 @@ describe("StorageManager", () => {
 
     it("should save and load to user-specific key when user is logged in", () => {
         // Mock User
-        (window as any).Blinko = { user: { id: 'user123' } };
+        (window as any).Blinko = { user: { id: 'user123' }, i18n: { t: (key: string) => key } };
 
         manager.save(mockSettings);
 
@@ -55,7 +55,7 @@ describe("StorageManager", () => {
         expect(localStorage.getItem('blinko-rtl-settings')).toBeTruthy();
 
         // 2. Log in
-        (window as any).Blinko = { user: { id: 'user123' } };
+        (window as any).Blinko = { user: { id: 'user123' }, i18n: { t: (key: string) => key } };
 
         // 3. Load - should find nothing for user, but fall back to anonymous
         const loaded = manager.load();
@@ -80,7 +80,7 @@ describe("StorageManager", () => {
         localStorage.setItem('blinko-rtl-settings-user123', JSON.stringify(userSettings));
 
         // 3. Log in
-        (window as any).Blinko = { user: { id: 'user123' } };
+        (window as any).Blinko = { user: { id: 'user123' }, i18n: { t: (key: string) => key } };
 
         // 4. Load - should get user settings
         const loaded = manager.load();
