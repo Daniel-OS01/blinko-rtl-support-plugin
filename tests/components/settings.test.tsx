@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from "bun:test";
 import { RTLSetting } from "../../src/setting";
-import { render, fireEvent, waitFor, act } from "@testing-library/preact";
+import { render, fireEvent, waitFor, act, cleanup } from "@testing-library/preact";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { h } from "preact";
 import { DEFAULT_TARGET_SELECTORS, DEFAULT_DYNAMIC_CSS } from "../../src/services/constants";
@@ -117,6 +117,10 @@ describe("RTLSetting Component", () => {
 
     // Reset window.blinkoRTL mock implementation between tests if needed
     (window as any).blinkoRTL.settings = () => mockSettings;
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it("renders with default settings", () => {

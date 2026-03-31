@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from "bun:test";
 import { RTLApp } from "../../src/app";
-import { render } from "@testing-library/preact";
+import { render, cleanup } from "@testing-library/preact";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { h } from "preact";
 
@@ -43,6 +43,10 @@ describe("RTLApp Component", () => {
     localStorage.clear();
     jest.clearAllMocks();
     mockDetector = { detectRTL: jest.fn() };
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it("renders with stats", () => {
