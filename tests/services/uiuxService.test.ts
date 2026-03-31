@@ -66,7 +66,7 @@ function makeEditor(): { backdrop: HTMLDivElement; editor: HTMLDivElement; close
 // ─── Mock Blinko toast ────────────────────────────────────────────────────────
 
 const mockToast = { success: jest.fn(), error: jest.fn() };
-(window as any).Blinko = { toast: mockToast, i18n: { t: (key: string) => key } };
+(window as any).Blinko = { toast: mockToast };
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 1 — Regression tests for Issues 1–4 (prior session fixes)
