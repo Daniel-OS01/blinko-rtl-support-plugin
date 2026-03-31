@@ -84,14 +84,6 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     document.body.className = '';
     jest.clearAllMocks();
     service = new UIUXService();
-
-    // reset history length to 1 because history isn't fully reset by innerHTML
-    if (window.history.length > 1) {
-       let numToPop = window.history.length - 1;
-       while(numToPop--) {
-          window.history.back();
-       }
-    }
   });
 
   afterEach(() => {
