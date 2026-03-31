@@ -230,8 +230,11 @@ jobs:
       - name: Check Bundle Size
         shell: bash
         run: |
-          JS_SIZE=$(stat -c%s dist/*.js 2>/dev/null || stat -f%z dist/*.js)
-          CSS_SIZE=$(stat -c%s dist/*.css 2>/dev/null || stat -f%z dist/*.css)
+          # vite production build outputs to release/ by default based on configuration
+          JS_FILE=$(ls release/*.js | head -n 1)
+          CSS_FILE=$(ls release/*.css | head -n 1)
+          JS_SIZE=$(stat -c%s "$JS_FILE" 2>/dev/null || stat -f%z "$JS_FILE")
+          CSS_SIZE=$(stat -c%s "$CSS_FILE" 2>/dev/null || stat -f%z "$CSS_FILE")
           echo "JS bundle: ${JS_SIZE} bytes"
           echo "CSS bundle: ${CSS_SIZE} bytes"
           # Fail if JS bundle exceeds 400 kB uncompressed (current ~228 kB)
@@ -244,8 +247,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ github.run_id }}
-          path: dist/
+          name: release-${{ github.run_id }}
+          path: release/
           retention-days: 7
 
   # ─── Job 4: Visual Verification (optional, non-blocking) ──────────────────

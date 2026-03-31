@@ -106,19 +106,23 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
   });
 
   it('re-pushes sentinel when back is pressed and an overlay is open', () => {
+    // Reset history to isolate this test if running in parallel
+    const initialHistoryLength = history.length;
     service.updateSettings({ backButtonClosesNote: true });
     makeOverlay();
-    const before = history.length;
+    const afterEnable = history.length;
 
     // Simulate back button press
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
 
     // Handler should re-push sentinel for the next back press
-    expect(history.length).toBe(before + 1);
+    expect(history.length).toBe(afterEnable + 1);
   });
 
   it('does NOT push when back is pressed and no overlay is open', () => {
     service.updateSettings({ backButtonClosesNote: true });
+
+    // We already pushed a sentinel when we enabled it, so we need to track relative changes
     const before = history.length;
 
     // No overlay in DOM
@@ -129,8 +133,10 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
   });
 
   it('resets backButtonInitialized when feature is disabled, allowing re-initialization', () => {
+    const beforeEnable = history.length;
     service.updateSettings({ backButtonClosesNote: true });
     const afterEnable = history.length;
+    expect(afterEnable).toBe(beforeEnable + 1); // just to verify
 
     // Disable
     service.updateSettings({ backButtonClosesNote: false });
@@ -148,6 +154,9 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     closeBtn.addEventListener('click', clickSpy);
 
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+
+    // Remove overlay so we don't pollute other tests
+    overlay.remove();
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
   });
@@ -454,12 +463,14 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
+
+    backdrop.remove(); // cleanup
   });
 
   it('clicking inside the editor does NOT fire close button', () => {
     service.updateSettings({ tapOutsideClosesNote: true });
 
-    const { editor, closeBtn } = makeEditor();
+    const { backdrop, editor, closeBtn } = makeEditor();
     const clickSpy = jest.fn();
     closeBtn.addEventListener('click', clickSpy);
 
@@ -471,6 +482,8 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     inner.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
     expect(clickSpy).not.toHaveBeenCalled();
+
+    backdrop.remove(); // cleanup
   });
 
   it('does nothing when tapOutsideClosesNote is disabled', () => {
@@ -483,6 +496,8 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
     expect(clickSpy).not.toHaveBeenCalled();
+
+    backdrop.remove(); // cleanup
   });
 
   it('destroy() removes the mousedown listener', () => {
@@ -497,6 +512,8 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     // After destroy, backdrop click should not trigger close
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     expect(clickSpy).not.toHaveBeenCalled();
+
+    backdrop.remove(); // cleanup
   });
 
   it('dispatches Escape if no close button is found', () => {
@@ -517,6 +534,8 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     expect(escapeSpy).toHaveBeenCalledTimes(1);
     const event = escapeSpy.mock.calls[0][0] as KeyboardEvent;
     expect(event.key).toBe('Escape');
+
+    backdrop.remove(); // cleanup
   });
 });
 
