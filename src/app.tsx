@@ -13,7 +13,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const [sensitivity, setSensitivity] = useState(15); // Default 15%
   const [isFixing, setIsFixing] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
-  const i18n = window.Blinko.i18n;
+  const i18n = window?.Blinko?.i18n || { t: (key: string) => key };
 
   // Poll for stats
   useEffect(() => {
