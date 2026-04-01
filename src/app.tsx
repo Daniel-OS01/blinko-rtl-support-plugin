@@ -122,8 +122,8 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
             padding: '4px',
             borderRadius: '4px'
           }}
-          title={i18n.t('manual_toggle')}
-          aria-label={i18n.t('manual_toggle')}
+          title={i18n?.t ? i18n.t('manual_toggle') : 'Toggle RTL'}
+          aria-label={i18n?.t ? i18n.t('manual_toggle') : 'Toggle RTL'}
         >
           🔄
         </button>
