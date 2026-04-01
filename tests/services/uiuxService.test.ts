@@ -88,14 +88,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {
-    const before = history.length;
-    service.updateSettings({ backButtonClosesNote: true });
-    // Due to environment variations in testing history length,
-    // simply check that history length grew by 1 OR if it was a pushState call (mocked).
-    // Here we'll stick to a spy on history.pushState using jest.spyOn
     const mockPushState = jest.spyOn(history, 'pushState');
-    service.destroy(); // reset
-    service = new UIUXService(); // re-init
 
     service.updateSettings({ backButtonClosesNote: true });
     expect(mockPushState).toHaveBeenCalledTimes(1);
@@ -117,27 +110,33 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
   });
 
   it('re-pushes sentinel when back is pressed and an overlay is open', () => {
+    const mockPushState = jest.spyOn(history, 'pushState');
     service.updateSettings({ backButtonClosesNote: true });
     makeOverlay();
-    const mockPushState = jest.spyOn(history, 'pushState');
+
+    // The first apply() pushed the initial sentinel
+    expect(mockPushState).toHaveBeenCalledTimes(1);
 
     // Simulate back button press
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
 
     // Handler should re-push sentinel for the next back press
-    expect(mockPushState).toHaveBeenCalledTimes(1);
+    expect(mockPushState).toHaveBeenCalledTimes(2);
     mockPushState.mockRestore();
   });
 
   it('does NOT push when back is pressed and no overlay is open', () => {
-    service.updateSettings({ backButtonClosesNote: true });
     const mockPushState = jest.spyOn(history, 'pushState');
+    service.updateSettings({ backButtonClosesNote: true });
+
+    // The first apply() pushed the initial sentinel
+    expect(mockPushState).toHaveBeenCalledTimes(1);
 
     // No overlay in DOM
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
 
-    // No re-push — navigation should proceed naturally
-    expect(mockPushState).toHaveBeenCalledTimes(0);
+    // No re-push — navigation should proceed naturally (stays at 1)
+    expect(mockPushState).toHaveBeenCalledTimes(1);
     mockPushState.mockRestore();
   });
 
