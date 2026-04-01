@@ -186,8 +186,8 @@ export class AIPostService {
       .filter(Boolean)
       .join(', ');
     return this.settings.customPrompt
-      .replace(/\{note\}/g, content)
-      .replace(/\{tags\}/g, tags);
+      .replace(/\{note\}/g, () => content)
+      .replace(/\{tags\}/g, () => tags);
   }
 
   // ── AI operations ────────────────────────────────────────────────────────
