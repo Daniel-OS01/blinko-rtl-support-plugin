@@ -13,7 +13,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const [sensitivity, setSensitivity] = useState(15); // Default 15%
   const [isFixing, setIsFixing] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
-  const i18n = window.Blinko.i18n;
+  const i18n = window.Blinko?.i18n;
 
   // Poll for stats
   useEffect(() => {
@@ -122,7 +122,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
             padding: '4px',
             borderRadius: '4px'
           }}
-          title={i18n.t('manual_toggle')}
+          title={i18n?.t('manual_toggle') || 'Toggle RTL'}
         >
           🔄
         </button>
