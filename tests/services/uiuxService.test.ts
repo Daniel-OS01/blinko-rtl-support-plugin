@@ -108,7 +108,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     expect(history.length).toBe(afterFirstEnable);
   });
 
-  it('re-pushes sentinel when back is pressed and an overlay is open', () => {
+  it('re-pushes sentinel when back is pressed and an overlay is open', async () => {
     service.updateSettings({ backButtonClosesNote: true });
     makeOverlay();
     const before = history.length;
@@ -117,6 +117,8 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
 
     // Handler should re-push sentinel for the next back press
+    // Need a tiny wait for happy-dom / jest to process event microtasks.
+    await Promise.resolve();
     expect(history.length).toBe(before + 1);
   });
 
@@ -143,7 +145,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     expect(history.length).toBe(afterEnable + 1);
   });
 
-  it('clicks the close button on the overlay when back is pressed', () => {
+  it('clicks the close button on the overlay when back is pressed', async () => {
     service.updateSettings({ backButtonClosesNote: true });
     const overlay = makeOverlay();
     const closeBtn = overlay.querySelector<HTMLElement>('.close')!;
@@ -151,6 +153,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     closeBtn.addEventListener('click', clickSpy);
 
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+    await Promise.resolve();
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
   });
@@ -446,7 +449,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     service.destroy();
   });
 
-  it('clicking outside the editor fires the close button', () => {
+  it('clicking outside the editor fires the close button', async () => {
     service.updateSettings({ tapOutsideClosesNote: true });
 
     const { backdrop, closeBtn } = makeEditor();
@@ -455,11 +458,12 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
 
     // Click on the backdrop (outside editor)
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    await Promise.resolve();
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('clicking inside the editor does NOT fire close button', () => {
+  it('clicking inside the editor does NOT fire close button', async () => {
     service.updateSettings({ tapOutsideClosesNote: true });
 
     const { editor, closeBtn } = makeEditor();
@@ -472,11 +476,12 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     editor.appendChild(inner);
 
     inner.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    await Promise.resolve();
 
     expect(clickSpy).not.toHaveBeenCalled();
   });
 
-  it('does nothing when tapOutsideClosesNote is disabled', () => {
+  it('does nothing when tapOutsideClosesNote is disabled', async () => {
     service.updateSettings({ tapOutsideClosesNote: false });
 
     const { backdrop, closeBtn } = makeEditor();
@@ -484,11 +489,12 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     closeBtn.addEventListener('click', clickSpy);
 
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    await Promise.resolve();
 
     expect(clickSpy).not.toHaveBeenCalled();
   });
 
-  it('destroy() removes the mousedown listener', () => {
+  it('destroy() removes the mousedown listener', async () => {
     service.updateSettings({ tapOutsideClosesNote: true });
 
     const { backdrop, closeBtn } = makeEditor();
@@ -499,10 +505,11 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
 
     // After destroy, backdrop click should not trigger close
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    await Promise.resolve();
     expect(clickSpy).not.toHaveBeenCalled();
   });
 
-  it('dispatches Escape if no close button is found', () => {
+  it('dispatches Escape if no close button is found', async () => {
     service.updateSettings({ tapOutsideClosesNote: true });
 
     // Editor with no close button
@@ -516,6 +523,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     editor.addEventListener('keydown', escapeSpy);
 
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    await Promise.resolve();
 
     expect(escapeSpy).toHaveBeenCalledTimes(1);
     const event = escapeSpy.mock.calls[0][0] as KeyboardEvent;
