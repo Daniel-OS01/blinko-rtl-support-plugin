@@ -1,4 +1,3 @@
-try { (window as any).Blinko = { i18n: { t: (key: string) => key }, toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn() } }; } catch(e) {}
 /**
  * UIUXService — Comprehensive Unit Tests
  * ========================================
@@ -606,7 +605,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     // Wait for the setTimeout(0) inside interceptor
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    expect((window as any).Blinko.toast.error).toHaveBeenCalledWith(
+    expect(mockToast.error).toHaveBeenCalledWith(
       expect.stringContaining('Settings')
     );
   });
@@ -619,7 +618,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
 
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    expect((window as any).Blinko.toast.error).toHaveBeenCalledWith(
+    expect(mockToast.error).toHaveBeenCalledWith(
       expect.stringContaining('Settings')
     );
   });
@@ -632,7 +631,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
 
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    expect((window as any).Blinko.toast.error).not.toHaveBeenCalled();
+    expect(mockToast.error).not.toHaveBeenCalled();
   });
 
   it('does NOT show toast for 200 response from AI endpoint', async () => {
@@ -643,7 +642,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
 
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    expect((window as any).Blinko.toast.error).not.toHaveBeenCalled();
+    expect(mockToast.error).not.toHaveBeenCalled();
   });
 
   it('returns the original response untouched', async () => {
@@ -736,8 +735,3 @@ describe('UIUXService — Lifecycle: destroy() cleans up all state', () => {
     service.destroy();
   });
 });
-// Add mock for window.Blinko
-(window as any).Blinko = {
-  i18n: { t: (key: string) => key },
-  toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn() }
-};

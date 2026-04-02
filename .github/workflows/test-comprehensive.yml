@@ -230,8 +230,8 @@ jobs:
       - name: Check Bundle Size
         shell: bash
         run: |
-          JS_SIZE=$(stat -c%s dist/*.js 2>/dev/null || stat -f%z dist/*.js)
-          CSS_SIZE=$(stat -c%s dist/*.css 2>/dev/null || stat -f%z dist/*.css)
+          JS_SIZE=$(stat -c %s dist/*.js 2>/dev/null || stat -f %z dist/*.js)
+          CSS_SIZE=$(stat -c %s dist/*.css 2>/dev/null || stat -f %z dist/*.css)
           echo "JS bundle: ${JS_SIZE} bytes"
           echo "CSS bundle: ${CSS_SIZE} bytes"
           # Fail if JS bundle exceeds 400 kB uncompressed (current ~228 kB)
