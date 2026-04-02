@@ -58,6 +58,7 @@ function makeEditor(): { backdrop: HTMLDivElement; editor: HTMLDivElement; close
   editor.className = 'editor-container';
   const closeBtn = document.createElement('button');
   closeBtn.className = 'close';
+  closeBtn.setAttribute('aria-label', 'Close');
   editor.appendChild(closeBtn);
   backdrop.appendChild(editor);
   document.body.appendChild(backdrop);
