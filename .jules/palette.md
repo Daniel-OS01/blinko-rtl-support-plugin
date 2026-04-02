@@ -1,0 +1,3 @@
+## 2025-03-05 - Added ARIA Labels to Icon-Only Buttons
+**Learning:** Found multiple icon-only buttons (`ع/א` text and `🔄` symbol) that lacked textual description for screen readers, breaking accessibility.
+**Action:** Ensure all icon-only buttons include `aria-label` attributes to explicitly describe their functionality, using the established `i18n.t` localization framework where possible for consistent UX across languages.

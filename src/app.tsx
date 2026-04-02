@@ -123,6 +123,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
             borderRadius: '4px'
           }}
           title={i18n.t('manual_toggle')}
+          aria-label={i18n.t('manual_toggle')}
         >
           🔄
         </button>

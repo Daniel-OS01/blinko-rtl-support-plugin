@@ -44,6 +44,7 @@ System.register([], (exports) => ({
       toggleButton.className = 'rtl-toggle-btn';
       toggleButton.textContent = 'ع/א';
       toggleButton.title = 'Toggle RTL Support (Hebrew/Arabic)';
+      toggleButton.setAttribute('aria-label', 'Toggle RTL Support (Hebrew/Arabic)');
       
       toggleButton.addEventListener('click', () => {
           rtlService.toggle();
