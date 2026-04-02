@@ -42,6 +42,7 @@ function makeOverlay(): HTMLDivElement {
   const closeBtn = document.createElement('button');
   closeBtn.className = 'close';
   closeBtn.textContent = '×';
+  closeBtn.setAttribute('aria-label', 'Close');
   overlay.appendChild(closeBtn);
   document.body.appendChild(overlay);
   return overlay;
