@@ -185,9 +185,10 @@ export class AIPostService {
       .map(t => t.name ?? '')
       .filter(Boolean)
       .join(', ');
+    // Use replacer functions to prevent regex injection attacks via special patterns like $&
     return this.settings.customPrompt
-      .replace(/\{note\}/g, content)
-      .replace(/\{tags\}/g, tags);
+      .replace(/\{note\}/g, () => content)
+      .replace(/\{tags\}/g, () => tags);
   }
 
   // ── AI operations ────────────────────────────────────────────────────────
