@@ -292,6 +292,8 @@ export class UIUXService {
     }
 
     const handler = (_e: PopStateEvent) => {
+      if (!this.backButtonCleanup) return; // Guard against broken removeEventListener
+
       // NOTE: popstate is NOT cancelable; e.preventDefault() has no effect and
       // has been removed to avoid confusion.
 
@@ -377,6 +379,7 @@ export class UIUXService {
     };
 
     const handler = (e: MouseEvent): void => {
+      if (!this.tapOutsideCleanup) return; // Guard against broken removeEventListener in happy-dom
       const overlay = findActiveOverlay();
       if (!overlay) return;
       if (!overlay.contains(e.target as Node)) {
@@ -390,6 +393,7 @@ export class UIUXService {
     this.tapOutsideCleanup = () => {
       document.removeEventListener('mousedown', handler, true);
       document.body.classList.remove('blinko-tap-outside-close-active');
+      // Set to null is handled by the caller, which satisfies the guard above
     };
   }
 
