@@ -85,6 +85,9 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
 
   afterEach(() => {
     service.destroy();
+    // Clean up popstate handler manually if needed,
+    // although destroy() should handle it.
+    // Reset history state length issues if possible, although it's read-only
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {

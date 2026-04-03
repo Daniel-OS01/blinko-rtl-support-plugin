@@ -458,6 +458,8 @@ export class UIUXService {
     if (this.tapOutsideCleanup) this.tapOutsideCleanup();
     if (this.aiInterceptorCleanup) { this.aiInterceptorCleanup(); this.aiInterceptorCleanup = null; }
 
+    this.backButtonInitialized = false;
+
     // Remove all body classes
     const classes = [
       'blinko-compact-datetime', 'blinko-touch-targets', 'blinko-reduce-motion',
