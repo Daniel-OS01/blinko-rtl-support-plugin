@@ -1,0 +1,3 @@
+## 2024-04-03 - Cache Configuration-Dependent DOM Validations Outside Mutation Observers
+**Learning:** Performing configuration-dependent DOM validations (e.g., array filtering, `document.querySelector` checks for selector validity) inside a `MutationObserver` callback creates a massive performance bottleneck. The callback runs on every DOM mutation batch (potentially dozens of times a second during heavy DOM updates), repeatedly executing expensive DOM APIs for constant values.
+**Action:** Always pre-calculate configuration-dependent validations and cache them outside the `MutationObserver` callback. E.g., Move `safeSelectors` initialization up into `setupObserver()` scope instead of keeping it inside `new MutationObserver(() => {...})`.
