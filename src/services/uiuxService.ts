@@ -453,9 +453,9 @@ export class UIUXService {
   // ─── Lifecycle ───────────────────────────────────────────────────────
 
   destroy(): void {
-    if (this.singleTapCleanup) this.singleTapCleanup();
-    if (this.backButtonCleanup) this.backButtonCleanup();
-    if (this.tapOutsideCleanup) this.tapOutsideCleanup();
+    if (this.singleTapCleanup) { this.singleTapCleanup(); this.singleTapCleanup = null; }
+    if (this.backButtonCleanup) { this.backButtonCleanup(); this.backButtonCleanup = null; }
+    if (this.tapOutsideCleanup) { this.tapOutsideCleanup(); this.tapOutsideCleanup = null; }
     if (this.aiInterceptorCleanup) { this.aiInterceptorCleanup(); this.aiInterceptorCleanup = null; }
 
     this.backButtonInitialized = false;
