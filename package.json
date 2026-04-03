@@ -34,7 +34,7 @@
     "blinko": "^0.0.14",
     "blinko-cli": "^0.0.4",
     "browser-image-compression": "^2.0.2",
-    "happy-dom": "^20.0.11",
+    "happy-dom": "20.8.9",
     "typescript": "^5.0.0",
     "vite": "^4.5.14"
   },

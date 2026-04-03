@@ -187,7 +187,7 @@ describe("RTLSetting Component", () => {
       const buttons = document.body.querySelectorAll('button');
       let foundTab = null;
       buttons.forEach(btn => {
-          if (btn.textContent === 'Advanced') foundTab = btn;
+          if (btn.textContent?.includes('Tools')) foundTab = btn;
       });
 
       if (foundTab) fireEvent.click(foundTab);
@@ -197,7 +197,7 @@ describe("RTLSetting Component", () => {
       const exportBtns = document.body.querySelectorAll('button');
       let exportBtn = null;
       exportBtns.forEach(btn => {
-          if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
+          if (btn.textContent?.includes('Export Settings (JSON)')) exportBtn = btn;
       });
 
       if (!exportBtn) throw new Error('Export button not found');
