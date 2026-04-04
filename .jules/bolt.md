@@ -1,0 +1,3 @@
+## 2026-03-05 - Caching configuration-dependent selectors for MutationObservers
+**Learning:** In highly interactive environments like text editors or apps with frequent DOM updates, performing configuration-dependent calculations (like filtering array of selectors and testing DOM `querySelector` validity) *inside* a `MutationObserver` callback causes massive performance bottlenecks.
+**Action:** Always compute and cache static or configuration-dependent values outside of the `MutationObserver` callback (e.g. within the `setupObserver` method body itself, relying on closure scope) so that the callback executes as fast as possible.
