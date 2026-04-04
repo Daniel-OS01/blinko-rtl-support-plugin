@@ -85,6 +85,10 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
 
   afterEach(() => {
     service.destroy();
+    if (service['backButtonCleanup']) {
+      service['backButtonCleanup']();
+      service['backButtonCleanup'] = null;
+    }
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {
