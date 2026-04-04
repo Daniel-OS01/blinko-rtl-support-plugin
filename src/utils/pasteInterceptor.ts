@@ -57,18 +57,69 @@ export class PasteInterceptor {
 
     const toast = document.createElement('div');
     toast.className = 'rtl-paste-toast';
-    toast.innerHTML = `
-      <div style="margin-bottom: 10px;">
-        <strong style="display: block; margin-bottom: 5px;">Mixed content detected</strong>
-        <p style="margin: 0; font-size: 0.9em; opacity: 0.8;">How would you like to paste this text?</p>
-      </div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button id="rtl-btn-split" style="flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-primary, #007bff); color: white; cursor: pointer;">Split Blocks</button>
-        <button id="rtl-btn-wrap" style="flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-secondary, #6c757d); color: white; cursor: pointer;">Wrap (Isolation)</button>
-        <button id="rtl-btn-original" style="flex: 1; padding: 6px 12px; border: 1px solid var(--b3-theme-surface-lighter, #ccc); border-radius: 4px; background: transparent; color: inherit; cursor: pointer;">Original</button>
-      </div>
-      <button class="rtl-toast-close" style="position: absolute; top: 5px; right: 5px; border: none; background: transparent; cursor: pointer; font-size: 16px;">&times;</button>
-    `;
+
+    const container = document.createElement('div');
+    container.style.marginBottom = '10px';
+
+    const title = document.createElement('strong');
+    title.style.display = 'block';
+    title.style.marginBottom = '5px';
+    title.textContent = 'Mixed content detected';
+
+    const desc = document.createElement('p');
+    desc.style.margin = '0';
+    desc.style.fontSize = '0.9em';
+    desc.style.opacity = '0.8';
+    desc.textContent = 'How would you like to paste this text?';
+
+    container.appendChild(title);
+    container.appendChild(desc);
+
+    const btnContainer = document.createElement('div');
+    btnContainer.style.display = 'flex';
+    btnContainer.style.gap = '8px';
+    btnContainer.style.flexWrap = 'wrap';
+
+    const btnSplit = document.createElement('button');
+    btnSplit.id = 'rtl-btn-split';
+    btnSplit.textContent = 'Split Blocks';
+    Object.assign(btnSplit.style, {
+      flex: '1', padding: '6px 12px', border: 'none', borderRadius: '4px',
+      background: 'var(--b3-theme-primary, #007bff)', color: 'white', cursor: 'pointer'
+    });
+
+    const btnWrap = document.createElement('button');
+    btnWrap.id = 'rtl-btn-wrap';
+    btnWrap.textContent = 'Wrap (Isolation)';
+    Object.assign(btnWrap.style, {
+      flex: '1', padding: '6px 12px', border: 'none', borderRadius: '4px',
+      background: 'var(--b3-theme-secondary, #6c757d)', color: 'white', cursor: 'pointer'
+    });
+
+    const btnOriginal = document.createElement('button');
+    btnOriginal.id = 'rtl-btn-original';
+    btnOriginal.textContent = 'Original';
+    Object.assign(btnOriginal.style, {
+      flex: '1', padding: '6px 12px', border: '1px solid var(--b3-theme-surface-lighter, #ccc)',
+      borderRadius: '4px', background: 'transparent', color: 'inherit', cursor: 'pointer'
+    });
+
+    btnContainer.appendChild(btnSplit);
+    btnContainer.appendChild(btnWrap);
+    btnContainer.appendChild(btnOriginal);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'rtl-toast-close';
+    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.textContent = '×';
+    Object.assign(closeBtn.style, {
+      position: 'absolute', top: '5px', right: '5px', border: 'none',
+      background: 'transparent', cursor: 'pointer', fontSize: '16px'
+    });
+
+    toast.appendChild(container);
+    toast.appendChild(btnContainer);
+    toast.appendChild(closeBtn);
 
     // Apply styles
     Object.assign(toast.style, {
