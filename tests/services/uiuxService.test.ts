@@ -85,10 +85,24 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
 
   afterEach(() => {
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
     if (service['backButtonCleanup']) {
       service['backButtonCleanup']();
       service['backButtonCleanup'] = null;
     }
+    // Also reset the internal state flag so tests don't bleed into each other
+    service['backButtonInitialized'] = false;
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {
@@ -172,6 +186,22 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
 
   afterEach(() => {
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
+    if (service['tapOutsideCleanup']) {
+      service['tapOutsideCleanup']();
+      service['tapOutsideCleanup'] = null;
+    }
   });
 
   it('redirects tap on <p> text to the heading click', () => {
@@ -299,6 +329,18 @@ describe('UIUXService — Issue 3A: Re-entry guard prevents dual event', () => {
 
   afterEach(() => {
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
   });
 
   it('calls openBtn.click() exactly once despite rapid re-entrant paragraph clicks', () => {
@@ -390,6 +432,18 @@ describe('UIUXService — Phase 2: MutationObserver debounce', () => {
 
   afterEach(() => {
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
   });
 
   it('cards added before singleTap enable are still marked', () => {
@@ -445,6 +499,18 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
 
   afterEach(() => {
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
   });
 
   it('clicking outside the editor fires the close button', () => {
@@ -497,6 +563,18 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     closeBtn.addEventListener('click', clickSpy);
 
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
 
     // After destroy, backdrop click should not trigger close
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
@@ -541,6 +619,18 @@ describe('UIUXService — Phase 4: reduceVerticalSpacing', () => {
 
   afterEach(() => {
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
   });
 
   it('enabling adds blinko-reduce-vspacing class to body', () => {
@@ -571,6 +661,18 @@ describe('UIUXService — Phase 4: reduceVerticalSpacing', () => {
   it('destroy() removes blinko-reduce-vspacing class and CSS var', () => {
     service.updateSettings({ reduceVerticalSpacing: true, noteListPadding: 8 });
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
 
     expect(document.body.classList.contains('blinko-reduce-vspacing')).toBe(false);
     expect(document.documentElement.style.getPropertyValue('--blinko-v-padding')).toBe('');
@@ -596,6 +698,18 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
 
   afterEach(() => {
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
     window.fetch = originalFetch;
   });
 
@@ -671,6 +785,18 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     expect(window.fetch).not.toBe(originalFetch);
 
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
     expect(window.fetch).toBe(originalFetch);
   });
 });
@@ -699,6 +825,18 @@ describe('UIUXService — Lifecycle: destroy() cleans up all state', () => {
     });
 
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
 
     const classes = [
       'blinko-compact-datetime', 'blinko-touch-targets', 'blinko-reduce-motion',
@@ -723,6 +861,18 @@ describe('UIUXService — Lifecycle: destroy() cleans up all state', () => {
     expect(parsed.noteListPadding).toBe(5);
 
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
   });
 
   it('loads persisted settings on construction', () => {
@@ -737,5 +887,17 @@ describe('UIUXService — Lifecycle: destroy() cleans up all state', () => {
     expect(s.compactDatetime).toBe(true);
     expect(s.noteListPadding).toBe(7);
     service.destroy();
+    if (service["backButtonCleanup"]) {
+      service["backButtonCleanup"]();
+      service["backButtonCleanup"] = null;
+    }
+    if (service["tapOutsideCleanup"]) {
+      service["tapOutsideCleanup"]();
+      service["tapOutsideCleanup"] = null;
+    }
+    if (service["singleTapCleanup"]) {
+      service["singleTapCleanup"]();
+      service["singleTapCleanup"] = null;
+    }
   });
 });
