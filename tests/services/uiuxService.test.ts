@@ -74,17 +74,37 @@ const mockToast = { success: jest.fn(), error: jest.fn() };
 
 describe('UIUXService — Issue 1: Back button history guard', () => {
   let service: UIUXService;
+  let originalPushState: typeof history.pushState;
+  let mockHistoryLength = 0;
 
   beforeEach(() => {
     localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    // Mock history completely to prevent leaks across tests
+    mockHistoryLength = 0;
+    originalPushState = window.history.pushState;
+    window.history.pushState = jest.fn((...args) => {
+        mockHistoryLength++;
+        originalPushState.apply(window.history, args);
+    });
+
+    // Override history.length getter specifically for this suite
+    Object.defineProperty(window.history, 'length', {
+        get: () => mockHistoryLength,
+        configurable: true
+    });
+
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+    window.history.pushState = originalPushState;
+    // Remove the override to let Happy DOM handle it normally outside this suite
+    delete (window.history as any).length;
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {
@@ -284,17 +304,37 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
 
 describe('UIUXService — Issue 3A: Re-entry guard prevents dual event', () => {
   let service: UIUXService;
+  let originalPushState: typeof history.pushState;
+  let mockHistoryLength = 0;
 
   beforeEach(() => {
     localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    // Mock history completely to prevent leaks across tests
+    mockHistoryLength = 0;
+    originalPushState = window.history.pushState;
+    window.history.pushState = jest.fn((...args) => {
+        mockHistoryLength++;
+        originalPushState.apply(window.history, args);
+    });
+
+    // Override history.length getter specifically for this suite
+    Object.defineProperty(window.history, 'length', {
+        get: () => mockHistoryLength,
+        configurable: true
+    });
+
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+    window.history.pushState = originalPushState;
+    // Remove the override to let Happy DOM handle it normally outside this suite
+    delete (window.history as any).length;
   });
 
   it('calls openBtn.click() exactly once despite rapid re-entrant paragraph clicks', () => {
@@ -375,17 +415,38 @@ describe('UIUXService — Issue 3B: CSS selector regression (tag layout)', () =>
 
 describe('UIUXService — Phase 2: MutationObserver debounce', () => {
   let service: UIUXService;
+  let mousedownListeners: any[] = [];
+  let originalAddEventListener: any;
+  let originalRemoveEventListener: any;
 
   beforeEach(() => {
     localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    mousedownListeners = [];
+    originalAddEventListener = document.addEventListener;
+    originalRemoveEventListener = document.removeEventListener;
+
+    document.addEventListener = jest.fn((type, listener, options) => {
+        if (type === 'mousedown') mousedownListeners.push({ listener, options });
+        originalAddEventListener.call(document, type, listener, options);
+    });
+
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+
+    // Forcefully remove leaked listeners
+    mousedownListeners.forEach(({ listener, options }) => {
+        originalRemoveEventListener.call(document, 'mousedown', listener, options);
+    });
+
+    document.addEventListener = originalAddEventListener;
+    document.removeEventListener = originalRemoveEventListener;
   });
 
   it('cards added before singleTap enable are still marked', () => {
@@ -587,6 +648,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     document.body.className = '';
     jest.clearAllMocks();
     originalFetch = window.fetch;
+    window.fetch = jest.fn() as any;
     service = new UIUXService();
   });
 
@@ -596,13 +658,11 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('shows guidance toast on 401 from AI autoTag endpoint', async () => {
-    // Mock must be set before updateSettings so the interceptor wraps the mock
-    window.fetch = jest.fn().mockResolvedValue({ status: 401, ok: false }) as any;
+    (window.fetch as any).mockResolvedValue({ status: 401, ok: false });
     service.updateSettings({ interceptAIErrors: true });
 
     await window.fetch('https://blinko.app/api/trpc/ai.autoTag');
 
-    // Wait for the setTimeout(0) inside interceptor
     await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(mockToast.error).toHaveBeenCalledWith(
@@ -611,7 +671,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('shows guidance toast on 401 from AI writing endpoint', async () => {
-    window.fetch = jest.fn().mockResolvedValue({ status: 401, ok: false }) as any;
+    (window.fetch as any).mockResolvedValue({ status: 401, ok: false });
     service.updateSettings({ interceptAIErrors: true });
 
     await window.fetch('https://blinko.app/api/trpc/ai.writing');
@@ -624,7 +684,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('does NOT show toast for 401 from non-AI endpoint', async () => {
-    window.fetch = jest.fn().mockResolvedValue({ status: 401, ok: false }) as any;
+    (window.fetch as any).mockResolvedValue({ status: 401, ok: false });
     service.updateSettings({ interceptAIErrors: true });
 
     await window.fetch('https://blinko.app/api/trpc/notes.list');
@@ -635,7 +695,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('does NOT show toast for 200 response from AI endpoint', async () => {
-    window.fetch = jest.fn().mockResolvedValue({ status: 200, ok: true }) as any;
+    (window.fetch as any).mockResolvedValue({ status: 200, ok: true });
     service.updateSettings({ interceptAIErrors: true });
 
     await window.fetch('https://blinko.app/api/trpc/ai.autoTag');
@@ -647,7 +707,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
 
   it('returns the original response untouched', async () => {
     const mockResponse = { status: 401, ok: false, body: 'Unauthorized' };
-    window.fetch = jest.fn().mockResolvedValue(mockResponse) as any;
+    (window.fetch as any).mockResolvedValue(mockResponse);
     service.updateSettings({ interceptAIErrors: true });
 
     const result = await window.fetch('https://blinko.app/api/trpc/ai.autoTag');
@@ -656,18 +716,19 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('does NOT intercept when interceptAIErrors is false', async () => {
+    const originalMock = window.fetch;
     service.updateSettings({ interceptAIErrors: false });
 
-    // fetch should not be replaced
-    expect(window.fetch).toBe(originalFetch);
+    expect(window.fetch).toBe(originalMock);
   });
 
   it('destroy() restores original window.fetch', () => {
+    const originalMock = window.fetch;
     service.updateSettings({ interceptAIErrors: true });
-    expect(window.fetch).not.toBe(originalFetch);
+    expect(window.fetch).not.toBe(originalMock);
 
     service.destroy();
-    expect(window.fetch).toBe(originalFetch);
+    expect(window.fetch).toBe(originalMock);
   });
 });
 
