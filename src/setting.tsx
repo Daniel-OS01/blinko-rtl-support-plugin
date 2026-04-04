@@ -1574,6 +1574,7 @@ export function RTLSetting(): JSX.Element {
                 opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
               title="Delete selected preset"
+              aria-label="Delete selected preset"
             >
               🗑️
             </button>
@@ -1631,6 +1632,7 @@ export function RTLSetting(): JSX.Element {
               borderRadius: '4px', 
               cursor: 'pointer' 
             }}
+            aria-label="Clear custom CSS"
           >
             🗑️ Clear CSS
           </button>
