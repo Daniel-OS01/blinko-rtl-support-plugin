@@ -68,6 +68,39 @@ function makeEditor(): { backdrop: HTMLDivElement; editor: HTMLDivElement; close
 const mockToast = { success: jest.fn(), error: jest.fn() };
 (window as any).Blinko = { toast: mockToast };
 
+// ─── Global Event Listener Cleanup ─────────────────────────────────────────────
+
+let globalDocumentListeners: any[] = [];
+let globalWindowListeners: any[] = [];
+const originalDocAdd = document.addEventListener;
+const originalDocRemove = document.removeEventListener;
+const originalWinAdd = window.addEventListener;
+const originalWinRemove = window.removeEventListener;
+
+beforeEach(() => {
+  globalDocumentListeners = [];
+  globalWindowListeners = [];
+  document.addEventListener = jest.fn((type, listener, options) => {
+      globalDocumentListeners.push({ type, listener, options });
+      originalDocAdd.call(document, type, listener, options);
+  });
+  window.addEventListener = jest.fn((type, listener, options) => {
+      globalWindowListeners.push({ type, listener, options });
+      originalWinAdd.call(window, type, listener, options);
+  });
+});
+
+afterEach(() => {
+  globalDocumentListeners.forEach(({ type, listener, options }) => {
+      originalDocRemove.call(document, type, listener, options);
+  });
+  globalWindowListeners.forEach(({ type, listener, options }) => {
+      originalWinRemove.call(window, type, listener, options);
+  });
+  document.addEventListener = originalDocAdd;
+  window.addEventListener = originalWinAdd;
+});
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 1 — Regression tests for Issues 1–4 (prior session fixes)
 // ═══════════════════════════════════════════════════════════════════════════════
