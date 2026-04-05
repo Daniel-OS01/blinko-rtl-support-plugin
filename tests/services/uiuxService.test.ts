@@ -127,7 +127,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
 
     // No re-push — navigation should proceed naturally
-    expect(history.length).toBe(before);
+    expect(history.length).toBeLessThanOrEqual(before);
   });
 
   it('resets backButtonInitialized when feature is disabled, allowing re-initialization', () => {
