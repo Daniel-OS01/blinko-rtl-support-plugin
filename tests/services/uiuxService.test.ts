@@ -68,6 +68,47 @@ function makeEditor(): { backdrop: HTMLDivElement; editor: HTMLDivElement; close
 const mockToast = { success: jest.fn(), error: jest.fn() };
 (window as any).Blinko = { toast: mockToast };
 
+// Global Mock for History
+let globalLocalHistoryLength = 0;
+let globalOriginalPushState: any;
+
+function setupHistoryMock() {
+  globalLocalHistoryLength = window.history.length;
+  if (!globalOriginalPushState) {
+    globalOriginalPushState = window.history.pushState;
+  }
+
+  // We avoid redefining history via Object.defineProperty if possible or just redefine the methods
+  // But wait, the issue is that originalPushState.apply(this, args) throws because `this` isn't correct.
+  // Instead of passing `this`, we can bind it or avoid calling it directly.
+
+  const mockPushState = jest.fn((...args: any[]) => {
+    globalLocalHistoryLength++;
+  });
+
+  Object.defineProperty(window.history, 'pushState', {
+    value: mockPushState,
+    writable: true,
+    configurable: true
+  });
+
+  Object.defineProperty(window.history, 'length', {
+    get() { return globalLocalHistoryLength; },
+    configurable: true
+  });
+}
+
+function teardownHistoryMock() {
+  if (globalOriginalPushState) {
+    Object.defineProperty(window.history, 'pushState', {
+      value: globalOriginalPushState,
+      writable: true,
+      configurable: true
+    });
+  }
+}
+
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 1 — Regression tests for Issues 1–4 (prior session fixes)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -80,11 +121,13 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+    setupHistoryMock();
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+    teardownHistoryMock();
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {
@@ -163,11 +206,13 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+    setupHistoryMock();
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+    teardownHistoryMock();
   });
 
   it('redirects tap on <p> text to the heading click', () => {
@@ -290,11 +335,13 @@ describe('UIUXService — Issue 3A: Re-entry guard prevents dual event', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+    setupHistoryMock();
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+    teardownHistoryMock();
   });
 
   it('calls openBtn.click() exactly once despite rapid re-entrant paragraph clicks', () => {
@@ -381,11 +428,13 @@ describe('UIUXService — Phase 2: MutationObserver debounce', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+    setupHistoryMock();
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+    teardownHistoryMock();
   });
 
   it('cards added before singleTap enable are still marked', () => {
@@ -436,11 +485,13 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+    setupHistoryMock();
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+    teardownHistoryMock();
   });
 
   it('clicking outside the editor fires the close button', () => {
@@ -532,11 +583,13 @@ describe('UIUXService — Phase 4: reduceVerticalSpacing', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+    setupHistoryMock();
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+    teardownHistoryMock();
   });
 
   it('enabling adds blinko-reduce-vspacing class to body', () => {
