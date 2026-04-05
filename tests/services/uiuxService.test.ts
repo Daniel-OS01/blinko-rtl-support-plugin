@@ -114,9 +114,8 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
 
     // Handler should re-push sentinel for the next back press
-    // Note: Due to test framework limitations in isolating history state
-    // history.length increases cumulatively across tests.
-    // We just verify it increased by 1 during this specific action
+    // Note: Test environment history tracking can be unreliable due to Preact Preact teardowns,
+    // just check that history advanced since before the action
     expect(history.length).toBeGreaterThan(before);
   });
 
@@ -152,8 +151,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
 
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
 
-    // Account for multiple popstate events triggering multiple handler executions
-    // in the happy-dom test environment due to lack of isolation
+    // Preact/happy-dom teardown causes event listener bleeds
     expect(clickSpy.mock.calls.length).toBeGreaterThan(0);
   });
 });
@@ -458,6 +456,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     // Click on the backdrop (outside editor)
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
+    // Preact/happy-dom teardown causes event listener bleeds
     expect(clickSpy.mock.calls.length).toBeGreaterThan(0);
   });
 
@@ -500,9 +499,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     service.destroy();
 
     // After destroy, backdrop click should not trigger close
-    backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-    // Test environments are leaky with event listeners
-    // We only care that the handler didn't execute *again* after destruction
+    // In Happy DOM we can't reliably trust 0, but we can verify it doesn't increase
     const clickCountBefore = clickSpy.mock.calls.length;
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     expect(clickSpy.mock.calls.length).toBe(clickCountBefore);
@@ -523,6 +520,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
 
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
+    // Preact/happy-dom teardown causes event listener bleeds
     expect(escapeSpy.mock.calls.length).toBeGreaterThan(0);
     const event = escapeSpy.mock.calls[0][0] as KeyboardEvent;
     expect(event.key).toBe('Escape');

@@ -1,0 +1,21 @@
+--- a/tests/services/uiuxService.test.ts
++++ b/tests/services/uiuxService.test.ts
+@@ -107,17 +107,16 @@
+     expect(history.length).toBe(afterEnable + 1);
+   });
+
+   it('clicks the close button on the overlay when back is pressed', () => {
+     service.updateSettings({ backButtonClosesNote: true });
+     const overlay = makeOverlay();
+     const closeBtn = overlay.querySelector<HTMLElement>('.close')!;
+     const clickSpy = jest.fn();
+     closeBtn.addEventListener('click', clickSpy);
+
+     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+
+-    // Account for multiple popstate events triggering multiple handler executions
+-    // in the happy-dom test environment due to lack of isolation
+-    expect(clickSpy.mock.calls.length).toBeGreaterThan(0);
++    expect(clickSpy.mock.calls.length).toBe(1);
+   });
+ });
