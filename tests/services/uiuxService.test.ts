@@ -84,6 +84,11 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
   });
 
   afterEach(() => {
+    // Clear DOM and events to avoid contamination
+    document.body.innerHTML = '';
+  });
+
+  afterEach(() => {
     service.destroy();
   });
 
