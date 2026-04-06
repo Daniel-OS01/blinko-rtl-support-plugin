@@ -57,18 +57,78 @@ export class PasteInterceptor {
 
     const toast = document.createElement('div');
     toast.className = 'rtl-paste-toast';
-    toast.innerHTML = `
-      <div style="margin-bottom: 10px;">
-        <strong style="display: block; margin-bottom: 5px;">Mixed content detected</strong>
-        <p style="margin: 0; font-size: 0.9em; opacity: 0.8;">How would you like to paste this text?</p>
-      </div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button id="rtl-btn-split" style="flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-primary, #007bff); color: white; cursor: pointer;">Split Blocks</button>
-        <button id="rtl-btn-wrap" style="flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-secondary, #6c757d); color: white; cursor: pointer;">Wrap (Isolation)</button>
-        <button id="rtl-btn-original" style="flex: 1; padding: 6px 12px; border: 1px solid var(--b3-theme-surface-lighter, #ccc); border-radius: 4px; background: transparent; color: inherit; cursor: pointer;">Original</button>
-      </div>
-      <button class="rtl-toast-close" style="position: absolute; top: 5px; right: 5px; border: none; background: transparent; cursor: pointer; font-size: 16px;">&times;</button>
-    `;
+
+    const headerContainer = document.createElement('div');
+    headerContainer.style.marginBottom = '10px';
+    const strong = document.createElement('strong');
+    strong.style.display = 'block';
+    strong.style.marginBottom = '5px';
+    strong.textContent = 'Mixed content detected';
+    const p = document.createElement('p');
+    p.style.margin = '0';
+    p.style.fontSize = '0.9em';
+    p.style.opacity = '0.8';
+    p.textContent = 'How would you like to paste this text?';
+    headerContainer.appendChild(strong);
+    headerContainer.appendChild(p);
+
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.gap = '8px';
+    buttonContainer.style.flexWrap = 'wrap';
+
+    const btnSplit = document.createElement('button');
+    btnSplit.id = 'rtl-btn-split';
+    btnSplit.style.flex = '1';
+    btnSplit.style.padding = '6px 12px';
+    btnSplit.style.border = 'none';
+    btnSplit.style.borderRadius = '4px';
+    btnSplit.style.background = 'var(--b3-theme-primary, #007bff)';
+    btnSplit.style.color = 'white';
+    btnSplit.style.cursor = 'pointer';
+    btnSplit.textContent = 'Split Blocks';
+
+    const btnWrap = document.createElement('button');
+    btnWrap.id = 'rtl-btn-wrap';
+    btnWrap.style.flex = '1';
+    btnWrap.style.padding = '6px 12px';
+    btnWrap.style.border = 'none';
+    btnWrap.style.borderRadius = '4px';
+    btnWrap.style.background = 'var(--b3-theme-secondary, #6c757d)';
+    btnWrap.style.color = 'white';
+    btnWrap.style.cursor = 'pointer';
+    btnWrap.textContent = 'Wrap (Isolation)';
+
+    const btnOriginal = document.createElement('button');
+    btnOriginal.id = 'rtl-btn-original';
+    btnOriginal.style.flex = '1';
+    btnOriginal.style.padding = '6px 12px';
+    btnOriginal.style.border = '1px solid var(--b3-theme-surface-lighter, #ccc)';
+    btnOriginal.style.borderRadius = '4px';
+    btnOriginal.style.background = 'transparent';
+    btnOriginal.style.color = 'inherit';
+    btnOriginal.style.cursor = 'pointer';
+    btnOriginal.textContent = 'Original';
+
+    buttonContainer.appendChild(btnSplit);
+    buttonContainer.appendChild(btnWrap);
+    buttonContainer.appendChild(btnOriginal);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'rtl-toast-close';
+    closeBtn.style.position = 'absolute';
+    closeBtn.style.top = '5px';
+    closeBtn.style.right = '5px';
+    closeBtn.style.border = 'none';
+    closeBtn.style.background = 'transparent';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.fontSize = '16px';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.setAttribute('aria-label', 'Close suggestion toast');
+
+    toast.appendChild(headerContainer);
+    toast.appendChild(buttonContainer);
+    toast.appendChild(closeBtn);
 
     // Apply styles
     Object.assign(toast.style, {
