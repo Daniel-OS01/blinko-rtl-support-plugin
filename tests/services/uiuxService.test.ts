@@ -72,6 +72,37 @@ const mockToast = { success: jest.fn(), error: jest.fn() };
 // PHASE 1 — Regression tests for Issues 1–4 (prior session fixes)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// ─── Global Event Listener Tracker ───────────────────────────────────────────
+const originalDocAdd = document.addEventListener.bind(document);
+const originalWinAdd = window.addEventListener.bind(window);
+
+let trackedDocListeners: Array<{ type: string; listener: EventListenerOrEventListenerObject; options?: boolean | AddEventListenerOptions }> = [];
+let trackedWinListeners: Array<{ type: string; listener: EventListenerOrEventListenerObject; options?: boolean | AddEventListenerOptions }> = [];
+
+beforeEach(() => {
+  trackedDocListeners = [];
+  trackedWinListeners = [];
+  document.addEventListener = jest.fn((type, listener, options) => {
+    trackedDocListeners.push({ type, listener, options });
+    originalDocAdd(type, listener, options);
+  });
+  window.addEventListener = jest.fn((type, listener, options) => {
+    trackedWinListeners.push({ type, listener, options });
+    originalWinAdd(type, listener, options);
+  });
+});
+
+afterEach(() => {
+  trackedDocListeners.forEach(({ type, listener, options }) => {
+    document.removeEventListener(type, listener, options);
+  });
+  trackedWinListeners.forEach(({ type, listener, options }) => {
+    window.removeEventListener(type, listener, options);
+  });
+  document.addEventListener = originalDocAdd;
+  window.addEventListener = originalWinAdd;
+});
+
 describe('UIUXService — Issue 1: Back button history guard', () => {
   let localHistoryLength = 1;
   const originalPushState = window.history.pushState;
