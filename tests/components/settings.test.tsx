@@ -179,22 +179,22 @@ describe("RTLSetting Component", () => {
 
       // Navigate to Advanced
       // Use querySelector to find the exact button to avoid ambiguity with headings
-      const advancedTab = document.body.querySelector('button:last-child');
-      if (!advancedTab || advancedTab.textContent !== 'Advanced') {
-          // Fallback if structure changes, but try to find by text if possible with specific selector
-      }
-
-      const buttons = document.body.querySelectorAll('button');
+      // The settings are separated into categories (tabs) like General, Visuals, Tools, AI
+      // The Export button is in the 'Tools' tab.
+      const { container } = render(<RTLSetting />);
+      const buttons = container.querySelectorAll('button');
       let foundTab = null;
       buttons.forEach(btn => {
-          if (btn.textContent === 'Advanced') foundTab = btn;
+          if (btn.textContent && btn.textContent.includes('Tools')) foundTab = btn;
       });
 
-      if (foundTab) fireEvent.click(foundTab);
+      if (foundTab) {
+          fireEvent.click(foundTab);
+      }
 
       // Find Export button (regex for flexible matching)
       // Use getAllByText and pick the first or most specific one to avoid ambiguity if multiple elements match
-      const exportBtns = document.body.querySelectorAll('button');
+      const exportBtns = container.querySelectorAll('button');
       let exportBtn = null;
       exportBtns.forEach(btn => {
           if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
