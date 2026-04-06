@@ -68,6 +68,33 @@ function makeEditor(): { backdrop: HTMLDivElement; editor: HTMLDivElement; close
 const mockToast = { success: jest.fn(), error: jest.fn() };
 (window as any).Blinko = { toast: mockToast };
 
+// ─── Global Event Listener Tracker ────────────────────────────────────────────
+const activeWindowListeners: { type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions }[] = [];
+const activeDocumentListeners: { type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions }[] = [];
+
+const originalWindowAddEventListener = window.addEventListener;
+window.addEventListener = function(type, listener, options) {
+  activeWindowListeners.push({ type, listener, options });
+  return originalWindowAddEventListener.call(this, type, listener, options);
+};
+
+const originalDocumentAddEventListener = document.addEventListener;
+document.addEventListener = function(type, listener, options) {
+  activeDocumentListeners.push({ type, listener, options });
+  return originalDocumentAddEventListener.call(this, type, listener, options);
+};
+
+export function cleanupGlobalListeners() {
+  while (activeWindowListeners.length > 0) {
+    const { type, listener, options } = activeWindowListeners.pop()!;
+    window.removeEventListener(type, listener, options);
+  }
+  while (activeDocumentListeners.length > 0) {
+    const { type, listener, options } = activeDocumentListeners.pop()!;
+    document.removeEventListener(type, listener, options);
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 1 — Regression tests for Issues 1–4 (prior session fixes)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -86,9 +113,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
   afterEach(() => {
     // Clear DOM and events to avoid contamination
     document.body.innerHTML = '';
-  });
-
-  afterEach(() => {
+    cleanupGlobalListeners();
     service.destroy();
   });
 
@@ -172,6 +197,8 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
   });
 
   afterEach(() => {
+    document.body.innerHTML = '';
+    cleanupGlobalListeners();
     service.destroy();
   });
 
@@ -299,6 +326,8 @@ describe('UIUXService — Issue 3A: Re-entry guard prevents dual event', () => {
   });
 
   afterEach(() => {
+    document.body.innerHTML = '';
+    cleanupGlobalListeners();
     service.destroy();
   });
 
@@ -390,6 +419,8 @@ describe('UIUXService — Phase 2: MutationObserver debounce', () => {
   });
 
   afterEach(() => {
+    document.body.innerHTML = '';
+    cleanupGlobalListeners();
     service.destroy();
   });
 
@@ -445,6 +476,8 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
   });
 
   afterEach(() => {
+    document.body.innerHTML = '';
+    cleanupGlobalListeners();
     service.destroy();
   });
 
@@ -596,6 +629,8 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   afterEach(() => {
+    document.body.innerHTML = '';
+    cleanupGlobalListeners();
     service.destroy();
     window.fetch = originalFetch;
   });
