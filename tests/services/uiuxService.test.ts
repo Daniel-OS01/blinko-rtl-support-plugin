@@ -73,6 +73,26 @@ const mockToast = { success: jest.fn(), error: jest.fn() };
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('UIUXService — Issue 1: Back button history guard', () => {
+  let localHistoryLength = 1;
+  const originalPushState = window.history.pushState;
+  const originalHistoryLengthDescriptor = Object.getOwnPropertyDescriptor(window.history, 'length');
+
+  beforeEach(() => {
+    localHistoryLength = 1;
+    window.history.pushState = jest.fn(() => { localHistoryLength++; });
+    Object.defineProperty(window.history, 'length', {
+      get: () => localHistoryLength,
+      configurable: true
+    });
+  });
+
+  afterEach(() => {
+    window.history.pushState = originalPushState;
+    if (originalHistoryLengthDescriptor) {
+      Object.defineProperty(window.history, 'length', originalHistoryLengthDescriptor);
+    }
+  });
+
   let service: UIUXService;
 
   beforeEach(() => {
