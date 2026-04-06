@@ -187,7 +187,8 @@ describe("RTLSetting Component", () => {
       const buttons = document.body.querySelectorAll('button');
       let foundTab = null;
       buttons.forEach(btn => {
-          if (btn.textContent === 'Advanced') foundTab = btn;
+          // The tab name changed to '🧪 Tools' or 'testing'
+          if (btn.textContent?.includes('Tools')) foundTab = btn;
       });
 
       if (foundTab) fireEvent.click(foundTab);

@@ -1,0 +1,3 @@
+## 2025-04-06 - Accessible Icon-Only Toggle Buttons
+**Learning:** Icon-only toggle buttons built with raw DOM APIs (e.g., `document.createElement`) or Preact components need explicit accessibility attributes, specifically `aria-label` to provide an accessible name and `aria-pressed` to indicate their current toggle state. Relying only on `title` attributes is insufficient for screen readers.
+**Action:** When creating or modifying icon-only buttons or toggle controls, always add an explicit `aria-label` (using `setAttribute('aria-label', ...)` or JSX `aria-label`) and ensure the `aria-pressed` state is updated dynamically when the toggle state changes.
