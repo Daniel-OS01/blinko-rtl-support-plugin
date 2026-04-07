@@ -68,6 +68,36 @@ function makeEditor(): { backdrop: HTMLDivElement; editor: HTMLDivElement; close
 const mockToast = { success: jest.fn(), error: jest.fn() };
 (window as any).Blinko = { toast: mockToast };
 
+// Track registered event listeners to prevent cross-test leakage in happy-dom
+let trackedDocListeners: { type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions }[] = [];
+let trackedWinListeners: { type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions }[] = [];
+
+const originalDocAddEventListener = document.addEventListener;
+const originalWinAddEventListener = window.addEventListener;
+
+beforeEach(() => {
+  trackedDocListeners = [];
+  trackedWinListeners = [];
+  jest.spyOn(document, 'addEventListener').mockImplementation((type, listener, options) => {
+    trackedDocListeners.push({ type, listener, options });
+    originalDocAddEventListener.call(document, type, listener, options);
+  });
+  jest.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
+    trackedWinListeners.push({ type, listener, options });
+    originalWinAddEventListener.call(window, type, listener, options);
+  });
+});
+
+afterEach(() => {
+  trackedDocListeners.forEach(({ type, listener, options }) => {
+    document.removeEventListener(type, listener, options);
+  });
+  trackedWinListeners.forEach(({ type, listener, options }) => {
+    window.removeEventListener(type, listener, options);
+  });
+  jest.restoreAllMocks();
+});
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 1 — Regression tests for Issues 1–4 (prior session fixes)
 // ═══════════════════════════════════════════════════════════════════════════════
