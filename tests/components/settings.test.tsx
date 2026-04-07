@@ -168,40 +168,48 @@ describe("RTLSetting Component", () => {
       (window as any).blinkoRTL.service = originalService;
   });
 
-  it("handles export settings click", () => {
+  it("handles export settings click", async () => {
       // Mock URL.createObjectURL and URL.revokeObjectURL
       const mockCreateObjectURL = jest.fn();
       const mockRevokeObjectURL = jest.fn();
       URL.createObjectURL = mockCreateObjectURL;
       URL.revokeObjectURL = mockRevokeObjectURL;
 
-      const { getByText } = render(<RTLSetting />);
+      const { container } = render(<RTLSetting />);
 
-      // Navigate to Advanced
-      // Use querySelector to find the exact button to avoid ambiguity with headings
-      const advancedTab = document.body.querySelector('button:last-child');
-      if (!advancedTab || advancedTab.textContent !== 'Advanced') {
-          // Fallback if structure changes, but try to find by text if possible with specific selector
-      }
-
-      const buttons = document.body.querySelectorAll('button');
-      let foundTab = null;
+      const buttons = container.querySelectorAll('button');
+      let foundTab: HTMLButtonElement | null = null;
       buttons.forEach(btn => {
-          if (btn.textContent === 'Advanced') foundTab = btn;
+          if (btn.textContent?.includes('Tools')) foundTab = btn;
       });
 
-      if (foundTab) fireEvent.click(foundTab);
+      if (foundTab) {
+          await act(async () => {
+              fireEvent.click(foundTab as HTMLButtonElement);
+          });
+      }
 
-      // Find Export button (regex for flexible matching)
-      // Use getAllByText and pick the first or most specific one to avoid ambiguity if multiple elements match
-      const exportBtns = document.body.querySelectorAll('button');
-      let exportBtn = null;
+      // Wait for the Tools tab content to be rendered
+      await waitFor(() => {
+          const exportBtns = container.querySelectorAll('button');
+          let exportBtn = null;
+          exportBtns.forEach(btn => {
+              if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
+          });
+          expect(exportBtn).not.toBeNull();
+      });
+
+      const exportBtns = container.querySelectorAll('button');
+      let exportBtn: HTMLButtonElement | null = null;
       exportBtns.forEach(btn => {
-          if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
+          if (btn.textContent?.includes('Export Settings')) exportBtn = btn as HTMLButtonElement;
       });
 
       if (!exportBtn) throw new Error('Export button not found');
-      fireEvent.click(exportBtn);
+
+      await act(async () => {
+          fireEvent.click(exportBtn as HTMLButtonElement);
+      });
 
       expect(mockCreateObjectURL).toHaveBeenCalled();
       // Check if toast was called - check for "successfully" to match the actual message or loosely match
