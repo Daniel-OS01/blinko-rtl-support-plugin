@@ -75,6 +75,10 @@ let trackedWinListeners: { type: string, listener: EventListenerOrEventListenerO
 const originalDocAddEventListener = document.addEventListener;
 const originalWinAddEventListener = window.addEventListener;
 
+// Mock history length tracking for cross-test stability in happy-dom
+let originalHistoryPushState: any;
+let localHistoryLength = 1;
+
 beforeEach(() => {
   trackedDocListeners = [];
   trackedWinListeners = [];
@@ -86,6 +90,22 @@ beforeEach(() => {
     trackedWinListeners.push({ type, listener, options });
     originalWinAddEventListener.call(window, type, listener, options);
   });
+
+  // Setup local history length tracking
+  localHistoryLength = 1;
+  originalHistoryPushState = window.history.pushState;
+
+  // Mock window.history.length getter
+  Object.defineProperty(window.history, 'length', {
+    get: () => localHistoryLength,
+    configurable: true
+  });
+
+  // Mock window.history.pushState to increment local length
+  window.history.pushState = jest.fn((state, title, url) => {
+    localHistoryLength++;
+    originalHistoryPushState.call(window.history, state, title, url);
+  });
 });
 
 afterEach(() => {
@@ -95,6 +115,12 @@ afterEach(() => {
   trackedWinListeners.forEach(({ type, listener, options }) => {
     window.removeEventListener(type, listener, options);
   });
+
+  // Restore history pushState
+  if (originalHistoryPushState) {
+    window.history.pushState = originalHistoryPushState;
+  }
+
   jest.restoreAllMocks();
 });
 
