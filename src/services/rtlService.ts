@@ -631,29 +631,38 @@ export class RTLService {
       if (this.observer) this.observer.disconnect();
       if (!this.settings.autoDetect) return;
 
+      /*
+       * ⚡ Bolt Performance Optimization:
+       * 💡 What: Moved `activeSelectors`, `safeSelectors`, and `joinedSelectors` calculations outside the MutationObserver callback.
+       * 🎯 Why: MutationObserver callbacks fire extremely frequently (often multiple times per frame) during active DOM manipulation.
+       *         Calculating these static configuration values and running `document.querySelector` inside the callback caused
+       *         unnecessary repeated overhead and potential layout thrashing.
+       * 📊 Impact: Significantly reduces the CPU overhead per mutation batch, improving editor responsiveness and preventing stutter.
+       */
+
+      // Compute active selectors for matching
+      const activeSelectors = this.settings.targetSelectors.filter(
+        s => !this.settings.disabledSelectors.includes(s)
+      );
+
+      // Build a safe matching function or list
+      // We can't check 'matches' with invalid selectors without try-catch
+      const safeSelectors: string[] = [];
+      activeSelectors.forEach(s => {
+          try {
+              document.querySelector(s); // Just to test validity, or trust the loop below
+              safeSelectors.push(s);
+          } catch (e) {
+              // Ignore invalid
+          }
+      });
+
+      const joinedSelectors = safeSelectors.join(', ');
+
       this.observer = new MutationObserver((mutations) => {
           if (!this.isRTLEnabled) return;
 
           let hasRelevantMutation = false;
-
-          // Compute active selectors for matching
-          const activeSelectors = this.settings.targetSelectors.filter(
-            s => !this.settings.disabledSelectors.includes(s)
-          );
-
-          // Build a safe matching function or list
-          // We can't check 'matches' with invalid selectors without try-catch
-          const safeSelectors: string[] = [];
-          activeSelectors.forEach(s => {
-              try {
-                  document.querySelector(s); // Just to test validity, or trust the loop below
-                  safeSelectors.push(s);
-              } catch (e) {
-                  // Ignore invalid
-              }
-          });
-
-          const joinedSelectors = safeSelectors.join(', ');
 
           mutations.forEach((mutation) => {
              if (mutation.type === 'childList') {
