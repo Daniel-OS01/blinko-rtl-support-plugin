@@ -587,6 +587,9 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     document.body.className = '';
     jest.clearAllMocks();
     originalFetch = window.fetch;
+    // Replace window.fetch *before* instantiating the service so caching catches the mock
+    // Assigning originalFetch first so it captures the function, rather than the jest mock
+    window.fetch = jest.fn();
     service = new UIUXService();
   });
 
@@ -656,18 +659,25 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('does NOT intercept when interceptAIErrors is false', async () => {
-    service.updateSettings({ interceptAIErrors: false });
+    const fetchMock = jest.fn();
+    window.fetch = fetchMock;
+    const testService = new UIUXService();
+    testService.updateSettings({ interceptAIErrors: false });
 
     // fetch should not be replaced
-    expect(window.fetch).toBe(originalFetch);
+    expect(window.fetch).toBe(fetchMock);
+    testService.destroy();
   });
 
   it('destroy() restores original window.fetch', () => {
-    service.updateSettings({ interceptAIErrors: true });
-    expect(window.fetch).not.toBe(originalFetch);
+    const fetchMock = jest.fn();
+    window.fetch = fetchMock;
+    const testService = new UIUXService();
+    testService.updateSettings({ interceptAIErrors: true });
+    expect(window.fetch).not.toBe(fetchMock);
 
-    service.destroy();
-    expect(window.fetch).toBe(originalFetch);
+    testService.destroy();
+    expect(window.fetch).toBe(fetchMock);
   });
 });
 

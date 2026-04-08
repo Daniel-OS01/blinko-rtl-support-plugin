@@ -54,7 +54,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.2.5"
+          bun-version: 1.2.14
 
       - name: Cache Bun dependencies
         uses: actions/cache@v4  # TODO(node24): upgrade to v5 once released
@@ -103,7 +103,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.2.5"
+          bun-version: 1.2.14
 
       - name: Cache Bun dependencies
         uses: actions/cache@v4  # TODO(node24): upgrade to v5 once released
@@ -192,7 +192,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.2.5"
+          bun-version: 1.2.14
 
       - name: Cache Bun dependencies
         uses: actions/cache@v4  # TODO(node24): upgrade to v5 once released
@@ -230,8 +230,8 @@ jobs:
       - name: Check Bundle Size
         shell: bash
         run: |
-          JS_SIZE=$(stat -c%s dist/*.js 2>/dev/null || stat -f%z dist/*.js)
-          CSS_SIZE=$(stat -c%s dist/*.css 2>/dev/null || stat -f%z dist/*.css)
+          JS_SIZE=$(stat -c%s release/*.js 2>/dev/null || stat -f%z release/*.js)
+          CSS_SIZE=$(stat -c%s release/*.css 2>/dev/null || stat -f%z release/*.css)
           echo "JS bundle: ${JS_SIZE} bytes"
           echo "CSS bundle: ${CSS_SIZE} bytes"
           # Fail if JS bundle exceeds 400 kB uncompressed (current ~228 kB)
@@ -244,8 +244,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ github.run_id }}
-          path: dist/
+          name: release-${{ github.run_id }}
+          path: release/
           retention-days: 7
 
   # ─── Job 4: Visual Verification (optional, non-blocking) ──────────────────
@@ -263,7 +263,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.2.5"
+          bun-version: 1.2.14
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -328,7 +328,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        bun-version: ["1.1.38"]    # last stable 1.1.x — oldest supported
+        bun-version: ["1.1.38", "1.2.14"]    # last stable 1.1.x — oldest supported
     steps:
       - uses: actions/checkout@v4  # TODO(node24): upgrade to v5 once released
 
