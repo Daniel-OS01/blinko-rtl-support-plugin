@@ -184,21 +184,37 @@ describe("RTLSetting Component", () => {
           // Fallback if structure changes, but try to find by text if possible with specific selector
       }
 
-      const buttons = document.body.querySelectorAll('button');
-      let foundTab = null;
-      buttons.forEach(btn => {
-          if (btn.textContent === 'Advanced') foundTab = btn;
+      const { container } = render(<RTLSetting />);
+
+      // Preact uses event delegation and `fireEvent.click` might not trigger state updates synchronously
+      // without wrapping in `act` or awaiting the result. Let's explicitly set the state by triggering the tab button correctly.
+      let foundTab: HTMLElement | null = null;
+      container.querySelectorAll('button').forEach(btn => {
+          if (btn.textContent?.includes('Tools')) foundTab = btn;
       });
 
       if (foundTab) fireEvent.click(foundTab);
 
       // Find Export button (regex for flexible matching)
       // Use getAllByText and pick the first or most specific one to avoid ambiguity if multiple elements match
-      const exportBtns = document.body.querySelectorAll('button');
+      const exportBtns = container.querySelectorAll('button');
       let exportBtn = null;
       exportBtns.forEach(btn => {
           if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
       });
+
+      if (!exportBtn) {
+          // Fallback logic to check document.body directly
+          const fallbackBtns = document.body.querySelectorAll('button');
+          fallbackBtns.forEach(btn => {
+              if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
+          });
+      }
+
+      if (!exportBtn) {
+          console.error("Export button not found. Available buttons are:");
+          container.querySelectorAll('button').forEach(b => console.error(b.textContent));
+      }
 
       if (!exportBtn) throw new Error('Export button not found');
       fireEvent.click(exportBtn);
