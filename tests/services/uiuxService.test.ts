@@ -70,20 +70,30 @@ const mockToast = { success: jest.fn(), error: jest.fn() };
 
 // ─── Event Listener Tracker ───────────────────────────────────────────────────
 
-let windowListeners: Array<{ type: string; listener: EventListenerOrEventListenerObject; options?: boolean | AddEventListenerOptions }> = [];
-let documentListeners: Array<{ type: string; listener: EventListenerOrEventListenerObject; options?: boolean | AddEventListenerOptions }> = [];
-
 const originalWindowAddEventListener = window.addEventListener;
 const originalWindowRemoveEventListener = window.removeEventListener;
 const originalDocumentAddEventListener = document.addEventListener;
 const originalDocumentRemoveEventListener = document.removeEventListener;
 
+let windowListeners: Array<{ type: string; listener: EventListenerOrEventListenerObject; options?: boolean | AddEventListenerOptions }> = [];
+let documentListeners: Array<{ type: string; listener: EventListenerOrEventListenerObject; options?: boolean | AddEventListenerOptions }> = [];
+
+function trackWindowListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) {
+  windowListeners.push({ type, listener, options });
+  return originalWindowAddEventListener.call(window, type, listener as EventListenerOrEventListenerObject, options);
+}
+
+function trackDocumentListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) {
+  documentListeners.push({ type, listener, options });
+  return originalDocumentAddEventListener.call(document, type, listener as EventListenerOrEventListenerObject, options);
+}
+
 function cleanupEventListeners() {
   for (const { type, listener, options } of windowListeners) {
-    originalWindowRemoveEventListener.call(window, type, listener, options);
+    originalWindowRemoveEventListener.call(window, type, listener as EventListenerOrEventListenerObject, options);
   }
   for (const { type, listener, options } of documentListeners) {
-    originalDocumentRemoveEventListener.call(document, type, listener, options);
+    originalDocumentRemoveEventListener.call(document, type, listener as EventListenerOrEventListenerObject, options);
   }
   windowListeners = [];
   documentListeners = [];
@@ -102,15 +112,8 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     document.body.className = '';
     jest.clearAllMocks();
 
-    window.addEventListener = jest.fn((type, listener, options) => {
-      windowListeners.push({ type, listener, options });
-      originalWindowAddEventListener.call(window, type, listener, options);
-    });
-
-    document.addEventListener = jest.fn((type, listener, options) => {
-      documentListeners.push({ type, listener, options });
-      originalDocumentAddEventListener.call(document, type, listener, options);
-    });
+    window.addEventListener = jest.fn().mockImplementation(trackWindowListener) as any;
+    document.addEventListener = jest.fn().mockImplementation(trackDocumentListener) as any;
 
     // Mock history state and replace window.fetch to avoid leakage
     let internalLength = 1;
@@ -210,15 +213,8 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
     document.body.className = '';
     jest.clearAllMocks();
 
-    window.addEventListener = jest.fn((type, listener, options) => {
-      windowListeners.push({ type, listener, options });
-      originalWindowAddEventListener.call(window, type, listener, options);
-    });
-
-    document.addEventListener = jest.fn((type, listener, options) => {
-      documentListeners.push({ type, listener, options });
-      originalDocumentAddEventListener.call(document, type, listener, options);
-    });
+    window.addEventListener = jest.fn().mockImplementation(trackWindowListener) as any;
+    document.addEventListener = jest.fn().mockImplementation(trackDocumentListener) as any;
 
     service = new UIUXService();
   });
@@ -351,15 +347,8 @@ describe('UIUXService — Issue 3A: Re-entry guard prevents dual event', () => {
     document.body.className = '';
     jest.clearAllMocks();
 
-    window.addEventListener = jest.fn((type, listener, options) => {
-      windowListeners.push({ type, listener, options });
-      originalWindowAddEventListener.call(window, type, listener, options);
-    });
-
-    document.addEventListener = jest.fn((type, listener, options) => {
-      documentListeners.push({ type, listener, options });
-      originalDocumentAddEventListener.call(document, type, listener, options);
-    });
+    window.addEventListener = jest.fn().mockImplementation(trackWindowListener) as any;
+    document.addEventListener = jest.fn().mockImplementation(trackDocumentListener) as any;
 
     service = new UIUXService();
   });
@@ -456,15 +445,8 @@ describe('UIUXService — Phase 2: MutationObserver debounce', () => {
     document.body.className = '';
     jest.clearAllMocks();
 
-    window.addEventListener = jest.fn((type, listener, options) => {
-      windowListeners.push({ type, listener, options });
-      originalWindowAddEventListener.call(window, type, listener, options);
-    });
-
-    document.addEventListener = jest.fn((type, listener, options) => {
-      documentListeners.push({ type, listener, options });
-      originalDocumentAddEventListener.call(document, type, listener, options);
-    });
+    window.addEventListener = jest.fn().mockImplementation(trackWindowListener) as any;
+    document.addEventListener = jest.fn().mockImplementation(trackDocumentListener) as any;
 
     service = new UIUXService();
   });
@@ -525,15 +507,8 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     document.body.className = '';
     jest.clearAllMocks();
 
-    window.addEventListener = jest.fn((type, listener, options) => {
-      windowListeners.push({ type, listener, options });
-      originalWindowAddEventListener.call(window, type, listener, options);
-    });
-
-    document.addEventListener = jest.fn((type, listener, options) => {
-      documentListeners.push({ type, listener, options });
-      originalDocumentAddEventListener.call(document, type, listener, options);
-    });
+    window.addEventListener = jest.fn().mockImplementation(trackWindowListener) as any;
+    document.addEventListener = jest.fn().mockImplementation(trackDocumentListener) as any;
 
     service = new UIUXService();
   });
@@ -635,15 +610,8 @@ describe('UIUXService — Phase 4: reduceVerticalSpacing', () => {
     document.body.className = '';
     jest.clearAllMocks();
 
-    window.addEventListener = jest.fn((type, listener, options) => {
-      windowListeners.push({ type, listener, options });
-      originalWindowAddEventListener.call(window, type, listener, options);
-    });
-
-    document.addEventListener = jest.fn((type, listener, options) => {
-      documentListeners.push({ type, listener, options });
-      originalDocumentAddEventListener.call(document, type, listener, options);
-    });
+    window.addEventListener = jest.fn().mockImplementation(trackWindowListener) as any;
+    document.addEventListener = jest.fn().mockImplementation(trackDocumentListener) as any;
 
     service = new UIUXService();
   });
@@ -704,15 +672,8 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     jest.clearAllMocks();
     originalFetch = window.fetch;
 
-    window.addEventListener = jest.fn((type, listener, options) => {
-      windowListeners.push({ type, listener, options });
-      originalWindowAddEventListener.call(window, type, listener, options);
-    });
-
-    document.addEventListener = jest.fn((type, listener, options) => {
-      documentListeners.push({ type, listener, options });
-      originalDocumentAddEventListener.call(document, type, listener, options);
-    });
+    window.addEventListener = jest.fn().mockImplementation(trackWindowListener) as any;
+    document.addEventListener = jest.fn().mockImplementation(trackDocumentListener) as any;
 
     // Must mock fetch before service instantiate!
     window.fetch = jest.fn() as any;
