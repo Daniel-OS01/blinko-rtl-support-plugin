@@ -85,6 +85,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
 
   afterEach(() => {
     service.destroy();
+    document.body.innerHTML = '';
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {
@@ -168,6 +169,7 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
 
   afterEach(() => {
     service.destroy();
+    document.body.innerHTML = '';
   });
 
   it('redirects tap on <p> text to the heading click', () => {
@@ -295,6 +297,7 @@ describe('UIUXService — Issue 3A: Re-entry guard prevents dual event', () => {
 
   afterEach(() => {
     service.destroy();
+    document.body.innerHTML = '';
   });
 
   it('calls openBtn.click() exactly once despite rapid re-entrant paragraph clicks', () => {
@@ -386,6 +389,7 @@ describe('UIUXService — Phase 2: MutationObserver debounce', () => {
 
   afterEach(() => {
     service.destroy();
+    document.body.innerHTML = '';
   });
 
   it('cards added before singleTap enable are still marked', () => {
@@ -441,6 +445,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
 
   afterEach(() => {
     service.destroy();
+    document.body.innerHTML = '';
   });
 
   it('clicking outside the editor fires the close button', () => {
@@ -537,6 +542,7 @@ describe('UIUXService — Phase 4: reduceVerticalSpacing', () => {
 
   afterEach(() => {
     service.destroy();
+    document.body.innerHTML = '';
   });
 
   it('enabling adds blinko-reduce-vspacing class to body', () => {
