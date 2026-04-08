@@ -14,7 +14,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const [sensitivity, setSensitivity] = useState(15); // Default 15%
   const [isFixing, setIsFixing] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
-  const i18n = window.Blinko.i18n;
+  const i18n = window.Blinko?.i18n;
 
   // Poll for stats
   useEffect(() => {
@@ -94,8 +94,8 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
     (window as any).blinkoRTL?.toggle();
     const isEnabled = (window as any).blinkoRTL?.isEnabled();
     setIsRTLEnabled(isEnabled);
-    window.Blinko.toast.success(
-      isEnabled ? i18n.t('rtl_enabled') : i18n.t('rtl_disabled')
+    window.Blinko?.toast?.success?.(
+      isEnabled ? (i18n?.t?.('rtl_enabled') || 'RTL Enabled') : (i18n?.t?.('rtl_disabled') || 'RTL Disabled')
     );
   };
 
@@ -126,8 +126,8 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
             padding: '4px',
             borderRadius: '4px'
           }}
-          title={i18n.t('manual_toggle')}
-          aria-label={i18n.t('manual_toggle')}
+          title={i18n?.t?.('manual_toggle') || 'Toggle RTL'}
+          aria-label={i18n?.t?.('manual_toggle') || 'Toggle RTL'}
           aria-pressed={isRTLEnabled}
         >
           🔄
