@@ -106,14 +106,16 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
   });
 
   it('re-pushes sentinel when back is pressed and an overlay is open', () => {
-    service.updateSettings({ backButtonClosesNote: true });
+    // Make overlay first, so that the backButton setup can detect it or be ready
     makeOverlay();
+    service.updateSettings({ backButtonClosesNote: true });
     const before = history.length;
 
     // Simulate back button press
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
 
     // Handler should re-push sentinel for the next back press
+    // Wait for the asynchronous history.pushState if they are batched
     expect(history.length).toBe(before + 1);
   });
 
