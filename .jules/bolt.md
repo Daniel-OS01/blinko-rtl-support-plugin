@@ -1,0 +1,3 @@
+## 2025-04-08 - Cache Selectors Outside MutationObserver
+**Learning:** In `src/services/rtlService.ts`, the `MutationObserver` callback was dynamically filtering and validating selectors (using `document.querySelector(s)` wrapped in try/catch) on *every single DOM mutation*. This created a massive performance bottleneck as DOM mutations fire frequently during active editing or loading, causing redundant array allocations and DOM queries.
+**Action:** Always pre-calculate and cache expensive array operations and validate safe DOM selectors (like `safeSelectors` and `joinedSelectors`) *outside* of the `MutationObserver` callback whenever the dependencies (e.g. settings) only change explicitly.
