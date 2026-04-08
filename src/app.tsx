@@ -10,6 +10,7 @@ interface RTLAppProps {
 
 export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const [stats, setStats] = useState({ activeBlocks: 0 });
+  const [isRTLEnabled, setIsRTLEnabled] = useState(false);
   const [sensitivity, setSensitivity] = useState(15); // Default 15%
   const [isFixing, setIsFixing] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
@@ -19,7 +20,9 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   useEffect(() => {
     const fetchStats = () => {
       const activeBlocks = (window as any).blinkoRTL?.getStats() || 0;
+      const enabled = (window as any).blinkoRTL?.isEnabled?.() || false;
       setStats({ activeBlocks });
+      setIsRTLEnabled(enabled);
     };
 
     fetchStats();
@@ -90,6 +93,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const toggleRTL = () => {
     (window as any).blinkoRTL?.toggle();
     const isEnabled = (window as any).blinkoRTL?.isEnabled();
+    setIsRTLEnabled(isEnabled);
     window.Blinko.toast.success(
       isEnabled ? i18n.t('rtl_enabled') : i18n.t('rtl_disabled')
     );
@@ -123,6 +127,8 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
             borderRadius: '4px'
           }}
           title={i18n.t('manual_toggle')}
+          aria-label={i18n.t('manual_toggle')}
+          aria-pressed={isRTLEnabled}
         >
           🔄
         </button>

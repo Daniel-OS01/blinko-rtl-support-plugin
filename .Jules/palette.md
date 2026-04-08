@@ -1,0 +1,3 @@
+## 2024-04-08 - Icon-Only Toggle Buttons Missing ARIA attributes
+**Learning:** Found that custom floating action buttons or toggle icons relying exclusively on emojis (like 🔄 or ع/א) inside Preact and plain DOM lacked proper accessibility hints and active states (`aria-pressed`). In this codebase, the toggles were being toggled without `aria-pressed` mirroring the internal application state (`isEnabled`).
+**Action:** Always verify icon-only buttons include an `aria-label`. For boolean toggles, inject `aria-pressed` directly into the DOM (e.g., via `setAttribute` for raw elements) or map it tightly to Preact component state, ensuring screen readers receive immediate context updates during toggles.
