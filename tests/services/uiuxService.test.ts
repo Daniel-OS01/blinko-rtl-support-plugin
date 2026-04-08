@@ -68,6 +68,27 @@ function makeEditor(): { backdrop: HTMLDivElement; editor: HTMLDivElement; close
 const mockToast = { success: jest.fn(), error: jest.fn() };
 (window as any).Blinko = { toast: mockToast };
 
+// ─── Event Listener Tracker ───────────────────────────────────────────────────
+
+let windowListeners: Array<{ type: string; listener: EventListenerOrEventListenerObject; options?: boolean | AddEventListenerOptions }> = [];
+let documentListeners: Array<{ type: string; listener: EventListenerOrEventListenerObject; options?: boolean | AddEventListenerOptions }> = [];
+
+const originalWindowAddEventListener = window.addEventListener;
+const originalWindowRemoveEventListener = window.removeEventListener;
+const originalDocumentAddEventListener = document.addEventListener;
+const originalDocumentRemoveEventListener = document.removeEventListener;
+
+function cleanupEventListeners() {
+  for (const { type, listener, options } of windowListeners) {
+    originalWindowRemoveEventListener.call(window, type, listener, options);
+  }
+  for (const { type, listener, options } of documentListeners) {
+    originalDocumentRemoveEventListener.call(document, type, listener, options);
+  }
+  windowListeners = [];
+  documentListeners = [];
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 1 — Regression tests for Issues 1–4 (prior session fixes)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -80,6 +101,16 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    window.addEventListener = jest.fn((type, listener, options) => {
+      windowListeners.push({ type, listener, options });
+      originalWindowAddEventListener.call(window, type, listener, options);
+    });
+
+    document.addEventListener = jest.fn((type, listener, options) => {
+      documentListeners.push({ type, listener, options });
+      originalDocumentAddEventListener.call(document, type, listener, options);
+    });
 
     // Mock history state and replace window.fetch to avoid leakage
     let internalLength = 1;
@@ -97,6 +128,9 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
 
   afterEach(() => {
     service?.destroy();
+    cleanupEventListeners();
+    window.addEventListener = originalWindowAddEventListener;
+    document.addEventListener = originalDocumentAddEventListener;
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {
@@ -175,11 +209,25 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    window.addEventListener = jest.fn((type, listener, options) => {
+      windowListeners.push({ type, listener, options });
+      originalWindowAddEventListener.call(window, type, listener, options);
+    });
+
+    document.addEventListener = jest.fn((type, listener, options) => {
+      documentListeners.push({ type, listener, options });
+      originalDocumentAddEventListener.call(document, type, listener, options);
+    });
+
     service = new UIUXService();
   });
 
   afterEach(() => {
-    service.destroy();
+    service?.destroy();
+    cleanupEventListeners();
+    window.addEventListener = originalWindowAddEventListener;
+    document.addEventListener = originalDocumentAddEventListener;
   });
 
   it('redirects tap on <p> text to the heading click', () => {
@@ -302,11 +350,25 @@ describe('UIUXService — Issue 3A: Re-entry guard prevents dual event', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    window.addEventListener = jest.fn((type, listener, options) => {
+      windowListeners.push({ type, listener, options });
+      originalWindowAddEventListener.call(window, type, listener, options);
+    });
+
+    document.addEventListener = jest.fn((type, listener, options) => {
+      documentListeners.push({ type, listener, options });
+      originalDocumentAddEventListener.call(document, type, listener, options);
+    });
+
     service = new UIUXService();
   });
 
   afterEach(() => {
-    service.destroy();
+    service?.destroy();
+    cleanupEventListeners();
+    window.addEventListener = originalWindowAddEventListener;
+    document.addEventListener = originalDocumentAddEventListener;
   });
 
   it('calls openBtn.click() exactly once despite rapid re-entrant paragraph clicks', () => {
@@ -393,11 +455,25 @@ describe('UIUXService — Phase 2: MutationObserver debounce', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    window.addEventListener = jest.fn((type, listener, options) => {
+      windowListeners.push({ type, listener, options });
+      originalWindowAddEventListener.call(window, type, listener, options);
+    });
+
+    document.addEventListener = jest.fn((type, listener, options) => {
+      documentListeners.push({ type, listener, options });
+      originalDocumentAddEventListener.call(document, type, listener, options);
+    });
+
     service = new UIUXService();
   });
 
   afterEach(() => {
-    service.destroy();
+    service?.destroy();
+    cleanupEventListeners();
+    window.addEventListener = originalWindowAddEventListener;
+    document.addEventListener = originalDocumentAddEventListener;
   });
 
   it('cards added before singleTap enable are still marked', () => {
@@ -448,11 +524,25 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    window.addEventListener = jest.fn((type, listener, options) => {
+      windowListeners.push({ type, listener, options });
+      originalWindowAddEventListener.call(window, type, listener, options);
+    });
+
+    document.addEventListener = jest.fn((type, listener, options) => {
+      documentListeners.push({ type, listener, options });
+      originalDocumentAddEventListener.call(document, type, listener, options);
+    });
+
     service = new UIUXService();
   });
 
   afterEach(() => {
-    service.destroy();
+    service?.destroy();
+    cleanupEventListeners();
+    window.addEventListener = originalWindowAddEventListener;
+    document.addEventListener = originalDocumentAddEventListener;
   });
 
   it('clicking outside the editor fires the close button', () => {
@@ -544,11 +634,25 @@ describe('UIUXService — Phase 4: reduceVerticalSpacing', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    window.addEventListener = jest.fn((type, listener, options) => {
+      windowListeners.push({ type, listener, options });
+      originalWindowAddEventListener.call(window, type, listener, options);
+    });
+
+    document.addEventListener = jest.fn((type, listener, options) => {
+      documentListeners.push({ type, listener, options });
+      originalDocumentAddEventListener.call(document, type, listener, options);
+    });
+
     service = new UIUXService();
   });
 
   afterEach(() => {
-    service.destroy();
+    service?.destroy();
+    cleanupEventListeners();
+    window.addEventListener = originalWindowAddEventListener;
+    document.addEventListener = originalDocumentAddEventListener;
   });
 
   it('enabling adds blinko-reduce-vspacing class to body', () => {
@@ -600,6 +704,16 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     jest.clearAllMocks();
     originalFetch = window.fetch;
 
+    window.addEventListener = jest.fn((type, listener, options) => {
+      windowListeners.push({ type, listener, options });
+      originalWindowAddEventListener.call(window, type, listener, options);
+    });
+
+    document.addEventListener = jest.fn((type, listener, options) => {
+      documentListeners.push({ type, listener, options });
+      originalDocumentAddEventListener.call(document, type, listener, options);
+    });
+
     // Must mock fetch before service instantiate!
     window.fetch = jest.fn() as any;
 
@@ -607,7 +721,10 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   afterEach(() => {
-    service.destroy();
+    service?.destroy();
+    cleanupEventListeners();
+    window.addEventListener = originalWindowAddEventListener;
+    document.addEventListener = originalDocumentAddEventListener;
     window.fetch = originalFetch;
   });
 
