@@ -80,11 +80,23 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    // Mock history state and replace window.fetch to avoid leakage
+    let internalLength = 1;
+    jest.spyOn(window.history, 'pushState').mockImplementation(() => { internalLength++; });
+
+    // Note: spyOn(target, prop, 'get') on window.history.length doesn't work in happy-dom well.
+    // Instead we redefine it:
+    Object.defineProperty(window.history, 'length', {
+      get: () => internalLength,
+      configurable: true
+    });
+
     service = new UIUXService();
   });
 
   afterEach(() => {
-    service.destroy();
+    service?.destroy();
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {
@@ -587,6 +599,10 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     document.body.className = '';
     jest.clearAllMocks();
     originalFetch = window.fetch;
+
+    // Must mock fetch before service instantiate!
+    window.fetch = jest.fn() as any;
+
     service = new UIUXService();
   });
 
@@ -596,8 +612,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('shows guidance toast on 401 from AI autoTag endpoint', async () => {
-    // Mock must be set before updateSettings so the interceptor wraps the mock
-    window.fetch = jest.fn().mockResolvedValue({ status: 401, ok: false }) as any;
+    (window.fetch as any).mockResolvedValue({ status: 401, ok: false });
     service.updateSettings({ interceptAIErrors: true });
 
     await window.fetch('https://blinko.app/api/trpc/ai.autoTag');
@@ -611,7 +626,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('shows guidance toast on 401 from AI writing endpoint', async () => {
-    window.fetch = jest.fn().mockResolvedValue({ status: 401, ok: false }) as any;
+    (window.fetch as any).mockResolvedValue({ status: 401, ok: false });
     service.updateSettings({ interceptAIErrors: true });
 
     await window.fetch('https://blinko.app/api/trpc/ai.writing');
@@ -624,7 +639,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('does NOT show toast for 401 from non-AI endpoint', async () => {
-    window.fetch = jest.fn().mockResolvedValue({ status: 401, ok: false }) as any;
+    (window.fetch as any).mockResolvedValue({ status: 401, ok: false });
     service.updateSettings({ interceptAIErrors: true });
 
     await window.fetch('https://blinko.app/api/trpc/notes.list');
@@ -635,7 +650,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('does NOT show toast for 200 response from AI endpoint', async () => {
-    window.fetch = jest.fn().mockResolvedValue({ status: 200, ok: true }) as any;
+    (window.fetch as any).mockResolvedValue({ status: 200, ok: true });
     service.updateSettings({ interceptAIErrors: true });
 
     await window.fetch('https://blinko.app/api/trpc/ai.autoTag');
@@ -647,7 +662,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
 
   it('returns the original response untouched', async () => {
     const mockResponse = { status: 401, ok: false, body: 'Unauthorized' };
-    window.fetch = jest.fn().mockResolvedValue(mockResponse) as any;
+    (window.fetch as any).mockResolvedValue(mockResponse);
     service.updateSettings({ interceptAIErrors: true });
 
     const result = await window.fetch('https://blinko.app/api/trpc/ai.autoTag');
@@ -656,6 +671,11 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('does NOT intercept when interceptAIErrors is false', async () => {
+    // Need to reset service because beforeEach mocked fetch
+    service.destroy();
+    window.fetch = originalFetch;
+    service = new UIUXService();
+
     service.updateSettings({ interceptAIErrors: false });
 
     // fetch should not be replaced
@@ -663,11 +683,16 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
   });
 
   it('destroy() restores original window.fetch', () => {
+    // We already mock fetch in beforeEach, grab that reference
+    const currentFetch = window.fetch;
+
     service.updateSettings({ interceptAIErrors: true });
-    expect(window.fetch).not.toBe(originalFetch);
+    // After update, window.fetch should be wrapped by the interceptor
+    expect(window.fetch).not.toBe(currentFetch);
 
     service.destroy();
-    expect(window.fetch).toBe(originalFetch);
+    // After destroy, window.fetch should be restored to what it was right before setup
+    expect(window.fetch).toBe(currentFetch);
   });
 });
 
