@@ -80,6 +80,22 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    // Mock history manipulation for happy-dom isolation
+    let mockedHistoryLength = 5;
+    Object.defineProperty(window, 'history', {
+      value: {
+        pushState: jest.fn(() => {
+          mockedHistoryLength++;
+        }),
+        get length() {
+          return mockedHistoryLength;
+        }
+      },
+      writable: true,
+      configurable: true
+    });
+
     service = new UIUXService();
   });
 
