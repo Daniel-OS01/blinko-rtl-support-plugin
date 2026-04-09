@@ -1,0 +1,19 @@
+--- tests/services/uiuxService.test.ts
++++ tests/services/uiuxService.test.ts
+@@ -79,6 +79,16 @@
+     document.body.innerHTML = '';
+     document.body.className = '';
+     jest.clearAllMocks();
++
++    // Reset history length counter using the logic discovered in memory
++    let lengthCounter = 1;
++    window.history.pushState = jest.fn(() => {
++      lengthCounter++;
++    });
++    Object.defineProperty(window.history, 'length', {
++      get: () => lengthCounter,
++      configurable: true
++    });
++
+     service = new UIUXService();
+   });

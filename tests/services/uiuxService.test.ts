@@ -82,6 +82,16 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    let lengthCounter = 1;
+    window.history.pushState = jest.fn(() => {
+      lengthCounter++;
+    });
+    Object.defineProperty(window.history, 'length', {
+      get: () => lengthCounter,
+      configurable: true
+    });
+
     service = new UIUXService();
   });
 
