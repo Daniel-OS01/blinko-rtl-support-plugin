@@ -61,6 +61,10 @@ function makeOverlay(): HTMLDivElement {
   closeBtn.textContent = '×';
   overlay.appendChild(closeBtn);
   document.body.appendChild(overlay);
+
+  // Explicitly set style.display and visibility for happy-dom tests
+  overlay.style.display = 'block';
+  overlay.style.visibility = 'visible';
   return overlay;
 }
 
