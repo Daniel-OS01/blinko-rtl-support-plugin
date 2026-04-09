@@ -803,7 +803,7 @@ export function RTLSetting(): JSX.Element {
 
   const resetDynamicCSS = () => {
       saveSettings({ dynamicCSS: DEFAULT_DYNAMIC_CSS });
-      window.Blinko.toast.success('Dynamic CSS reset');
+      window.Blinko?.toast?.success('Dynamic CSS reset');
   };
 
   const loadDynamicPreset = () => {
@@ -811,7 +811,7 @@ export function RTLSetting(): JSX.Element {
     const preset = DYNAMIC_CSS_PRESETS.find(p => p.id === selectedDynamicPresetId);
     if (preset) {
       saveSettings({ dynamicCSS: preset.css });
-      window.Blinko.toast.success(`Dynamic preset "${preset.name}" loaded!`);
+      window.Blinko?.toast?.success(`Dynamic preset "${preset.name}" loaded!`);
     }
   };
 
@@ -1464,11 +1464,11 @@ export function RTLSetting(): JSX.Element {
           <button
             onClick={() => {
                 if (cssError) {
-                    window.Blinko.toast.error('Please fix CSS errors before saving.');
+                    window.Blinko?.toast?.error('Please fix CSS errors before saving.');
                     return;
                 }
                 saveSettings({ dynamicCSS: settings.dynamicCSS }); // Trigger save explicitly
-                window.Blinko.toast.success('Dynamic CSS Settings Saved');
+                window.Blinko?.toast?.success('Dynamic CSS Settings Saved');
             }}
             disabled={!settings.enabled}
              style={{

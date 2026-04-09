@@ -168,43 +168,63 @@ describe("RTLSetting Component", () => {
       (window as any).blinkoRTL.service = originalService;
   });
 
-  it("handles export settings click", () => {
+  it("handles export settings click", async () => {
       // Mock URL.createObjectURL and URL.revokeObjectURL
       const mockCreateObjectURL = jest.fn();
       const mockRevokeObjectURL = jest.fn();
       URL.createObjectURL = mockCreateObjectURL;
       URL.revokeObjectURL = mockRevokeObjectURL;
 
-      const { getByText } = render(<RTLSetting />);
+      const { container } = render(<RTLSetting />);
+
+      // Wait a moment for preact to be ready
+      await act(async () => {
+        await Promise.resolve();
+      });
 
       // Navigate to Advanced
-      // Use querySelector to find the exact button to avoid ambiguity with headings
-      const advancedTab = document.body.querySelector('button:last-child');
-      if (!advancedTab || advancedTab.textContent !== 'Advanced') {
-          // Fallback if structure changes, but try to find by text if possible with specific selector
-      }
-
-      const buttons = document.body.querySelectorAll('button');
+      // Use container specifically to scope to this test instance.
+      // Since dom retains previous test render we need to filter for the newly rendered one
+      const buttons = container.querySelectorAll('button');
       let foundTab = null;
       buttons.forEach(btn => {
-          if (btn.textContent === 'Advanced') foundTab = btn;
+          if (btn.textContent?.includes('Tools') || btn.textContent === 'Tools') foundTab = btn;
       });
 
-      if (foundTab) fireEvent.click(foundTab);
+      if (foundTab) {
+          await act(async () => {
+            fireEvent.click(foundTab as HTMLElement);
+            await Promise.resolve(); // Allow re-render
+          });
+      } else {
+        console.warn("Could not find Tools tab");
+      }
 
-      // Find Export button (regex for flexible matching)
-      // Use getAllByText and pick the first or most specific one to avoid ambiguity if multiple elements match
-      const exportBtns = document.body.querySelectorAll('button');
+      // Re-query buttons since the DOM changed in container
+      const currentButtons = container.querySelectorAll('button');
+
+      // Find Export button
       let exportBtn = null;
-      exportBtns.forEach(btn => {
-          if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
+      currentButtons.forEach(btn => {
+          if (btn.textContent?.includes('Export Settings') || btn.textContent?.includes('Export Settings (JSON)')) exportBtn = btn;
       });
 
-      if (!exportBtn) throw new Error('Export button not found');
-      fireEvent.click(exportBtn);
+      if (!exportBtn) {
+          // It might be a label instead depending on the markup structure
+          const labels = document.body.querySelectorAll('label');
+          labels.forEach(label => {
+               if (label.textContent?.includes('Export Settings') || label.textContent?.includes('Export Settings (JSON)')) exportBtn = label;
+          });
+      }
+
+      if (!exportBtn) throw new Error('Export button not found. Available buttons: ' + Array.from(currentButtons).map(b => b.textContent).join(', '));
+
+      await act(async () => {
+        fireEvent.click(exportBtn as HTMLElement);
+      });
 
       expect(mockCreateObjectURL).toHaveBeenCalled();
-      // Check if toast was called - check for "successfully" to match the actual message or loosely match
-      expect((window as any).Blinko.toast.success).toHaveBeenCalled();
+      // Check if toast was called
+      expect((window as any).Blinko?.toast?.success).toHaveBeenCalled();
   });
 });
