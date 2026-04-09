@@ -17,6 +17,23 @@ try {
   // Already registered — ignore
 }
 
+// ─── Track mock state for History ─────────────────────────────────────────────
+// Under happy-dom, window.history.pushState works but its length may leak or
+// behave oddly across tests. We mock it locally for accurate counting.
+let mockHistoryLength = 1;
+const originalPushState = window.history.pushState;
+
+Object.defineProperty(window.history, 'length', {
+  get: () => mockHistoryLength,
+  configurable: true
+});
+
+window.history.pushState = function(data: any, title: string, url?: string | URL | null | undefined) {
+  mockHistoryLength++;
+  return originalPushState.call(window.history, data, title, url);
+};
+
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeCard(opts: { heading?: boolean; paragraph?: boolean } = {}): HTMLDivElement {
@@ -79,6 +96,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
+    mockHistoryLength = 1; // Reset mock history
     jest.clearAllMocks();
     service = new UIUXService();
   });
@@ -162,6 +180,7 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
     localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
+    mockHistoryLength = 1; // Reset mock history
     jest.clearAllMocks();
     service = new UIUXService();
   });
@@ -289,6 +308,7 @@ describe('UIUXService — Issue 3A: Re-entry guard prevents dual event', () => {
     localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
+    mockHistoryLength = 1;
     jest.clearAllMocks();
     service = new UIUXService();
   });
@@ -380,6 +400,7 @@ describe('UIUXService — Phase 2: MutationObserver debounce', () => {
     localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
+    mockHistoryLength = 1;
     jest.clearAllMocks();
     service = new UIUXService();
   });
@@ -435,6 +456,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
+    mockHistoryLength = 1;
     jest.clearAllMocks();
     service = new UIUXService();
   });
@@ -531,6 +553,7 @@ describe('UIUXService — Phase 4: reduceVerticalSpacing', () => {
     localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
+    mockHistoryLength = 1;
     jest.clearAllMocks();
     service = new UIUXService();
   });
