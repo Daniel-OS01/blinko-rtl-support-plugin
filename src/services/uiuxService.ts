@@ -377,6 +377,7 @@ export class UIUXService {
     };
 
     const handler = (e: MouseEvent): void => {
+      if (!this.tapOutsideCleanup) return; // Guard against leaked listeners
       const overlay = findActiveOverlay();
       if (!overlay) return;
       if (!overlay.contains(e.target as Node)) {
