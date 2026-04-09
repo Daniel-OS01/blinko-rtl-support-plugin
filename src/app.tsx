@@ -91,7 +91,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
     (window as any).blinkoRTL?.toggle();
     const isEnabled = (window as any).blinkoRTL?.isEnabled();
     window.Blinko.toast.success(
-      isEnabled ? i18n.t('rtl_enabled') : i18n.t('rtl_disabled')
+      isEnabled ? (i18n?.t?.('rtl_enabled') || 'RTL Enabled') : (i18n?.t?.('rtl_disabled') || 'RTL Disabled')
     );
   };
 
@@ -122,7 +122,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
             padding: '4px',
             borderRadius: '4px'
           }}
-          title={i18n.t('manual_toggle')}
+          title={i18n?.t?.('manual_toggle') || 'Toggle Manual Mode'}
         >
           🔄
         </button>

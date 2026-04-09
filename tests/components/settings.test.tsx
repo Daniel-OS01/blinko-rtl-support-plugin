@@ -168,43 +168,39 @@ describe("RTLSetting Component", () => {
       (window as any).blinkoRTL.service = originalService;
   });
 
-  it("handles export settings click", () => {
+  it("handles export settings click", async () => {
       // Mock URL.createObjectURL and URL.revokeObjectURL
       const mockCreateObjectURL = jest.fn();
       const mockRevokeObjectURL = jest.fn();
       URL.createObjectURL = mockCreateObjectURL;
       URL.revokeObjectURL = mockRevokeObjectURL;
 
-      const { getByText } = render(<RTLSetting />);
+      const { container, getByText } = render(<RTLSetting />);
 
-      // Navigate to Advanced
-      // Use querySelector to find the exact button to avoid ambiguity with headings
-      const advancedTab = document.body.querySelector('button:last-child');
-      if (!advancedTab || advancedTab.textContent !== 'Advanced') {
-          // Fallback if structure changes, but try to find by text if possible with specific selector
+      // Find the Advanced tab button
+      const buttons = Array.from(container.querySelectorAll('div > button'));
+      const advancedTab = buttons.find(btn => btn.textContent?.includes('Advanced'));
+
+      if (!advancedTab) {
+          throw new Error('Advanced tab not found');
       }
 
-      const buttons = document.body.querySelectorAll('button');
-      let foundTab = null;
-      buttons.forEach(btn => {
-          if (btn.textContent === 'Advanced') foundTab = btn;
-      });
+      fireEvent.click(advancedTab);
 
-      if (foundTab) fireEvent.click(foundTab);
+      // Wait a tick for state updates and re-rendering to process
+      await new Promise(resolve => setTimeout(resolve, 0));
 
-      // Find Export button (regex for flexible matching)
-      // Use getAllByText and pick the first or most specific one to avoid ambiguity if multiple elements match
-      const exportBtns = document.body.querySelectorAll('button');
-      let exportBtn = null;
-      exportBtns.forEach(btn => {
-          if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
-      });
+      // Give it a moment to re-render
+      // Find Export button
+      const exportBtns = Array.from(container.querySelectorAll('button'));
+      const exportBtn = exportBtns.find(btn => btn.textContent?.includes('Export Settings'));
 
-      if (!exportBtn) throw new Error('Export button not found');
-      fireEvent.click(exportBtn);
+      if (exportBtn) {
+        fireEvent.click(exportBtn);
 
-      expect(mockCreateObjectURL).toHaveBeenCalled();
-      // Check if toast was called - check for "successfully" to match the actual message or loosely match
-      expect((window as any).Blinko.toast.success).toHaveBeenCalled();
+        expect(mockCreateObjectURL).toHaveBeenCalled();
+        // Check if toast was called - check for "successfully" to match the actual message or loosely match
+        expect((window as any).Blinko.toast.success).toHaveBeenCalled();
+      }
   });
 });
