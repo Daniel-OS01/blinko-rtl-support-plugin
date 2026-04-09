@@ -186,8 +186,10 @@ export class AIPostService {
       .filter(Boolean)
       .join(', ');
     return this.settings.customPrompt
-      .replace(/\{note\}/g, content)
-      .replace(/\{tags\}/g, tags);
+      // Security Pattern: Use replacer arrow functions () => str to prevent injection
+      // of regex replacement special characters (like $&, $') by user content
+      .replace(/\{note\}/g, () => content)
+      .replace(/\{tags\}/g, () => tags);
   }
 
   // ── AI operations ────────────────────────────────────────────────────────
