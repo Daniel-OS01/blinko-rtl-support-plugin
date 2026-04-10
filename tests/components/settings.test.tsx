@@ -175,11 +175,16 @@ describe("RTLSetting Component", () => {
       URL.createObjectURL = mockCreateObjectURL;
       URL.revokeObjectURL = mockRevokeObjectURL;
 
-      const { container } = render(<RTLSetting />);
+      const { getByText } = render(<RTLSetting />);
 
       // Navigate to Advanced
       // Use querySelector to find the exact button to avoid ambiguity with headings
-      const buttons = container.querySelectorAll('button');
+      const advancedTab = document.body.querySelector('button:last-child');
+      if (!advancedTab || advancedTab.textContent !== 'Advanced') {
+          // Fallback if structure changes, but try to find by text if possible with specific selector
+      }
+
+      const buttons = document.body.querySelectorAll('button');
       let foundTab = null;
       buttons.forEach(btn => {
           if (btn.textContent === 'Advanced') foundTab = btn;
@@ -188,8 +193,8 @@ describe("RTLSetting Component", () => {
       if (foundTab) fireEvent.click(foundTab);
 
       // Find Export button (regex for flexible matching)
-      // Use container to pick the specific element inside the rendered output
-      const exportBtns = container.querySelectorAll('button');
+      // Use getAllByText and pick the first or most specific one to avoid ambiguity if multiple elements match
+      const exportBtns = document.body.querySelectorAll('button');
       let exportBtn = null;
       exportBtns.forEach(btn => {
           if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
