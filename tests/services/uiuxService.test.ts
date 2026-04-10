@@ -103,6 +103,11 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
   afterEach(() => {
     service.destroy();
     window.history.pushState = originalPushState;
+    // Reset history mock object definition
+    Object.defineProperty(window.history, 'length', {
+      value: originalPushState ? window.history.length : 1,
+      configurable: true,
+    });
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {
