@@ -74,17 +74,35 @@ const mockToast = { success: jest.fn(), error: jest.fn() };
 
 describe('UIUXService — Issue 1: Back button history guard', () => {
   let service: UIUXService;
+  let originalPushState: any;
+  let simulatedHistoryLength = 1;
 
   beforeEach(() => {
     localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    // Mock pushState to properly isolate history manipulation tests and prevent cross-test pollution
+    originalPushState = window.history.pushState;
+    simulatedHistoryLength = 1;
+
+    // Override history.length getter
+    Object.defineProperty(window.history, 'length', {
+      get: () => simulatedHistoryLength,
+      configurable: true,
+    });
+
+    window.history.pushState = jest.fn((state, unused, url) => {
+      simulatedHistoryLength++;
+    });
+
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+    window.history.pushState = originalPushState;
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {
