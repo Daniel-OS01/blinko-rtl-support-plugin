@@ -68,6 +68,16 @@ function makeEditor(): { backdrop: HTMLDivElement; editor: HTMLDivElement; close
 const mockToast = { success: jest.fn(), error: jest.fn() };
 (window as any).Blinko = { toast: mockToast };
 
+// Reset history length mock
+let historyLength = 1;
+Object.defineProperty(window, 'history', {
+  value: {
+    get length() { return historyLength; },
+    pushState: jest.fn(() => { historyLength++; })
+  },
+  writable: true
+});
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 1 — Regression tests for Issues 1–4 (prior session fixes)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -80,6 +90,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+    historyLength = 1; // Reset mock
     service = new UIUXService();
   });
 
