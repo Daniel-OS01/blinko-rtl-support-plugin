@@ -451,7 +451,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     closeBtn.addEventListener('click', clickSpy);
 
     // Click on the backdrop (outside editor)
-    backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: 10, clientY: 10 }));
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
   });
@@ -480,7 +480,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     const clickSpy = jest.fn();
     closeBtn.addEventListener('click', clickSpy);
 
-    backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: 10, clientY: 10 }));
 
     expect(clickSpy).not.toHaveBeenCalled();
   });
@@ -495,7 +495,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     service.destroy();
 
     // After destroy, backdrop click should not trigger close
-    backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: 10, clientY: 10 }));
     expect(clickSpy).not.toHaveBeenCalled();
   });
 
@@ -512,7 +512,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     const escapeSpy = jest.fn();
     editor.addEventListener('keydown', escapeSpy);
 
-    backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: 10, clientY: 10 }));
 
     expect(escapeSpy).toHaveBeenCalledTimes(1);
     const event = escapeSpy.mock.calls[0][0] as KeyboardEvent;
