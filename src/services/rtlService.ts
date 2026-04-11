@@ -631,29 +631,29 @@ export class RTLService {
       if (this.observer) this.observer.disconnect();
       if (!this.settings.autoDetect) return;
 
+      // ⚡ Bolt Optimization: Cache configuration-dependent calculations outside the
+      // observer callback to prevent massive performance bottlenecks during DOM updates.
+      // This avoids redundant array filtering and expensive DOM validation via querySelector.
+      const activeSelectors = this.settings.targetSelectors.filter(
+        s => !this.settings.disabledSelectors.includes(s)
+      );
+
+      const safeSelectors: string[] = [];
+      activeSelectors.forEach(s => {
+          try {
+              document.querySelector(s); // Test validity
+              safeSelectors.push(s);
+          } catch (e) {
+              // Ignore invalid
+          }
+      });
+
+      const joinedSelectors = safeSelectors.join(', ');
+
       this.observer = new MutationObserver((mutations) => {
           if (!this.isRTLEnabled) return;
 
           let hasRelevantMutation = false;
-
-          // Compute active selectors for matching
-          const activeSelectors = this.settings.targetSelectors.filter(
-            s => !this.settings.disabledSelectors.includes(s)
-          );
-
-          // Build a safe matching function or list
-          // We can't check 'matches' with invalid selectors without try-catch
-          const safeSelectors: string[] = [];
-          activeSelectors.forEach(s => {
-              try {
-                  document.querySelector(s); // Just to test validity, or trust the loop below
-                  safeSelectors.push(s);
-              } catch (e) {
-                  // Ignore invalid
-              }
-          });
-
-          const joinedSelectors = safeSelectors.join(', ');
 
           mutations.forEach((mutation) => {
              if (mutation.type === 'childList') {
