@@ -1,0 +1,3 @@
+## 2025-04-11 - Polling Preact State for ARIA Attributes in External DOM Environments
+**Learning:** When Preact components represent the state of an external DOM-based plugin (like Blinko), standard prop passing isn't enough to keep attributes like `aria-pressed` in sync. The component doesn't inherently know when the external state changes (e.g., when a user clicks the raw DOM toggle button).
+**Action:** When adding accessibility attributes that depend on global/external state to UI components, ensure that state is actively polled (using a `useEffect` interval) and mirrored into local component state, so the component re-renders and updates its ARIA attributes correctly.
