@@ -186,8 +186,9 @@ export class AIPostService {
       .filter(Boolean)
       .join(', ');
     return this.settings.customPrompt
-      .replace(/\{note\}/g, content)
-      .replace(/\{tags\}/g, tags);
+      // Use replacer functions to prevent regex substitution vulnerabilities (e.g. user inputting '$&')
+      .replace(/\{note\}/g, () => content)
+      .replace(/\{tags\}/g, () => tags);
   }
 
   // ── AI operations ────────────────────────────────────────────────────────
