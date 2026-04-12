@@ -175,33 +175,34 @@ describe("RTLSetting Component", () => {
       URL.createObjectURL = mockCreateObjectURL;
       URL.revokeObjectURL = mockRevokeObjectURL;
 
-      const { getByText } = render(<RTLSetting />);
+      const { container } = render(<RTLSetting />);
 
       // Navigate to Advanced
-      // Use querySelector to find the exact button to avoid ambiguity with headings
-      const advancedTab = document.body.querySelector('button:last-child');
-      if (!advancedTab || advancedTab.textContent !== 'Advanced') {
-          // Fallback if structure changes, but try to find by text if possible with specific selector
-      }
-
-      const buttons = document.body.querySelectorAll('button');
+      const buttons = container.querySelectorAll('button');
       let foundTab = null;
       buttons.forEach(btn => {
-          if (btn.textContent === 'Advanced') foundTab = btn;
+          if (btn.textContent?.includes('Tools')) foundTab = btn;
       });
 
-      if (foundTab) fireEvent.click(foundTab);
+      if (foundTab) {
+          act(() => {
+              fireEvent.click(foundTab);
+          });
+      }
 
+      // Wait for re-render if necessary (though state updates in preact testing library are generally synchronous within act, it's safer)
       // Find Export button (regex for flexible matching)
-      // Use getAllByText and pick the first or most specific one to avoid ambiguity if multiple elements match
-      const exportBtns = document.body.querySelectorAll('button');
+      // Re-query container for buttons
+      const newButtons = container.querySelectorAll('button');
       let exportBtn = null;
-      exportBtns.forEach(btn => {
+      newButtons.forEach(btn => {
           if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
       });
 
       if (!exportBtn) throw new Error('Export button not found');
-      fireEvent.click(exportBtn);
+      act(() => {
+          fireEvent.click(exportBtn);
+      });
 
       expect(mockCreateObjectURL).toHaveBeenCalled();
       // Check if toast was called - check for "successfully" to match the actual message or loosely match
