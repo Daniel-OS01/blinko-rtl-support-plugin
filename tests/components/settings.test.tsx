@@ -175,32 +175,39 @@ describe("RTLSetting Component", () => {
       URL.createObjectURL = mockCreateObjectURL;
       URL.revokeObjectURL = mockRevokeObjectURL;
 
-      const { getByText } = render(<RTLSetting />);
+      const { getByText, container } = render(<RTLSetting />);
 
       // Navigate to Advanced
       // Use querySelector to find the exact button to avoid ambiguity with headings
-      const advancedTab = document.body.querySelector('button:last-child');
+      const advancedTab = container.querySelector('button:last-child');
       if (!advancedTab || advancedTab.textContent !== 'Advanced') {
           // Fallback if structure changes, but try to find by text if possible with specific selector
       }
 
-      const buttons = document.body.querySelectorAll('button');
+      const buttons = container.querySelectorAll('button');
       let foundTab = null;
       buttons.forEach(btn => {
-          if (btn.textContent === 'Advanced') foundTab = btn;
+          if (btn.textContent === '🧪 Tools') foundTab = btn;
       });
 
-      if (foundTab) fireEvent.click(foundTab);
+      if (foundTab) {
+          fireEvent.click(foundTab);
+          // Wait for preact state to update
+      }
 
       // Find Export button (regex for flexible matching)
       // Use getAllByText and pick the first or most specific one to avoid ambiguity if multiple elements match
-      const exportBtns = document.body.querySelectorAll('button');
+      const exportBtns = container.querySelectorAll('button');
       let exportBtn = null;
       exportBtns.forEach(btn => {
           if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
       });
 
-      if (!exportBtn) throw new Error('Export button not found');
+      if (!exportBtn) {
+          // Fallback, if export button still not found
+          console.warn("Export button not found. Available buttons:", Array.from(exportBtns).map(b => b.textContent));
+          throw new Error('Export button not found');
+      }
       fireEvent.click(exportBtn);
 
       expect(mockCreateObjectURL).toHaveBeenCalled();

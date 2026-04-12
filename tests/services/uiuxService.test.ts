@@ -80,6 +80,17 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    // Reset history tracking for popstate
+    let mockHistoryLength = 0;
+    Object.defineProperty(window, 'history', {
+      value: {
+        get length() { return mockHistoryLength; },
+        pushState: jest.fn(() => mockHistoryLength += 1)
+      },
+      writable: true
+    });
+
     service = new UIUXService();
   });
 
@@ -163,6 +174,17 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    // Reset history tracking for popstate
+    let mockHistoryLength = 0;
+    Object.defineProperty(window, 'history', {
+      value: {
+        get length() { return mockHistoryLength; },
+        pushState: jest.fn(() => mockHistoryLength += 1)
+      },
+      writable: true
+    });
+
     service = new UIUXService();
   });
 
