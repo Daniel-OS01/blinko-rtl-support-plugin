@@ -124,8 +124,8 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
             padding: '4px',
             borderRadius: '4px'
           }}
-          title={i18n.t('manual_toggle')}
-          aria-label={i18n.t('manual_toggle') || 'Toggle RTL'}
+          title={i18n?.t?.('manual_toggle') || 'Toggle RTL'}
+          aria-label={i18n?.t?.('manual_toggle') || 'Toggle RTL'}
           aria-pressed={isEnabled}
         >
           🔄
