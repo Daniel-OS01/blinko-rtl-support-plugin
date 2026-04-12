@@ -13,6 +13,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const [sensitivity, setSensitivity] = useState(15); // Default 15%
   const [isFixing, setIsFixing] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(false);
   const i18n = window.Blinko.i18n;
 
   // Poll for stats
@@ -20,6 +21,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
     const fetchStats = () => {
       const activeBlocks = (window as any).blinkoRTL?.getStats() || 0;
       setStats({ activeBlocks });
+      setIsEnabled((window as any).blinkoRTL?.isEnabled?.() || false);
     };
 
     fetchStats();
@@ -123,6 +125,8 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
             borderRadius: '4px'
           }}
           title={i18n.t('manual_toggle')}
+          aria-label={i18n.t('manual_toggle') || 'Toggle RTL'}
+          aria-pressed={isEnabled}
         >
           🔄
         </button>
