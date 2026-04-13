@@ -1,0 +1,3 @@
+## 2025-04-13 - Dynamic State Syncing for Preact ARIA Attributes
+**Learning:** To dynamically update Preact component UI (such as ARIA attributes like `aria-pressed`) based on global plugin state, components must poll `(window as any).blinkoRTL?.isEnabled?.()` inside a `useEffect` interval and mirror the result to local state. This is because the external DOM-based plugin logic does not automatically trigger Preact re-renders.
+**Action:** When integrating Preact components with external state that doesn't provide event emitters for all state changes (e.g., enabled/disabled state), use a polling mechanism to ensure UI elements (especially accessibility attributes) remain accurate and in sync.
