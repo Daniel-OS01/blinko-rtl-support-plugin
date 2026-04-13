@@ -300,9 +300,11 @@ export class UIUXService {
       // selector-engine compatibility (happy-dom, jsdom, older browsers).
       const findVisibleOverlay = (): HTMLElement | null => {
         const candidates = document.querySelectorAll<HTMLElement>(
-          '[class*="expanded"], [class*="modal"], [class*="overlay"]:not([id*="root"])'
+          '[class*="expanded"], [class*="modal"], [class*="overlay"]'
         );
         for (const el of Array.from(candidates)) {
+          const id = (el.id || '').toLowerCase();
+          if (id.includes('root')) continue;
           if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
           return el;
         }
@@ -316,10 +318,19 @@ export class UIUXService {
         history.pushState({ blinkoPlugin: true }, '', window.location.href);
 
         // Try to find and click a close button.
-        const closeBtn = overlay.querySelector<HTMLElement>(
-          '[class*="close"], [aria-label*="close" i], [aria-label*="dismiss" i], ' +
-          'button[class*="X"], button svg[data-icon="x"]'
-        );
+        const closeBtn = Array.from(
+          overlay.querySelectorAll<HTMLElement>('button, [class*="close"], [aria-label], [data-dismiss]')
+        ).find((el) => {
+          const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+          const className = (el.className || '').toString().toLowerCase();
+          return (
+            className.includes('close') ||
+            className.includes('dismiss') ||
+            ariaLabel.includes('close') ||
+            ariaLabel.includes('dismiss') ||
+            el.hasAttribute('data-dismiss')
+          );
+        }) ?? null;
         if (closeBtn) {
           closeBtn.click();
         } else {
@@ -355,18 +366,25 @@ export class UIUXService {
 
     if (!this.settings.tapOutsideClosesNote) return;
 
-    const findActiveOverlay = (): HTMLElement | null =>
-      document.querySelector<HTMLElement>(
-        '[class*="editor-container"]:not([style*="display: none"]), ' +
-        '[class*="note-editor"]:not([style*="display: none"]), ' +
-        '[class*="blinko-editor"]:not([style*="display: none"]), ' +
-        '[class*="dialog-content"]:not([style*="display: none"]), ' +
-        '[class*="modal-content"]:not([style*="display: none"])'
+    const findActiveOverlay = (): HTMLElement | null => {
+      const candidates = document.querySelectorAll<HTMLElement>(
+        '[class*="editor-container"], [class*="note-editor"], [class*="blinko-editor"], [class*="dialog-content"], [class*="modal-content"]'
       );
+      for (const el of Array.from(candidates)) {
+        if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
+        return el;
+      }
+      return null;
+    };
 
     const closeViaButtonOrEscape = (scope: HTMLElement): void => {
       const closeBtn =
-        scope.querySelector<HTMLElement>('[class*="close"], [aria-label*="close" i], button[data-dismiss]') ??
+        Array.from(scope.querySelectorAll<HTMLElement>('button, [class*="close"], [aria-label], [data-dismiss]'))
+          .find((el) => {
+            const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+            const className = (el.className || '').toString().toLowerCase();
+            return className.includes('close') || ariaLabel.includes('close') || el.hasAttribute('data-dismiss');
+          }) ??
         document.querySelector<HTMLElement>('.modal-close');
       if (closeBtn) {
         closeBtn.click();
