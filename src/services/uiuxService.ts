@@ -291,7 +291,11 @@ export class UIUXService {
       this.backButtonInitialized = true;
     }
 
-    const handler = (_e: PopStateEvent) => {
+    const processedEvents = new WeakSet<Event>();
+    const runBackButtonHandler = (_e: PopStateEvent) => {
+      if (processedEvents.has(_e)) return;
+      processedEvents.add(_e);
+
       // NOTE: popstate is NOT cancelable; e.preventDefault() has no effect and
       // has been removed to avoid confusion.
 
@@ -299,10 +303,14 @@ export class UIUXService {
       // Visibility is checked in JS (not CSS :not([style*="..."])) for broad
       // selector-engine compatibility (happy-dom, jsdom, older browsers).
       const findVisibleOverlay = (): HTMLElement | null => {
-        const candidates = document.querySelectorAll<HTMLElement>(
-          '[class*="expanded"], [class*="modal"], [class*="overlay"]:not([id*="root"])'
-        );
-        for (const el of Array.from(candidates)) {
+        const candidates = Array.from(document.querySelectorAll<HTMLElement>('*'));
+        for (const el of candidates) {
+          const cls = (el.className || '').toString().toLowerCase();
+          const id = (el.id || '').toLowerCase();
+          const looksLikeOverlay =
+            cls.includes('expanded') || cls.includes('modal') || cls.includes('overlay');
+          if (!looksLikeOverlay) continue;
+          if (id.includes('root')) continue;
           if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
           return el;
         }
@@ -331,10 +339,22 @@ export class UIUXService {
       // the browser navigates back, enabling logout and regular back-navigation.
     };
 
-    window.addEventListener('popstate', handler);
+    const previousOnPopState = window.onpopstate;
+    const propertyHandler = (event: PopStateEvent) => {
+      runBackButtonHandler(event);
+      if (typeof previousOnPopState === 'function') {
+        previousOnPopState.call(window, event);
+      }
+    };
+
+    window.addEventListener('popstate', runBackButtonHandler);
+    window.onpopstate = propertyHandler;
 
     this.backButtonCleanup = () => {
-      window.removeEventListener('popstate', handler);
+      window.removeEventListener('popstate', runBackButtonHandler);
+      if (window.onpopstate === propertyHandler) {
+        window.onpopstate = previousOnPopState;
+      }
     };
   }
 
@@ -355,14 +375,22 @@ export class UIUXService {
 
     if (!this.settings.tapOutsideClosesNote) return;
 
-    const findActiveOverlay = (): HTMLElement | null =>
-      document.querySelector<HTMLElement>(
-        '[class*="editor-container"]:not([style*="display: none"]), ' +
-        '[class*="note-editor"]:not([style*="display: none"]), ' +
-        '[class*="blinko-editor"]:not([style*="display: none"]), ' +
-        '[class*="dialog-content"]:not([style*="display: none"]), ' +
-        '[class*="modal-content"]:not([style*="display: none"])'
-      );
+    const findActiveOverlay = (): HTMLElement | null => {
+      const candidates = Array.from(document.querySelectorAll<HTMLElement>('*'));
+      for (const el of candidates) {
+        const cls = (el.className || '').toString().toLowerCase();
+        const isEditorLike =
+          cls.includes('editor-container') ||
+          cls.includes('note-editor') ||
+          cls.includes('blinko-editor') ||
+          cls.includes('dialog-content') ||
+          cls.includes('modal-content');
+        if (!isEditorLike) continue;
+        if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
+        return el;
+      }
+      return null;
+    };
 
     const closeViaButtonOrEscape = (scope: HTMLElement): void => {
       const closeBtn =

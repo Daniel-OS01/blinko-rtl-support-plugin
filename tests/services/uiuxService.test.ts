@@ -63,6 +63,14 @@ function makeEditor(): { backdrop: HTMLDivElement; editor: HTMLDivElement; close
   return { backdrop, editor, closeBtn };
 }
 
+function triggerBackNavigation(): void {
+  const event = new PopStateEvent('popstate', { state: null });
+  window.dispatchEvent(event);
+  if (typeof window.onpopstate === 'function') {
+    window.onpopstate(event);
+  }
+}
+
 // ─── Mock Blinko toast ────────────────────────────────────────────────────────
 
 const mockToast = { success: jest.fn(), error: jest.fn() };
@@ -111,7 +119,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     const before = history.length;
 
     // Simulate back button press
-    window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+    triggerBackNavigation();
 
     // Handler should re-push sentinel for the next back press
     expect(history.length).toBe(before + 1);
@@ -122,7 +130,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     const before = history.length;
 
     // No overlay in DOM
-    window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+    triggerBackNavigation();
 
     // No re-push — navigation should proceed naturally
     expect(history.length).toBe(before);
@@ -147,7 +155,7 @@ describe('UIUXService — Issue 1: Back button history guard', () => {
     const clickSpy = jest.fn();
     closeBtn.addEventListener('click', clickSpy);
 
-    window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+    triggerBackNavigation();
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
   });
