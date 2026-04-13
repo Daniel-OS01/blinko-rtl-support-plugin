@@ -13,6 +13,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const [sensitivity, setSensitivity] = useState(15); // Default 15%
   const [isFixing, setIsFixing] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
+  const [isRTLEnabled, setIsRTLEnabled] = useState(false);
   const t = (key: string): string => {
     const i18n = (window as any).Blinko?.i18n;
     if (i18n && typeof i18n.t === 'function') {
@@ -25,6 +26,8 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   useEffect(() => {
     const fetchStats = () => {
       const activeBlocks = (window as any).blinkoRTL?.getStats() || 0;
+      const enabled = (window as any).blinkoRTL?.isEnabled?.() || false;
+      setIsRTLEnabled(enabled);
       setStats({ activeBlocks });
     };
 
@@ -96,6 +99,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const toggleRTL = () => {
     (window as any).blinkoRTL?.toggle();
     const isEnabled = (window as any).blinkoRTL?.isEnabled();
+    setIsRTLEnabled(isEnabled);
     window.Blinko.toast.success(
       isEnabled ? t('rtl_enabled') : t('rtl_disabled')
     );
@@ -129,6 +133,8 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
             borderRadius: '4px'
           }}
           title={t('manual_toggle')}
+          aria-label={t('manual_toggle')}
+          aria-pressed={isRTLEnabled}
         >
           🔄
         </button>
@@ -172,7 +178,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
         >
           {isFixing ? 'Processing...' : (
             <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
               </svg>
               Fix Selected Text
