@@ -11,7 +11,7 @@
 # Key design decisions:
 #   - bun-version pinned to "1.2.5" for reproducible builds
 #   - --frozen-lockfile with graceful fallback for lockfile version drift
-#   - NODE_NO_WARNINGS set until actions/checkout and actions/cache ship node24 builds
+#   - FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 enabled to proactively run JavaScript actions on Node.js 24
 #   - Bundle size gate: JS > 400kB fails the build job
 #   - All jobs upload artifacts on failure for debugging
 #   - concurrency group cancels duplicate branch runs
@@ -31,11 +31,9 @@ on:
 
 # Cancel any in-progress run for the same branch/PR to avoid wasted minutes
 env:
-  # Suppress Node.js 20 deprecation warnings from actions/checkout@v4 and
-  # actions/cache@v4 until they ship Node.js 24-compatible builds.
-  # Track: https://github.com/actions/checkout/issues and actions/cache/issues
-  # Deadline: June 2, 2026 — upgrade to v5 once available.
-  NODE_NO_WARNINGS: "1"
+  # Opt in JavaScript actions to the Node.js 24 runtime ahead of GitHub's
+  # default migration date (June 2, 2026).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -49,7 +47,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4  # TODO(node24): upgrade to v5 once released
+      - uses: actions/checkout@v5  
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -57,7 +55,7 @@ jobs:
           bun-version: "1.2.5"
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v4  # TODO(node24): upgrade to v5 once released
+        uses: actions/cache@v4  
         with:
           path: |
             ~/.bun/install/cache
@@ -98,7 +96,7 @@ jobs:
     needs: typecheck
 
     steps:
-      - uses: actions/checkout@v4  # TODO(node24): upgrade to v5 once released
+      - uses: actions/checkout@v5  
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -106,7 +104,7 @@ jobs:
           bun-version: "1.2.5"
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v4  # TODO(node24): upgrade to v5 once released
+        uses: actions/cache@v4  
         with:
           path: |
             ~/.bun/install/cache
@@ -187,7 +185,7 @@ jobs:
     needs: typecheck
 
     steps:
-      - uses: actions/checkout@v4  # TODO(node24): upgrade to v5 once released
+      - uses: actions/checkout@v5  
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -195,7 +193,7 @@ jobs:
           bun-version: "1.2.5"
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v4  # TODO(node24): upgrade to v5 once released
+        uses: actions/cache@v4  
         with:
           path: |
             ~/.bun/install/cache
@@ -230,10 +228,27 @@ jobs:
       - name: Check Bundle Size
         shell: bash
         run: |
-          JS_SIZE=$(stat -c%s dist/*.js 2>/dev/null || stat -f%z dist/*.js)
-          CSS_SIZE=$(stat -c%s dist/*.css 2>/dev/null || stat -f%z dist/*.css)
-          echo "JS bundle: ${JS_SIZE} bytes"
-          echo "CSS bundle: ${CSS_SIZE} bytes"
+          get_file_size() {
+            local file="$1"
+            if stat -c %s "$file" >/dev/null 2>&1; then
+              stat -c %s "$file"
+            else
+              stat -f %z "$file"
+            fi
+          }
+
+          JS_FILE=$(ls dist/*.js 2>/dev/null | head -n 1)
+          CSS_FILE=$(ls dist/*.css 2>/dev/null | head -n 1)
+
+          if [ -z "$JS_FILE" ] || [ -z "$CSS_FILE" ]; then
+            echo "::error::Expected dist/*.js and dist/*.css output files were not found"
+            exit 1
+          fi
+
+          JS_SIZE=$(get_file_size "$JS_FILE")
+          CSS_SIZE=$(get_file_size "$CSS_FILE")
+          echo "JS bundle (${JS_FILE}): ${JS_SIZE} bytes"
+          echo "CSS bundle (${CSS_FILE}): ${CSS_SIZE} bytes"
           # Fail if JS bundle exceeds 400 kB uncompressed (current ~228 kB)
           if [ "$JS_SIZE" -gt 409600 ]; then
             echo "::error::JS bundle ${JS_SIZE} bytes exceeds 400 kB limit"
@@ -258,7 +273,7 @@ jobs:
     continue-on-error: true
 
     steps:
-      - uses: actions/checkout@v4  # TODO(node24): upgrade to v5 once released
+      - uses: actions/checkout@v5  
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -271,7 +286,7 @@ jobs:
           python-version: "3.12"
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v4  # TODO(node24): upgrade to v5 once released
+        uses: actions/cache@v4  
         with:
           path: |
             ~/.bun/install/cache
@@ -330,7 +345,7 @@ jobs:
       matrix:
         bun-version: ["1.1.38"]    # last stable 1.1.x — oldest supported
     steps:
-      - uses: actions/checkout@v4  # TODO(node24): upgrade to v5 once released
+      - uses: actions/checkout@v5  
 
       - name: Setup Bun ${{ matrix.bun-version }}
         uses: oven-sh/setup-bun@v2
@@ -360,7 +375,7 @@ jobs:
         shell: bash
         run: |
           echo "Pinned versions in use:"
-          echo "  actions/checkout@v4     → check https://github.com/actions/checkout/releases"
+          echo "  actions/checkout@v5     → check https://github.com/actions/checkout/releases"
           echo "  actions/cache@v4        → check https://github.com/actions/cache/releases"
           echo "  oven-sh/setup-bun@v2   → check https://github.com/oven-sh/setup-bun/releases"
           echo "  actions/upload-artifact@v4"
