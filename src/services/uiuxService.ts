@@ -22,7 +22,7 @@ const STYLE_TAG_ID = 'blinko-uiux-dynamic-styles';
 export class UIUXService {
   private static activeBackButtonHandler: ((e: PopStateEvent) => void) | null = null;
   private static activeOnPopStateHandler: ((e: PopStateEvent) => void) | null = null;
-  private static previousOnPopStateHandler: ((this: Window, ev: PopStateEvent) => any) | null = null;
+  private static previousOnPopStateHandler: typeof window.onpopstate = null;
   private static activeTapOutsideHandler: ((e: MouseEvent) => void) | null = null;
   private static originalFetchRef: typeof window.fetch | null = null;
   private static aiInterceptorInstalled = false;
