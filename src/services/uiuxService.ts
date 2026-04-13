@@ -21,8 +21,8 @@ const STYLE_TAG_ID = 'blinko-uiux-dynamic-styles';
 
 export class UIUXService {
   private static activeBackButtonHandler: ((e: PopStateEvent) => void) | null = null;
-  private static activeOnPopStateHandler: ((e: PopStateEvent) => void) | null = null;
-  private static previousOnPopStateHandler: ((this: Window, ev: PopStateEvent) => any) | null = null;
+  private static activeOnPopStateHandler: Window['onpopstate'] = null;
+  private static previousOnPopStateHandler: Window['onpopstate'] = null;
   private static activeTapOutsideHandler: ((e: MouseEvent) => void) | null = null;
   private static originalFetchRef: typeof window.fetch | null = null;
   private static aiInterceptorInstalled = false;
@@ -364,7 +364,7 @@ export class UIUXService {
     }
 
     const previousOnPopState = window.onpopstate;
-    const propertyHandler = (event: PopStateEvent) => {
+    const propertyHandler: NonNullable<Window['onpopstate']> = function (this: WindowEventHandlers, event: PopStateEvent) {
       runBackButtonHandler(event);
       if (typeof previousOnPopState === 'function') {
         previousOnPopState.call(window, event);
