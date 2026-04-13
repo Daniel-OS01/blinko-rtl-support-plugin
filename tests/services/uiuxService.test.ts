@@ -74,70 +74,88 @@ const mockToast = { success: jest.fn(), error: jest.fn() };
 
 describe('UIUXService — Issue 1: Back button history guard', () => {
   let service: UIUXService;
+  let mockHistoryLength = 0;
+  let originalPushState: any;
+  let historySpy: any;
 
   beforeEach(() => {
     localStorage.clear();
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+
+    mockHistoryLength = window.history.length;
+    originalPushState = window.history.pushState;
+    window.history.pushState = jest.fn((state, title, url) => {
+        mockHistoryLength++;
+    });
+
+    // Mock history.length property
+    Object.defineProperty(window.history, 'length', {
+        get: () => mockHistoryLength,
+        configurable: true
+    });
+
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+    window.history.pushState = originalPushState;
+    delete (window.history as any).length;
   });
 
   it('pushes the sentinel state exactly once when first enabled', () => {
-    const before = history.length;
+    const before = window.history.length;
     service.updateSettings({ backButtonClosesNote: true });
-    expect(history.length).toBe(before + 1);
+    expect(window.history.length).toBe(before + 1);
   });
 
   it('does NOT accumulate history entries on repeated updateSettings() calls', () => {
     service.updateSettings({ backButtonClosesNote: true });
-    const afterFirstEnable = history.length;
+    const afterFirstEnable = window.history.length;
 
     // Simulate 5 settings changes (the original bug: each call pushed a new entry)
     for (let i = 0; i < 5; i++) {
       service.updateSettings({ compactDatetime: i % 2 === 0 });
     }
 
-    expect(history.length).toBe(afterFirstEnable);
+    expect(window.history.length).toBe(afterFirstEnable);
   });
 
   it('re-pushes sentinel when back is pressed and an overlay is open', () => {
     service.updateSettings({ backButtonClosesNote: true });
     makeOverlay();
-    const before = history.length;
+    const before = window.history.length;
 
     // Simulate back button press
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
 
     // Handler should re-push sentinel for the next back press
-    expect(history.length).toBe(before + 1);
+    expect(window.history.length).toBe(before + 1);
   });
 
   it('does NOT push when back is pressed and no overlay is open', () => {
     service.updateSettings({ backButtonClosesNote: true });
-    const before = history.length;
+    const before = window.history.length;
 
     // No overlay in DOM
     window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
 
     // No re-push — navigation should proceed naturally
-    expect(history.length).toBe(before);
+    expect(window.history.length).toBe(before);
   });
 
   it('resets backButtonInitialized when feature is disabled, allowing re-initialization', () => {
     service.updateSettings({ backButtonClosesNote: true });
-    const afterEnable = history.length;
+    const afterEnable = window.history.length;
 
     // Disable
     service.updateSettings({ backButtonClosesNote: false });
 
     // Re-enable — should push sentinel once again
     service.updateSettings({ backButtonClosesNote: true });
-    expect(history.length).toBe(afterEnable + 1);
+    expect(window.history.length).toBe(afterEnable + 1);
   });
 
   it('clicks the close button on the overlay when back is pressed', () => {
