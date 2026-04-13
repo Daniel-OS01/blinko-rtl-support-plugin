@@ -21,6 +21,8 @@ const STYLE_TAG_ID = 'blinko-uiux-dynamic-styles';
 
 export class UIUXService {
   private static activeBackButtonHandler: ((e: PopStateEvent) => void) | null = null;
+  private static activeOnPopStateHandler: ((e: PopStateEvent) => void) | null = null;
+  private static previousOnPopStateHandler: ((this: Window, ev: PopStateEvent) => any) | null = null;
   private static activeTapOutsideHandler: ((e: MouseEvent) => void) | null = null;
   private static originalFetchRef: typeof window.fetch | null = null;
   private static aiInterceptorInstalled = false;
@@ -351,6 +353,16 @@ export class UIUXService {
       // the browser navigates back, enabling logout and regular back-navigation.
     };
 
+    if (UIUXService.activeBackButtonHandler) {
+      window.removeEventListener('popstate', UIUXService.activeBackButtonHandler);
+      UIUXService.activeBackButtonHandler = null;
+    }
+    if (UIUXService.activeOnPopStateHandler && window.onpopstate === UIUXService.activeOnPopStateHandler) {
+      window.onpopstate = UIUXService.previousOnPopStateHandler;
+      UIUXService.activeOnPopStateHandler = null;
+      UIUXService.previousOnPopStateHandler = null;
+    }
+
     const previousOnPopState = window.onpopstate;
     const propertyHandler = (event: PopStateEvent) => {
       runBackButtonHandler(event);
@@ -361,11 +373,21 @@ export class UIUXService {
 
     window.addEventListener('popstate', runBackButtonHandler);
     window.onpopstate = propertyHandler;
+    UIUXService.activeBackButtonHandler = runBackButtonHandler;
+    UIUXService.activeOnPopStateHandler = propertyHandler;
+    UIUXService.previousOnPopStateHandler = previousOnPopState;
 
     this.backButtonCleanup = () => {
       window.removeEventListener('popstate', runBackButtonHandler);
+      if (UIUXService.activeBackButtonHandler === runBackButtonHandler) {
+        UIUXService.activeBackButtonHandler = null;
+      }
       if (window.onpopstate === propertyHandler) {
         window.onpopstate = previousOnPopState;
+      }
+      if (UIUXService.activeOnPopStateHandler === propertyHandler) {
+        UIUXService.activeOnPopStateHandler = null;
+        UIUXService.previousOnPopStateHandler = null;
       }
     };
   }
