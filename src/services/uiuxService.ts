@@ -296,7 +296,11 @@ export class UIUXService {
       this.backButtonInitialized = true;
     }
 
-    const handler = (_e: PopStateEvent) => {
+    const processedEvents = new WeakSet<Event>();
+    const runBackButtonHandler = (_e: PopStateEvent) => {
+      if (processedEvents.has(_e)) return;
+      processedEvents.add(_e);
+
       // NOTE: popstate is NOT cancelable; e.preventDefault() has no effect and
       // has been removed to avoid confusion.
 
@@ -347,16 +351,21 @@ export class UIUXService {
       // the browser navigates back, enabling logout and regular back-navigation.
     };
 
-    if (UIUXService.activeBackButtonHandler) {
-      window.removeEventListener('popstate', UIUXService.activeBackButtonHandler);
-    }
-    window.addEventListener('popstate', handler);
-    UIUXService.activeBackButtonHandler = handler;
+    const previousOnPopState = window.onpopstate;
+    const propertyHandler = (event: PopStateEvent) => {
+      runBackButtonHandler(event);
+      if (typeof previousOnPopState === 'function') {
+        previousOnPopState.call(window, event);
+      }
+    };
+
+    window.addEventListener('popstate', runBackButtonHandler);
+    window.onpopstate = propertyHandler;
 
     this.backButtonCleanup = () => {
-      window.removeEventListener('popstate', handler);
-      if (UIUXService.activeBackButtonHandler === handler) {
-        UIUXService.activeBackButtonHandler = null;
+      window.removeEventListener('popstate', runBackButtonHandler);
+      if (window.onpopstate === propertyHandler) {
+        window.onpopstate = previousOnPopState;
       }
     };
   }
