@@ -20,6 +20,11 @@ const STORAGE_KEY = 'blinko-uiux-settings';
 const STYLE_TAG_ID = 'blinko-uiux-dynamic-styles';
 
 export class UIUXService {
+  private static activeBackButtonHandler: ((e: PopStateEvent) => void) | null = null;
+  private static activeTapOutsideHandler: ((e: MouseEvent) => void) | null = null;
+  private static originalFetchRef: typeof window.fetch | null = null;
+  private static aiInterceptorInstalled = false;
+
   private settings: UIUXSettings;
   private singleTapCleanup: (() => void) | null = null;
   private backButtonCleanup: (() => void) | null = null;
@@ -342,10 +347,17 @@ export class UIUXService {
       // the browser navigates back, enabling logout and regular back-navigation.
     };
 
+    if (UIUXService.activeBackButtonHandler) {
+      window.removeEventListener('popstate', UIUXService.activeBackButtonHandler);
+    }
     window.addEventListener('popstate', handler);
+    UIUXService.activeBackButtonHandler = handler;
 
     this.backButtonCleanup = () => {
       window.removeEventListener('popstate', handler);
+      if (UIUXService.activeBackButtonHandler === handler) {
+        UIUXService.activeBackButtonHandler = null;
+      }
     };
   }
 
@@ -402,11 +414,18 @@ export class UIUXService {
       }
     };
 
+    if (UIUXService.activeTapOutsideHandler) {
+      document.removeEventListener('mousedown', UIUXService.activeTapOutsideHandler, true);
+    }
     document.addEventListener('mousedown', handler, true);
+    UIUXService.activeTapOutsideHandler = handler;
     document.body.classList.add('blinko-tap-outside-close-active');
 
     this.tapOutsideCleanup = () => {
       document.removeEventListener('mousedown', handler, true);
+      if (UIUXService.activeTapOutsideHandler === handler) {
+        UIUXService.activeTapOutsideHandler = null;
+      }
       document.body.classList.remove('blinko-tap-outside-close-active');
     };
   }
@@ -441,12 +460,17 @@ export class UIUXService {
   }
 
   private applyAIErrorInterceptor(): void {
-    // Idempotent — only install once per enable-cycle.
-    // apply() is called on every updateSettings(); the caller is responsible
-    // for calling restoreAIErrorInterceptor() when the setting is toggled off.
-    if (this.aiInterceptorCleanup) return;
+    if (UIUXService.aiInterceptorInstalled && UIUXService.originalFetchRef) {
+      window.fetch = UIUXService.originalFetchRef;
+      UIUXService.aiInterceptorInstalled = false;
+    }
+    if (this.aiInterceptorCleanup) {
+      this.aiInterceptorCleanup();
+      this.aiInterceptorCleanup = null;
+    }
 
     const originalFetch = window.fetch;
+    UIUXService.originalFetchRef = originalFetch;
 
     window.fetch = async (...args: Parameters<typeof fetch>) => {
       const response = await originalFetch(...args);
@@ -465,7 +489,10 @@ export class UIUXService {
 
     this.aiInterceptorCleanup = () => {
       window.fetch = originalFetch;
+      UIUXService.aiInterceptorInstalled = false;
+      UIUXService.originalFetchRef = null;
     };
+    UIUXService.aiInterceptorInstalled = true;
   }
 
   // ─── Lifecycle ───────────────────────────────────────────────────────

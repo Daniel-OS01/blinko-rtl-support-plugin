@@ -237,11 +237,11 @@ jobs:
             fi
           }
 
-          JS_FILE=$(ls dist/*.js 2>/dev/null | head -n 1)
-          CSS_FILE=$(ls dist/*.css 2>/dev/null | head -n 1)
+          JS_FILE=$(ls release/*.js 2>/dev/null | head -n 1)
+          CSS_FILE=$(ls release/*.css 2>/dev/null | head -n 1)
 
           if [ -z "$JS_FILE" ] || [ -z "$CSS_FILE" ]; then
-            echo "::error::Expected dist/*.js and dist/*.css output files were not found"
+            echo "::error::Expected release/*.js and release/*.css output files were not found"
             exit 1
           fi
 
@@ -259,8 +259,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ github.run_id }}
-          path: dist/
+          name: release-${{ github.run_id }}
+          path: release/
           retention-days: 7
 
   # ─── Job 4: Visual Verification (optional, non-blocking) ──────────────────

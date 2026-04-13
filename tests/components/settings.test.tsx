@@ -175,19 +175,12 @@ describe("RTLSetting Component", () => {
       URL.createObjectURL = mockCreateObjectURL;
       URL.revokeObjectURL = mockRevokeObjectURL;
 
-      const { getByText } = render(<RTLSetting />);
-
-      // Navigate to Advanced
-      // Use querySelector to find the exact button to avoid ambiguity with headings
-      const advancedTab = document.body.querySelector('button:last-child');
-      if (!advancedTab || advancedTab.textContent !== 'Advanced') {
-          // Fallback if structure changes, but try to find by text if possible with specific selector
-      }
+      render(<RTLSetting />);
 
       const buttons = document.body.querySelectorAll('button');
-      let foundTab = null;
+      let foundTab: HTMLButtonElement | null = null;
       buttons.forEach(btn => {
-          if (btn.textContent === 'Advanced') foundTab = btn;
+          if (btn.textContent?.includes('Tools')) foundTab = btn as HTMLButtonElement;
       });
 
       if (foundTab) fireEvent.click(foundTab);

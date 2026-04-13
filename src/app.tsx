@@ -13,7 +13,13 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
   const [sensitivity, setSensitivity] = useState(15); // Default 15%
   const [isFixing, setIsFixing] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
-  const i18n = window.Blinko.i18n;
+  const t = (key: string): string => {
+    const i18n = (window as any).Blinko?.i18n;
+    if (i18n && typeof i18n.t === 'function') {
+      return i18n.t(key);
+    }
+    return key;
+  };
 
   // Poll for stats
   useEffect(() => {
@@ -91,7 +97,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
     (window as any).blinkoRTL?.toggle();
     const isEnabled = (window as any).blinkoRTL?.isEnabled();
     window.Blinko.toast.success(
-      isEnabled ? i18n.t('rtl_enabled') : i18n.t('rtl_disabled')
+      isEnabled ? t('rtl_enabled') : t('rtl_disabled')
     );
   };
 
@@ -122,7 +128,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
             padding: '4px',
             borderRadius: '4px'
           }}
-          title={i18n.t('manual_toggle')}
+          title={t('manual_toggle')}
         >
           🔄
         </button>
