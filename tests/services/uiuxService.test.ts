@@ -455,11 +455,14 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     document.body.innerHTML = '';
     document.body.className = '';
     jest.clearAllMocks();
+    // Re-create a fresh service per test so event listeners don't leak/duplicate
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
+    // Prevent event listener leak between tests in happy-dom by explicitly clearing the DOM
+    document.body.innerHTML = '';
   });
 
   it('clicking outside the editor fires the close button', () => {
