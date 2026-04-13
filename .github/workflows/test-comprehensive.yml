@@ -18,7 +18,7 @@
 #
 # Maintenance:
 #   - Regenerate bun.lockb: `bun install` locally with Bun 1.2.5 then commit
-#   - Node.js 24 deadline: June 2, 2026 — upgrade checkout/cache to v5
+#   - Node.js 24 runtime is explicitly enabled for JavaScript actions
 # ──────────────────────────────────────────────────────────────────────────────
 name: Comprehensive Tests
 
