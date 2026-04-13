@@ -184,10 +184,14 @@ describe("RTLSetting Component", () => {
           // Fallback if structure changes, but try to find by text if possible with specific selector
       }
 
+      // The tabs are managed inside a wrapper component or top level, usually called "Advanced".
+      // But the text is actually "🛠️ Advanced Configuration", so we should click the tab button "Tools" or "Advanced"
       const buttons = document.body.querySelectorAll('button');
       let foundTab = null;
       buttons.forEach(btn => {
-          if (btn.textContent === 'Advanced') foundTab = btn;
+          if (btn.textContent?.includes('Tools') || btn.textContent?.includes('Advanced') || btn.textContent?.includes('🧰 Tools')) {
+              foundTab = btn;
+          }
       });
 
       if (foundTab) fireEvent.click(foundTab);
@@ -199,6 +203,13 @@ describe("RTLSetting Component", () => {
       exportBtns.forEach(btn => {
           if (btn.textContent?.includes('Export Settings')) exportBtn = btn;
       });
+
+      // Fallback selector using more generic text matching
+      if (!exportBtn) {
+          exportBtns.forEach(btn => {
+              if (btn.textContent?.includes('Export') && btn.textContent?.includes('Settings')) exportBtn = btn;
+          });
+      }
 
       if (!exportBtn) throw new Error('Export button not found');
       fireEvent.click(exportBtn);
