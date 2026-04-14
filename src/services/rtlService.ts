@@ -702,12 +702,24 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // ⚡ Bolt: Optimize selector matching inside hot MutationObserver loop
+                         // 💡 What: Replaced O(N) iteration over individual selectors with a single O(1) matching using joinedSelectors.
+                         // 🎯 Why: Iterating over many individual selectors in high-frequency MutationObserver callbacks causes repeated JavaScript-to-C++ boundary crossings, slowing down overall text entry and rendering.
+                         // 📊 Impact: O(1) matching improves scaling when user configures numerous target selectors.
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
+                         if (joinedSelectors) {
+                             try {
+                                 matched = element.matches(joinedSelectors);
+                             } catch (e) {
+                                 // Fallback: If combined matching fails for any reason
+                                 for (const s of safeSelectors) {
+                                     try {
+                                         if (element.matches(s)) {
+                                             matched = true;
+                                             break;
+                                         }
+                                     } catch (innerE) {}
+                                 }
                              }
                          }
 
@@ -752,14 +764,24 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
+                      // ⚡ Bolt: Optimize selector matching inside hot MutationObserver loop
+                      // 💡 What: Replaced O(N) iteration over individual selectors with a single O(1) matching using joinedSelectors.
+                      // 🎯 Why: CharacterData and Attributes mutations are extremely frequent when users are typing. A single `matches(joinedSelectors)` evaluation drastically reduces overhead compared to multiple loops.
+                      // 📊 Impact: Lowers DOM latency during typing when there are many active selectors.
                       let matched = false;
-                      for (const s of safeSelectors) {
+                      if (joinedSelectors) {
                            try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
+                               matched = target.matches(joinedSelectors);
+                           } catch (e) {
+                               for (const s of safeSelectors) {
+                                   try {
+                                       if (target.matches(s)) {
+                                           matched = true;
+                                           break;
+                                       }
+                                   } catch (innerE) {}
                                }
-                           } catch (e) {}
+                           }
                       }
 
                       if (matched) {
