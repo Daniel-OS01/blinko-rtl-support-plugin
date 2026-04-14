@@ -14,12 +14,26 @@ export class RegexStrategy implements DetectionStrategy {
   private checkArabic: boolean;
   private threshold: number; // Ratio 0.0 - 1.0
   private minRTLChars: number = 3;
+  private rtlRegex: RegExp | null = null;
 
   constructor(checkHebrew: boolean = true, checkArabic: boolean = true, threshold: number = 0.3, minRTLChars: number = 3) {
     this.checkHebrew = checkHebrew;
     this.checkArabic = checkArabic;
     this.threshold = threshold;
     this.minRTLChars = minRTLChars;
+    this.updateRegex();
+  }
+
+  private updateRegex(): void {
+    const patterns: string[] = [];
+    if (this.checkHebrew) patterns.push(this.hebrewPattern);
+    if (this.checkArabic) patterns.push(this.arabicPattern);
+
+    if (patterns.length === 0) {
+      this.rtlRegex = null;
+    } else {
+      this.rtlRegex = new RegExp(`[${patterns.join('')}]`, 'g');
+    }
   }
 
   updateConfig(config: { minRTLChars?: number, threshold?: number }): void {
@@ -34,19 +48,9 @@ export class RegexStrategy implements DetectionStrategy {
   detect(text: string): boolean {
     if (!text || !text.trim()) return false;
 
-    // Clean text: remove non-alphabetic chars (optional, but good for ratio)
-    // Actually, we should count total words or characters that are "strong" (L or R).
-    // Simplifying: Count total alphanumeric characters vs RTL characters.
+    if (!this.rtlRegex) return false;
 
-    // Match all RTL chars
-    let patterns: string[] = [];
-    if (this.checkHebrew) patterns.push(this.hebrewPattern);
-    if (this.checkArabic) patterns.push(this.arabicPattern);
-
-    if (patterns.length === 0) return false;
-
-    const rtlRegex = new RegExp(`[${patterns.join('')}]`, 'g');
-    const matches = text.match(rtlRegex);
+    const matches = text.match(this.rtlRegex);
 
     if (!matches) return false;
 
