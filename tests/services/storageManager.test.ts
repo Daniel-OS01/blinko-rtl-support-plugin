@@ -87,4 +87,70 @@ describe("StorageManager", () => {
         expect(loaded).toEqual(userSettings);
         expect(loaded!.autoDetect).toBe(false);
     });
+
+    describe("import", () => {
+        let importManager;
+        beforeEach(() => {
+            importManager = new StorageManager();
+        });
+
+        it("should throw 'Invalid JSON format' on invalid json string", () => {
+            expect(() => importManager.import("invalid json")).toThrow("Invalid JSON format");
+        });
+
+        it("should throw 'Invalid import data: Root must be an object' if root is not an object", () => {
+            expect(() => importManager.import("true")).toThrow("Invalid import data: Root must be an object");
+            expect(() => importManager.import("42")).toThrow("Invalid import data: Root must be an object");
+            expect(() => importManager.import("null")).toThrow("Invalid import data: Root must be an object");
+        });
+
+        it("should throw 'Invalid import data: Missing settings data' if structure is valid but data is missing", () => {
+            expect(() => importManager.import(JSON.stringify({ version: 1 }))).toThrow("Invalid import data: Missing settings data");
+            expect(() => importManager.import(JSON.stringify({ source: "blinko-rtl-support-plugin" }))).toThrow("Invalid import data: Missing settings data");
+        });
+
+        it("should throw 'Invalid settings: targetSelectors must be an array' if targetSelectors is missing or not an array", () => {
+            const invalidData = { data: { minRTLChars: 5 } };
+            expect(() => importManager.import(JSON.stringify(invalidData))).toThrow("Invalid settings: targetSelectors must be an array");
+
+            const invalidData2 = { data: { targetSelectors: "not an array" } };
+            expect(() => importManager.import(JSON.stringify(invalidData2))).toThrow("Invalid settings: targetSelectors must be an array");
+        });
+
+        it("should throw 'Invalid settings: minRTLChars must be a number' if minRTLChars is not a number", () => {
+            const invalidData = { data: { targetSelectors: [], minRTLChars: "5" } };
+            expect(() => importManager.import(JSON.stringify(invalidData))).toThrow("Invalid settings: minRTLChars must be a number");
+        });
+
+        it("should sanitize dynamicCSS if not a string", () => {
+            const dataWithInvalidCSS = { data: { targetSelectors: [], dynamicCSS: 123 } };
+            const result = importManager.import(JSON.stringify(dataWithInvalidCSS));
+            expect(result.dynamicCSS).toBe("");
+        });
+
+        it("should import standard schema successfully", () => {
+            const validData = {
+                version: 1,
+                source: "blinko-rtl-support-plugin",
+                data: {
+                    targetSelectors: [".test"],
+                    minRTLChars: 10,
+                    dynamicCSS: "body { direction: rtl; }"
+                }
+            };
+            const result = importManager.import(JSON.stringify(validData));
+            expect(result).toEqual(validData.data);
+        });
+
+        it("should import legacy raw format successfully", () => {
+            const legacyData = {
+                targetSelectors: [".legacy"],
+                minRTLChars: 3,
+                dynamicCSS: ".rtl {}"
+            };
+            const result = importManager.import(JSON.stringify(legacyData));
+            expect(result).toEqual(legacyData);
+        });
+    });
+
 });
