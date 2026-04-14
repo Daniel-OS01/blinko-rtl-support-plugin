@@ -58,22 +58,11 @@ export class RegexStrategy implements DetectionStrategy {
 
     // Support minRTLChars check
     if (rtlCount < this.minRTLChars) {
-        // However, if the text is VERY short, we might want to allow it if it's purely RTL.
+        // If the text is purely RTL, we accept it even if it's shorter than minRTLChars.
         // E.g. "כן" (yes) is 2 chars.
-        // If minRTLChars is 3, "כן" fails.
-        // Maybe we should only enforce minRTLChars if the text is longer than minRTLChars?
-        // Or if ratio is high enough?
-
-        // If ratio is 1.0 (pure RTL), we should probably accept it even if short?
-        // But tests might expect strict minRTLChars.
-        // Let's assume strict minRTLChars for now based on parameter name.
-        // Exception: If the whole text length is small but > 0
-        if (text.trim().length >= this.minRTLChars) {
-             return false;
+        if (rtlCount > 0 && rtlCount === text.trim().length) {
+            return true;
         }
-        // If text is shorter than minRTLChars, we might still reject it if we want to be strict.
-        // But let's verify what 'should respect minRTLChars' test expects.
-        // If input has < minRTLChars RTL characters, it should return false.
         return false;
     }
 

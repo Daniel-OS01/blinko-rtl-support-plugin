@@ -14,18 +14,26 @@ describe("RTLDetector Configuration Respect", () => {
 
     it("respects minRTLChars updateConfig", () => {
         const detector = new RTLDetector({ minRTLChars: 2 });
-        expect(detector.detectRTL("א")).toBe(false); // 1 char, min 2
+        // Pure RTL is accepted regardless of minRTLChars
+        expect(detector.detectRTL("א")).toBe(true);
+
+        // Mixed text below minRTLChars is rejected
+        expect(detector.detectRTL("אa")).toBe(false);
 
         detector.updateConfig({ minRTLChars: 1 });
-        expect(detector.detectRTL("א")).toBe(true); // 1 char, min 1
+        expect(detector.detectRTL("אa")).toBe(true);
     });
 });
 
 describe("RegexStrategy Optimized", () => {
     it("counts matches correctly for minRTLChars > 1", () => {
         const strategy = new RegexStrategy(true, true, 0.0, 3);
-        expect(strategy.detect("אא")).toBe(false);
+        // Pure RTL is accepted regardless of minRTLChars
+        expect(strategy.detect("אא")).toBe(true);
         expect(strategy.detect("אאא")).toBe(true);
+
+        // Mixed text respects minRTLChars
+        expect(strategy.detect("אאa")).toBe(false);
     });
 
     it("handles updates via updateConfig", () => {
