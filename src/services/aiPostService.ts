@@ -17,7 +17,7 @@ import { AIPostSettings, DEFAULT_AI_POST_SETTINGS } from '../types';
 const STORAGE_KEY = 'blinko-ai-post-settings';
 
 /** Minimal shape the service needs from a Blinko Note */
-export interface NoteRef {
+interface NoteRef {
   id?: number | null;
   content?: string | null;
   tags?: Array<{ name?: string | null }> | null;
