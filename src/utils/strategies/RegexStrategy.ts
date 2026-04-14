@@ -14,12 +14,26 @@ export class RegexStrategy implements DetectionStrategy {
   private checkArabic: boolean;
   private threshold: number; // Ratio 0.0 - 1.0
   private minRTLChars: number = 3;
+  private rtlRegex: RegExp | null = null;
 
   constructor(checkHebrew: boolean = true, checkArabic: boolean = true, threshold: number = 0.3, minRTLChars: number = 3) {
     this.checkHebrew = checkHebrew;
     this.checkArabic = checkArabic;
     this.threshold = threshold;
     this.minRTLChars = minRTLChars;
+    this.updateRegex();
+  }
+
+  private updateRegex(): void {
+    const patterns: string[] = [];
+    if (this.checkHebrew) patterns.push(this.hebrewPattern);
+    if (this.checkArabic) patterns.push(this.arabicPattern);
+
+    if (patterns.length === 0) {
+      this.rtlRegex = null;
+    } else {
+      this.rtlRegex = new RegExp(`[${patterns.join('')}]`, 'g');
+    }
   }
 
   updateConfig(config: { minRTLChars?: number, threshold?: number }): void {
@@ -34,19 +48,9 @@ export class RegexStrategy implements DetectionStrategy {
   detect(text: string): boolean {
     if (!text || !text.trim()) return false;
 
-    // Clean text: remove non-alphabetic chars (optional, but good for ratio)
-    // Actually, we should count total words or characters that are "strong" (L or R).
-    // Simplifying: Count total alphanumeric characters vs RTL characters.
+    if (!this.rtlRegex) return false;
 
-    // Match all RTL chars
-    let patterns: string[] = [];
-    if (this.checkHebrew) patterns.push(this.hebrewPattern);
-    if (this.checkArabic) patterns.push(this.arabicPattern);
-
-    if (patterns.length === 0) return false;
-
-    const rtlRegex = new RegExp(`[${patterns.join('')}]`, 'g');
-    const matches = text.match(rtlRegex);
+    const matches = text.match(this.rtlRegex);
 
     if (!matches) return false;
 
@@ -54,22 +58,11 @@ export class RegexStrategy implements DetectionStrategy {
 
     // Support minRTLChars check
     if (rtlCount < this.minRTLChars) {
-        // However, if the text is VERY short, we might want to allow it if it's purely RTL.
+        // If the text is purely RTL, we accept it even if it's shorter than minRTLChars.
         // E.g. "כן" (yes) is 2 chars.
-        // If minRTLChars is 3, "כן" fails.
-        // Maybe we should only enforce minRTLChars if the text is longer than minRTLChars?
-        // Or if ratio is high enough?
-
-        // If ratio is 1.0 (pure RTL), we should probably accept it even if short?
-        // But tests might expect strict minRTLChars.
-        // Let's assume strict minRTLChars for now based on parameter name.
-        // Exception: If the whole text length is small but > 0
-        if (text.trim().length >= this.minRTLChars) {
-             return false;
+        if (rtlCount > 0 && rtlCount === text.trim().length) {
+            return true;
         }
-        // If text is shorter than minRTLChars, we might still reject it if we want to be strict.
-        // But let's verify what 'should respect minRTLChars' test expects.
-        // If input has < minRTLChars RTL characters, it should return false.
         return false;
     }
 
