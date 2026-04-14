@@ -8,6 +8,8 @@ import { StorageManager } from './storageManager';
 export class RTLService {
   private detector: RTLDetector;
   private isRTLEnabled: boolean = false;
+  private validSelectorsCache = new Map<string, boolean>();
+  private dummyElement = document.createElement('div');
   private baseStyleElement: HTMLStyleElement | null = null;
   private styleElement: HTMLStyleElement | null = null;
   private permanentStyleElement: HTMLStyleElement | null = null;
@@ -637,14 +639,21 @@ export class RTLService {
       );
 
       // Build a safe matching function or list
-      // We can't check 'matches' with invalid selectors without try-catch
+      // We use a dummy element and cache to safely and efficiently test selector validity without DOM traversal
       const safeSelectors: string[] = [];
       activeSelectors.forEach(s => {
-          try {
-              document.querySelector(s); // Just to test validity, or trust the loop below
+          let isValid = this.validSelectorsCache.get(s);
+          if (isValid === undefined) {
+              try {
+                  this.dummyElement.matches(s);
+                  isValid = true;
+              } catch (e) {
+                  isValid = false;
+              }
+              this.validSelectorsCache.set(s, isValid);
+          }
+          if (isValid) {
               safeSelectors.push(s);
-          } catch (e) {
-              // Ignore invalid
           }
       });
 
