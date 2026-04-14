@@ -608,7 +608,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     window.fetch = jest.fn().mockResolvedValue({ status: 401, ok: false }) as any;
     service.updateSettings({ interceptAIErrors: true });
 
-    await window.fetch('https://blinko.app/api/trpc/ai.autoTag');
+    await window.fetch('http://localhost/api/trpc/ai.autoTag');
 
     // Wait for the setTimeout(0) inside interceptor
     await new Promise(resolve => setTimeout(resolve, 10));
@@ -622,7 +622,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     window.fetch = jest.fn().mockResolvedValue({ status: 401, ok: false }) as any;
     service.updateSettings({ interceptAIErrors: true });
 
-    await window.fetch('https://blinko.app/api/trpc/ai.writing');
+    await window.fetch('http://localhost/api/trpc/ai.writing');
 
     await new Promise(resolve => setTimeout(resolve, 10));
 
@@ -635,7 +635,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     window.fetch = jest.fn().mockResolvedValue({ status: 401, ok: false }) as any;
     service.updateSettings({ interceptAIErrors: true });
 
-    await window.fetch('https://blinko.app/api/trpc/notes.list');
+    await window.fetch('http://localhost/api/trpc/notes.list');
 
     await new Promise(resolve => setTimeout(resolve, 10));
 
@@ -646,7 +646,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     window.fetch = jest.fn().mockResolvedValue({ status: 200, ok: true }) as any;
     service.updateSettings({ interceptAIErrors: true });
 
-    await window.fetch('https://blinko.app/api/trpc/ai.autoTag');
+    await window.fetch('http://localhost/api/trpc/ai.autoTag');
 
     await new Promise(resolve => setTimeout(resolve, 10));
 
@@ -658,7 +658,7 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     window.fetch = jest.fn().mockResolvedValue(mockResponse) as any;
     service.updateSettings({ interceptAIErrors: true });
 
-    const result = await window.fetch('https://blinko.app/api/trpc/ai.autoTag');
+    const result = await window.fetch('http://localhost/api/trpc/ai.autoTag');
 
     expect(result).toBe(mockResponse);
   });

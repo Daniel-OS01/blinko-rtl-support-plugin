@@ -480,8 +480,26 @@ export class UIUXService {
     return String(input);
   }
 
-  private isAIEndpointUrl(url: string): boolean {
-    return url.includes('ai.autoTag') || url.includes('ai.writing') || url.includes('/trpc/ai');
+  private isAIEndpointUrl(urlStr: string): boolean {
+    try {
+      // Security Pattern: strict origin and pathname validation for API interception
+      // Use 'http://localhost' as base if window.location is 'about:blank', 'null', etc.
+      const originStr = window.location.origin;
+      const isValidOrigin = originStr && originStr !== 'null' && !originStr.includes('about:');
+      const base = isValidOrigin ? originStr : 'http://localhost';
+
+      const url = new URL(urlStr, base);
+
+      if (isValidOrigin && url.origin !== originStr) {
+        return false;
+      }
+
+      return url.pathname.includes('ai.autoTag') ||
+             url.pathname.includes('ai.writing') ||
+             url.pathname.includes('/trpc/ai');
+    } catch {
+      return false;
+    }
   }
 
   private restoreAIErrorInterceptor(): void {
