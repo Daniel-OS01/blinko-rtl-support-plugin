@@ -477,11 +477,33 @@ export class UIUXService {
   private extractFetchUrl(input: RequestInfo | URL): string {
     if (typeof input === 'string') return input;
     if (input instanceof Request) return input.url;
+    if (input instanceof URL) return input.href;
     return String(input);
   }
 
-  private isAIEndpointUrl(url: string): boolean {
-    return url.includes('ai.autoTag') || url.includes('ai.writing') || url.includes('/trpc/ai');
+  private isAIEndpointUrl(urlStr: string): boolean {
+    try {
+      // Use current window origin as base for relative URLs
+      const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+      const url = new URL(urlStr, base);
+
+      // Security: Only intercept requests to our own origin to prevent
+      // attackers from triggering guidance toasts via external links.
+      if (typeof window !== 'undefined' && url.origin !== window.location.origin) {
+        return false;
+      }
+
+      // Strictly match Blinko's tRPC AI endpoints
+      const p = url.pathname;
+      return (
+        p === '/api/trpc/ai.autoTag' ||
+        p === '/api/trpc/ai.writing' ||
+        p.startsWith('/api/trpc/ai.') ||
+        p.startsWith('/api/trpc/ai/')
+      );
+    } catch {
+      return false;
+    }
   }
 
   private restoreAIErrorInterceptor(): void {
