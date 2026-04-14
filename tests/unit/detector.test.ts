@@ -49,10 +49,13 @@ describe("RTL Detection", () => {
     describe("RTLDetector (Integration)", () => {
         test("should use CombinedStrategy by default", () => {
             const detector = new RTLDetector({ minRTLChars: 2 });
-            // "ש" -> 1 char, min 2. Regex returns false. CharCode returns false (minRTLChars 3 default in CharCodeStrategy unless overridden).
-            // Wait, RTLDetector sets minRTLChars in config passed to Strategies?
-            // Yes, we updated RTLDetector to pass config.
-            expect(detector.detectRTL("ש")).toBe(false);
+            // "ש" is 1 char, purely RTL. Now accepted by RegexStrategy regardless of minRTLChars.
+            expect(detector.detectRTL("ש")).toBe(true);
+
+            // "שa" -> 2 chars total, 1 RTL. minRTLChars 2 not met. Ratio 0.5.
+            // RegexStrategy: rtlCount (1) < minRTLChars (2), not pure RTL -> False
+            // CharCodeStrategy: sensitivity 'medium' -> 15% threshold. 1/2 = 50% > 15% BUT minRTLChars 2 not met -> False
+            expect(detector.detectRTL("שa")).toBe(false);
             expect(detector.detectRTL("של")).toBe(true);
         });
     });
