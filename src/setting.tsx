@@ -2558,8 +2558,10 @@ export function RTLSetting(): JSX.Element {
                 <button
                   onClick={() => setShowApiToken(v => !v)}
                   style={{ padding: '6px 10px', borderRadius: '5px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, background: settings.darkMode ? '#333' : '#f0f0f0', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+                  aria-label={showApiToken ? "Hide API token" : "Show API token"}
+                  aria-pressed={showApiToken}
                 >
-                  {showApiToken ? '🙈 Hide' : '👁 Show'}
+                  <span aria-hidden="true">{showApiToken ? '🙈 Hide' : '👁 Show'}</span>
                 </button>
               </div>
             </div>
@@ -2595,8 +2597,10 @@ export function RTLSetting(): JSX.Element {
                   }
                 }}
                 style={{ background: apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? '#888' : '#5a2d9b', color: '#fff', border: 'none', padding: '7px 14px', borderRadius: '5px', cursor: apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: '600' }}
+                aria-label={apiConnTesting ? "Testing connection" : "Test API connection"}
+                aria-busy={apiConnTesting}
               >
-                {apiConnTesting ? '⏳ Testing…' : '🧪 Test Connection'}
+                <span aria-hidden="true">{apiConnTesting ? '⏳ Testing…' : '🧪 Test Connection'}</span>
               </button>
               {apiConnTestResult && (
                 <span style={{ fontSize: '12px', color: apiConnTestResult.startsWith('✅') ? '#22a55a' : '#c0392b' }}>
