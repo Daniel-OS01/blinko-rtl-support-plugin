@@ -702,12 +702,20 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // Check matches efficiently by using a single combined selector call
+                         // to minimize JS-to-C++ boundary crossings for high-frequency events
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
+                         if (joinedSelectors) {
+                             try {
+                                 matched = element.matches(joinedSelectors);
+                             } catch (e) {
+                                 // Fallback to loop if joined selector throws an error
+                                 for (const s of safeSelectors) {
+                                     if (element.matches(s)) {
+                                         matched = true;
+                                         break;
+                                     }
+                                 }
                              }
                          }
 
