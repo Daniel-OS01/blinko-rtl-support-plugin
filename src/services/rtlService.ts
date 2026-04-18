@@ -702,12 +702,19 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // ⚡ Bolt: Optimize selector matching by evaluating all safe selectors
+                         // in a single C++ boundary crossing using joinedSelectors.
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
+                         if (joinedSelectors) {
+                             try {
+                                 matched = element.matches(joinedSelectors);
+                             } catch (e) {
+                                 for (const s of safeSelectors) {
+                                     if (element.matches(s)) {
+                                         matched = true;
+                                         break;
+                                     }
+                                 }
                              }
                          }
 
@@ -752,14 +759,22 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
+                      // ⚡ Bolt: Optimize selector matching by evaluating all safe selectors
+                      // in a single C++ boundary crossing using joinedSelectors.
                       let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
+                      if (joinedSelectors) {
+                          try {
+                              matched = target.matches(joinedSelectors);
+                          } catch (e) {
+                              for (const s of safeSelectors) {
+                                  try {
+                                      if (target.matches(s)) {
+                                          matched = true;
+                                          break;
+                                      }
+                                  } catch (err) {}
+                              }
+                          }
                       }
 
                       if (matched) {
