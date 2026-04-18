@@ -136,7 +136,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
           aria-label={t('manual_toggle')}
           aria-pressed={isRTLEnabled}
         >
-          🔄
+          <span aria-hidden="true">🔄</span>
         </button>
       </div>
 
@@ -205,7 +205,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
 
       {/* Sensitivity Slider */}
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+        <div id="sensitivity-label" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
           <strong>Detection Sensitivity</strong>
           <span style={{ color: '#007bff' }}>{sensitivity}%</span>
         </div>
@@ -216,6 +216,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
           value={sensitivity}
           onChange={handleSensitivityChange}
           style={{ width: '100%', cursor: 'pointer' }}
+          aria-labelledby="sensitivity-label"
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#999', marginTop: '4px' }}>
           <span>More Sensitive (1%)</span>
