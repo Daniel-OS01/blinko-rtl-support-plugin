@@ -136,7 +136,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
           aria-label={t('manual_toggle')}
           aria-pressed={isRTLEnabled}
         >
-          🔄
+          <span aria-hidden="true">🔄</span>
         </button>
       </div>
 
