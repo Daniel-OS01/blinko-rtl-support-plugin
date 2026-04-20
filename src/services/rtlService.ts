@@ -703,11 +703,21 @@ export class RTLService {
                          }
 
                          // Check individual matches safely
+                         // ⚡ Bolt: Batch multiple CSS selectors into a single string for element.matches()
+                         // to minimize JavaScript-to-C++ boundary crossings in high-frequency MutationObserver events.
+                         // Note: joinedSelectors is safely pre-computed in the outer scope setupObserver method.
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
+                         if (joinedSelectors) {
+                             try {
+                                 matched = element.matches(joinedSelectors);
+                             } catch (e) {
+                                 // Fallback to loop if joinedSelectors is somehow invalid
+                                 for (const s of safeSelectors) {
+                                     if (element.matches(s)) {
+                                         matched = true;
+                                         break;
+                                     }
+                                 }
                              }
                          }
 
@@ -752,14 +762,23 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
+                      // ⚡ Bolt: Batch multiple CSS selectors into a single string for element.matches()
+                      // to minimize JavaScript-to-C++ boundary crossings in high-frequency MutationObserver events.
+                      // Note: joinedSelectors is safely pre-computed in the outer scope setupObserver method.
                       let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
+                      if (joinedSelectors) {
+                          try {
+                              matched = target.matches(joinedSelectors);
+                          } catch (e) {
+                              for (const s of safeSelectors) {
+                                   try {
+                                       if (target.matches(s)) {
+                                           matched = true;
+                                           break;
+                                       }
+                                   } catch (e) {}
+                              }
+                          }
                       }
 
                       if (matched) {
