@@ -1573,9 +1573,10 @@ export function RTLSetting(): JSX.Element {
                 cursor: 'pointer',
                 opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
-              title="Delete selected preset"
+              title={(BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? "Cannot delete built-in presets" : "Delete selected preset"}
+              aria-label="Delete selected preset"
             >
-              🗑️
+              <span aria-hidden="true">🗑️</span>
             </button>
           </div>
         </div>
