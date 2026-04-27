@@ -10,21 +10,6 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   readonly name = 'CharacterCode';
   private config: RTLDetectionConfig;
 
-  // Hebrew: \u0590-\u05FF
-  // Arabic: \u0600-\u06FF
-  // Additional RTL: \u0700-\u074F, \u0780-\u07BF
-  private readonly RTL_RANGES = [
-    [0x0590, 0x05FF], // Hebrew
-    [0x0600, 0x06FF], // Arabic
-    [0x0700, 0x074F], // Syriac
-    [0x0750, 0x077F], // Arabic Supplement
-    [0x0780, 0x07BF], // Thaana
-    [0x08A0, 0x08FF], // Arabic Extended-A
-    [0xFB1D, 0xFB4F], // Hebrew Presentation Forms
-    [0xFB50, 0xFDFF], // Arabic Presentation Forms-A
-    [0xFE70, 0xFEFF], // Arabic Presentation Forms-B
-  ];
-
   constructor(config: RTLDetectionConfig = {
     sensitivity: 'medium',
     minRTLChars: 3,
@@ -34,11 +19,53 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
+   * Check if a character code is RTL
+   * ⚡ BOLT OPTIMIZATION: Replaced Array.prototype.some with direct integer comparisons
+   * for faster evaluation in the hot loop.
    */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+  private isRTLCode(code: number): boolean {
+    if (code >= 0x0590 && code <= 0x05FF) return true; // Hebrew
+    if (code >= 0x0600 && code <= 0x06FF) return true; // Arabic
+    if (code >= 0x0700 && code <= 0x074F) return true; // Syriac
+    if (code >= 0x0750 && code <= 0x077F) return true; // Arabic Supplement
+    if (code >= 0x0780 && code <= 0x07BF) return true; // Thaana
+    if (code >= 0x08A0 && code <= 0x08FF) return true; // Arabic Extended-A
+    if (code >= 0xFB1D && code <= 0xFB4F) return true; // Hebrew Presentation Forms
+    if (code >= 0xFB50 && code <= 0xFDFF) return true; // Arabic Presentation Forms-A
+    if (code >= 0xFE70 && code <= 0xFEFF) return true; // Arabic Presentation Forms-B
+    return false;
+  }
+
+  /**
+   * Check if a character code is significant (not whitespace or common punctuation)
+   * ⚡ BOLT OPTIMIZATION: Replaced Regex.test with direct integer comparisons.
+   */
+  private isSignificantCode(code: number): boolean {
+    // Common whitespace
+    if (code <= 32) return false;
+
+    // Non-breaking space
+    if (code === 160) return false;
+
+    // Punctuation .,!?;:()[\]{}
+    if (
+      code === 46 || // .
+      code === 44 || // ,
+      code === 33 || // !
+      code === 63 || // ?
+      code === 59 || // ;
+      code === 58 || // :
+      code === 40 || // (
+      code === 41 || // )
+      code === 91 || // [
+      code === 93 || // ]
+      code === 123 || // {
+      code === 125    // }
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -47,17 +74,32 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   public detect(text: string): boolean {
     if (!text || text.length === 0) return false;
 
-    // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
-
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
+    let codePointsCount = 0;
 
-    for (const char of sample) {
+    // ⚡ BOLT OPTIMIZATION: Standard for loop with charCodeAt over allocating string.substring
+    // and using for...of. Properly handles UTF-16 surrogate pairs.
+    for (let i = 0; i < text.length && codePointsCount < this.config.sampleSize; i++) {
+      const code = text.charCodeAt(i);
+
+      // Surrogate pair checking (SMP characters like emojis)
+      if (code >= 0xD800 && code <= 0xDBFF) {
+        const nextCode = text.charCodeAt(i + 1);
+        if (nextCode >= 0xDC00 && nextCode <= 0xDFFF) {
+          codePointsCount++;
+          totalSignificantChars++; // Surrogate pairs are generally significant for RTL calculations
+          i++; // Skip trailing surrogate
+          continue;
+        }
+      }
+
+      codePointsCount++;
+
       // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
+      if (this.isSignificantCode(code)) {
         totalSignificantChars++;
-        if (this.isRTLChar(char)) {
+        if (this.isRTLCode(code)) {
           rtlCharCount++;
         }
       }
