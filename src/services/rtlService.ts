@@ -29,6 +29,8 @@ export class RTLService {
   private actionLog: { timestamp: string; element: string; direction: string; textPreview: string }[] = [];
   private readonly MAX_LOG_SIZE = 50;
 
+  private joinedDisabledSelectors: string = '';
+
   // Hebrew regex from userscript
   private readonly hebrewRegex = /\p{Script=Hebrew}/u;
   private readonly arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
@@ -82,6 +84,22 @@ export class RTLService {
     return this.isRTLEnabled;
   }
 
+  private updateJoinedDisabledSelectors() {
+      if (!this.settings.disabledSelectors || this.settings.disabledSelectors.length === 0) {
+          this.joinedDisabledSelectors = '';
+          return;
+      }
+      const combined = this.settings.disabledSelectors.join(',');
+      try {
+          // Pre-validate the combined selector
+          this.dummyElement.matches(combined);
+          this.joinedDisabledSelectors = combined;
+      } catch (e) {
+          console.warn('Invalid combined disabledSelectors, falling back to loop:', e);
+          this.joinedDisabledSelectors = '';
+      }
+  }
+
   public loadSettings() {
     const loadedSettings = this.storageManager.load();
     if (loadedSettings) {
@@ -128,6 +146,8 @@ export class RTLService {
         this.settings.autoDetect = true;
         this.settings.enablePasteInterceptor = true;
     }
+
+    this.updateJoinedDisabledSelectors();
   }
 
   public updateSettings(newSettings: Partial<RTLSettings>) {
@@ -175,6 +195,8 @@ export class RTLService {
           detail: this.settings
         })
     );
+
+    this.updateJoinedDisabledSelectors();
   }
 
   // Import/Export Proxy Methods
@@ -377,7 +399,16 @@ export class RTLService {
     };
 
     // Skip disabled selectors
-    if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) {
+    if (this.joinedDisabledSelectors) {
+        try {
+            if (element.matches(this.joinedDisabledSelectors)) return;
+        } catch (e) {
+            // Fallback to loop if joined string is somehow invalid for this element
+            if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) {
+                return;
+            }
+        }
+    } else if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) {
         return;
     }
 
