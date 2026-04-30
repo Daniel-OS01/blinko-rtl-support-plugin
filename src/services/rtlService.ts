@@ -16,6 +16,7 @@ export class RTLService {
   private dynamicStyleElement: HTMLStyleElement | null = null;
   private observer: MutationObserver | null = null;
   private autoProcessInterval: any = null;
+  private joinedDisabledSelectors: string = '';
   // Managers
   private pasteInterceptor: PasteInterceptor;
   private storageManager: StorageManager;
@@ -48,6 +49,30 @@ export class RTLService {
     this.debouncedProcessQueue = debounce(() => {
        this.processPendingElements();
     }, 50);
+  }
+
+  private updateDisabledSelectorsCache() {
+    if (!this.settings.disabledSelectors || this.settings.disabledSelectors.length === 0) {
+      this.joinedDisabledSelectors = '';
+      return;
+    }
+    const safeSelectors: string[] = [];
+    this.settings.disabledSelectors.forEach(s => {
+      let isValid = this.validSelectorsCache.get(s);
+      if (isValid === undefined) {
+        try {
+          this.dummyElement.matches(s);
+          isValid = true;
+        } catch (e) {
+          isValid = false;
+        }
+        this.validSelectorsCache.set(s, isValid);
+      }
+      if (isValid) {
+        safeSelectors.push(s);
+      }
+    });
+    this.joinedDisabledSelectors = safeSelectors.join(', ');
   }
 
   public getSettings(): RTLSettings {
@@ -128,10 +153,13 @@ export class RTLService {
         this.settings.autoDetect = true;
         this.settings.enablePasteInterceptor = true;
     }
+
+    this.updateDisabledSelectorsCache();
   }
 
   public updateSettings(newSettings: Partial<RTLSettings>) {
     this.settings = { ...this.settings, ...newSettings };
+    this.updateDisabledSelectorsCache();
     this.storageManager.save(this.settings);
 
     this.detector.updateConfig({
@@ -377,8 +405,22 @@ export class RTLService {
     };
 
     // Skip disabled selectors
-    if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) {
-        return;
+    // 💡 What: Replaced array iteration (`some`) and individual `matches` calls with a single `matches` call on a pre-combined comma-separated selector string.
+    // 🎯 Why: `processElement` is called repeatedly for many elements (especially via MutationObserver). The overhead of array iteration and multiple JS-to-C++ DOM bindings for `matches` is high.
+    // 📊 Impact: O(1) DOM check instead of O(N). Significantly reduces execution time in the high-frequency event loop for elements.
+    if (this.joinedDisabledSelectors) {
+      try {
+        if (element.matches(this.joinedDisabledSelectors)) {
+          return;
+        }
+      } catch (e) {
+        // Fallback for unexpected invalid selector combinations
+        if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) {
+          return;
+        }
+      }
+    } else if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) {
+      return;
     }
 
     // Check if element is part of the UI shell that should be protected
