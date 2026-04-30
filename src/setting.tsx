@@ -1621,18 +1621,27 @@ export function RTLSetting(): JSX.Element {
           </button>
           
           <button
-            onClick={() => saveSettings({ customCSS: '' })}
-            disabled={!settings.enabled}
+            onClick={() => {
+              if (window.confirm("Are you sure you want to permanently delete all custom CSS? This cannot be undone.")) {
+                saveSettings({ customCSS: '' });
+                if (typeof window.Blinko?.toast?.success === 'function') {
+                  window.Blinko.toast.success('Custom CSS cleared.');
+                }
+              }
+            }}
+            disabled={!settings.enabled || !settings.customCSS?.trim()}
+            aria-label="Clear custom CSS code"
             style={{ 
               background: '#dc3545', 
               color: 'white', 
               border: 'none', 
               padding: '8px 16px', 
               borderRadius: '4px', 
-              cursor: 'pointer' 
+              cursor: (!settings.enabled || !settings.customCSS?.trim()) ? 'not-allowed' : 'pointer',
+              opacity: (!settings.enabled || !settings.customCSS?.trim()) ? 0.6 : 1
             }}
           >
-            🗑️ Clear CSS
+            <span aria-hidden="true">🗑️</span> Clear CSS
           </button>
         </div>
       </div>
