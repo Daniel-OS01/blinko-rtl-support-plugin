@@ -1562,6 +1562,7 @@ export function RTLSetting(): JSX.Element {
             </button>
 
             <button
+              type="button"
               onClick={deletePreset}
               disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
               style={{
@@ -1574,8 +1575,9 @@ export function RTLSetting(): JSX.Element {
                 opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
               title="Delete selected preset"
+              aria-label="Delete selected preset"
             >
-              🗑️
+              <span aria-hidden="true">🗑️</span>
             </button>
           </div>
         </div>
@@ -2518,10 +2520,11 @@ export function RTLSetting(): JSX.Element {
 
             {/* Blinko Instance URL */}
             <div style={{ marginBottom: '12px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '4px', color: settings.darkMode ? '#ccc' : '#333' }}>
+              <label htmlFor="blinkoApiUrl" style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '4px', color: settings.darkMode ? '#ccc' : '#333' }}>
                 Blinko Instance URL
               </label>
               <input
+                id="blinkoApiUrl"
                 type="text"
                 placeholder="https://blink.psy-tech.link"
                 value={aiPostSettings.blinkoApiUrl}
@@ -2538,11 +2541,12 @@ export function RTLSetting(): JSX.Element {
 
             {/* Bearer Token */}
             <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '4px', color: settings.darkMode ? '#ccc' : '#333' }}>
+              <label htmlFor="blinkoApiToken" style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '4px', color: settings.darkMode ? '#ccc' : '#333' }}>
                 Bearer Token
               </label>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <input
+                  id="blinkoApiToken"
                   type={showApiToken ? 'text' : 'password'}
                   placeholder="Paste your API token here"
                   value={aiPostSettings.blinkoApiToken}
@@ -2556,10 +2560,13 @@ export function RTLSetting(): JSX.Element {
                   style={{ flex: 1, padding: '7px 10px', borderRadius: '5px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, background: settings.darkMode ? '#222' : '#fff', color: settings.darkMode ? '#eee' : '#222', fontSize: '12px' }}
                 />
                 <button
+                  type="button"
+                  aria-label="Toggle API token visibility"
+                  aria-pressed={showApiToken}
                   onClick={() => setShowApiToken(v => !v)}
                   style={{ padding: '6px 10px', borderRadius: '5px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, background: settings.darkMode ? '#333' : '#f0f0f0', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
                 >
-                  {showApiToken ? '🙈 Hide' : '👁 Show'}
+                  {showApiToken ? <><span aria-hidden="true">🙈</span> Hide</> : <><span aria-hidden="true">👁</span> Show</>}
                 </button>
               </div>
             </div>
