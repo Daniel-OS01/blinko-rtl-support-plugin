@@ -1574,8 +1574,9 @@ export function RTLSetting(): JSX.Element {
                 opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
               title="Delete selected preset"
+              aria-label="Delete selected preset"
             >
-              🗑️
+              <span aria-hidden="true">🗑️</span>
             </button>
           </div>
         </div>
@@ -1631,8 +1632,9 @@ export function RTLSetting(): JSX.Element {
               borderRadius: '4px', 
               cursor: 'pointer' 
             }}
+            aria-label="Clear CSS"
           >
-            🗑️ Clear CSS
+            <><span aria-hidden="true">🗑️</span> Clear CSS</>
           </button>
         </div>
       </div>
@@ -2558,8 +2560,9 @@ export function RTLSetting(): JSX.Element {
                 <button
                   onClick={() => setShowApiToken(v => !v)}
                   style={{ padding: '6px 10px', borderRadius: '5px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, background: settings.darkMode ? '#333' : '#f0f0f0', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+                  aria-label={showApiToken ? 'Hide token' : 'Show token'}
                 >
-                  {showApiToken ? '🙈 Hide' : '👁 Show'}
+                  <><span aria-hidden="true">{showApiToken ? '🙈' : '👁'}</span> {showApiToken ? 'Hide' : 'Show'}</>
                 </button>
               </div>
             </div>
