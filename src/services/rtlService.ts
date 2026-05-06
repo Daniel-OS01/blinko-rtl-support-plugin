@@ -10,6 +10,7 @@ export class RTLService {
   private isRTLEnabled: boolean = false;
   private validSelectorsCache = new Map<string, boolean>();
   private dummyElement = document.createElement('div');
+  private joinedDisabledSelectors: string = '';
   private baseStyleElement: HTMLStyleElement | null = null;
   private styleElement: HTMLStyleElement | null = null;
   private permanentStyleElement: HTMLStyleElement | null = null;
@@ -48,6 +49,25 @@ export class RTLService {
     this.debouncedProcessQueue = debounce(() => {
        this.processPendingElements();
     }, 50);
+  }
+
+
+  private updateDisabledSelectorsCache() {
+      const selectors = this.settings.disabledSelectors || [];
+      const safeSelectors = selectors.filter(s => {
+          let isValid = this.validSelectorsCache.get(s);
+          if (isValid === undefined) {
+              try {
+                  this.dummyElement.matches(s);
+                  isValid = true;
+              } catch (e) {
+                  isValid = false;
+              }
+              this.validSelectorsCache.set(s, isValid);
+          }
+          return isValid;
+      });
+      this.joinedDisabledSelectors = safeSelectors.join(', ');
   }
 
   public getSettings(): RTLSettings {
@@ -113,6 +133,8 @@ export class RTLService {
             this.settings.enablePasteInterceptor = true;
         }
 
+        this.updateDisabledSelectorsCache();
+
         // Apply config to detector
         this.detector.updateConfig({
           sensitivity: this.settings.sensitivity,
@@ -132,6 +154,7 @@ export class RTLService {
 
   public updateSettings(newSettings: Partial<RTLSettings>) {
     this.settings = { ...this.settings, ...newSettings };
+    this.updateDisabledSelectorsCache();
     this.storageManager.save(this.settings);
 
     this.detector.updateConfig({
@@ -377,8 +400,13 @@ export class RTLService {
     };
 
     // Skip disabled selectors
-    if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) {
-        return;
+    if (this.joinedDisabledSelectors) {
+        try {
+            if (element.matches(this.joinedDisabledSelectors)) return;
+        } catch (e) {
+            // Fallback just in case
+            if (this.settings.disabledSelectors && this.settings.disabledSelectors.some(selector => safeMatches(element, selector))) return;
+        }
     }
 
     // Check if element is part of the UI shell that should be protected
@@ -702,13 +730,13 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // 💡 What: Replaced loop over safeSelectors with a single comma-separated query.
+                         // 🎯 Why: Calling .matches() in a tight loop inside a MutationObserver is extremely expensive.
+                         // Combining them into one string offloads the loop to the native C++ browser engine.
+                         // Check combined matches safely and quickly
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
-                             }
+                         if (joinedSelectors && element.matches(joinedSelectors)) {
+                             matched = true;
                          }
 
                          if (matched) {
@@ -753,11 +781,10 @@ export class RTLService {
                       }
 
                       let matched = false;
-                      for (const s of safeSelectors) {
+                      if (joinedSelectors) {
                            try {
-                               if (target.matches(s)) {
+                               if (target.matches(joinedSelectors)) {
                                    matched = true;
-                                   break;
                                }
                            } catch (e) {}
                       }
