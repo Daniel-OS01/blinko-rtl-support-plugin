@@ -702,12 +702,21 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // 💡 What: Replaced individual element.matches(s) checks inside a loop with a single element.matches(joinedSelectors) call.
+                         // 🎯 Why: Iterating over n safe selectors and calling matches() n times is much slower than a single matches() with a combined comma-separated selector.
+                         // 📊 Impact: Substantially reduces JavaScript-to-C++ boundary crossings during high-frequency DOM mutations.
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
+                         if (joinedSelectors) {
+                             try {
+                                 matched = element.matches(joinedSelectors);
+                             } catch (e) {
+                                 // Fallback if joinedSelectors somehow fails
+                                 for (const s of safeSelectors) {
+                                     if (element.matches(s)) {
+                                         matched = true;
+                                         break;
+                                     }
+                                 }
                              }
                          }
 
@@ -752,14 +761,24 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
+                      // 💡 What: Replaced individual target.matches(s) checks inside a loop with a single target.matches(joinedSelectors) call.
+                      // 🎯 Why: Iterating over n safe selectors and calling matches() n times is much slower than a single matches() with a combined comma-separated selector.
+                      // 📊 Impact: Substantially reduces JavaScript-to-C++ boundary crossings during high-frequency DOM mutations.
                       let matched = false;
-                      for (const s of safeSelectors) {
+                      if (joinedSelectors) {
                            try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
+                               matched = target.matches(joinedSelectors);
+                           } catch (e) {
+                               // Fallback if joinedSelectors somehow fails
+                               for (const s of safeSelectors) {
+                                    try {
+                                        if (target.matches(s)) {
+                                            matched = true;
+                                            break;
+                                        }
+                                    } catch (err) {}
                                }
-                           } catch (e) {}
+                           }
                       }
 
                       if (matched) {
