@@ -10,21 +10,6 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   readonly name = 'CharacterCode';
   private config: RTLDetectionConfig;
 
-  // Hebrew: \u0590-\u05FF
-  // Arabic: \u0600-\u06FF
-  // Additional RTL: \u0700-\u074F, \u0780-\u07BF
-  private readonly RTL_RANGES = [
-    [0x0590, 0x05FF], // Hebrew
-    [0x0600, 0x06FF], // Arabic
-    [0x0700, 0x074F], // Syriac
-    [0x0750, 0x077F], // Arabic Supplement
-    [0x0780, 0x07BF], // Thaana
-    [0x08A0, 0x08FF], // Arabic Extended-A
-    [0xFB1D, 0xFB4F], // Hebrew Presentation Forms
-    [0xFB50, 0xFDFF], // Arabic Presentation Forms-A
-    [0xFE70, 0xFEFF], // Arabic Presentation Forms-B
-  ];
-
   constructor(config: RTLDetectionConfig = {
     sensitivity: 'medium',
     minRTLChars: 3,
@@ -34,11 +19,20 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
+   * Check if a code point is RTL
    */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+  private isRTLCodePoint(code: number): boolean {
+    if (code < 0x0590) return false;
+    if (code <= 0x05FF) return true; // Hebrew
+    if (code >= 0x0600 && code <= 0x06FF) return true; // Arabic
+    if (code >= 0x0700 && code <= 0x074F) return true; // Syriac
+    if (code >= 0x0750 && code <= 0x077F) return true; // Arabic Supplement
+    if (code >= 0x0780 && code <= 0x07BF) return true; // Thaana
+    if (code >= 0x08A0 && code <= 0x08FF) return true; // Arabic Extended-A
+    if (code >= 0xFB1D && code <= 0xFB4F) return true; // Hebrew Presentation Forms
+    if (code >= 0xFB50 && code <= 0xFDFF) return true; // Arabic Presentation Forms-A
+    if (code >= 0xFE70 && code <= 0xFEFF) return true; // Arabic Presentation Forms-B
+    return false;
   }
 
   /**
@@ -47,19 +41,40 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   public detect(text: string): boolean {
     if (!text || text.length === 0) return false;
 
-    // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
-
+    // Limit check to sampleSize
+    const len = Math.min(text.length, this.config.sampleSize);
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
 
-    for (const char of sample) {
-      // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
-        totalSignificantChars++;
-        if (this.isRTLChar(char)) {
-          rtlCharCount++;
+    for (let i = 0; i < len; i++) {
+      const code = text.charCodeAt(i);
+
+      // Early ASCII bounds check for punctuation and whitespace
+      if (code <= 125) {
+        // Space, tab, newline, return
+        if (code === 32 || code === 9 || code === 10 || code === 13) continue;
+
+        // Punctuation: .,!?;:()[]{}"'
+        if (
+          (code >= 33 && code <= 47) ||
+          (code >= 58 && code <= 64) ||
+          (code >= 91 && code <= 96) ||
+          (code >= 123 && code <= 126)
+        ) {
+          continue;
         }
+      }
+
+      // Handle surrogates
+      if (code >= 0xD800 && code <= 0xDBFF) {
+        totalSignificantChars++;
+        i++; // skip low surrogate
+        continue;
+      }
+
+      totalSignificantChars++;
+      if (this.isRTLCodePoint(code)) {
+        rtlCharCount++;
       }
     }
 
