@@ -2557,9 +2557,10 @@ export function RTLSetting(): JSX.Element {
                 />
                 <button
                   onClick={() => setShowApiToken(v => !v)}
+                  aria-label={showApiToken ? 'Hide API Token' : 'Show API Token'}
                   style={{ padding: '6px 10px', borderRadius: '5px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, background: settings.darkMode ? '#333' : '#f0f0f0', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
                 >
-                  {showApiToken ? '🙈 Hide' : '👁 Show'}
+                  <span aria-hidden="true">{showApiToken ? '🙈 Hide' : '👁 Show'}</span>
                 </button>
               </div>
             </div>
