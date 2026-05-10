@@ -34,11 +34,35 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
+   * Check if a character code point is within RTL ranges
    */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+  private isRTLCode(code: number): boolean {
+    for (let i = 0; i < this.RTL_RANGES.length; i++) {
+      const range = this.RTL_RANGES[i];
+      if (code >= range[0] && code <= range[1]) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Fast check for whitespace and punctuation
+   */
+  private isSignificant(code: number): boolean {
+    // Quick ASCII check for common punctuation and whitespace
+    if (code <= 125) {
+      if (
+        code === 32 || (code >= 9 && code <= 13) || // Space and whitespace
+        code === 46 || code === 44 || code === 33 || code === 63 || // . , ! ?
+        code === 59 || code === 58 || code === 40 || code === 41 || // ; : ( )
+        code === 91 || code === 93 || code === 123 || code === 125  // [ ] { }
+      ) {
+        return false;
+      }
+    } else {
+      // Fallback for other whitespace (e.g. NBSP, Line/Paragraph Separator)
+      if (code === 160 || code === 8232 || code === 8233) return false;
+    }
+    return true;
   }
 
   /**
@@ -47,19 +71,22 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   public detect(text: string): boolean {
     if (!text || text.length === 0) return false;
 
-    // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
-
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
 
-    for (const char of sample) {
-      // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
-        totalSignificantChars++;
-        if (this.isRTLChar(char)) {
-          rtlCharCount++;
-        }
+    // Process up to sampleSize directly without substring allocation
+    const len = Math.min(text.length, this.config.sampleSize);
+
+    for (let i = 0; i < len; i++) {
+      const code = text.charCodeAt(i);
+
+      if (!this.isSignificant(code)) {
+        continue;
+      }
+
+      totalSignificantChars++;
+      if (this.isRTLCode(code)) {
+        rtlCharCount++;
       }
     }
 
