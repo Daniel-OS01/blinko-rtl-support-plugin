@@ -57,6 +57,8 @@ export class PasteInterceptor {
 
     const toast = document.createElement('div');
     toast.className = 'rtl-paste-toast';
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
     toast.innerHTML = `
       <div style="margin-bottom: 10px;">
         <strong style="display: block; margin-bottom: 5px;">Mixed content detected</strong>
@@ -67,7 +69,7 @@ export class PasteInterceptor {
         <button id="rtl-btn-wrap" style="flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-secondary, #6c757d); color: white; cursor: pointer;">Wrap (Isolation)</button>
         <button id="rtl-btn-original" style="flex: 1; padding: 6px 12px; border: 1px solid var(--b3-theme-surface-lighter, #ccc); border-radius: 4px; background: transparent; color: inherit; cursor: pointer;">Original</button>
       </div>
-      <button class="rtl-toast-close" style="position: absolute; top: 5px; right: 5px; border: none; background: transparent; cursor: pointer; font-size: 16px;">&times;</button>
+      <button class="rtl-toast-close" aria-label="Close" style="position: absolute; top: 5px; right: 5px; border: none; background: transparent; cursor: pointer; font-size: 16px;">&times;</button>
     `;
 
     // Apply styles
