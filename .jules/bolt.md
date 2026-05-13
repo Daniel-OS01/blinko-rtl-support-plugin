@@ -4,3 +4,6 @@
 ## 2024-05-18 - Optimize Selector Validation with dummyElement matches
 **Learning:** Validating selectors using `document.querySelector(s)` is extremely slow because it traverses the live document DOM, whereas `document.createElement('div').matches(s)` achieves the same syntax validation ~25x faster by skipping the DOM entirely.
 **Action:** Always prefer a dummy element's `.matches()` for validating CSS selectors, and cache the validation results in a Map or Set to completely eliminate repeated validation overhead during configuration setups like `setupObserver()`.
+## 2024-05-18 - Optimize NodeList iteration via for...of
+**Learning:** Converting NodeList objects returned by `querySelectorAll` into Arrays via `Array.from()` creates unnecessary array allocation overhead and degrades performance, especially in hot code paths or frequent DOM querying.
+**Action:** Always prefer iterating directly over NodeList objects using `for...of` loops. If `.find()` or `.some()` is needed, implement the logic manually within the loop using conditional statements and early `break` or `return` to skip allocating intermediate Arrays.
