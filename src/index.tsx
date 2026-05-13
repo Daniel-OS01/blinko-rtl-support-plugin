@@ -268,10 +268,12 @@ System.register([], (exports) => ({
 
                 const applyBtn = document.createElement('button');
                 applyBtn.textContent = '✅ Apply to Note';
+                applyBtn.setAttribute('aria-label', 'Apply to Note');
                 applyBtn.style.cssText = 'background:#28a745;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px;margin-right:8px;';
 
                 const cancelBtn = document.createElement('button');
                 cancelBtn.textContent = '✖ Cancel';
+                cancelBtn.setAttribute('aria-label', 'Cancel');
                 cancelBtn.style.cssText = 'background:#6c757d;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px;';
 
                 applyBtn.addEventListener('click', async () => {
