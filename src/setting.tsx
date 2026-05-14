@@ -919,6 +919,7 @@ export function RTLSetting(): JSX.Element {
           <button
             onClick={processAllContent}
             disabled={!settings.enabled}
+            aria-label="Process All Content"
             style={{ 
               background: '#28a745', 
               color: 'white', 
@@ -929,7 +930,7 @@ export function RTLSetting(): JSX.Element {
               fontWeight: '500'
             }}
           >
-            🔄 Process All Content
+            <span aria-hidden="true">🔄</span> Process All Content
           </button>
           
           <button
@@ -937,6 +938,7 @@ export function RTLSetting(): JSX.Element {
               window.blinkoRTL?.toggle();
               window.Blinko.toast.success('RTL toggled!');
             }}
+            aria-label="Toggle RTL"
             style={{ 
               background: '#007bff', 
               color: 'white', 
@@ -947,7 +949,7 @@ export function RTLSetting(): JSX.Element {
               fontWeight: '500'
             }}
           >
-            🔄 Toggle RTL (ع/א)
+            <span aria-hidden="true">🔄</span> Toggle RTL (ع/א)
           </button>
         </div>
       </div>
