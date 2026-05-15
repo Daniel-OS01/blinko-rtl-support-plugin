@@ -656,7 +656,7 @@ export function RTLSetting(): JSX.Element {
 
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
-    
+
     // Call service update if available
     if (window.blinkoRTL?.service) {
         window.blinkoRTL.service.updateSettings(newSettings);
@@ -886,12 +886,12 @@ export function RTLSetting(): JSX.Element {
   };
 
   return (
-    <div 
+    <div
       className={settings.darkMode ? 'rtl-settings-dark' : ''}
-      style={{ 
-        maxWidth: '700px', 
-        margin: '0 auto', 
-        padding: '20px', 
+      style={{
+        maxWidth: '700px',
+        margin: '0 auto',
+        padding: '20px',
         fontFamily: 'system-ui, sans-serif',
         background: settings.darkMode ? '#1a1a1a' : 'white',
         color: settings.darkMode ? '#e0e0e0' : '#000'
@@ -906,43 +906,43 @@ export function RTLSetting(): JSX.Element {
       </div>
 
       {/* Quick Actions */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '2px solid #007bff', 
-        borderRadius: '8px', 
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '2px solid #007bff',
+        borderRadius: '8px',
         background: settings.darkMode ? '#2c3e50' : '#f8f9ff'
       }}>
         <h3 style={{ margin: '0 0 15px 0', color: '#007bff' }}>⚡ Quick Actions</h3>
-        
+
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
           <button
             onClick={processAllContent}
             disabled={!settings.enabled}
-            style={{ 
-              background: '#28a745', 
-              color: 'white', 
-              border: 'none', 
-              padding: '10px 20px', 
-              borderRadius: '4px', 
+            style={{
+              background: '#28a745',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '4px',
               cursor: 'pointer',
               fontWeight: '500'
             }}
           >
             🔄 Process All Content
           </button>
-          
+
           <button
             onClick={() => {
               window.blinkoRTL?.toggle();
               window.Blinko.toast.success('RTL toggled!');
             }}
-            style={{ 
-              background: '#007bff', 
-              color: 'white', 
-              border: 'none', 
-              padding: '10px 20px', 
-              borderRadius: '4px', 
+            style={{
+              background: '#007bff',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '4px',
               cursor: 'pointer',
               fontWeight: '500'
             }}
@@ -1072,15 +1072,15 @@ export function RTLSetting(): JSX.Element {
 
       {/* Simple Settings */}
       {activeTab === 'simple' && (
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #ddd', 
-        borderRadius: '8px', 
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
         background: settings.darkMode ? '#333' : '#fafafa'
       }}>
         <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>🎛️ Basic Settings</h3>
-        
+
         <div style={{ display: 'grid', gap: '15px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
@@ -1486,15 +1486,15 @@ export function RTLSetting(): JSX.Element {
       </div>
 
       {/* Permanent CSS Settings */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #28a745', 
-        borderRadius: '8px', 
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '1px solid #28a745',
+        borderRadius: '8px',
         background: settings.darkMode ? '#1e3023' : '#f8fff8'
       }}>
         <h3 style={{ margin: '0 0 15px 0', color: '#28a745' }}>📌 Permanent CSS Settings</h3>
-        
+
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '500', cursor: 'pointer' }}>
             <input
@@ -1564,7 +1564,6 @@ export function RTLSetting(): JSX.Element {
             <button
               onClick={deletePreset}
               disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
-              aria-label="Delete selected preset"
               style={{
                 background: '#dc3545',
                 color: 'white',
@@ -1574,9 +1573,9 @@ export function RTLSetting(): JSX.Element {
                 cursor: 'pointer',
                 opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
-              title={!settings.enabled ? "Plugin is disabled" : !selectedPresetId ? "No preset selected" : BUILT_IN_PRESETS.some(p => p.id === selectedPresetId) ? "Built-in presets cannot be deleted" : "Delete selected preset"}
+              title="Delete selected preset"
             >
-              <span aria-hidden="true">🗑️</span>
+              🗑️
             </button>
           </div>
         </div>
@@ -1590,11 +1589,11 @@ export function RTLSetting(): JSX.Element {
             onChange={(e) => saveSettings({ customCSS: (e.target as HTMLTextAreaElement).value })}
             placeholder="Enter your permanent custom CSS code here..."
             disabled={!settings.enabled}
-            style={{ 
-              width: '100%', 
-              height: '200px', 
-              padding: '10px', 
-              border: '1px solid #ccc', 
+            style={{
+              width: '100%',
+              height: '200px',
+              padding: '10px',
+              border: '1px solid #ccc',
               borderRadius: '4px',
               fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
               fontSize: '13px',
@@ -1609,28 +1608,28 @@ export function RTLSetting(): JSX.Element {
           <button
             onClick={saveAsPreset}
             disabled={!settings.enabled || !settings.customCSS.trim()}
-            style={{ 
+            style={{
               background: '#28a745',
-              color: 'white', 
-              border: 'none', 
-              padding: '8px 16px', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer'
             }}
           >
             💾 Save as New Preset
           </button>
-          
+
           <button
             onClick={() => saveSettings({ customCSS: '' })}
             disabled={!settings.enabled}
-            style={{ 
-              background: '#dc3545', 
-              color: 'white', 
-              border: 'none', 
-              padding: '8px 16px', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
+            style={{
+              background: '#dc3545',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer'
             }}
           >
             🗑️ Clear CSS
@@ -1639,25 +1638,25 @@ export function RTLSetting(): JSX.Element {
       </div>
 
       {/* Testing */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #ddd', 
-        borderRadius: '8px', 
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
         background: settings.darkMode ? '#333' : '#fafafa'
       }}>
         <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>🧪 Test RTL Detection</h3>
-        
+
         <div style={{ marginBottom: '15px' }}>
           <textarea
             value={testText}
             onChange={(e) => setTestText((e.target as HTMLTextAreaElement).value)}
             placeholder="Enter text to test RTL detection..."
-            style={{ 
-              width: '100%', 
-              height: '80px', 
-              padding: '10px', 
-              border: '1px solid #ccc', 
+            style={{
+              width: '100%',
+              height: '80px',
+              padding: '10px',
+              border: '1px solid #ccc',
               borderRadius: '4px',
               resize: 'vertical',
               fontFamily: 'inherit',
@@ -1668,15 +1667,15 @@ export function RTLSetting(): JSX.Element {
         </div>
 
         <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-          <button 
+          <button
             onClick={testRTL}
-            style={{ 
-              background: '#28a745', 
-              color: 'white', 
-              border: 'none', 
-              padding: '8px 16px', 
-              borderRadius: '4px', 
-              cursor: 'pointer' 
+            style={{
+              background: '#28a745',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer'
             }}
           >
             🧪 Test Detection
@@ -1684,9 +1683,9 @@ export function RTLSetting(): JSX.Element {
         </div>
 
         {testResult && (
-          <div style={{ 
-            padding: '10px', 
-            background: testResult === 'RTL' ? '#d4edda' : '#f8d7da', 
+          <div style={{
+            padding: '10px',
+            background: testResult === 'RTL' ? '#d4edda' : '#f8d7da',
             borderRadius: '4px',
             borderLeft: `4px solid ${testResult === 'RTL' ? '#28a745' : '#dc3545'}`,
             marginBottom: '15px',
@@ -1698,27 +1697,27 @@ export function RTLSetting(): JSX.Element {
       </div>
 
       {/* Advanced Actions & Import/Export */}
-      <div style={{ 
-        marginBottom: '30px', 
-        padding: '20px', 
-        border: '1px solid #ddd', 
-        borderRadius: '8px', 
+      <div style={{
+        marginBottom: '30px',
+        padding: '20px',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
         background: settings.darkMode ? '#333' : '#fafafa'
       }}>
         <h3 style={{ margin: '0 0 15px 0', color: settings.darkMode ? '#fff' : '#333' }}>🔧 Advanced Actions</h3>
-        
+
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           <button
             type="button"
             onClick={resetToDefaults}
-            style={{ 
-              padding: '10px 20px', 
-              background: '#dc3545', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: 'pointer', 
-              fontWeight: '500' 
+            style={{
+              padding: '10px 20px',
+              background: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: '500'
             }}
           >
             🔄 Reset to Defaults
@@ -1727,14 +1726,14 @@ export function RTLSetting(): JSX.Element {
           <button
             type="button"
             onClick={exportSettings}
-            style={{ 
-              padding: '10px 20px', 
-              background: '#28a745', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: 'pointer', 
-              fontWeight: '500' 
+            style={{
+              padding: '10px 20px',
+              background: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: '500'
             }}
           >
             📋 Export Settings (JSON)
