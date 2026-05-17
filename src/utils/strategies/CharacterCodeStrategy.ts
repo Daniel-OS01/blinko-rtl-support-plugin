@@ -34,11 +34,15 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
+   * Check if a character code is RTL
    */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+  private isRTLCode(code: number): boolean {
+    // ⚡ Bolt: Array iteration using raw loop to avoid array.some overhead
+    for (let i = 0; i < this.RTL_RANGES.length; i++) {
+      const range = this.RTL_RANGES[i];
+      if (code >= range[0] && code <= range[1]) return true;
+    }
+    return false;
   }
 
   /**
@@ -47,19 +51,61 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   public detect(text: string): boolean {
     if (!text || text.length === 0) return false;
 
-    // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
+    // ⚡ Bolt: Use direct length checking to avoid substring allocation
+    const limit = Math.min(text.length, this.config.sampleSize);
 
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
 
-    for (const char of sample) {
-      // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
-        totalSignificantChars++;
-        if (this.isRTLChar(char)) {
-          rtlCharCount++;
+    // ⚡ Bolt: Raw loop with charCodeAt is much faster than `for (const char of string)`
+    // because it avoids string iterators and object creation.
+    for (let i = 0; i < limit; i++) {
+      const code = text.charCodeAt(i);
+
+      // ⚡ Bolt: Fast path - skip ASCII whitespace and common punctuation (up to 125 '}')
+      // using integer bounds checking instead of expensive RegExp.test()
+      if (code <= 125) {
+        if (
+          code <= 32 || // Control chars and space
+          code === 33 || // !
+          code === 40 || // (
+          code === 41 || // )
+          code === 44 || // ,
+          code === 46 || // .
+          code === 58 || // :
+          code === 59 || // ;
+          code === 63 || // ?
+          code === 91 || // [
+          code === 93 || // ]
+          code === 123 || // {
+          code === 125 // }
+        ) {
+          continue;
         }
+      } else if (
+        code === 0xA0 || // NBSP
+        (code >= 0x2000 && code <= 0x200A) || // EN/EM spaces
+        code === 0x200E || // LRM
+        code === 0x200F || // RLM
+        code === 0x2028 || // Line separator
+        code === 0x2029 || // Paragraph separator
+        code === 0x202F || // NNBSP
+        code === 0x205F || // MMSP
+        code === 0x3000   // Ideographic space
+      ) {
+        // Skip common unicode whitespace/control chars
+        continue;
+      }
+
+      // Handle surrogate pairs to correctly process code points (matching for...of behavior)
+      if (code >= 0xD800 && code <= 0xDBFF && i + 1 < limit) {
+        // High surrogate, skip the next code unit (low surrogate)
+        i++;
+      }
+
+      totalSignificantChars++;
+      if (this.isRTLCode(code)) {
+        rtlCharCount++;
       }
     }
 

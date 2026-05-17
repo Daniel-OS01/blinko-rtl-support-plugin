@@ -4,3 +4,6 @@
 ## 2024-05-18 - Optimize Selector Validation with dummyElement matches
 **Learning:** Validating selectors using `document.querySelector(s)` is extremely slow because it traverses the live document DOM, whereas `document.createElement('div').matches(s)` achieves the same syntax validation ~25x faster by skipping the DOM entirely.
 **Action:** Always prefer a dummy element's `.matches()` for validating CSS selectors, and cache the validation results in a Map or Set to completely eliminate repeated validation overhead during configuration setups like `setupObserver()`.
+## 2024-05-19 - Optimize High-Frequency Text Processing Hot Paths
+**Learning:** In high-frequency text parsing (like iterating hundreds of characters on every keystroke), using standard ES6 features like string iterators (`for (const char of text)`), string subset allocations (`substring()`), array evaluations (`some()`), and regex (`RegExp.test()`) introduces significant object creation and memory allocation overhead.
+**Action:** Replace these operations with raw `for` loops evaluating UTF-16 code units via `charCodeAt(i)`. Manually skip low surrogates (`code >= 0xD800 && code <= 0xDBFF`) to match `for...of` code point behavior safely, and use early integer bounds checking (e.g., ASCII `code <= 125`) for punctuation and whitespace instead of regex to achieve massive execution speedups.
