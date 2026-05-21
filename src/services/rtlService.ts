@@ -704,10 +704,9 @@ export class RTLService {
 
                          // Check individual matches safely
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
+                         if (joinedSelectors) {
+                             if (element.matches(joinedSelectors)) {
                                  matched = true;
-                                 break;
                              }
                          }
 
@@ -753,11 +752,10 @@ export class RTLService {
                       }
 
                       let matched = false;
-                      for (const s of safeSelectors) {
+                      if (joinedSelectors) {
                            try {
-                               if (target.matches(s)) {
+                               if (target.matches(joinedSelectors)) {
                                    matched = true;
-                                   break;
                                }
                            } catch (e) {}
                       }

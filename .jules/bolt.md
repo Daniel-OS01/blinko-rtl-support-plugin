@@ -4,3 +4,7 @@
 ## 2024-05-18 - Optimize Selector Validation with dummyElement matches
 **Learning:** Validating selectors using `document.querySelector(s)` is extremely slow because it traverses the live document DOM, whereas `document.createElement('div').matches(s)` achieves the same syntax validation ~25x faster by skipping the DOM entirely.
 **Action:** Always prefer a dummy element's `.matches()` for validating CSS selectors, and cache the validation results in a Map or Set to completely eliminate repeated validation overhead during configuration setups like `setupObserver()`.
+
+## 2026-05-21 - Optimize Selector Matching with joinedSelectors
+**Learning:** Iterating over multiple selectors and calling element.matches() individually inside a MutationObserver causes unnecessary overhead due to repeated JavaScript/C++ boundary crossings.
+**Action:** Use a single element.matches(joinedSelectors) call with a comma-separated string to leverage the browser's native CSS engine for bulk selector matching.
