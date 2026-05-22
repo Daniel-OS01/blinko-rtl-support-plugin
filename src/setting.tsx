@@ -1563,6 +1563,7 @@ export function RTLSetting(): JSX.Element {
 
             <button
               onClick={deletePreset}
+              aria-label="Delete preset"
               disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
               style={{
                 background: '#dc3545',
@@ -1575,7 +1576,7 @@ export function RTLSetting(): JSX.Element {
               }}
               title="Delete selected preset"
             >
-              🗑️
+              <span aria-hidden="true">🗑️</span>
             </button>
           </div>
         </div>
@@ -1632,7 +1633,7 @@ export function RTLSetting(): JSX.Element {
               cursor: 'pointer' 
             }}
           >
-            🗑️ Clear CSS
+            <span aria-hidden="true">🗑️</span> Clear CSS
           </button>
         </div>
       </div>
