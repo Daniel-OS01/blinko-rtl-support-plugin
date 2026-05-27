@@ -313,7 +313,9 @@ export class UIUXService {
         const candidates = document.querySelectorAll<HTMLElement>(
           '[class*="expanded"], [class*="modal"], [class*="overlay"]'
         );
-        for (const el of Array.from(candidates)) {
+        // 💡 What: Replaced Array.from(candidates) with direct iteration
+        // 🎯 Why: Iterating over NodeList directly via for...of avoids unnecessary memory allocations and array creation overhead
+        for (const el of candidates) {
           const id = (el.id || '').toLowerCase();
           if (id.includes('root')) continue;
           if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
@@ -413,7 +415,9 @@ export class UIUXService {
       const candidates = document.querySelectorAll<HTMLElement>(
         '[class*="editor-container"], [class*="note-editor"], [class*="blinko-editor"], [class*="dialog-content"], [class*="modal-content"]'
       );
-      for (const el of Array.from(candidates)) {
+      // 💡 What: Replaced Array.from(candidates) with direct iteration
+      // 🎯 Why: Iterating over NodeList directly via for...of avoids unnecessary memory allocations and array creation overhead
+      for (const el of candidates) {
         if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
         return el;
       }
