@@ -1608,6 +1608,7 @@ export function RTLSetting(): JSX.Element {
           <button
             onClick={saveAsPreset}
             disabled={!settings.enabled || !settings.customCSS.trim()}
+            title={!settings.enabled ? "Enable RTL support first" : (!settings.customCSS.trim() ? "Add custom CSS first" : undefined)}
             style={{ 
               background: '#28a745',
               color: 'white', 
@@ -2483,6 +2484,7 @@ export function RTLSetting(): JSX.Element {
             </p>
             <button
               disabled={aiPostTesting}
+              title={aiPostTesting ? "Test in progress..." : undefined}
               onClick={async () => {
                 setAIPostTesting(true);
                 setAIPostTestResult('');
@@ -2568,6 +2570,7 @@ export function RTLSetting(): JSX.Element {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <button
                 disabled={apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken}
+                title={apiConnTesting ? "Test in progress..." : (!aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? "Missing API URL or Token" : undefined)}
                 onClick={async () => {
                   setApiConnTesting(true);
                   setApiConnTestResult('');
