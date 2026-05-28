@@ -10,21 +10,6 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   readonly name = 'CharacterCode';
   private config: RTLDetectionConfig;
 
-  // Hebrew: \u0590-\u05FF
-  // Arabic: \u0600-\u06FF
-  // Additional RTL: \u0700-\u074F, \u0780-\u07BF
-  private readonly RTL_RANGES = [
-    [0x0590, 0x05FF], // Hebrew
-    [0x0600, 0x06FF], // Arabic
-    [0x0700, 0x074F], // Syriac
-    [0x0750, 0x077F], // Arabic Supplement
-    [0x0780, 0x07BF], // Thaana
-    [0x08A0, 0x08FF], // Arabic Extended-A
-    [0xFB1D, 0xFB4F], // Hebrew Presentation Forms
-    [0xFB50, 0xFDFF], // Arabic Presentation Forms-A
-    [0xFE70, 0xFEFF], // Arabic Presentation Forms-B
-  ];
-
   constructor(config: RTLDetectionConfig = {
     sensitivity: 'medium',
     minRTLChars: 3,
@@ -34,11 +19,22 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
+   * Check if a character code point is RTL
+   * 💡 What: Replacing array iteration with direct comparisons
+   * 🎯 Why: Avoids overhead of creating functions and iterating through arrays for every character
    */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+  private isRTLCode(code: number): boolean {
+    return (
+        (code >= 0x0590 && code <= 0x05FF) || // Hebrew
+        (code >= 0x0600 && code <= 0x06FF) || // Arabic
+        (code >= 0x0700 && code <= 0x074F) || // Syriac
+        (code >= 0x0750 && code <= 0x077F) || // Arabic Supplement
+        (code >= 0x0780 && code <= 0x07BF) || // Thaana
+        (code >= 0x08A0 && code <= 0x08FF) || // Arabic Extended-A
+        (code >= 0xFB1D && code <= 0xFB4F) || // Hebrew Presentation Forms
+        (code >= 0xFB50 && code <= 0xFDFF) || // Arabic Presentation Forms-A
+        (code >= 0xFE70 && code <= 0xFEFF)    // Arabic Presentation Forms-B
+    );
   }
 
   /**
@@ -48,19 +44,49 @@ export class CharacterCodeStrategy implements DetectionStrategy {
     if (!text || text.length === 0) return false;
 
     // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
+    const sampleSize = Math.min(text.length, this.config.sampleSize);
 
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
 
-    for (const char of sample) {
-      // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
-        totalSignificantChars++;
-        if (this.isRTLChar(char)) {
-          rtlCharCount++;
+    // Cache regex for fallback to avoid recompilation
+    const spaceRegex = /\s/;
+
+    // 💡 What: Using charCodeAt and standard loop instead of string iterator and regex
+    // 🎯 Why: String iterators and Regex tests per-character are very slow compared to raw integer checks
+    for (let i = 0; i < sampleSize; i++) {
+        const code = text.charCodeAt(i);
+
+        let isPunctuationOrSpace = false;
+
+        // Fast path for ASCII punctuation and whitespace
+        if (code <= 125) {
+            isPunctuationOrSpace =
+                code <= 32 ||   // Whitespace and control chars
+                code === 33 ||  // !
+                code === 40 ||  // (
+                code === 41 ||  // )
+                code === 44 ||  // ,
+                code === 46 ||  // .
+                code === 58 ||  // :
+                code === 59 ||  // ;
+                code === 63 ||  // ?
+                code === 91 ||  // [
+                code === 93 ||  // ]
+                code === 123 || // {
+                code === 125;   // }
+        } else {
+            // Fallback for Unicode whitespace
+            isPunctuationOrSpace = spaceRegex.test(text[i]);
         }
-      }
+
+        // Skip whitespace and punctuation for analysis
+        if (!isPunctuationOrSpace) {
+            totalSignificantChars++;
+            if (this.isRTLCode(code)) {
+                rtlCharCount++;
+            }
+        }
     }
 
     // Must have minimum RTL characters
