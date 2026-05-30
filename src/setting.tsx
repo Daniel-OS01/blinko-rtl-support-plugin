@@ -2557,9 +2557,10 @@ export function RTLSetting(): JSX.Element {
                 />
                 <button
                   onClick={() => setShowApiToken(v => !v)}
+                  aria-label="Toggle API token visibility"
                   style={{ padding: '6px 10px', borderRadius: '5px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, background: settings.darkMode ? '#333' : '#f0f0f0', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
                 >
-                  {showApiToken ? '🙈 Hide' : '👁 Show'}
+                  {showApiToken ? <><span aria-hidden="true">🙈</span> Hide</> : <><span aria-hidden="true">👁</span> Show</>}
                 </button>
               </div>
             </div>
@@ -2568,6 +2569,7 @@ export function RTLSetting(): JSX.Element {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <button
                 disabled={apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken}
+                title={apiConnTesting ? 'Testing connection...' : (!aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? 'Requires API URL and Token to test' : undefined)}
                 onClick={async () => {
                   setApiConnTesting(true);
                   setApiConnTestResult('');
@@ -2596,7 +2598,7 @@ export function RTLSetting(): JSX.Element {
                 }}
                 style={{ background: apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? '#888' : '#5a2d9b', color: '#fff', border: 'none', padding: '7px 14px', borderRadius: '5px', cursor: apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: '600' }}
               >
-                {apiConnTesting ? '⏳ Testing…' : '🧪 Test Connection'}
+                {apiConnTesting ? <><span aria-hidden="true">⏳</span> Testing…</> : <><span aria-hidden="true">🧪</span> Test Connection</>}
               </button>
               {apiConnTestResult && (
                 <span style={{ fontSize: '12px', color: apiConnTestResult.startsWith('✅') ? '#22a55a' : '#c0392b' }}>
