@@ -4,3 +4,6 @@
 ## 2024-05-18 - Optimize Selector Validation with dummyElement matches
 **Learning:** Validating selectors using `document.querySelector(s)` is extremely slow because it traverses the live document DOM, whereas `document.createElement('div').matches(s)` achieves the same syntax validation ~25x faster by skipping the DOM entirely.
 **Action:** Always prefer a dummy element's `.matches()` for validating CSS selectors, and cache the validation results in a Map or Set to completely eliminate repeated validation overhead during configuration setups like `setupObserver()`.
+## 2026-06-01 - Optimize RTL Detection Strategy
+**Learning:** In high-frequency text processing, string iteration, regex testing (`/.test()`), and array methods (`.some()`) create massive performance overhead due to allocations and boundary crossings.
+**Action:** Replace these patterns with raw `charCodeAt()` parsing and manual numerical code point bounds checking (e.g., `code <= 125` for early ASCII exits) to achieve a massive performance speedup.
