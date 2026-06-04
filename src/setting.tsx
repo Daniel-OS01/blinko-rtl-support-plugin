@@ -1561,22 +1561,34 @@ export function RTLSetting(): JSX.Element {
               📥 Load
             </button>
 
-            <button
-              onClick={deletePreset}
-              disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
-              style={{
-                background: '#dc3545',
-                color: 'white',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
-              }}
-              title="Delete selected preset"
-            >
-              🗑️
-            </button>
+            {(() => {
+              const isBuiltIn = BUILT_IN_PRESETS.some(p => p.id === selectedPresetId);
+              const isDisabled = !settings.enabled || !selectedPresetId || isBuiltIn;
+              let disableReason = "Delete selected preset";
+              if (!settings.enabled) disableReason = "Enable plugin to delete presets";
+              else if (!selectedPresetId) disableReason = "Select a preset to delete";
+              else if (isBuiltIn) disableReason = "Built-in presets cannot be deleted";
+
+              return (
+                <button
+                  onClick={deletePreset}
+                  disabled={isDisabled}
+                  style={{
+                    background: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    opacity: isBuiltIn ? 0.5 : 1
+                  }}
+                  title={disableReason}
+                  aria-label="Delete selected preset"
+                >
+                  <span aria-hidden="true">🗑️</span>
+                </button>
+              );
+            })()}
           </div>
         </div>
 
