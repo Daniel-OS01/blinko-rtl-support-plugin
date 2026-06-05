@@ -34,32 +34,56 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
-   */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
-  }
-
-  /**
    * Detect RTL content in text
    */
   public detect(text: string): boolean {
     if (!text || text.length === 0) return false;
 
     // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
+    const sampleSize = Math.min(text.length, this.config.sampleSize);
 
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
 
-    for (const char of sample) {
-      // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
-        totalSignificantChars++;
-        if (this.isRTLChar(char)) {
-          rtlCharCount++;
+    for (let i = 0; i < sampleSize; i++) {
+      const code = text.charCodeAt(i);
+
+      // Fast path for ASCII (whitespace and punctuation)
+      if (code <= 125) {
+        if (
+          code <= 32 || // Whitespace and control chars
+          code === 33 || // !
+          code === 40 || // (
+          code === 41 || // )
+          code === 44 || // ,
+          code === 46 || // .
+          code === 58 || // :
+          code === 59 || // ;
+          code === 63 || // ?
+          code === 91 || // [
+          code === 93 || // ]
+          code === 123 || // {
+          code === 125    // }
+        ) {
+          continue;
         }
+      }
+
+      totalSignificantChars++;
+
+      // Check RTL ranges manually for performance
+      if (
+        (code >= 0x0590 && code <= 0x05FF) ||
+        (code >= 0x0600 && code <= 0x06FF) ||
+        (code >= 0x0700 && code <= 0x074F) ||
+        (code >= 0x0750 && code <= 0x077F) ||
+        (code >= 0x0780 && code <= 0x07BF) ||
+        (code >= 0x08A0 && code <= 0x08FF) ||
+        (code >= 0xFB1D && code <= 0xFB4F) ||
+        (code >= 0xFB50 && code <= 0xFDFF) ||
+        (code >= 0xFE70 && code <= 0xFEFF)
+      ) {
+        rtlCharCount++;
       }
     }
 
