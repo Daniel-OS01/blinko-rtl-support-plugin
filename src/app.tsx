@@ -160,6 +160,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
         <button 
           onClick={handleFixSelection}
           disabled={isFixing}
+          title={isFixing ? "Processing selection..." : "Fix selected text"}
           style={{ 
             width: '100%',
             background: isFixing ? '#6c757d' : '#28a745',

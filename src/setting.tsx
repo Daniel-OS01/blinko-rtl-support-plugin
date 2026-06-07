@@ -1549,13 +1549,14 @@ export function RTLSetting(): JSX.Element {
             <button
               onClick={loadPreset}
               disabled={!settings.enabled || !selectedPresetId}
+              title={(!settings.enabled || !selectedPresetId) ? "Plugin disabled or no preset selected" : "Load preset"}
               style={{
                 background: '#17a2b8',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer'
+                cursor: (!settings.enabled || !selectedPresetId) ? 'not-allowed' : 'pointer'
               }}
             >
               📥 Load
@@ -1570,10 +1571,10 @@ export function RTLSetting(): JSX.Element {
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer',
+                cursor: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 'not-allowed' : 'pointer',
                 opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
-              title="Delete selected preset"
+              title={(!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? "Cannot delete built-in presets or none selected" : "Delete selected preset"}
             >
               🗑️
             </button>
@@ -1608,13 +1609,14 @@ export function RTLSetting(): JSX.Element {
           <button
             onClick={saveAsPreset}
             disabled={!settings.enabled || !settings.customCSS.trim()}
+            title={(!settings.enabled || !settings.customCSS.trim()) ? "Plugin disabled or no custom CSS to save" : "Save as New Preset"}
             style={{ 
               background: '#28a745',
               color: 'white', 
               border: 'none', 
               padding: '8px 16px', 
               borderRadius: '4px', 
-              cursor: 'pointer' 
+              cursor: (!settings.enabled || !settings.customCSS.trim()) ? 'not-allowed' : 'pointer'
             }}
           >
             💾 Save as New Preset
@@ -1623,13 +1625,14 @@ export function RTLSetting(): JSX.Element {
           <button
             onClick={() => saveSettings({ customCSS: '' })}
             disabled={!settings.enabled}
+            title={!settings.enabled ? "Plugin disabled" : "Clear CSS"}
             style={{ 
               background: '#dc3545', 
               color: 'white', 
               border: 'none', 
               padding: '8px 16px', 
               borderRadius: '4px', 
-              cursor: 'pointer' 
+              cursor: !settings.enabled ? 'not-allowed' : 'pointer'
             }}
           >
             🗑️ Clear CSS
