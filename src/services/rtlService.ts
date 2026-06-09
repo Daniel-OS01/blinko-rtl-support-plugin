@@ -702,12 +702,23 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // Check multiple matches safely using comma-separated joined string
+                         // 💡 What: Replaced individual element.matches(s) loop with a single element.matches(joinedSelectors) check.
+                         // 🎯 Why: Using a single comma-separated selector string avoids iterative array matching and JS-to-C++ boundary crossings, dramatically speeding up node inspection inside the MutationObserver.
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
+                         try {
+                             if (joinedSelectors && element.matches(joinedSelectors)) {
                                  matched = true;
-                                 break;
+                             }
+                         } catch (e) {
+                             // Fallback to loop if joinedSelectors becomes corrupted (should not happen due to validation)
+                             for (const s of safeSelectors) {
+                                 try {
+                                     if (element.matches(s)) {
+                                         matched = true;
+                                         break;
+                                     }
+                                 } catch (err) {}
                              }
                          }
 
@@ -752,14 +763,22 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
+                      // Check multiple matches safely using comma-separated joined string
                       let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
+                      try {
+                           if (joinedSelectors && target.matches(joinedSelectors)) {
+                               matched = true;
+                           }
+                      } catch (e) {
+                          // Fallback
+                          for (const s of safeSelectors) {
+                               try {
+                                   if (target.matches(s)) {
+                                       matched = true;
+                                       break;
+                                   }
+                               } catch (err) {}
+                          }
                       }
 
                       if (matched) {
