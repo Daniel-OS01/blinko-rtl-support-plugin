@@ -704,10 +704,22 @@ export class RTLService {
 
                          // Check individual matches safely
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
+                         if (joinedSelectors) {
+                             try {
+                                 // ⚡ Bolt: Single native CSS check is significantly faster than looping JS
+                                 if (element.matches(joinedSelectors)) {
+                                     matched = true;
+                                 }
+                             } catch (e) {
+                                 // Fallback if joinedSelectors throws due to an unsupported selector
+                                 for (const s of safeSelectors) {
+                                     try {
+                                         if (element.matches(s)) {
+                                             matched = true;
+                                             break;
+                                         }
+                                     } catch (e) {}
+                                 }
                              }
                          }
 
@@ -753,13 +765,23 @@ export class RTLService {
                       }
 
                       let matched = false;
-                      for (const s of safeSelectors) {
+                      if (joinedSelectors) {
                            try {
-                               if (target.matches(s)) {
+                               // ⚡ Bolt: Single native CSS check is significantly faster than looping JS
+                               if (target.matches(joinedSelectors)) {
                                    matched = true;
-                                   break;
                                }
-                           } catch (e) {}
+                           } catch (e) {
+                               // Fallback if joinedSelectors throws
+                               for (const s of safeSelectors) {
+                                   try {
+                                       if (target.matches(s)) {
+                                           matched = true;
+                                           break;
+                                       }
+                                   } catch (e) {}
+                               }
+                           }
                       }
 
                       if (matched) {
