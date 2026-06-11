@@ -1549,33 +1549,36 @@ export function RTLSetting(): JSX.Element {
             <button
               onClick={loadPreset}
               disabled={!settings.enabled || !selectedPresetId}
+              aria-label="Load Preset"
+              title={!settings.enabled ? "Settings must be enabled to load a preset" : (!selectedPresetId ? "Select a preset to load" : "Load Preset")}
               style={{
                 background: '#17a2b8',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer'
+                cursor: (!settings.enabled || !selectedPresetId) ? 'not-allowed' : 'pointer'
               }}
             >
-              📥 Load
+              <><span aria-hidden="true">📥</span> Load</>
             </button>
 
             <button
               onClick={deletePreset}
               disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
+              aria-label="Delete Preset"
+              title={!settings.enabled ? "Settings must be enabled to delete a preset" : (!selectedPresetId ? "Select a preset to delete" : (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId) ? "Built-in presets cannot be deleted" : "Delete selected preset"))}
               style={{
                 background: '#dc3545',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer',
+                cursor: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 'not-allowed' : 'pointer',
                 opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
-              title="Delete selected preset"
             >
-              🗑️
+              <span aria-hidden="true">🗑️</span>
             </button>
           </div>
         </div>
