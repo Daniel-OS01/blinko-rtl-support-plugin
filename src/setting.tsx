@@ -1555,10 +1555,11 @@ export function RTLSetting(): JSX.Element {
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer'
+                cursor: (!settings.enabled || !selectedPresetId) ? 'not-allowed' : 'pointer'
               }}
+              title={!settings.enabled ? "Enable RTL Support first" : !selectedPresetId ? "Select a preset to load" : "Load selected preset"}
             >
-              📥 Load
+              <span aria-hidden="true">📥</span> Load
             </button>
 
             <button
@@ -1570,12 +1571,13 @@ export function RTLSetting(): JSX.Element {
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer',
+                cursor: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 'not-allowed' : 'pointer',
                 opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
-              title="Delete selected preset"
+              title={!settings.enabled ? "Enable RTL Support first" : !selectedPresetId ? "Select a preset to delete" : BUILT_IN_PRESETS.some(p => p.id === selectedPresetId) ? "Built-in presets cannot be deleted" : "Delete selected preset"}
+              aria-label="Delete selected preset"
             >
-              🗑️
+              <span aria-hidden="true">🗑️</span>
             </button>
           </div>
         </div>
