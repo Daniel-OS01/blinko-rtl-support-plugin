@@ -917,15 +917,21 @@ export function RTLSetting(): JSX.Element {
         
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
           <button
-            onClick={processAllContent}
-            disabled={!settings.enabled}
+            onClick={() => {
+              if (settings.enabled) {
+                processAllContent();
+              }
+            }}
+            aria-disabled={!settings.enabled}
+            title={!settings.enabled ? "Enable RTL Support first to process content" : "Process all content now"}
             style={{ 
               background: '#28a745', 
               color: 'white', 
               border: 'none', 
               padding: '10px 20px', 
               borderRadius: '4px', 
-              cursor: 'pointer',
+              cursor: !settings.enabled ? 'not-allowed' : 'pointer',
+              opacity: !settings.enabled ? 0.6 : 1,
               fontWeight: '500'
             }}
           >
@@ -1668,14 +1674,21 @@ export function RTLSetting(): JSX.Element {
 
         <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
           <button 
-            onClick={testRTL}
+            onClick={() => {
+              if (testText.trim()) {
+                testRTL();
+              }
+            }}
+            aria-disabled={!testText.trim()}
+            title={!testText.trim() ? "Enter text above to test detection" : "Test detection now"}
             style={{ 
               background: '#28a745', 
               color: 'white', 
               border: 'none', 
               padding: '8px 16px', 
               borderRadius: '4px', 
-              cursor: 'pointer' 
+              cursor: !testText.trim() ? 'not-allowed' : 'pointer',
+              opacity: !testText.trim() ? 0.6 : 1
             }}
           >
             🧪 Test Detection
