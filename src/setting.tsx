@@ -1400,18 +1400,27 @@ export function RTLSetting(): JSX.Element {
               ))}
             </select>
             <button
-              onClick={loadDynamicPreset}
-              disabled={!settings.enabled || !selectedDynamicPresetId}
+              onClick={(e) => {
+                if (!settings.enabled || !selectedDynamicPresetId) {
+                  e.preventDefault();
+                } else {
+                  loadDynamicPreset();
+                }
+              }}
+              aria-disabled={!settings.enabled || !selectedDynamicPresetId}
+              title={!settings.enabled || !selectedDynamicPresetId ? "Select a dynamic preset to load" : "Load dynamic preset"}
+              aria-label="Load dynamic preset"
               style={{
                 background: '#6610f2',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer'
+                cursor: (!settings.enabled || !selectedDynamicPresetId) ? 'not-allowed' : 'pointer',
+                opacity: (!settings.enabled || !selectedDynamicPresetId) ? 0.6 : 1
               }}
             >
-              📥 Load
+              <><span aria-hidden="true">📥</span> Load</>
             </button>
           </div>
           {selectedDynamicPresetId && (() => {
@@ -1547,35 +1556,51 @@ export function RTLSetting(): JSX.Element {
             </select>
 
             <button
-              onClick={loadPreset}
-              disabled={!settings.enabled || !selectedPresetId}
+              onClick={(e) => {
+                if (!settings.enabled || !selectedPresetId) {
+                  e.preventDefault();
+                } else {
+                  loadPreset();
+                }
+              }}
+              aria-disabled={!settings.enabled || !selectedPresetId}
+              title={!settings.enabled || !selectedPresetId ? "Select a preset to load" : "Load preset"}
+              aria-label="Load preset"
               style={{
                 background: '#17a2b8',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer'
+                cursor: (!settings.enabled || !selectedPresetId) ? 'not-allowed' : 'pointer',
+                opacity: (!settings.enabled || !selectedPresetId) ? 0.6 : 1
               }}
             >
-              📥 Load
+              <><span aria-hidden="true">📥</span> Load</>
             </button>
 
             <button
-              onClick={deletePreset}
-              disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
+              onClick={(e) => {
+                if (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) {
+                  e.preventDefault();
+                } else {
+                  deletePreset();
+                }
+              }}
+              aria-disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
+              aria-label="Delete selected preset"
               style={{
                 background: '#dc3545',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer',
-                opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
+                cursor: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 'not-allowed' : 'pointer',
+                opacity: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
-              title="Delete selected preset"
+              title={(!settings.enabled || !selectedPresetId) ? "Select a custom preset to delete" : (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId) ? "Cannot delete built-in presets" : "Delete selected preset")}
             >
-              🗑️
+              <span aria-hidden="true">🗑️</span>
             </button>
           </div>
         </div>
