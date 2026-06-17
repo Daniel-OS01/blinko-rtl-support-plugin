@@ -702,16 +702,8 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
-                         let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
-                             }
-                         }
-
-                         if (matched) {
+                         // Check individual matches safely using single matches call to avoid JS/C++ boundary crossings
+                         if (joinedSelectors && element.matches(joinedSelectors)) {
                              this.pendingElements.add(element);
                              hasRelevantMutation = true;
                          }
@@ -752,20 +744,12 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
-                      let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
-                      }
-
-                      if (matched) {
-                          this.pendingElements.add(target);
-                          hasRelevantMutation = true;
-                      }
+                      try {
+                          if (joinedSelectors && target.matches(joinedSelectors)) {
+                              this.pendingElements.add(target);
+                              hasRelevantMutation = true;
+                          }
+                      } catch (e) {}
                   }
              }
           });
