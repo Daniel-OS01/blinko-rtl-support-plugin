@@ -1547,35 +1547,51 @@ export function RTLSetting(): JSX.Element {
             </select>
 
             <button
-              onClick={loadPreset}
-              disabled={!settings.enabled || !selectedPresetId}
+              onClick={(e) => {
+                if (!settings.enabled || !selectedPresetId) {
+                  e.preventDefault();
+                  return;
+                }
+                loadPreset();
+              }}
+              aria-disabled={!settings.enabled || !selectedPresetId}
+              title={!settings.enabled ? "Enable Plugin to load preset" : !selectedPresetId ? "Select a preset to load" : "Load selected preset"}
               style={{
                 background: '#17a2b8',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer'
+                cursor: (!settings.enabled || !selectedPresetId) ? 'not-allowed' : 'pointer',
+                opacity: (!settings.enabled || !selectedPresetId) ? 0.6 : 1
               }}
             >
-              📥 Load
+              <span aria-hidden="true">📥</span> Load
             </button>
 
             <button
-              onClick={deletePreset}
-              disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
+              onClick={(e) => {
+                const isDisabled = !settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId);
+                if (isDisabled) {
+                  e.preventDefault();
+                  return;
+                }
+                deletePreset();
+              }}
+              aria-disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
+              aria-label="Delete preset"
+              title={!settings.enabled ? "Enable Plugin to delete preset" : !selectedPresetId ? "Select a preset to delete" : BUILT_IN_PRESETS.some(p => p.id === selectedPresetId) ? "Cannot delete built-in presets" : "Delete selected preset"}
               style={{
                 background: '#dc3545',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer',
-                opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
+                cursor: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 'not-allowed' : 'pointer',
+                opacity: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
-              title="Delete selected preset"
             >
-              🗑️
+              <span aria-hidden="true">🗑️</span>
             </button>
           </div>
         </div>
@@ -1606,33 +1622,49 @@ export function RTLSetting(): JSX.Element {
 
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button
-            onClick={saveAsPreset}
-            disabled={!settings.enabled || !settings.customCSS.trim()}
+            onClick={(e) => {
+              if (!settings.enabled || !settings.customCSS.trim()) {
+                e.preventDefault();
+                return;
+              }
+              saveAsPreset();
+            }}
+            aria-disabled={!settings.enabled || !settings.customCSS.trim()}
+            title={!settings.enabled ? "Enable Plugin to save preset" : !settings.customCSS.trim() ? "Enter CSS to save as preset" : "Save as New Preset"}
             style={{ 
               background: '#28a745',
               color: 'white', 
               border: 'none', 
               padding: '8px 16px', 
               borderRadius: '4px', 
-              cursor: 'pointer' 
+              cursor: (!settings.enabled || !settings.customCSS.trim()) ? 'not-allowed' : 'pointer',
+              opacity: (!settings.enabled || !settings.customCSS.trim()) ? 0.6 : 1
             }}
           >
-            💾 Save as New Preset
+            <span aria-hidden="true">💾</span> Save as New Preset
           </button>
           
           <button
-            onClick={() => saveSettings({ customCSS: '' })}
-            disabled={!settings.enabled}
+            onClick={(e) => {
+              if (!settings.enabled) {
+                e.preventDefault();
+                return;
+              }
+              saveSettings({ customCSS: '' });
+            }}
+            aria-disabled={!settings.enabled}
+            title={!settings.enabled ? "Enable Plugin to clear CSS" : "Clear CSS"}
             style={{ 
               background: '#dc3545', 
               color: 'white', 
               border: 'none', 
               padding: '8px 16px', 
               borderRadius: '4px', 
-              cursor: 'pointer' 
+              cursor: (!settings.enabled) ? 'not-allowed' : 'pointer',
+              opacity: (!settings.enabled) ? 0.6 : 1
             }}
           >
-            🗑️ Clear CSS
+            <span aria-hidden="true">🗑️</span> Clear CSS
           </button>
         </div>
       </div>
