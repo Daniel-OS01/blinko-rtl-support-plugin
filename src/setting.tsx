@@ -1561,22 +1561,34 @@ export function RTLSetting(): JSX.Element {
               📥 Load
             </button>
 
-            <button
-              onClick={deletePreset}
-              disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
-              style={{
-                background: '#dc3545',
-                color: 'white',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
-              }}
-              title="Delete selected preset"
-            >
-              🗑️
-            </button>
+            {(() => {
+              const isDeleteDisabled = !settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId);
+              return (
+                <button
+                  onClick={(e) => {
+                    if (isDeleteDisabled) {
+                      e.preventDefault();
+                      return;
+                    }
+                    deletePreset();
+                  }}
+                  aria-disabled={isDeleteDisabled}
+                  style={{
+                    background: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: isDeleteDisabled ? 'not-allowed' : 'pointer',
+                    opacity: isDeleteDisabled ? 0.5 : 1
+                  }}
+                  title={isDeleteDisabled ? "Cannot delete preset (disabled, none selected, or built-in)" : "Delete selected preset"}
+                  aria-label="Delete selected preset"
+                >
+                  <span aria-hidden="true">🗑️</span>
+                </button>
+              );
+            })()}
           </div>
         </div>
 
