@@ -1562,20 +1562,27 @@ export function RTLSetting(): JSX.Element {
             </button>
 
             <button
-              onClick={deletePreset}
-              disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
+              onClick={(e) => {
+                if (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) {
+                  e.preventDefault();
+                  return;
+                }
+                deletePreset();
+              }}
+              aria-disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
+              aria-label="Delete selected preset"
               style={{
                 background: '#dc3545',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer',
-                opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
+                cursor: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 'not-allowed' : 'pointer',
+                opacity: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
-              title="Delete selected preset"
+              title={!settings.enabled ? "RTL support must be enabled to manage presets" : (!selectedPresetId ? "No preset selected" : (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId) ? "Cannot delete built-in presets" : "Delete selected preset"))}
             >
-              🗑️
+              <span aria-hidden="true">🗑️</span>
             </button>
           </div>
         </div>
@@ -1621,18 +1628,27 @@ export function RTLSetting(): JSX.Element {
           </button>
           
           <button
-            onClick={() => saveSettings({ customCSS: '' })}
-            disabled={!settings.enabled}
+            onClick={(e) => {
+              if (!settings.enabled) {
+                e.preventDefault();
+                return;
+              }
+              saveSettings({ customCSS: '' });
+            }}
+            aria-disabled={!settings.enabled}
+            aria-label="Clear custom CSS"
             style={{ 
               background: '#dc3545', 
               color: 'white', 
               border: 'none', 
               padding: '8px 16px', 
               borderRadius: '4px', 
-              cursor: 'pointer' 
+              cursor: !settings.enabled ? 'not-allowed' : 'pointer',
+              opacity: !settings.enabled ? 0.5 : 1
             }}
+            title={!settings.enabled ? "RTL support must be enabled to clear CSS" : "Clear custom CSS"}
           >
-            🗑️ Clear CSS
+            <span aria-hidden="true">🗑️</span> Clear CSS
           </button>
         </div>
       </div>
