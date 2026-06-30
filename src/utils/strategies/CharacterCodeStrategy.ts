@@ -34,11 +34,15 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
+   * Check if a character code is RTL
    */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+  private isRTLCode(code: number): boolean {
+    for (let i = 0; i < this.RTL_RANGES.length; i++) {
+      if (code >= this.RTL_RANGES[i][0] && code <= this.RTL_RANGES[i][1]) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -47,17 +51,27 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   public detect(text: string): boolean {
     if (!text || text.length === 0) return false;
 
-    // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
+    // Determine how many characters to sample
+    const sampleLimit = Math.min(text.length, this.config.sampleSize);
 
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
 
-    for (const char of sample) {
-      // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
+    for (let i = 0; i < sampleLimit; i++) {
+      const code = text.charCodeAt(i);
+
+      // Skip whitespace and common punctuation for analysis using fast char code bounds checks
+      // Whitespace <= 32
+      // Commas (44), Periods (46), Exclamation (33), Question (63), Semicolon (59), Colon (58)
+      // Parentheses (40, 41), Brackets (91, 93), Braces (123, 125)
+      if (
+        code > 32 &&
+        code !== 44 && code !== 46 && code !== 33 && code !== 63 &&
+        code !== 59 && code !== 58 && code !== 40 && code !== 41 &&
+        code !== 91 && code !== 93 && code !== 123 && code !== 125
+      ) {
         totalSignificantChars++;
-        if (this.isRTLChar(char)) {
+        if (this.isRTLCode(code)) {
           rtlCharCount++;
         }
       }
