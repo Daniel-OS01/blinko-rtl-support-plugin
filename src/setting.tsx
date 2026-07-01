@@ -917,19 +917,27 @@ export function RTLSetting(): JSX.Element {
         
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
           <button
-            onClick={processAllContent}
-            disabled={!settings.enabled}
+            onClick={(e) => {
+              if (!settings.enabled) {
+                e.preventDefault();
+                return;
+              }
+              processAllContent();
+            }}
+            aria-disabled={!settings.enabled}
+            aria-label="Process All Content"
+            title={!settings.enabled ? "Enable the plugin to process content" : "Process all content now"}
             style={{ 
-              background: '#28a745', 
+              background: !settings.enabled ? '#6c757d' : '#28a745',
               color: 'white', 
               border: 'none', 
               padding: '10px 20px', 
               borderRadius: '4px', 
-              cursor: 'pointer',
+              cursor: !settings.enabled ? 'not-allowed' : 'pointer',
               fontWeight: '500'
             }}
           >
-            🔄 Process All Content
+            <span aria-hidden="true">🔄</span> Process All Content
           </button>
           
           <button
