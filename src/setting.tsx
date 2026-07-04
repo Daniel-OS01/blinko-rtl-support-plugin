@@ -1562,20 +1562,29 @@ export function RTLSetting(): JSX.Element {
             </button>
 
             <button
-              onClick={deletePreset}
-              disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
+              onClick={() => {
+                if (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) return;
+                deletePreset();
+              }}
+              aria-disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
+              aria-label="Delete selected preset"
               style={{
                 background: '#dc3545',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer',
-                opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
+                cursor: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 'not-allowed' : 'pointer',
+                opacity: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
               }}
-              title="Delete selected preset"
+              title={
+                !settings.enabled ? "Cannot delete preset while plugin is disabled" :
+                !selectedPresetId ? "Select a preset to delete" :
+                BUILT_IN_PRESETS.some(p => p.id === selectedPresetId) ? "Cannot delete built-in presets" :
+                "Delete selected preset"
+              }
             >
-              🗑️
+              <span aria-hidden="true">🗑️</span>
             </button>
           </div>
         </div>
