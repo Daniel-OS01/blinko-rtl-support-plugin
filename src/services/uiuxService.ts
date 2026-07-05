@@ -313,7 +313,8 @@ export class UIUXService {
         const candidates = document.querySelectorAll<HTMLElement>(
           '[class*="expanded"], [class*="modal"], [class*="overlay"]'
         );
-        for (const el of Array.from(candidates)) {
+        // ⚡ Bolt: Iterate over NodeList directly without Array.from memory allocation
+        for (const el of candidates) {
           const id = (el.id || '').toLowerCase();
           if (id.includes('root')) continue;
           if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
@@ -329,19 +330,23 @@ export class UIUXService {
         history.pushState({ blinkoPlugin: true }, '', window.location.href);
 
         // Try to find and click a close button.
-        const closeBtn = Array.from(
-          overlay.querySelectorAll<HTMLElement>('button, [class*="close"], [aria-label], [data-dismiss]')
-        ).find((el) => {
+        let closeBtn: HTMLElement | null = null;
+        // ⚡ Bolt: Replace Array.from + find with direct for...of for performance
+        for (const el of overlay.querySelectorAll<HTMLElement>('button, [class*="close"], [aria-label], [data-dismiss]')) {
           const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
           const className = (el.className || '').toString().toLowerCase();
-          return (
+          if (
             className.includes('close') ||
             className.includes('dismiss') ||
             ariaLabel.includes('close') ||
             ariaLabel.includes('dismiss') ||
             el.hasAttribute('data-dismiss')
-          );
-        }) ?? null;
+          ) {
+            closeBtn = el;
+            break;
+          }
+        }
+
         if (closeBtn) {
           closeBtn.click();
         } else {
@@ -413,7 +418,8 @@ export class UIUXService {
       const candidates = document.querySelectorAll<HTMLElement>(
         '[class*="editor-container"], [class*="note-editor"], [class*="blinko-editor"], [class*="dialog-content"], [class*="modal-content"]'
       );
-      for (const el of Array.from(candidates)) {
+      // ⚡ Bolt: Iterate over NodeList directly without Array.from memory allocation
+      for (const el of candidates) {
         if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
         return el;
       }
@@ -421,14 +427,19 @@ export class UIUXService {
     };
 
     const closeViaButtonOrEscape = (scope: HTMLElement): void => {
-      const closeBtn =
-        Array.from(scope.querySelectorAll<HTMLElement>('button, [class*="close"], [aria-label], [data-dismiss]'))
-          .find((el) => {
-            const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
-            const className = (el.className || '').toString().toLowerCase();
-            return className.includes('close') || ariaLabel.includes('close') || el.hasAttribute('data-dismiss');
-          }) ??
-        document.querySelector<HTMLElement>('.modal-close');
+      let closeBtn: HTMLElement | null = null;
+      // ⚡ Bolt: Replace Array.from + find with direct for...of for performance
+      for (const el of scope.querySelectorAll<HTMLElement>('button, [class*="close"], [aria-label], [data-dismiss]')) {
+        const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+        const className = (el.className || '').toString().toLowerCase();
+        if (className.includes('close') || ariaLabel.includes('close') || el.hasAttribute('data-dismiss')) {
+          closeBtn = el;
+          break;
+        }
+      }
+
+      closeBtn = closeBtn ?? document.querySelector<HTMLElement>('.modal-close');
+
       if (closeBtn) {
         closeBtn.click();
       } else {
