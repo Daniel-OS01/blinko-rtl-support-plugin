@@ -36,9 +36,30 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   /**
    * Check if a character is RTL
    */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+  private isRTLCode(code: number): boolean {
+    const ranges = this.RTL_RANGES;
+    for (let i = 0; i < ranges.length; i++) {
+        if (code >= ranges[i][0] && code <= ranges[i][1]) {
+            return true;
+        }
+    }
+    return false;
+  }
+
+  // Custom check for punctuation and whitespace instead of regex
+  private isIgnored(code: number): boolean {
+      // Space, Tab, LF, CR
+      if (code === 32 || code === 9 || code === 10 || code === 13) return true;
+      // Basic punctuation: ! " # $ % & ' ( ) * + , - . /
+      if (code >= 33 && code <= 47) return true;
+      // : ; < = > ? @
+      if (code >= 58 && code <= 64) return true;
+      // [ \ ] ^ _ `
+      if (code >= 91 && code <= 96) return true;
+      // { | } ~
+      if (code >= 123 && code <= 126) return true;
+
+      return false;
   }
 
   /**
@@ -48,16 +69,19 @@ export class CharacterCodeStrategy implements DetectionStrategy {
     if (!text || text.length === 0) return false;
 
     // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
+    const sampleSize = Math.min(text.length, this.config.sampleSize);
 
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
 
-    for (const char of sample) {
+    for (let i = 0; i < sampleSize; i++) {
+      const code = text.charCodeAt(i);
+
       // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
+      if (!this.isIgnored(code)) {
         totalSignificantChars++;
-        if (this.isRTLChar(char)) {
+        // Fast path check to skip loop if not within valid range
+        if (code >= 0x0590 && this.isRTLCode(code)) {
           rtlCharCount++;
         }
       }
