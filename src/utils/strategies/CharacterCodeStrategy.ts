@@ -10,6 +10,10 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   readonly name = 'CharacterCode';
   private config: RTLDetectionConfig;
 
+  // Cached regex to prevent recreating the pattern on every loop iteration
+  // Performance Pattern: using a cached static regex avoids memory allocation overhead inside hot parsing loops.
+  private static readonly IGNORE_PATTERN = /\s|[.,!?;:()[\]{}]/;
+
   // Hebrew: \u0590-\u05FF
   // Arabic: \u0600-\u06FF
   // Additional RTL: \u0700-\u074F, \u0780-\u07BF
@@ -34,11 +38,16 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
+   * Check if a character code is RTL
    */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+  private isRTLCode(code: number): boolean {
+    // Performance Pattern: Replace .some() array closure with a flat for-loop
+    // and direct bounds checking to avoid callback overhead in hot paths.
+    for (let i = 0; i < this.RTL_RANGES.length; i++) {
+      const range = this.RTL_RANGES[i];
+      if (code >= range[0] && code <= range[1]) return true;
+    }
+    return false;
   }
 
   /**
@@ -48,16 +57,19 @@ export class CharacterCodeStrategy implements DetectionStrategy {
     if (!text || text.length === 0) return false;
 
     // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
+    // Performance Pattern: Replace text.substring allocation with a limit bound for the loop
+    const limit = Math.min(text.length, this.config.sampleSize);
 
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
 
-    for (const char of sample) {
+    // Performance Pattern: Flat index-based for loop over characters is faster than for..of
+    for (let i = 0; i < limit; i++) {
+      const char = text[i];
       // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
+      if (!CharacterCodeStrategy.IGNORE_PATTERN.test(char)) {
         totalSignificantChars++;
-        if (this.isRTLChar(char)) {
+        if (this.isRTLCode(text.charCodeAt(i))) {
           rtlCharCount++;
         }
       }
