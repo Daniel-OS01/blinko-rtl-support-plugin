@@ -4,3 +4,7 @@
 ## 2024-05-18 - Optimize Selector Validation with dummyElement matches
 **Learning:** Validating selectors using `document.querySelector(s)` is extremely slow because it traverses the live document DOM, whereas `document.createElement('div').matches(s)` achieves the same syntax validation ~25x faster by skipping the DOM entirely.
 **Action:** Always prefer a dummy element's `.matches()` for validating CSS selectors, and cache the validation results in a Map or Set to completely eliminate repeated validation overhead during configuration setups like `setupObserver()`.
+
+## 2025-07-08 - CharacterCodeStrategy Parsing Optimization
+**Learning:** String slicing (`substring`), loop abstractions (`for...of`), inline regex creation (`/\s|.../`), and closure-based array iterations (`.some()`) introduce measurable execution overhead and memory allocation during hot character-by-character parsing loops in JS engines.
+**Action:** Replace them with limit calculations (e.g. `Math.min`), flat `for` loops, cached static regex objects, and direct integer bounds checking (e.g. `code >= min && code <= max` instead of array lookup) to significantly reduce execution time and memory pressure in frequent parsing paths.
