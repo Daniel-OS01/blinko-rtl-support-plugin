@@ -702,13 +702,10 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // Check individual matches safely using joined selectors for performance
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
-                             }
+                         if (joinedSelectors) {
+                             matched = element.matches(joinedSelectors);
                          }
 
                          if (matched) {
@@ -752,13 +749,11 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
+                      // Check individual matches safely using joined selectors for performance
                       let matched = false;
-                      for (const s of safeSelectors) {
+                      if (joinedSelectors) {
                            try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
+                               matched = target.matches(joinedSelectors);
                            } catch (e) {}
                       }
 
