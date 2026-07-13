@@ -2482,8 +2482,10 @@ export function RTLSetting(): JSX.Element {
               Requires a configured AI provider in Blinko settings.
             </p>
             <button
-              disabled={aiPostTesting}
+              aria-disabled={aiPostTesting}
+              title={aiPostTesting ? 'Please wait, test in progress...' : 'Click to run test with sample note'}
               onClick={async () => {
+                if (aiPostTesting) return;
                 setAIPostTesting(true);
                 setAIPostTestResult('');
                 try {
@@ -2567,8 +2569,10 @@ export function RTLSetting(): JSX.Element {
             {/* Test Connection */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <button
-                disabled={apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken}
+                aria-disabled={apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken}
+                title={apiConnTesting ? 'Please wait, test in progress...' : (!aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken) ? 'Please enter both Instance URL and API Token to test' : 'Click to test API connection'}
                 onClick={async () => {
+                  if (apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken) return;
                   setApiConnTesting(true);
                   setApiConnTestResult('');
                   try {
