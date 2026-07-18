@@ -33,6 +33,12 @@ System.register([], (exports) => ({
     // Apply UI/UX enhancements based on persisted settings
     uiuxService.apply();
     let toggleButton: HTMLButtonElement | null = null;
+    // Stored so destroy() can remove it and prevent accumulation across hot-reloads
+    let settingsChangedHandler: ((event: Event) => void) | null = null;
+    // Stored so destroy() can cancel initialization if DOMContentLoaded has not yet fired
+    let pendingDOMContentLoadedHandler: (() => void) | null = null;
+    // Stored so destroy() can cancel the else-path initialization delay
+    let pendingInitTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
     function createToggleButton() {
       if (toggleButton) return;
@@ -98,10 +104,11 @@ System.register([], (exports) => ({
         updateToggleButtonState();
       }
 
-      // Listen for settings changes to update UI
-      window.addEventListener('rtl-settings-changed', (event: any) => {
+      // Listen for settings changes to update UI.
+      // Stored in the closure so destroy() can remove it cleanly.
+      settingsChangedHandler = (event: any) => {
         const newSettings = event.detail;
-        
+
         if (newSettings.enableManualToggleBtn === false) {
              removeToggleButton();
         } else if (newSettings.enableManualToggleBtn !== false && !toggleButton) {
@@ -121,7 +128,8 @@ System.register([], (exports) => ({
         }
 
         // Service handles its own updates, we just update local UI if needed
-      });
+      };
+      window.addEventListener('rtl-settings-changed', settingsChangedHandler);
 
       // Global API
       const blinkoRTL: BlinkoRTL = {
@@ -200,9 +208,16 @@ System.register([], (exports) => ({
         this.initI18n();
         
         if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', initializeRTLPlugin);
+          pendingDOMContentLoadedHandler = () => {
+            pendingDOMContentLoadedHandler = null;
+            initializeRTLPlugin();
+          };
+          document.addEventListener('DOMContentLoaded', pendingDOMContentLoadedHandler, { once: true });
         } else {
-          setTimeout(initializeRTLPlugin, 100);
+          pendingInitTimeoutId = setTimeout(() => {
+            pendingInitTimeoutId = null;
+            initializeRTLPlugin();
+          }, 100);
         }
 
         window.Blinko.addToolBarIcon({
@@ -374,9 +389,22 @@ System.register([], (exports) => ({
       }
 
       destroy() {
+        // Cancel any pending initialization that has not yet run
+        if (pendingDOMContentLoadedHandler) {
+          document.removeEventListener('DOMContentLoaded', pendingDOMContentLoadedHandler);
+          pendingDOMContentLoadedHandler = null;
+        }
+        if (pendingInitTimeoutId !== null) {
+          clearTimeout(pendingInitTimeoutId);
+          pendingInitTimeoutId = null;
+        }
         rtlService.disable();
         uiuxService.destroy();
         removeToggleButton();
+        if (settingsChangedHandler) {
+          window.removeEventListener('rtl-settings-changed', settingsChangedHandler);
+          settingsChangedHandler = null;
+        }
         console.log('Advanced RTL Plugin destroyed');
       }
     });

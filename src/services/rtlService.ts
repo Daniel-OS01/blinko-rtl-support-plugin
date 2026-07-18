@@ -15,15 +15,16 @@ export class RTLService {
   private permanentStyleElement: HTMLStyleElement | null = null;
   private dynamicStyleElement: HTMLStyleElement | null = null;
   private observer: MutationObserver | null = null;
-  private autoProcessInterval: any = null;
+  private autoProcessInterval: ReturnType<typeof setInterval> | null = null;
+  private retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
   // Managers
   private pasteInterceptor: PasteInterceptor;
   private storageManager: StorageManager;
 
   // Optimizations
   private pendingElements: Set<HTMLElement> = new Set();
-  private debouncedProcessQueue: () => void;
-  private debouncedProcessAll: () => void;
+  private debouncedProcessQueue!: (() => void) & { cancel: () => void };
+  private debouncedProcessAll!: (() => void) & { cancel: () => void };
 
   // Action Log
   private actionLog: { timestamp: string; element: string; direction: string; textPreview: string }[] = [];
@@ -88,14 +89,12 @@ export class RTLService {
         // Merge with default settings
         this.settings = { ...this.settings, ...loadedSettings };
 
-        // v1→v2 migration: apply corrected defaults for existing installs.
-        // Before v2, minRTLChars defaulted to 2 and darkMode to false.
-        // Stored values override defaults, so migration is required to update them.
-        const storedVersion = (loadedSettings as any)._settingsVersion ?? 0;
+        // v1→v2 migration: stamp the schema version and persist.
+        // User-stored preference values (minRTLChars, darkMode, etc.) are intentionally
+        // preserved — the stored value is the user's choice, not a stale default to fix.
+        const storedVersion = loadedSettings._settingsVersion ?? 0;
         if (storedVersion < 2) {
-            this.settings.minRTLChars = 1;
-            this.settings.darkMode = true;
-            (this.settings as any)._settingsVersion = 2;
+            this.settings._settingsVersion = 2;
             this.storageManager.save(this.settings);
         }
 
@@ -525,6 +524,7 @@ export class RTLService {
   }
 
   public enable() {
+    if (this.isRTLEnabled) return;
     this.isRTLEnabled = true;
     this.settings.enabled = true;
     this.storageManager.save(this.settings);
@@ -545,9 +545,13 @@ export class RTLService {
     this.setupObserver();
     this.startAutoProcessing();
 
-    // Immediate process followed by debounced to catch initial load
+    // Immediate process followed by a one-shot retry to catch late-loading elements.
+    // The handle is stored so disable() can cancel it if called before the timer fires.
     this.processAllElements();
-    setTimeout(() => this.processAllElements(), 500); // Retry shortly after for late loaders
+    this.retryTimeoutId = setTimeout(() => {
+      this.retryTimeoutId = null;
+      this.processAllElements();
+    }, 500);
   }
 
   public disable() {
@@ -555,7 +559,7 @@ export class RTLService {
     this.settings.enabled = false;
     this.storageManager.save(this.settings);
     this.removeCSS();
-    
+
     // Disable Managers
     this.pasteInterceptor.disable();
 
@@ -563,6 +567,17 @@ export class RTLService {
     document.body.classList.remove('blinko-rtl-mobile-view');
 
     this.stopAutoProcessing();
+
+    // Cancel any pending debounced work so it does not run after teardown
+    this.debouncedProcessAll.cancel();
+    this.debouncedProcessQueue.cancel();
+
+    // Cancel the late-loader retry if it has not fired yet
+    if (this.retryTimeoutId !== null) {
+      clearTimeout(this.retryTimeoutId);
+      this.retryTimeoutId = null;
+    }
+
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;

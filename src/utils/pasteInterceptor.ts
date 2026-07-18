@@ -55,22 +55,12 @@ export class PasteInterceptor {
   private showSuggestionToast(text: string, target: HTMLElement) {
     this.removeToast();
 
+    // Build the toast using createElement + textContent to avoid innerHTML.
+    // No user-controlled text is placed in the DOM as markup — all dynamic
+    // content goes through textContent or style properties only.
+
     const toast = document.createElement('div');
     toast.className = 'rtl-paste-toast';
-    toast.innerHTML = `
-      <div style="margin-bottom: 10px;">
-        <strong style="display: block; margin-bottom: 5px;">Mixed content detected</strong>
-        <p style="margin: 0; font-size: 0.9em; opacity: 0.8;">How would you like to paste this text?</p>
-      </div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button id="rtl-btn-split" style="flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-primary, #007bff); color: white; cursor: pointer;">Split Blocks</button>
-        <button id="rtl-btn-wrap" style="flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-secondary, #6c757d); color: white; cursor: pointer;">Wrap (Isolation)</button>
-        <button id="rtl-btn-original" style="flex: 1; padding: 6px 12px; border: 1px solid var(--b3-theme-surface-lighter, #ccc); border-radius: 4px; background: transparent; color: inherit; cursor: pointer;">Original</button>
-      </div>
-      <button class="rtl-toast-close" style="position: absolute; top: 5px; right: 5px; border: none; background: transparent; cursor: pointer; font-size: 16px;">&times;</button>
-    `;
-
-    // Apply styles
     Object.assign(toast.style, {
       position: 'fixed',
       bottom: '20px',
@@ -84,28 +74,76 @@ export class PasteInterceptor {
       zIndex: '10000',
       maxWidth: '350px',
       fontFamily: 'sans-serif',
-      fontSize: '14px'
+      fontSize: '14px',
     });
+
+    // Header
+    const header = document.createElement('div');
+    header.style.marginBottom = '10px';
+
+    const title = document.createElement('strong');
+    title.style.cssText = 'display: block; margin-bottom: 5px;';
+    title.textContent = 'Mixed content detected';
+
+    const subtitle = document.createElement('p');
+    subtitle.style.cssText = 'margin: 0; font-size: 0.9em; opacity: 0.8;';
+    subtitle.textContent = 'How would you like to paste this text?';
+
+    header.append(title, subtitle);
+
+    // Button row
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display: flex; gap: 8px; flex-wrap: wrap;';
+
+    const splitBtn = document.createElement('button');
+    splitBtn.id = 'rtl-btn-split';
+    splitBtn.setAttribute('aria-label', 'Paste as split blocks');
+    splitBtn.style.cssText = 'flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-primary, #007bff); color: white; cursor: pointer;';
+    splitBtn.textContent = 'Split Blocks';
+
+    const wrapBtn = document.createElement('button');
+    wrapBtn.id = 'rtl-btn-wrap';
+    wrapBtn.setAttribute('aria-label', 'Paste with Unicode isolation wrap');
+    wrapBtn.style.cssText = 'flex: 1; padding: 6px 12px; border: none; border-radius: 4px; background: var(--b3-theme-secondary, #6c757d); color: white; cursor: pointer;';
+    wrapBtn.textContent = 'Wrap (Isolation)';
+
+    const origBtn = document.createElement('button');
+    origBtn.id = 'rtl-btn-original';
+    origBtn.setAttribute('aria-label', 'Paste original text unchanged');
+    origBtn.style.cssText = 'flex: 1; padding: 6px 12px; border: 1px solid var(--b3-theme-surface-lighter, #ccc); border-radius: 4px; background: transparent; color: inherit; cursor: pointer;';
+    origBtn.textContent = 'Original';
+
+    btnRow.append(splitBtn, wrapBtn, origBtn);
+
+    // Close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'rtl-toast-close';
+    closeBtn.setAttribute('aria-label', 'Close paste suggestion');
+    closeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; border: none; background: transparent; cursor: pointer; font-size: 16px;';
+    closeBtn.textContent = '×'; // ×
+
+    toast.append(header, btnRow, closeBtn);
 
     document.body.appendChild(toast);
     this.activeToast = toast;
 
-    toast.querySelector('#rtl-btn-split')?.addEventListener('click', () => {
+    // Listeners attached directly to variables — no querySelector needed
+    splitBtn.addEventListener('click', () => {
       this.insertText(target, this.processSplit(text));
       this.removeToast();
     });
 
-    toast.querySelector('#rtl-btn-wrap')?.addEventListener('click', () => {
+    wrapBtn.addEventListener('click', () => {
       this.insertText(target, this.processWrap(text));
       this.removeToast();
     });
 
-    toast.querySelector('#rtl-btn-original')?.addEventListener('click', () => {
+    origBtn.addEventListener('click', () => {
       this.insertText(target, text);
       this.removeToast();
     });
 
-    toast.querySelector('.rtl-toast-close')?.addEventListener('click', () => {
+    closeBtn.addEventListener('click', () => {
       this.removeToast();
     });
   }

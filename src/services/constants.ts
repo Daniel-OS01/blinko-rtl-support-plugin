@@ -336,5 +336,6 @@ export const DEFAULT_SETTINGS: RTLSettings = {
     fontFamily: 'inherit',
     lineHeight: 1.5,
     paragraphMargin: 10
-  }
+  },
+  _settingsVersion: 2,
 };

@@ -54,6 +54,8 @@ export interface RTLSettings {
   showManualToggle?: boolean;
   enableActionLog?: boolean;
   debugShowElementNames?: boolean; // Renamed from showElementNames
+  /** Internal — settings schema version for migration (matches UIUXSettings pattern) */
+  _settingsVersion?: number;
 }
 
 export interface UIUXSettings {
