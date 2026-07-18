@@ -427,7 +427,13 @@ export class UIUXService {
       for (const el of scope.querySelectorAll<HTMLElement>('button, [class*="close"], [aria-label], [data-dismiss]')) {
         const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
         const className = (el.className || '').toString().toLowerCase();
-        if (className.includes('close') || ariaLabel.includes('close') || el.hasAttribute('data-dismiss')) {
+        if (
+          className.includes('close') ||
+          className.includes('dismiss') ||
+          ariaLabel.includes('close') ||
+          ariaLabel.includes('dismiss') ||
+          el.hasAttribute('data-dismiss')
+        ) {
           closeBtn = el;
           break;
         }
