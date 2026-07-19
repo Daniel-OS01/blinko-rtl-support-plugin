@@ -1,5 +1,8 @@
 import { DetectionStrategy } from './types';
 
+// Cache regex outside hot loop to prevent re-compilation and memory allocation
+const SKIP_REGEX = /\s|[.,!?;:()[\]{}]/;
+
 export interface RTLDetectionConfig {
   sensitivity: 'high' | 'medium' | 'low';
   minRTLChars: number;
@@ -38,7 +41,13 @@ export class CharacterCodeStrategy implements DetectionStrategy {
    */
   private isRTLChar(char: string): boolean {
     const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+    // Replace .some() closure with flat loop for performance in hot paths
+    for (let i = 0; i < this.RTL_RANGES.length; i++) {
+      const min = this.RTL_RANGES[i][0];
+      const max = this.RTL_RANGES[i][1];
+      if (code >= min && code <= max) return true;
+    }
+    return false;
   }
 
   /**
@@ -47,15 +56,17 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   public detect(text: string): boolean {
     if (!text || text.length === 0) return false;
 
-    // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
+    // Avoid allocating a new string via substring; just calculate the loop limit
+    const limit = Math.min(text.length, this.config.sampleSize);
 
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
 
-    for (const char of sample) {
-      // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
+    // Flat loop using integer index avoids for..of iterator overhead
+    for (let i = 0; i < limit; i++) {
+      const char = text[i];
+      // Use cached regex and avoid string allocation
+      if (!SKIP_REGEX.test(char)) {
         totalSignificantChars++;
         if (this.isRTLChar(char)) {
           rtlCharCount++;
