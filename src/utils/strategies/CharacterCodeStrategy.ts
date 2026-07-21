@@ -10,21 +10,6 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   readonly name = 'CharacterCode';
   private config: RTLDetectionConfig;
 
-  // Hebrew: \u0590-\u05FF
-  // Arabic: \u0600-\u06FF
-  // Additional RTL: \u0700-\u074F, \u0780-\u07BF
-  private readonly RTL_RANGES = [
-    [0x0590, 0x05FF], // Hebrew
-    [0x0600, 0x06FF], // Arabic
-    [0x0700, 0x074F], // Syriac
-    [0x0750, 0x077F], // Arabic Supplement
-    [0x0780, 0x07BF], // Thaana
-    [0x08A0, 0x08FF], // Arabic Extended-A
-    [0xFB1D, 0xFB4F], // Hebrew Presentation Forms
-    [0xFB50, 0xFDFF], // Arabic Presentation Forms-A
-    [0xFE70, 0xFEFF], // Arabic Presentation Forms-B
-  ];
-
   constructor(config: RTLDetectionConfig = {
     sensitivity: 'medium',
     minRTLChars: 3,
@@ -34,11 +19,18 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
+   * Check if a character code is RTL
    */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+  private isRTLCode(code: number): boolean {
+    return (code >= 0x0590 && code <= 0x05FF) || // Hebrew
+           (code >= 0x0600 && code <= 0x06FF) || // Arabic
+           (code >= 0x0700 && code <= 0x074F) || // Syriac
+           (code >= 0x0750 && code <= 0x077F) || // Arabic Supplement
+           (code >= 0x0780 && code <= 0x07BF) || // Thaana
+           (code >= 0x08A0 && code <= 0x08FF) || // Arabic Extended-A
+           (code >= 0xFB1D && code <= 0xFB4F) || // Hebrew Presentation Forms
+           (code >= 0xFB50 && code <= 0xFDFF) || // Arabic Presentation Forms-A
+           (code >= 0xFE70 && code <= 0xFEFF);   // Arabic Presentation Forms-B
   }
 
   /**
@@ -47,19 +39,26 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   public detect(text: string): boolean {
     if (!text || text.length === 0) return false;
 
-    // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
-
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
+    const len = Math.min(text.length, this.config.sampleSize);
 
-    for (const char of sample) {
-      // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
-        totalSignificantChars++;
-        if (this.isRTLChar(char)) {
-          rtlCharCount++;
-        }
+    for (let i = 0; i < len; i++) {
+      const code = text.charCodeAt(i);
+
+      // Skip whitespace and punctuation (basic ascii bounds checking is faster than regex)
+      if (
+        code === 32 || code === 9 || code === 10 || code === 13 || // Whitespace
+        code === 46 || code === 44 || code === 33 || code === 63 || // . , ! ?
+        code === 59 || code === 58 || // ; :
+        code === 40 || code === 41 || code === 91 || code === 93 || code === 123 || code === 125 // () [] {}
+      ) {
+        continue;
+      }
+
+      totalSignificantChars++;
+      if (this.isRTLCode(code)) {
+        rtlCharCount++;
       }
     }
 
@@ -71,13 +70,11 @@ export class CharacterCodeStrategy implements DetectionStrategy {
     // Calculate RTL percentage based on sensitivity
     const rtlPercentage = totalSignificantChars > 0 ? rtlCharCount / totalSignificantChars : 0;
 
-    const thresholds = {
-      high: 0.1,    // 10% RTL chars
-      medium: 0.15, // 15% RTL chars
-      low: 0.4      // 40% RTL chars
-    };
+    let threshold = 0.15;
+    if (this.config.sensitivity === 'high') threshold = 0.1;
+    else if (this.config.sensitivity === 'low') threshold = 0.4;
 
-    return rtlPercentage >= thresholds[this.config.sensitivity];
+    return rtlPercentage >= threshold;
   }
 
   public updateConfig(config: Partial<RTLDetectionConfig>): void {
