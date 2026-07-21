@@ -136,7 +136,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
           aria-label={t('manual_toggle')}
           aria-pressed={isRTLEnabled}
         >
-          🔄
+          <span aria-hidden="true">🔄</span>
         </button>
       </div>
 
@@ -158,8 +158,9 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
       {/* Actions */}
       <div style={{ marginBottom: '20px' }}>
         <button 
-          onClick={handleFixSelection}
-          disabled={isFixing}
+          onClick={() => { if (!isFixing) handleFixSelection(); }}
+          aria-disabled={isFixing}
+          title={isFixing ? "Processing your selection..." : "Fix text direction in selected block"}
           style={{ 
             width: '100%',
             background: isFixing ? '#6c757d' : '#28a745',
@@ -167,7 +168,7 @@ export function RTLApp({ detector }: RTLAppProps): JSX.Element {
             border: 'none', 
             padding: '10px',
             borderRadius: '6px',
-            cursor: isFixing ? 'wait' : 'pointer',
+            cursor: isFixing ? 'not-allowed' : 'pointer',
             fontWeight: '500',
             display: 'flex',
             alignItems: 'center',
