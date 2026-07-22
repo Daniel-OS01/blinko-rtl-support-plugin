@@ -34,30 +34,41 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
-   */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
-  }
-
-  /**
    * Detect RTL content in text
    */
   public detect(text: string): boolean {
     if (!text || text.length === 0) return false;
 
-    // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
+    // ⚡ Bolt: Prevent string allocation and regex overhead by using Math.min and flat loops
+    const len = Math.min(text.length, this.config.sampleSize);
 
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
 
-    for (const char of sample) {
-      // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
+    for (let i = 0; i < len; i++) {
+      const code = text.charCodeAt(i);
+
+      // Fast path for ASCII whitespace and punctuation
+      const isWhitespaceOrPunctuation = code <= 125 && (
+        code === 32 || code === 9 || code === 10 || code === 13 ||
+        code === 46 || code === 44 || code === 33 || code === 63 ||
+        code === 59 || code === 58 || code === 40 || code === 41 ||
+        code === 91 || code === 93 || code === 123 || code === 125
+      );
+
+      if (!isWhitespaceOrPunctuation) {
         totalSignificantChars++;
-        if (this.isRTLChar(char)) {
+
+        let isRTL = false;
+        // ⚡ Bolt: Replace higher-order .some() with flat loop for speed
+        for (let j = 0; j < this.RTL_RANGES.length; j++) {
+          if (code >= this.RTL_RANGES[j][0] && code <= this.RTL_RANGES[j][1]) {
+            isRTL = true;
+            break;
+          }
+        }
+
+        if (isRTL) {
           rtlCharCount++;
         }
       }
