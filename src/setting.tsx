@@ -2482,8 +2482,10 @@ export function RTLSetting(): JSX.Element {
               Requires a configured AI provider in Blinko settings.
             </p>
             <button
-              disabled={aiPostTesting}
+              aria-disabled={aiPostTesting}
+              title={aiPostTesting ? 'Test in progress' : undefined}
               onClick={async () => {
+                if (aiPostTesting) return;
                 setAIPostTesting(true);
                 setAIPostTestResult('');
                 try {
@@ -2496,7 +2498,7 @@ export function RTLSetting(): JSX.Element {
                   setAIPostTesting(false);
                 }
               }}
-              style={{ background: aiPostTesting ? '#888' : '#6f42c1', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '5px', cursor: aiPostTesting ? 'wait' : 'pointer', fontSize: '12px', fontWeight: '600' }}
+              style={{ background: aiPostTesting ? '#888' : '#6f42c1', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '5px', cursor: aiPostTesting ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: '600' }}
             >
               {aiPostTesting ? '⏳ Processing…' : '🧪 Run Test'}
             </button>
@@ -2567,8 +2569,10 @@ export function RTLSetting(): JSX.Element {
             {/* Test Connection */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <button
-                disabled={apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken}
+                aria-disabled={apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken}
+                title={(apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken) ? 'Requires API URL and Token' : undefined}
                 onClick={async () => {
+                  if (apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken) return;
                   setApiConnTesting(true);
                   setApiConnTestResult('');
                   try {
