@@ -4,3 +4,6 @@
 ## 2024-05-18 - Optimize Selector Validation with dummyElement matches
 **Learning:** Validating selectors using `document.querySelector(s)` is extremely slow because it traverses the live document DOM, whereas `document.createElement('div').matches(s)` achieves the same syntax validation ~25x faster by skipping the DOM entirely.
 **Action:** Always prefer a dummy element's `.matches()` for validating CSS selectors, and cache the validation results in a Map or Set to completely eliminate repeated validation overhead during configuration setups like `setupObserver()`.
+## 2024-07-23 - Optimize Text Scanning in detectMixedContent
+**Learning:** Using `text.match(/.../g)` inside loops or frequent text-processing utilities evaluates unconditionally, scanning the entire string and allocating memory for every match. This results in heavy execution overhead and large memory allocation.
+**Action:** Replace regex matches with flat `for` loops, use `charCodeAt` bounds checking, and add an early exit condition to halt execution when necessary thresholds are met.
