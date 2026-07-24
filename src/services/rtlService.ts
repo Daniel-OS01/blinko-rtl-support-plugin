@@ -702,12 +702,13 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // Check matches efficiently by using joined selectors
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
+                         if (joinedSelectors) {
+                             try {
+                                 matched = element.matches(joinedSelectors);
+                             } catch (e) {
+                                 // Should not happen, but safe is safe
                              }
                          }
 
@@ -752,13 +753,11 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
+                      // Check matches efficiently by using joined selectors
                       let matched = false;
-                      for (const s of safeSelectors) {
+                      if (joinedSelectors) {
                            try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
+                               matched = target.matches(joinedSelectors);
                            } catch (e) {}
                       }
 
