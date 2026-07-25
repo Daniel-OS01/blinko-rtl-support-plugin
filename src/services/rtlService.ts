@@ -703,13 +703,11 @@ export class RTLService {
                          }
 
                          // Check individual matches safely
+                         // ⚡ Bolt: Optimize by matching multiple selectors at once instead of in a loop
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
-                             }
-                         }
+                         try {
+                             matched = joinedSelectors ? element.matches(joinedSelectors) : false;
+                         } catch(e) {}
 
                          if (matched) {
                              this.pendingElements.add(element);
@@ -752,15 +750,11 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
+                      // ⚡ Bolt: Optimize by matching multiple selectors at once instead of in a loop
                       let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
-                      }
+                      try {
+                          matched = joinedSelectors ? target.matches(joinedSelectors) : false;
+                      } catch(e) {}
 
                       if (matched) {
                           this.pendingElements.add(target);
