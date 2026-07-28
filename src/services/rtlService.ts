@@ -703,12 +703,13 @@ export class RTLService {
                          }
 
                          // Check individual matches safely
+                         // 💡 What: Combined multiple selectors into a single string to evaluate with one match call.
+                         // 🎯 Why: Evaluating element.matches() inside a MutationObserver callback loop is computationally expensive. Calling it once with a combined string bypasses the loop and improves performance in high-frequency rendering paths.
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
-                             }
+                         if (joinedSelectors) {
+                             try {
+                                 matched = element.matches(joinedSelectors);
+                             } catch (e) {}
                          }
 
                          if (matched) {
@@ -753,13 +754,10 @@ export class RTLService {
                       }
 
                       let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
+                      if (joinedSelectors) {
+                          try {
+                              matched = target.matches(joinedSelectors);
+                          } catch (e) {}
                       }
 
                       if (matched) {
