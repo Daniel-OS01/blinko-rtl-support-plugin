@@ -413,11 +413,26 @@ export class RTLService {
       const isCodeBlock = safeMatches(element, 'pre, code, .code-block, .CodeMirror-line, .notion-code-block');
 
       if (isCodeBlock) {
-          const hebrewChars = (text.match(/[\u0590-\u05FF]/g) || []).length;
-          const arabicChars = (text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g) || []).length;
-          const totalRTL = hebrewChars + arabicChars;
+          let totalRTL = 0;
+          let nonWhitespaceLength = 0;
+          const limit = text.length;
 
-          const nonWhitespaceLength = text.replace(/\s/g, '').length || text.length;
+          for (let i = 0; i < limit; i++) {
+            const code = text.charCodeAt(i);
+            // Skip whitespace (simplified check)
+            if (code !== 32 && code !== 9 && code !== 10 && code !== 13) {
+                nonWhitespaceLength++;
+                // Hebrew (0x0590-0x05FF) or Arabic (0x0600-0x06FF, 0x0750-0x077F, 0x08A0-0x08FF)
+                if ((code >= 0x0590 && code <= 0x05FF) ||
+                    (code >= 0x0600 && code <= 0x06FF) ||
+                    (code >= 0x0750 && code <= 0x077F) ||
+                    (code >= 0x08A0 && code <= 0x08FF)) {
+                    totalRTL++;
+                }
+            }
+          }
+
+          if (nonWhitespaceLength === 0) nonWhitespaceLength = text.length || 1;
           const ratio = totalRTL / nonWhitespaceLength;
 
           if (ratio > 0.6) {

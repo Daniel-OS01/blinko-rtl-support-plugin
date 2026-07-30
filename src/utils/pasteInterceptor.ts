@@ -45,11 +45,29 @@ export class PasteInterceptor {
   }
 
   private detectMixedContent(text: string): boolean {
-    const rtlCount = (text.match(/[\u0590-\u05FF\u0600-\u06FF]/g) || []).length;
-    const ltrCount = (text.match(/[a-zA-Z]/g) || []).length;
+    let rtlCount = 0;
+    let ltrCount = 0;
+    const limit = text.length;
 
-    // Threshold: at least 3 chars of each to consider it "mixed content" worth intervening
-    return rtlCount > 3 && ltrCount > 3;
+    for (let i = 0; i < limit; i++) {
+      const code = text.charCodeAt(i);
+
+      // Check RTL: Hebrew (0x0590-0x05FF) or Arabic (0x0600-0x06FF)
+      if ((code >= 0x0590 && code <= 0x05FF) || (code >= 0x0600 && code <= 0x06FF)) {
+        rtlCount++;
+      }
+      // Check LTR: [A-Z] (0x0041-0x005A) or [a-z] (0x0061-0x007A)
+      else if ((code >= 0x0041 && code <= 0x005A) || (code >= 0x0061 && code <= 0x007A)) {
+        ltrCount++;
+      }
+
+      // Early exit condition
+      if (rtlCount > 3 && ltrCount > 3) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private showSuggestionToast(text: string, target: HTMLElement) {
