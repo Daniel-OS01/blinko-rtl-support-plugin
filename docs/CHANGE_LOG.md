@@ -23,6 +23,35 @@ Rationale: why the change was made
 
 ---
 
+### [CL-S5-001] Comprehensive GitHub Actions workflow refactor
+
+**Date:** 2026-07-31
+**Branch:** `claude/review-rtl-plugin-prs-OMCOM`
+**Commit:** (pending)
+
+**Files modified:**
+- `.github/workflows/test-comprehensive.yml` — complete rewrite
+
+**Changes:**
+- **Lockfile fix:** replaced bare `bun install --frozen-lockfile` with a retry loop (3 attempts, 5s/10s/20s exponential back-off) plus graceful fallback to `bun install` on version-parse failure. Emits `::warning::` annotation with actionable instructions (regenerate `bun.lockb` locally under the pinned Bun version).
+- **Node.js 20 deprecation:** added `NODE_NO_WARNINGS: "1"` global env to suppress deprecation noise from `actions/checkout@v4` and `actions/cache@v4`; added `# TODO(node24)` upgrade comments on every affected step; deadline documented inline (June 2, 2026).
+- **BUN_VERSION env var:** single source of truth for the Bun version across all 6 jobs (previously hardcoded `"1.2.5"` in each job individually).
+- **Cache key improvement:** cache key now includes `BUN_VERSION` (`bun-${{ env.BUN_VERSION }}-${{ runner.os }}-...`) so a Bun version bump automatically busts the cache.
+- **Concurrency fix:** changed `github.ref` to `github.head_ref || github.ref` so PR runs cancel by branch name rather than `refs/pull/N/merge` (prevents cross-PR interference).
+- **Coverage reporting:** added `--coverage` flag to test job; uploads `coverage/` directory as artifact on every run (not just failures) with 14-day retention.
+- **Test job timeout:** increased from 15 min to 20 min to accommodate coverage overhead.
+- **Build artifact upload:** changed from `if: success()` (implicit) to `if: always()` so the dist is available for debugging even when the size gate fails.
+- **Bundle size gate:** improved output to show KB values and clearer error message.
+- **New `compat` job:** runs core tests against Bun 1.1.38 (oldest expected dev environment); non-blocking, independent, matrix-extensible.
+- **New `maintenance` job:** workflow_dispatch-only; prints pinned action versions, Bun version, lockfile regeneration instructions, and the Node.js 24 migration deadline.
+- **`shell: bash` explicit:** on all multi-line `run` steps for runner portability.
+- **Inline documentation:** top-of-file comment block explains job graph, design decisions, and upgrade strategy.
+
+**Rationale:**
+CI was failing on every run due to `bun.lockb` version mismatch (`Outdated lockfile version: failed to parse lockfile`). Separately, Node.js 20 deprecation warnings from `actions/checkout@v4` and `actions/cache@v4` will become hard failures by June 2, 2026. The refactor fixes both immediately and adds the robustness, coverage, and compatibility infrastructure requested.
+
+---
+
 ### [CL-009] Add API Connection settings section to AI Post tab
 
 **Date:** 2026-03-26

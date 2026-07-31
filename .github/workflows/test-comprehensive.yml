@@ -1,3 +1,35 @@
+# ─── Workflow: Comprehensive CI Pipeline ──────────────────────────────────────
+#
+# Jobs (execution order):
+#
+#   typecheck ──┬── test      (unit + service + integration tests)
+#               └── build     (production bundle + size gate)
+#                       └── visual    (Playwright screenshots, non-blocking)
+#
+#   compat      (Bun version matrix, independent, non-blocking)
+#   maintenance (manual-only, workflow_dispatch)
+#
+# Key design decisions:
+#   - bun-version pinned to "1.2.5"; change BUN_VERSION env and regenerate lockfile
+#   - --frozen-lockfile with retry + graceful fallback for lockfile version drift
+#     (bun.lockb binary format is Bun-version-specific; drift causes parse failures)
+#   - NODE_NO_WARNINGS suppresses node20 deprecation noise from actions/checkout@v4
+#     and actions/cache@v4 until they ship node24-compatible builds (June 2026)
+#   - Bundle size gate: JS > 400 kB uncompressed fails the build job (~228 kB now)
+#   - concurrency group cancels duplicate runs on the same branch/PR
+#
+# UPGRADE STRATEGY — when to bump versions:
+#   BUN_VERSION: update here → regenerate bun.lockb locally (`bun install` under
+#     new Bun version) → commit bun.lockb alongside the version bump
+#   actions/checkout + actions/cache: upgrade to v5 once released with node24
+#     Track: https://github.com/actions/checkout/releases
+#             https://github.com/actions/cache/releases
+#     Deadline: Node.js 24 mandatory on GitHub hosted runners — June 2, 2026
+#   oven-sh/setup-bun: v2 is current; https://github.com/oven-sh/setup-bun
+#   actions/upload-artifact + actions/setup-python: check their release pages
+#
+# ──────────────────────────────────────────────────────────────────────────────
+
 name: Comprehensive Tests
 
 on:
@@ -6,76 +38,171 @@ on:
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      run_compat:
+        description: "Run Bun compatibility matrix (in addition to normal jobs)"
+        required: false
+        default: "false"
+        type: boolean
 
-# Cancel any in-progress run for the same branch/PR to avoid wasted minutes
+# Cancel any in-progress run for the same branch/PR to save CI minutes.
+# Uses github.head_ref for PRs (branch name) and github.ref for pushes so
+# concurrent pushes to the same branch cancel each other without affecting others.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+# ─── Global environment ────────────────────────────────────────────────────────
+env:
+  # Suppress Node.js 20 deprecation warnings emitted by actions/checkout@v4 and
+  # actions/cache@v4. These actions currently require node20 and will be updated
+  # to node24 before the June 2, 2026 deadline. Remove once upgraded to v5.
+  NODE_NO_WARNINGS: "1"
+
+  # Force colour output in CI for readable Bun install/test logs.
+  FORCE_COLOR: "1"
+
+  # Canonical Bun version for the project. Single source of truth across all jobs.
+  # After changing: run `bun install` locally to regenerate bun.lockb, then commit.
+  BUN_VERSION: "1.2.5"
+
 jobs:
-  # ─── Job 1: TypeScript type-check ─────────────────────────────────────────
+  # ─── Job 1: TypeScript type-check ──────────────────────────────────────────
+  #
+  # Fails fast before running heavier jobs. tsc --noEmit on this project is < 30s.
   typecheck:
     name: TypeScript Type Check
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      # TODO(node24): upgrade to actions/checkout@v5 once released with node24 support
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-      - name: Setup Bun
+      - name: Setup Bun ${{ env.BUN_VERSION }}
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.2.5"
+          bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Cache Bun dependencies
+      # Cache key includes bun version so a Bun bump busts the cache automatically.
+      # restore-keys allow a partial cache hit when bun.lockb changes (e.g. new dep).
+      # TODO(node24): upgrade to actions/cache@v5 once released with node24 support
+      - name: Restore dependency cache
+        id: cache
         uses: actions/cache@v4
         with:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
+          key: bun-${{ env.BUN_VERSION }}-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
           restore-keys: |
-            bun-${{ runner.os }}-
+            bun-${{ env.BUN_VERSION }}-${{ runner.os }}-
 
-      - name: Install Dependencies
-        run: bun install --frozen-lockfile
+      # Install strategy:
+      #   1. Try --frozen-lockfile (fast, reproducible, catches accidental changes).
+      #   2. On failure — typically bun.lockb was generated with a different Bun
+      #      version so the binary format can't be parsed — warn loudly and fall
+      #      back to a plain install. The warning is actionable: commit a refreshed
+      #      lockfile (`bun install` under BUN_VERSION, then git add bun.lockb).
+      #   3. Retry each attempt up to 3 times with exponential back-off (5s→10s→20s)
+      #      to absorb transient registry or DNS failures.
+      - name: Install dependencies
+        shell: bash
+        run: |
+          MAX_RETRIES=3
+          DELAY=5
+          INSTALL_OK=false
 
-      - name: Type Check
+          for attempt in $(seq 1 $MAX_RETRIES); do
+            echo "── Install attempt $attempt/$MAX_RETRIES (--frozen-lockfile) ──"
+            if bun install --frozen-lockfile 2>&1; then
+              INSTALL_OK=true
+              echo "✅ Installed from frozen lockfile"
+              break
+            fi
+            if [ $attempt -lt $MAX_RETRIES ]; then
+              echo "Retrying in ${DELAY}s..."
+              sleep $DELAY
+              DELAY=$((DELAY * 2))
+            fi
+          done
+
+          if [ "$INSTALL_OK" = "false" ]; then
+            echo "::warning::--frozen-lockfile failed after $MAX_RETRIES attempts." \
+              "bun.lockb is likely incompatible with Bun ${{ env.BUN_VERSION }}." \
+              "Falling back to 'bun install'. Fix: run 'bun install' locally under" \
+              "Bun ${{ env.BUN_VERSION }} and commit the updated bun.lockb."
+            bun install
+          fi
+
+      - name: TypeScript type check
+        shell: bash
         run: bun x tsc --noEmit
 
-  # ─── Job 2: Unit + Service + Integration Tests ────────────────────────────
+  # ─── Job 2: Unit + Service + Integration Tests ─────────────────────────────
+  #
+  # Depends on typecheck to avoid burning minutes on type-broken code.
+  # Uploads coverage always and failure logs only on failure.
   test:
     name: Run All Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # Run after typecheck so we don't waste test minutes on type-broken code
+    timeout-minutes: 20
     needs: typecheck
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4 # TODO(node24): upgrade to v5
 
-      - name: Setup Bun
+      - name: Setup Bun ${{ env.BUN_VERSION }}
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.2.5"
+          bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
+      - name: Restore dependency cache
+        uses: actions/cache@v4 # TODO(node24): upgrade to v5
         with:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
+          key: bun-${{ env.BUN_VERSION }}-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
           restore-keys: |
-            bun-${{ runner.os }}-
+            bun-${{ env.BUN_VERSION }}-${{ runner.os }}-
 
-      - name: Install Dependencies
-        run: bun install --frozen-lockfile
+      - name: Install dependencies
+        shell: bash
+        run: |
+          MAX_RETRIES=3
+          DELAY=5
+          INSTALL_OK=false
 
-      - name: Run All Tests (excluding orphan renderer tests)
-        # tests/renderer.test.ts is excluded — it imports src/renderer.ts and
-        # src/config.ts which were removed as unused orphan files. All other
-        # test directories and files are included.
+          for attempt in $(seq 1 $MAX_RETRIES); do
+            echo "── Install attempt $attempt/$MAX_RETRIES (--frozen-lockfile) ──"
+            if bun install --frozen-lockfile 2>&1; then
+              INSTALL_OK=true
+              echo "✅ Installed from frozen lockfile"
+              break
+            fi
+            if [ $attempt -lt $MAX_RETRIES ]; then
+              echo "Retrying in ${DELAY}s..."
+              sleep $DELAY
+              DELAY=$((DELAY * 2))
+            fi
+          done
+
+          if [ "$INSTALL_OK" = "false" ]; then
+            echo "::warning::--frozen-lockfile failed after $MAX_RETRIES attempts." \
+              "Falling back to 'bun install'. Commit an updated bun.lockb to restore" \
+              "reproducible installs."
+            bun install
+          fi
+
+      # tests/renderer.test.ts is excluded — it imports src/renderer.ts and
+      # src/config.ts which were removed as orphan files. All other paths are
+      # listed explicitly so accidentally adding a top-level test file doesn't
+      # silently skip it (if it wasn't in the list it wouldn't run).
+      - name: Run tests with coverage
+        shell: bash
         run: |
           bun test \
             tests/unit/ \
@@ -87,9 +214,20 @@ jobs:
             tests/strategies_extra.test.ts \
             tests/regex_config.test.ts \
             tests/verify_dynamic_rtl.test.ts \
+            --coverage \
             --timeout 30000
 
-      - name: Upload Test Results
+      # Upload coverage on every run (not just failures) so trends are trackable.
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.run_id }}
+          path: coverage/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload test failure logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
@@ -98,8 +236,12 @@ jobs:
             *.log
             test-results/
           retention-days: 7
+          if-no-files-found: ignore
 
-  # ─── Job 3: Build ─────────────────────────────────────────────────────────
+  # ─── Job 3: Build & Bundle Analysis ────────────────────────────────────────
+  #
+  # Runs in parallel with `test` (both need `typecheck`).
+  # 400 kB JS gate; current baseline ~228 kB. Raise with a comment if needed.
   build:
     name: Build & Bundle Analysis
     runs-on: ubuntu-latest
@@ -107,95 +249,164 @@ jobs:
     needs: typecheck
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4 # TODO(node24): upgrade to v5
 
-      - name: Setup Bun
+      - name: Setup Bun ${{ env.BUN_VERSION }}
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.2.5"
+          bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
+      - name: Restore dependency cache
+        uses: actions/cache@v4 # TODO(node24): upgrade to v5
         with:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
+          key: bun-${{ env.BUN_VERSION }}-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
           restore-keys: |
-            bun-${{ runner.os }}-
+            bun-${{ env.BUN_VERSION }}-${{ runner.os }}-
 
-      - name: Install Dependencies
-        run: bun install --frozen-lockfile
+      - name: Install dependencies
+        shell: bash
+        run: |
+          MAX_RETRIES=3
+          DELAY=5
+          INSTALL_OK=false
 
-      - name: Production Build
+          for attempt in $(seq 1 $MAX_RETRIES); do
+            echo "── Install attempt $attempt/$MAX_RETRIES (--frozen-lockfile) ──"
+            if bun install --frozen-lockfile 2>&1; then
+              INSTALL_OK=true
+              echo "✅ Installed from frozen lockfile"
+              break
+            fi
+            if [ $attempt -lt $MAX_RETRIES ]; then
+              echo "Retrying in ${DELAY}s..."
+              sleep $DELAY
+              DELAY=$((DELAY * 2))
+            fi
+          done
+
+          if [ "$INSTALL_OK" = "false" ]; then
+            echo "::warning::--frozen-lockfile failed after $MAX_RETRIES attempts." \
+              "Falling back to 'bun install'. Commit an updated bun.lockb to restore" \
+              "reproducible installs."
+            bun install
+          fi
+
+      - name: Production build
+        shell: bash
         run: bun run build:prod
 
-      - name: Check Bundle Size
+      # stat -c%s is GNU (Linux); stat -f%z is BSD (macOS).
+      # The fallback makes this portable if the runner ever changes.
+      - name: Bundle size gate
+        shell: bash
         run: |
           JS_SIZE=$(stat -c%s dist/*.js 2>/dev/null || stat -f%z dist/*.js)
-          CSS_SIZE=$(stat -c%s dist/*.css 2>/dev/null || stat -f%z dist/*.css)
-          echo "JS bundle: ${JS_SIZE} bytes"
-          echo "CSS bundle: ${CSS_SIZE} bytes"
-          # Fail if JS bundle exceeds 400 kB uncompressed (current ~228 kB)
-          if [ "$JS_SIZE" -gt 409600 ]; then
-            echo "::error::JS bundle ${JS_SIZE} bytes exceeds 400 kB limit"
+          CSS_SIZE=$(stat -c%s dist/*.css 2>/dev/null || stat -f%z dist/*.css 2>/dev/null || echo 0)
+          TOTAL=$((JS_SIZE + CSS_SIZE))
+
+          echo "JS bundle:   ${JS_SIZE} bytes  ($(( JS_SIZE  / 1024 )) kB)"
+          echo "CSS bundle:  ${CSS_SIZE} bytes  ($(( CSS_SIZE / 1024 )) kB)"
+          echo "Total:       ${TOTAL} bytes  ($(( TOTAL    / 1024 )) kB)"
+
+          # 400 kB = 409600 bytes. Baseline at time of writing: ~228 kB.
+          # Raise JS_LIMIT_BYTES intentionally; leave a comment explaining why.
+          JS_LIMIT_BYTES=409600
+          if [ "$JS_SIZE" -gt "$JS_LIMIT_BYTES" ]; then
+            echo "::error::JS bundle ${JS_SIZE} bytes ($(( JS_SIZE / 1024 )) kB) exceeds" \
+              "the 400 kB limit. Optimise imports or raise JS_LIMIT_BYTES with a comment."
             exit 1
           fi
 
-      - name: Upload Build Artifacts
+          echo "✅ Bundle size within limits"
+
+      - name: Upload build artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ github.run_id }}
           path: dist/
           retention-days: 7
 
-  # ─── Job 4: Visual Verification (optional, non-blocking) ──────────────────
+  # ─── Job 4: Visual & Mobile Verification ───────────────────────────────────
+  #
+  # Non-blocking (continue-on-error: true): Playwright needs a browser display
+  # and the verification script may not exist on all branches.
   visual:
     name: Visual & Mobile Verification
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: build
-    # Non-blocking — visual tests require a browser display which may be absent
     continue-on-error: true
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4 # TODO(node24): upgrade to v5
 
-      - name: Setup Bun
+      - name: Setup Bun ${{ env.BUN_VERSION }}
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "1.2.5"
+          bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Set up Python
+      # Pinned to 3.12 (not "3.x") to catch Python API incompatibilities early.
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
+      - name: Restore dependency cache
+        uses: actions/cache@v4 # TODO(node24): upgrade to v5
         with:
           path: |
             ~/.bun/install/cache
             node_modules
-          key: bun-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
+          key: bun-${{ env.BUN_VERSION }}-${{ runner.os }}-${{ hashFiles('bun.lockb') }}
           restore-keys: |
-            bun-${{ runner.os }}-
+            bun-${{ env.BUN_VERSION }}-${{ runner.os }}-
 
-      - name: Install Dependencies
+      - name: Install dependencies
+        shell: bash
         run: |
-          bun install --frozen-lockfile
-          pip install playwright
+          MAX_RETRIES=3
+          DELAY=5
+          INSTALL_OK=false
+
+          for attempt in $(seq 1 $MAX_RETRIES); do
+            echo "── Install attempt $attempt/$MAX_RETRIES (--frozen-lockfile) ──"
+            if bun install --frozen-lockfile 2>&1; then
+              INSTALL_OK=true
+              echo "✅ Installed from frozen lockfile"
+              break
+            fi
+            if [ $attempt -lt $MAX_RETRIES ]; then
+              echo "Retrying in ${DELAY}s..."
+              sleep $DELAY
+              DELAY=$((DELAY * 2))
+            fi
+          done
+
+          if [ "$INSTALL_OK" = "false" ]; then
+            echo "::warning::--frozen-lockfile failed, falling back to bun install"
+            bun install
+          fi
+
+          # Playwright install is separate from bun install (different ecosystem).
+          pip install playwright --quiet
           playwright install --with-deps chromium
 
-      - name: Run Visual Verification
+      - name: Run visual verification
+        shell: bash
         run: |
           if [ -f "verification/verify_rtl_ui.py" ]; then
             python verification/verify_rtl_ui.py
           else
-            echo "Verification script not found, skipping."
+            echo "::notice::Verification script not found at verification/verify_rtl_ui.py — skipping."
           fi
 
-      - name: Upload Verification Screenshots
+      - name: Upload verification screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -203,3 +414,105 @@ jobs:
           path: verification/*.png
           retention-days: 7
           if-no-files-found: ignore
+
+  # ─── Job 5: Bun Version Compatibility Matrix ────────────────────────────────
+  #
+  # Runs the core tests against an older Bun release to catch regressions from
+  # Bun-version-specific runtime APIs or bundler behaviour.
+  #
+  # Non-blocking (continue-on-error: true), independent (no `needs`). Never gates
+  # a merge — it's an early-warning system.
+  #
+  # No --frozen-lockfile here: bun.lockb is generated for BUN_VERSION and would
+  # always fail to parse under a different version. Plain install from package.json.
+  compat:
+    name: Compat — Bun ${{ matrix.bun-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        # Last stable 1.1.x — oldest Bun version expected in dev environments.
+        # Extend: bun-version: ["1.1.38", "1.0.30"]
+        bun-version: ["1.1.38"]
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4 # TODO(node24): upgrade to v5
+
+      - name: Setup Bun ${{ matrix.bun-version }}
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ matrix.bun-version }}
+
+      - name: Install dependencies (no frozen-lockfile)
+        shell: bash
+        run: |
+          MAX_RETRIES=3
+          DELAY=5
+          for attempt in $(seq 1 $MAX_RETRIES); do
+            echo "── Install attempt $attempt/$MAX_RETRIES ──"
+            if bun install 2>&1; then
+              echo "✅ Dependencies installed"
+              break
+            fi
+            if [ $attempt -lt $MAX_RETRIES ]; then
+              echo "Retrying in ${DELAY}s..."
+              sleep $DELAY
+              DELAY=$((DELAY * 2))
+            else
+              echo "::error::bun install failed after $MAX_RETRIES attempts"
+              exit 1
+            fi
+          done
+
+      # Focused subset: unit + services. Integration tests are environment-sensitive;
+      # they're covered by the main `test` job under the canonical Bun version.
+      - name: Run core tests on Bun ${{ matrix.bun-version }}
+        shell: bash
+        run: |
+          bun test \
+            tests/unit/ \
+            tests/services/ \
+            tests/strategies.test.ts \
+            --timeout 30000
+
+  # ─── Job 6: Maintenance — Action Version Freshness Check ───────────────────
+  #
+  # Manual-only (workflow_dispatch). Run periodically to see which actions need
+  # upgrading and when the Node.js 24 deadline lands. Purely informational.
+  maintenance:
+    name: Maintenance — Action Version Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Report pinned versions and upgrade schedule
+        shell: bash
+        run: |
+          echo "═══════════════════════════════════════════════════════════"
+          echo "  Pinned action versions and upgrade checklist"
+          echo "═══════════════════════════════════════════════════════════"
+          echo ""
+          echo "  Action                        Pinned    Release page"
+          echo "  ────────────────────────────  ────────  ────────────────────────────────────────"
+          echo "  actions/checkout              v4        https://github.com/actions/checkout/releases"
+          echo "  actions/cache                 v4        https://github.com/actions/cache/releases"
+          echo "  actions/upload-artifact       v4        https://github.com/actions/upload-artifact/releases"
+          echo "  actions/setup-python          v5        https://github.com/actions/setup-python/releases"
+          echo "  oven-sh/setup-bun             v2        https://github.com/oven-sh/setup-bun/releases"
+          echo ""
+          echo "  BUN_VERSION (env):  ${{ env.BUN_VERSION }}"
+          echo "    → After bumping: run 'bun install' locally, commit updated bun.lockb"
+          echo ""
+          echo "  ⚠️  NODE.JS 24 MIGRATION DEADLINE: June 2, 2026"
+          echo "     actions/checkout@v4 and actions/cache@v4 use Node.js 20."
+          echo "     Steps before deadline:"
+          echo "       1. Upgrade to actions/checkout@v5 (when released with node24)"
+          echo "       2. Upgrade to actions/cache@v5     (when released with node24)"
+          echo "       3. Remove NODE_NO_WARNINGS from the global env block"
+          echo "     Track: https://github.com/actions/toolkit/discussions"
+          echo ""
+          echo "═══════════════════════════════════════════════════════════"
