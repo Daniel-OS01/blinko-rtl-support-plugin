@@ -322,6 +322,45 @@ const CARD_GRID_RTL_CSS = `/* Card Grid RTL — targets card masonry grid layout
     direction: ltr !important;
 }`;
 
+export interface PresetActionState {
+  /** True when the action must not run. */
+  disabled: boolean;
+  /** Why — shown as the tooltip, so it doubles as the enabled-state label. */
+  reason: string;
+}
+
+/**
+ * Single source of truth for whether a preset action is available and why.
+ *
+ * The buttons use `aria-disabled` rather than the native `disabled` attribute:
+ * a natively disabled button swallows pointer events, so its `title` tooltip
+ * never appears and the user is left guessing why the control is greyed out.
+ * The trade-off is that the element stays interactive, so every caller must
+ * consult `disabled` before acting — including for keyboard activation, since
+ * Enter and Space on a <button> dispatch a click.
+ *
+ * Order matters: the plugin being switched off is reported ahead of selection
+ * problems, because it is the condition the user has to resolve first.
+ */
+export function getPresetActionState(
+  action: 'load' | 'delete',
+  pluginEnabled: boolean,
+  selectedPresetId: string,
+): PresetActionState {
+  const verb = action === 'load' ? 'load' : 'delete';
+
+  if (!pluginEnabled) {
+    return { disabled: true, reason: `Enable the plugin to ${verb} presets` };
+  }
+  if (!selectedPresetId) {
+    return { disabled: true, reason: `Select a preset to ${verb}` };
+  }
+  if (action === 'delete' && BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) {
+    return { disabled: true, reason: 'Cannot delete built-in presets' };
+  }
+  return { disabled: false, reason: action === 'load' ? 'Load selected preset' : 'Delete selected preset' };
+}
+
 const BUILT_IN_PRESETS: Preset[] = [
   {
     id: 'default',
@@ -884,6 +923,9 @@ export function RTLSetting(): JSX.Element {
       // Reset input value to allow re-importing same file if needed
       (event.target as HTMLInputElement).value = '';
   };
+
+  const loadPresetState = getPresetActionState('load', settings.enabled, selectedPresetId);
+  const deletePresetState = getPresetActionState('delete', settings.enabled, selectedPresetId);
 
   return (
     <div 
@@ -1547,37 +1589,37 @@ export function RTLSetting(): JSX.Element {
             </select>
 
             <button
-              onClick={loadPreset}
-              disabled={!settings.enabled || !selectedPresetId}
+              onClick={() => { if (!loadPresetState.disabled) loadPreset(); }}
+              aria-disabled={loadPresetState.disabled}
+              aria-label="Load selected preset"
+              title={loadPresetState.reason}
               style={{
                 background: '#17a2b8',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: 'pointer'
+                cursor: loadPresetState.disabled ? 'not-allowed' : 'pointer',
+                opacity: loadPresetState.disabled ? 0.5 : 1
               }}
             >
-              📥 Load
+              <span aria-hidden="true">📥</span> Load
             </button>
 
             <button
-              onClick={() => {
-                const isDisabled = !settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId);
-                if (!isDisabled) deletePreset();
-              }}
-              aria-disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
+              onClick={() => { if (!deletePresetState.disabled) deletePreset(); }}
+              aria-disabled={deletePresetState.disabled}
               aria-label="Delete selected preset"
+              title={deletePresetState.reason}
               style={{
                 background: '#dc3545',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                cursor: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 'not-allowed' : 'pointer',
-                opacity: (!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1
+                cursor: deletePresetState.disabled ? 'not-allowed' : 'pointer',
+                opacity: deletePresetState.disabled ? 0.5 : 1
               }}
-              title={(!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId) ? "Cannot delete built-in presets" : "Select a preset to delete") : "Delete selected preset"}
             >
               <span aria-hidden="true">🗑️</span>
             </button>
