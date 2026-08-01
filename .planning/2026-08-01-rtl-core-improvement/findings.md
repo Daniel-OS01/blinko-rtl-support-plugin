@@ -213,6 +213,24 @@ technically. But #342, #343, #344, and #345 all carry `reviewDecision:
 CHANGES_REQUESTED` (CodeRabbit); only #341 has no review decision. The blocker is
 unaddressed review feedback, not conflicts.
 
+> **CORRECTION (Phase 3).** The "30 open PRs" below was wrong — `gh pr list
+> --limit 40` silently truncated. The authoritative count from the search API is
+> **205 open PRs**, of which **201** are Bolt (100) / Palette (101). The stream
+> runs back to **2026-04-15** (#147), i.e. ~3.5 months at ~2/day, not three
+> weeks. The "0% merge rate" was also wrong as stated: the repo has **76 merged**
+> and **67 closed-unmerged** PRs historically. What is true is that none of the
+> recent Bolt/Palette stream had been merged before this session.
+>
+> Only 4 open PRs are not from that stream, and they must **not** be swept up in
+> any bulk closure:
+> - **#145 — 🛡️ Sentinel: [HIGH] Fix AI endpoint interception and prompt
+>   injection vulnerabilities** (open since well before this session; a security
+>   fix, needs review on its own merits)
+> - **#257 — 🛡️ Sentinel: [MEDIUM] Add input length limit to paste interceptor**
+> - **#138 — 🧪 Add unit tests for AIPostService**
+> - **#349 — 🔧 CodeRabbit Post-Merge Regression Audit** (auto-created by the
+>   #344/#345 merges during this session)
+
 **F-17 — the backlog is 30 open PRs of the same two themes.** *This is the single
 biggest finding of the session.* Listing all open PRs shows a strictly alternating
 ⚡ Bolt / 🎨 Palette pattern at ~2 per day, unbroken from #306 (2026-07-10) to

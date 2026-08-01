@@ -96,10 +96,76 @@
 |---|---|---|
 | Corpus F-03 case failed: `detectWith('medium','שלום עולם',12)` returned false, I asserted true | 1 | My assumption was wrong, not the code: 8 Hebrew chars < 12, and the pure-RTL bypass needs `rtlCount === text.trim().length` (8 ≠ 9, the space). Rewrote the case around `"כן"` at `minRTLChars: 5`, where the service gate and detector gate genuinely disagree |
 
+---
+
+## Session: 2026-08-01 (cont.) — Phase 3 execution
+
+### Current Status
+- **Phase:** 3 complete → Phase 4 ready to start
+- **Open PRs:** 205 → 4
+- **Suite on `phase2` rebased onto merged main:** 225 pass / 0 fail / 0 skip
+
+### Actions Taken
+
+| # | Action | Result |
+|---|---|---|
+| 22 | Committed Phase 2 to `phase2/test-safety-net`, opened PR #348 | Open for review |
+| 23 | Fetched #344 and #345, merged Phase 2 into each, ran the corpus | Both **200 pass / 0 fail** — neither moved a classification |
+| 24 | Reviewed #344's diff independently | Spotted the NBSP/Unicode-whitespace regression before reading the review; CodeRabbit had flagged the same thing |
+| 25 | Fixed #344: added `isWhitespaceCode()` + `tests/codeblock-whitespace.test.ts` | First version of the test passed against the bug — reworked until it discriminated (5 of 11 fail pre-fix) |
+| 26 | Fixed #345: extracted `getPresetActionState()` + `tests/presetActions.test.ts` | 14 tests, all branches, incl. keyboard activation |
+| 27 | Merged #344 and #345 after full CI green | `main` @ 527fb06 |
+| 28 | Queried the authoritative PR count via the search API | **205 open**, not 30 — earlier `--limit 40` had truncated |
+| 29 | Paused and re-confirmed scope with the user before bulk closure | Approved: close all 201 Bolt/Palette |
+| 30 | Closed 201 duplicates with cluster-specific comments | 0 failures. 101 a11y / 64 perf / 36 uiux |
+| 31 | Reviewed #145 (Sentinel HIGH) | Both issues real; fix **failed open** on unknown origin |
+| 32 | Hardened #145, added `tests/security/aiEndpointGuards.test.ts` | 24 tests; 15 fail against pre-fix code |
+| 33 | Merged #145 after full CI green | — |
+
+### Test Results
+
+| Test run | Expected | Actual | Status |
+|---|---|---|---|
+| Corpus vs #344 | no classification moves | 200 pass / 0 fail | ✅ |
+| Corpus vs #345 | no classification moves | 200 pass / 0 fail | ✅ |
+| `codeblock-whitespace` vs naive predicate | should fail | 5 fail / 6 pass | ✅ discriminating |
+| `codeblock-whitespace` vs fix | green | 11 pass / 0 fail | ✅ |
+| `presetActions` | green | 14 pass / 0 fail | ✅ |
+| `aiEndpointGuards` vs pre-fix code | should fail | 15 fail / 9 pass | ✅ discriminating |
+| `aiEndpointGuards` vs hardened fix | green | 24 pass / 0 fail | ✅ |
+| `phase2` rebased onto merged main | green | 225 pass / 0 fail / 0 skip | ✅ |
+
+### Corrections to earlier findings
+
+- **"30 open PRs" was wrong.** Authoritative count was **205**, from
+  `search/issues`. `gh pr list --limit 40` had silently truncated. The stream
+  runs back to 2026-04-15, ~3.5 months, not three weeks.
+- **"0% merge rate" was wrong as stated.** The repo has 76 merged and 67
+  closed-unmerged PRs historically. What held was that none of the *recent*
+  Bolt/Palette stream had been merged.
+- **A first attempt at the NBSP regression test did not discriminate.** Six
+  Hebrew words with five separators keeps the ratio above 0.6 either way. Only
+  after switching to single letters (separators ≈ half the string) did the test
+  fail against the bug. Worth remembering: always run a new regression test
+  against the unfixed code.
+
+### Errors
+
+| Error | Attempt | Resolution |
+|---|---|---|
+| Literal newline inside a single-quoted string in the separator table | 1 | Rewrote the whole table with explicit `\uXXXX` escapes — clearer for invisible characters anyway |
+| `service.updateSettings is not a function` on `AIPostService` | 1 | Wrong API assumed; it exposes `save(patch)` and `buildPrompt` is public |
+| Pushed the #145 fix to a new branch instead of the PR head | 1 | Read `headRefName` from the API, pushed there, deleted the stray branch |
+| `git rebase` refused with unstaged planning-file changes | 1 | Committed the plan updates first |
+
 ### Notes for next session
 
-- Deps are now installed locally; `bun test` is the fast feedback loop (~1.6s)
-- Phase 2 is the gate — do not start Phase 4 or 5 without the detection corpus
-- The two PRs recommended for survival are **#344** (perf) and **#345** (a11y),
-  with #343's Load-button coverage possibly worth porting onto #345
+- **Phase 4 starts here.** The corpus in `tests/detection-corpus.test.ts` is the
+  contract: its CHARACTERIZATION assertions are *expected* to flip, deliberately
+  and one at a time, as F-03..F-07 are fixed
+- `bun test` is the fast loop (~1.9s, 225 tests)
 - Preserve the editor-flicker guard in `setupObserver` through all later phases
+- The 36 uiuxService NodeList PRs were closed **without** the optimisation being
+  applied — if that work is wanted, it needs one fresh PR
+- The Jules automation is still running by decision; #346/#347 appeared during
+  this session and the backlog will rebuild at ~2/day

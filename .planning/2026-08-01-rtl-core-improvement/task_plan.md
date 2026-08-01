@@ -19,7 +19,7 @@ application for Hebrew/Arabic content in Blinko — along three axes:
    they actually represent.
 
 ## Current Phase
-Phase 3 (Phases 1–2 complete) — blocked on a user decision, see Phase 3
+Phase 4 (Phases 1–3 complete)
 
 ## Success Criteria
 
@@ -95,20 +95,51 @@ The last 5 PRs collapse into **2 distinct changes** (F-11). The full backlog of
 | a11y: `disabled` → `aria-disabled` on preset buttons | #341, #343, #345 (+ #339, #338, #336, #333, #332, …) | `src/setting.tsx` Load/Delete preset buttons; adds tooltips, `aria-label`, `aria-hidden` emoji, click guard |
 | perf: `charCodeAt` hot-loop rewrite | #342, #344 (+ #337, #335, #334, #331, #330, #328, …) | `CharacterCodeStrategy.detect`, `pasteInterceptor.detectMixedContent`, `rtlService` code-block ratio |
 
-- [ ] Pick **one canonical PR per cluster**. Recommend #344 (perf — widest
-      coverage, +55/-18 across all three hot paths) and #345 (a11y — most recent,
-      smallest diff at +13/-6)
-- [ ] Address the `CHANGES_REQUESTED` review on the two survivors (4 of the 5
-      carry unresolved review feedback — F-12)
-- [ ] Re-run the Phase 2 corpus against the perf PR: it changes detection
-      *implementation*, and the risk called out in its own description is that
-      numeric range checks must stay equivalent to the string-based logic
-- [ ] Close the remaining 28 with a short explanation referencing the survivor
-- [ ] **Stop the source.** The Jules automation has produced ~2 near-duplicate
-      PRs/day since at least 2026-07-10 with a 0% merge rate. Decide: disable it,
-      narrow its scope, or gate it behind "no open PR touching the same file"
-- **Status:** pending
-- **Exit:** open PR count is deliberate; no duplicate-cluster PRs remain open.
+> **Scale correction.** The backlog was **205 open PRs**, not 30 — the original
+> figure came from a truncated `gh pr list --limit 40`. The stream runs back to
+> 2026-04-15. See the correction block at the top of `findings.md`.
+
+- [x] Picked one canonical PR per cluster: **#344** (perf) and **#345** (a11y)
+- [x] Addressed the `CHANGES_REQUESTED` review on both before merging:
+      - #344: CodeRabbit flagged that the charCode rewrite dropped Unicode-aware
+        whitespace handling. Confirmed real — added `isWhitespaceCode()` and
+        `tests/codeblock-whitespace.test.ts` (11 tests, 5 of which fail against
+        the naive predicate)
+      - #345: extracted `getPresetActionState()` as a single source of truth,
+        fixing a tooltip that reported "Select a preset to delete" when the real
+        blocker was the plugin being switched off. Added
+        `tests/presetActions.test.ts` (14 tests incl. keyboard activation)
+- [x] Re-ran the Phase 2 corpus against #344 — **no classification moved**,
+      confirming the risk called out in its own description
+- [x] Merged #344 and #345
+- [x] Closed **201** duplicate Bolt/Palette PRs, each with a cluster-specific
+      explanation. 0 failures
+- [x] Reviewed and merged **#145** (security) — see below
+- [ ] **Stop the source.** Deferred by decision: the automation stays running.
+      It produced #346 and #347 during this session, so duplicates will continue
+      to accumulate at ~2/day
+- **Status:** complete
+- **Completed:** 2026-08-01
+- **Result:** open PRs **205 → 4** (#350 CodeRabbit follow-up, #348 this work,
+  #257 Sentinel MEDIUM, #138 AIPostService tests).
+
+**Closure breakdown:** 101 a11y (superseded by #345), 64 perf (superseded by
+#344), 36 uiuxService NodeList (**not** superseded — #344 never touched
+`uiuxService.ts`, so that optimisation remains unapplied; closed because 36
+competing versions cannot all be reviewed, and said so in the comment).
+
+**#145 — 🛡️ Sentinel [HIGH], merged.** Two real issues: `isAIEndpointUrl` matched
+by substring over the whole URL, and `buildPrompt` passed note content as a
+`String.replace` *replacement string*, where `$&` and friends are special. Both
+fixes were correct in direction but untested, and the URL fix **failed open** —
+it skipped the origin comparison whenever the page origin was unknown, which is
+the default in a sandboxed iframe (and in the test environment, which is why the
+PR had rewritten its own tests to `http://localhost` to keep them green). Made
+it fail closed, gave the existing tests a real page origin, and added
+`tests/security/aiEndpointGuards.test.ts` (24 tests, 15 of which fail against
+the pre-fix code). **Severity note:** "HIGH" overstates it — the interceptor
+returns the response untouched and only fires a toast on a 401, so the
+over-match produced a misleading message, not data exposure.
 
 ---
 
