@@ -49,8 +49,9 @@ describe("RTL Detection", () => {
     describe("RTLDetector (Integration)", () => {
         test("should use CombinedStrategy by default", () => {
             const detector = new RTLDetector({ minRTLChars: 2 });
-            // "ש" is 1 char, purely RTL. Now accepted by RegexStrategy regardless of minRTLChars.
-            expect(detector.detectRTL("ש")).toBe(true);
+            // "ש" is 1 RTL char and the floor is 2. Wholly-RTL text is no
+            // longer exempt from minRTLChars — see regex_strategy_edge.
+            expect(detector.detectRTL("ש")).toBe(false);
 
             // "שa" -> 2 chars total, 1 RTL. minRTLChars 2 not met. Ratio 0.5.
             // RegexStrategy: rtlCount (1) < minRTLChars (2), not pure RTL -> False

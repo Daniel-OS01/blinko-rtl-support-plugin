@@ -318,6 +318,7 @@ export const DEFAULT_SETTINGS: RTLSettings = {
   targetSelectors: DEFAULT_TARGET_SELECTORS,
   disabledSelectors: ['.vditor-sv', '.vditor-sv textarea'],
   minRTLChars: 1,
+  minTextLength: 1,
   processInterval: 5000,
   threshold: 0.15,
   enableManualToggleBtn: true,

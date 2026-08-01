@@ -120,6 +120,22 @@ export class RTLService {
             this.storageManager.save(this.settings);
         }
 
+        // v2→v3 migration: minRTLChars used to govern two unrelated gates —
+        // the minimum count of RTL characters in the detector, and the minimum
+        // total text length before an element was examined at all. The length
+        // role moves to minTextLength.
+        //
+        // Carry the stored value across so existing installs keep the length
+        // behaviour they had, rather than silently starting to process short
+        // elements they previously skipped.
+        if (storedVersion < 3) {
+            if (this.settings.minTextLength === undefined) {
+                this.settings.minTextLength = this.settings.minRTLChars ?? 1;
+            }
+            (this.settings as any)._settingsVersion = 3;
+            this.storageManager.save(this.settings);
+        }
+
         // Ensure critical fields are initialized
         if (!this.settings.dynamicCSS) {
             this.settings.dynamicCSS = DEFAULT_DYNAMIC_CSS;
@@ -409,7 +425,7 @@ export class RTLService {
     const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
 
     // Short text handling
-    if (!text.trim() || text.length < this.settings.minRTLChars) {
+    if (!text.trim() || text.length < (this.settings.minTextLength ?? 1)) {
         // Neutral state for empty/short text to avoid forcing LTR on what might be an RTL placeholder
         this.applyCSSClassRTL(element, 'neutral');
         return;

@@ -116,120 +116,161 @@ describe('corpus / INVARIANT: sensitivity is monotonic', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CHARACTERIZATION — detection engine
+// DETECTION ENGINE
+//
+// These began as CHARACTERIZATION cases pinning incorrect behaviour. Phase 4
+// fixed the underlying findings, so each was flipped deliberately and is now an
+// invariant. The comments record what the behaviour used to be, because that is
+// what the assertions are guarding against returning to.
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('corpus / CHARACTERIZATION F-06: strategies disagree on script coverage', () => {
-  // CharacterCodeStrategy.RTL_RANGES includes Syriac and Thaana.
-  // RegexStrategy's hardcoded pattern strings do not. The two lists are
-  // maintained separately and have already drifted.
-  it('Syriac: CharacterCode detects it, Regex does not', () => {
-    expect(charCode('medium', 'ܐܒܓܕ')).toBe(true);
-    expect(regex('medium', 'ܐܒܓܕ')).toBe(false);
-  });
-
-  it('Thaana: CharacterCode detects it, Regex does not', () => {
-    expect(charCode('medium', 'ހަލޯ ދުނިޔެ')).toBe(true);
-    expect(regex('medium', 'ހަލޯ ދުނިޔެ')).toBe(false);
-  });
-
-  // FIX IN PHASE 4: these should all become true once RTL_RANGES and the regex
-  // patterns are unified and extended.
-  const undetected: [string, string, string][] = [
+describe('corpus / INVARIANT: both strategies cover the same RTL scripts', () => {
+  // Both now draw their range set from rtlRanges.ts. They previously carried
+  // separate copies — one numeric, one as regex pattern strings — which had
+  // already drifted: Syriac and Thaana were detected by one and not the other.
+  const scripts: [string, string, string][] = [
+    ['Hebrew', 'שלום עולם', 'U+0590–05FF'],
+    ['Arabic', 'مرحبا بالعالم', 'U+0600–06FF'],
+    ['Syriac', 'ܐܒܓܕ', 'U+0700–074F'],
+    ['Thaana', 'ހަލޯ ދުނިޔެ', 'U+0780–07BF'],
     ["N'Ko", 'ߒߞߏ ߞߊ߲', 'U+07C0–07FF'],
     ['Samaritan', 'ࠀࠁࠂࠃ', 'U+0800–083F'],
     ['Mandaic', 'ࡀࡁࡂࡃ', 'U+0840–085F'],
     ['Syriac Supplement', 'ࡠࡡࡢࡣ', 'U+0860–086F'],
     ['Arabic Extended-B', 'ࡰࡱࡲࡳ', 'U+0870–089F'],
+    ['Hebrew Presentation Forms', 'ﬡﬢﬣﬤ', 'U+FB1D–FB4F'],
     ['Adlam (astral)', '𞤀𞤁𞤂𞤃', 'U+1E900–1E95F'],
   ];
 
-  for (const [script, text, range] of undetected) {
-    it(`${script} (${range}) is currently NOT detected by either strategy`, () => {
-      expect(charCode('high', text)).toBe(false);
-      expect(regex('high', text)).toBe(false);
-      expect(detectWith('high', text)).toBe(false);
+  for (const [script, text, range] of scripts) {
+    it(`${script} (${range}) is detected by both strategies`, () => {
+      expect(charCode('medium', text)).toBe(true);
+      expect(regex('medium', text)).toBe(true);
+      expect(detectWith('medium', text)).toBe(true);
     });
   }
+
+  it('astral scripts require code-point iteration, not charCodeAt', () => {
+    // Adlam lives above the BMP. Reading UTF-16 code units yields a surrogate
+    // half, which matches no range — the mechanical reason it was unreachable.
+    const adlam = '𞤀𞤁𞤂𞤃';
+    expect(adlam.charCodeAt(0)).toBeGreaterThanOrEqual(0xd800);
+    expect(adlam.codePointAt(0)).toBeGreaterThan(0xffff);
+    expect(detectWith('medium', adlam)).toBe(true);
+  });
 });
 
-describe('corpus / CHARACTERIZATION F-07: only the first 100 chars are sampled', () => {
-  // A note that opens in English and turns to Hebrew after the sample window.
+describe('corpus / INVARIANT: sampling covers the whole text, not just the head', () => {
+  // A note that opens in English and turns to Hebrew well past the old
+  // 100-character window. Both strategies now sample head, middle and tail
+  // under a shared budget.
   const text = 'x'.repeat(120) + ' שלום עולם ומה שלומך היום';
 
-  it('CharacterCodeStrategy misses RTL that starts past the sample window', () => {
-    expect(charCode('high', text)).toBe(false);
-    expect(charCode('medium', text)).toBe(false);
+  it('RTL beyond the head of the text is found', () => {
+    expect(charCode('high', text)).toBe(true);
+    expect(charCode('medium', text)).toBe(true);
   });
 
-  it('RegexStrategy sees it at high sensitivity because it scans the whole string', () => {
+  it('both strategies agree about it', () => {
     expect(regex('high', text)).toBe(true);
-    expect(regex('medium', text)).toBe(false);
+    expect(regex('medium', text)).toBe(true);
   });
 
-  it('so the combined result flips on sensitivity for the wrong reason', () => {
-    // Detected at 'high' purely because one strategy has no sample window and
-    // the other does — not because the text is more RTL at high sensitivity.
+  it('the answer no longer flips on sensitivity for the wrong reason', () => {
+    // This used to be true at 'high' and false at 'medium' — decided by one
+    // strategy having a sample window and the other not, rather than by the
+    // threshold.
     expect(detectWith('high', text)).toBe(true);
-    expect(detectWith('medium', text)).toBe(false);
+    expect(detectWith('medium', text)).toBe(true);
+  });
+
+  it('work stays bounded on very large inputs', () => {
+    const huge = 'a'.repeat(200_000) + 'שלום עולם ומה שלומך';
+    const started = performance.now();
+    expect(detectWith('medium', huge)).toBe(true);
+    expect(performance.now() - started).toBeLessThan(50);
   });
 });
 
-describe('corpus / CHARACTERIZATION F-04 + F-05: OR means the looser strategy wins', () => {
-  it("'low' sensitivity is not conservative: CharacterCode still fires alone", () => {
-    const text = 'שלום עולם this is a test';
-    expect(charCode('low', text)).toBe(true);
-    expect(regex('low', text)).toBe(false);
-    // CombinedStrategy ORs them, so 'low' behaves like the looser strategy.
-    expect(detectWith('low', text)).toBe(true);
+describe('corpus / INVARIANT: the two strategies agree', () => {
+  // They previously normalised by different denominators over different
+  // amounts of text, so CombinedStrategy's OR let whichever was looser decide
+  // every outcome — and 'low' sensitivity was not actually conservative.
+  const samples = [
+    'שלום עולם this is a test',
+    'const x = 1; // ערך התחלתי',
+    'ש ל ו ם',
+    'ש' + ' '.repeat(20) + 'ל',
+    'https://example.com/עמוד',
+    'This is quite a long English sentence that happens to contain שלום inside it',
+    'مرحبا بالعالم',
+    '12345',
+  ];
+
+  for (const text of samples) {
+    for (const sensitivity of SENSITIVITIES) {
+      it(`${JSON.stringify(text.slice(0, 30))} @ ${sensitivity}`, () => {
+        expect(charCode(sensitivity, text)).toBe(regex(sensitivity, text));
+      });
+    }
+  }
+
+  it("'low' sensitivity is genuinely more conservative than 'high'", () => {
+    const borderline = 'https://example.com/עמוד';
+    expect(detectWith('high', borderline)).toBe(true);
+    expect(detectWith('low', borderline)).toBe(false);
   });
 
-  it('a Hebrew code comment behaves the same way', () => {
-    const text = 'const x = 1; // ערך התחלתי';
-    expect(charCode('low', text)).toBe(true);
-    expect(regex('low', text)).toBe(false);
-    expect(detectWith('low', text)).toBe(true);
-  });
-
-  it('whitespace in the Regex denominator lowers its score', () => {
-    // RegexStrategy divides by raw text.length (spaces included);
-    // CharacterCodeStrategy divides by significant chars only.
-    const spaced = 'ש ל ו ם';
-    expect(charCode('low', spaced)).toBe(true);
-    expect(regex('low', spaced)).toBe(true);
-    // The gap widens as spacing grows relative to content.
-    const sparse = 'ש' + ' '.repeat(20) + 'ל';
-    expect(charCode('low', sparse)).toBe(true);
-    expect(regex('low', sparse)).toBe(false);
+  it('whitespace no longer changes the score', () => {
+    // The Regex denominator used to include whitespace, so the same content
+    // scored lower purely for being spaced out.
+    const dense = 'שלום';
+    const sparse = 'ש' + ' '.repeat(20) + 'לום';
+    expect(regex('low', dense)).toBe(regex('low', sparse));
   });
 });
 
-describe('corpus / CHARACTERIZATION F-03: minRTLChars is bypassed for pure-RTL text', () => {
-  // RegexStrategy has an explicit escape hatch: if every non-space character is
-  // RTL, minRTLChars is ignored entirely.
-  it('a single Hebrew character is detected even at minRTLChars = 5', () => {
-    expect(detectWith('medium', 'א', 5)).toBe(true);
-    expect(regex('medium', 'א', 5)).toBe(true);
+describe('corpus / INVARIANT: minRTLChars is a hard floor on RTL evidence', () => {
+  // One meaning, applied by both strategies, with no exemption for wholly-RTL
+  // text. The old exemption compared against the trimmed length, so it fired
+  // only for text without spaces — "כן" was exempt, "שלום עולם" was not.
+  it('applies to wholly-RTL text', () => {
+    expect(detectWith('medium', 'א', 5)).toBe(false);
+    expect(regex('medium', 'א', 5)).toBe(false);
     expect(charCode('medium', 'א', 5)).toBe(false);
   });
 
-  it('but mixed text does respect minRTLChars', () => {
+  it('applies to mixed text', () => {
     expect(detectWith('medium', 'https://example.com/עמוד', 3)).toBe(true);
     expect(detectWith('medium', 'https://example.com/עמוד', 5)).toBe(false);
   });
-});
 
-describe('corpus / CHARACTERIZATION F-18: Arabic-Indic digits count as RTL', () => {
-  // U+0660–0669 sit inside the 0600–06FF Arabic range, so a pure number string
-  // is classified RTL. Their Unicode bidi class is AN (Arabic Number), which
-  // does not establish paragraph direction. Compare with Latin digits, which
-  // are correctly neutral.
-  it('Arabic-Indic digits are detected as RTL', () => {
-    expect(detectWith('medium', '١٢٣٤٥')).toBe(true);
+  it('short RTL words still work at the default floor of 1', () => {
+    expect(detectWith('medium', 'כן', 1)).toBe(true);
+    expect(detectWith('medium', 'א', 1)).toBe(true);
   });
 
-  it('Latin digits are not', () => {
+  it('is honoured identically by both strategies', () => {
+    for (const floor of [1, 2, 3, 5, 8]) {
+      expect(charCode('medium', 'שלום עולם', floor)).toBe(regex('medium', 'שלום עולם', floor));
+    }
+  });
+});
+
+describe('corpus / INVARIANT: Arabic-Indic digits do not establish direction', () => {
+  // U+0660–0669 sit inside the Arabic block but are bidi type AN (Arabic
+  // Number), not AL. "١٢٣" is no more inherently RTL than "123", and is now
+  // excluded from the strong set.
+  it('Arabic-Indic digits alone are neutral', () => {
+    expect(detectWith('medium', '١٢٣٤٥')).toBe(false);
+  });
+
+  it('as are Latin digits', () => {
     expect(detectWith('medium', '12345')).toBe(false);
+  });
+
+  it('but Arabic letters alongside them still read RTL', () => {
+    expect(detectWith('medium', 'مرحبا ١٢٣٤٥')).toBe(true);
   });
 });
 
@@ -365,10 +406,10 @@ describe('corpus / application layer', () => {
   });
 
   it('CHARACTERIZATION F-10: the short-text path leaves stale styling behind', () => {
-    // minRTLChars is a *text length* gate here (F-03). Shrinking the text below
-    // it routes through applyCSSClassRTL(el, 'neutral'), which only knows about
+    // Shrinking the text below minTextLength routes through
+    // applyCSSClassRTL(el, 'neutral'), which only knows about
     // rtl-force / ltr-force / rtl-auto.
-    const directService = freshService({ method: 'direct', minRTLChars: 4 });
+    const directService = freshService({ method: 'direct', minTextLength: 4 });
     const direct = makeEl('שלום עולם');
     directService.processElement(direct);
     direct.textContent = 'אב';
@@ -377,7 +418,7 @@ describe('corpus / application layer', () => {
     expect(snapshot(direct).styleDir).toBe('rtl'); // stale
     directService.disable();
 
-    const attrService = freshService({ method: 'attributes', minRTLChars: 4 });
+    const attrService = freshService({ method: 'attributes', minTextLength: 4 });
     const attrs = makeEl('שלום עולם');
     attrService.processElement(attrs);
     attrs.textContent = 'אב';
@@ -386,7 +427,7 @@ describe('corpus / application layer', () => {
     attrService.disable();
 
     // Only 'css' cleans up correctly, because neutral is expressed as a class.
-    const cssService = freshService({ method: 'css', minRTLChars: 4 });
+    const cssService = freshService({ method: 'css', minTextLength: 4 });
     const css = makeEl('שלום עולם');
     cssService.processElement(css);
     css.textContent = 'אב';
@@ -395,27 +436,46 @@ describe('corpus / application layer', () => {
     cssService.disable();
   });
 
-  it('CHARACTERIZATION F-03: minRTLChars gates on total text length, not RTL char count', () => {
-    // Same setting, two meanings:
-    //   RTLService.processElement → minimum *total text length*
-    //   both detection strategies → minimum *count of RTL characters*
-    // "כן" is 2 characters, both Hebrew. The detector accepts it at
-    // minRTLChars = 5 (pure-RTL text bypasses the count gate); the service
-    // rejects it before the detector is ever consulted, because 2 < 5.
-    expect(detectWith('medium', 'כן', 5)).toBe(true);
+  it('INVARIANT: the length gate and the RTL-evidence gate are separate settings', () => {
+    // minTextLength governs whether an element is examined at all;
+    // minRTLChars governs how much RTL evidence the detector requires. They
+    // used to be the same number, so raising one silently moved the other.
 
-    const service = freshService({ method: 'css', minRTLChars: 5 });
-    const el = makeEl('כן');
-    service.processElement(el);
-    expect(snapshot(el).cls).toBe('');
-    service.disable();
+    // Long enough to examine, but not enough RTL evidence.
+    const strictEvidence = freshService({ method: 'css', minTextLength: 1, minRTLChars: 5 });
+    const a = makeEl('כן');
+    strictEvidence.processElement(a);
+    expect(snapshot(a).cls).toBe('');
+    strictEvidence.disable();
 
-    // Lower the length gate and the same text is classified RTL.
-    const permissive = freshService({ method: 'css', minRTLChars: 2 });
-    const el2 = makeEl('כן');
-    permissive.processElement(el2);
-    expect(snapshot(el2).cls).toBe('rtl-force');
+    // Enough RTL evidence, but too short to be examined.
+    const strictLength = freshService({ method: 'css', minTextLength: 5, minRTLChars: 1 });
+    const b = makeEl('כן');
+    strictLength.processElement(b);
+    expect(snapshot(b).cls).toBe('');
+    strictLength.disable();
+
+    // Both satisfied.
+    const permissive = freshService({ method: 'css', minTextLength: 1, minRTLChars: 1 });
+    const c = makeEl('כן');
+    permissive.processElement(c);
+    expect(snapshot(c).cls).toBe('rtl-force');
     permissive.disable();
+
+    // Moving one does not move the other: a long, mostly-Latin string passes
+    // the length gate at any setting, and is governed purely by evidence.
+    const longMixed = 'https://example.com/עמוד';
+    const evidence3 = freshService({ method: 'css', minTextLength: 1, minRTLChars: 3 });
+    const d = makeEl(longMixed);
+    evidence3.processElement(d);
+    expect(snapshot(d).cls).toBe('rtl-force');
+    evidence3.disable();
+
+    const evidence5 = freshService({ method: 'css', minTextLength: 1, minRTLChars: 5 });
+    const e = makeEl(longMixed);
+    evidence5.processElement(e);
+    expect(snapshot(e).cls).toBe('ltr-force');
+    evidence5.disable();
   });
 
   it('CHARACTERIZATION F-13: a mixed container contradicts its own children', () => {
