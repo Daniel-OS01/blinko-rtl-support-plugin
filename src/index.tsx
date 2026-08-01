@@ -193,7 +193,19 @@ System.register([], (exports) => ({
       // Expose aiPostService for settings panel access
       (window as any).blinkoAIPost = aiPostService;
 
-      console.log('Advanced Blinko RTL Plugin initialized successfully');
+      // Version banner. "Is my build actually deployed?" was otherwise
+      // unanswerable without diffing the served bundle by hand, and a stale
+      // upload looks identical to a broken feature.
+      const uiux = uiuxService.getSettings();
+      console.log(
+        `%c[blinko-rtl] v${plugin.version} ready`,
+        'color:#28a745;font-weight:bold',
+        {
+          singleTapOpenNote: uiux.singleTapOpenNote,
+          cardClickOpensEditor: uiux.cardClickOpensEditor,
+          rtlEnabled: rtlService.isEnabled(),
+        }
+      );
     }
 
     exports('default', class Plugin implements BasePlugin {
