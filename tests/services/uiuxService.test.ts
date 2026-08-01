@@ -21,7 +21,7 @@ try {
 
 function makeCard(opts: { heading?: boolean; paragraph?: boolean } = {}): HTMLDivElement {
   const card = document.createElement('div');
-  card.className = 'note-card';
+  card.className = 'group/card flex flex-col p-4 bg-background';
   if (opts.heading !== false) {
     const h3 = document.createElement('h3');
     h3.textContent = 'Note title';
@@ -178,9 +178,12 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
     service.destroy();
   });
 
+  // These three cover the legacy path — clicking through to the read-only
+  // detail overlay. Opening the editor is now the default, so they opt out of
+  // it explicitly rather than relying on a default that changed.
   it('redirects tap on <p> text to the heading click', () => {
     const card = makeCard({ heading: true, paragraph: true });
-    service.updateSettings({ singleTapOpenNote: true });
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: false });
 
     const h3 = card.querySelector('h3')!;
     const p = card.querySelector('p')!;
@@ -253,7 +256,7 @@ describe('UIUXService — Issue 2: Single-tap on <p> text content', () => {
     // The plugin must fall back to dispatching a synthetic click on the card so
     // Blinko's React onClick handler fires.
     const card = makeCard({ heading: false, paragraph: true });
-    service.updateSettings({ singleTapOpenNote: true });
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: false });
 
     const p = card.querySelector('p')!;
 
@@ -307,7 +310,7 @@ describe('UIUXService — Issue 3A: Re-entry guard prevents dual event', () => {
 
   it('calls openBtn.click() exactly once despite rapid re-entrant paragraph clicks', () => {
     const card = makeCard({ heading: true, paragraph: true });
-    service.updateSettings({ singleTapOpenNote: true });
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: false });
 
     const h3 = card.querySelector('h3')!;
     const p = card.querySelector('p')!;
@@ -399,7 +402,7 @@ describe('UIUXService — Phase 2: MutationObserver debounce', () => {
   it('cards added before singleTap enable are still marked', () => {
     // Pre-existing card before enable
     const card = document.createElement('div');
-    card.className = 'note-card';
+    card.className = 'group/card flex flex-col p-4 bg-background';
     document.body.appendChild(card);
 
     service.updateSettings({ singleTapOpenNote: true });
@@ -413,7 +416,7 @@ describe('UIUXService — Phase 2: MutationObserver debounce', () => {
 
     // Add a new card after enable
     const card = document.createElement('div');
-    card.className = 'note-card';
+    card.className = 'group/card flex flex-col p-4 bg-background';
     document.body.appendChild(card);
 
     // Wait for debounced observer callback (150ms + buffer)
@@ -745,5 +748,100 @@ describe('UIUXService — Lifecycle: destroy() cleans up all state', () => {
     expect(s.compactDatetime).toBe(true);
     expect(s.noteListPadding).toBe(7);
     service.destroy();
+  });
+});
+
+describe('UIUXService — card click opens the editor', () => {
+  let service: UIUXService;
+
+  /** A card matching the real app's markup. */
+  function makeCard(): { card: HTMLElement; body: HTMLElement; icon: HTMLElement } {
+    const card = document.createElement('div');
+    card.className = 'group/card flex flex-col p-4 bg-background';
+    card.innerHTML =
+      '<div class="w-full">' +
+      '<svg id="icon" class="cursor-pointer text-desc"></svg>' +
+      '<div class="markdown-body"><p id="body">testing</p></div>' +
+      '</div>';
+    document.body.appendChild(card);
+    return {
+      card,
+      body: card.querySelector('#body') as HTMLElement,
+      icon: card.querySelector('#icon') as HTMLElement,
+    };
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    document.body.innerHTML = '';
+    service = new UIUXService();
+  });
+
+  afterEach(() => {
+    service.destroy();
+  });
+
+  it('turns a single click on the body into a double click on the card', () => {
+    const { card, body } = makeCard();
+    let dblclicks = 0;
+    card.addEventListener('dblclick', () => { dblclicks++; });
+
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: true });
+    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(dblclicks).toBe(1);
+  });
+
+  it('does not fire on the action rail', () => {
+    const { card, icon } = makeCard();
+    let dblclicks = 0;
+    card.addEventListener('dblclick', () => { dblclicks++; });
+
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: true });
+    icon.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(dblclicks).toBe(0);
+  });
+
+  it('does not re-enter when the synthetic event bubbles back', () => {
+    const { card, body } = makeCard();
+    let dblclicks = 0;
+    card.addEventListener('dblclick', () => { dblclicks++; });
+
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: true });
+    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    // Two real clicks, two opens — never more.
+    expect(dblclicks).toBeLessThanOrEqual(2);
+  });
+
+  it('falls back to the old heading-click behaviour when disabled', () => {
+    const { card, body } = makeCard();
+    const heading = document.createElement('h2');
+    heading.textContent = 'Title';
+    card.appendChild(heading);
+
+    let dblclicks = 0;
+    let headingClicks = 0;
+    card.addEventListener('dblclick', () => { dblclicks++; });
+    heading.addEventListener('click', () => { headingClicks++; });
+
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: false });
+    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(dblclicks).toBe(0);
+    expect(headingClicks).toBe(1);
+  });
+
+  it('does nothing at all when single-tap is off', () => {
+    const { card, body } = makeCard();
+    let dblclicks = 0;
+    card.addEventListener('dblclick', () => { dblclicks++; });
+
+    service.updateSettings({ singleTapOpenNote: false, cardClickOpensEditor: true });
+    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(dblclicks).toBe(0);
   });
 });

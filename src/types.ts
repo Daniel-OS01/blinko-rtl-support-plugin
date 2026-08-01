@@ -80,6 +80,16 @@ export interface UIUXSettings {
 
   // Navigation & Interactions
   singleTapOpenNote: boolean;
+  /**
+   * Open the editor when a card is clicked, instead of the read-only detail
+   * overlay.
+   *
+   * Blinko opens `div.fixed.inset-0.z-[9999] > … > div.w-full.mx-auto.px-4`
+   * (a read-only render) on a single click, and `#global-editor` on a double
+   * click. Most clicks on a note are the start of an edit, so the double click
+   * is the one worth having on the single click.
+   */
+  cardClickOpensEditor: boolean;
   backButtonClosesNote: boolean;
   tapOutsideClosesNote: boolean;
   interceptAIErrors: boolean;
@@ -114,6 +124,7 @@ export const DEFAULT_UIUX_SETTINGS: UIUXSettings = {
   noteLineHeight: 1.5,
   toolbarIconSize: 16,
   singleTapOpenNote: true,
+  cardClickOpensEditor: true,
   backButtonClosesNote: true,
   tapOutsideClosesNote: true,
   interceptAIErrors: true,

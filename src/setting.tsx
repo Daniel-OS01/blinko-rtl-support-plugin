@@ -1871,7 +1871,6 @@ export function RTLSetting(): JSX.Element {
                 { id: 'navigation',   label: '🧭 Navigation'   },
                 { id: 'accessibility',label: '♿ Accessibility' },
                 { id: 'layout',       label: '📐 Layout'       },
-                { id: 'analysis',     label: '📋 UX Audit'     },
               ] as const
             ).map(({ id, label }) => (
               <button
@@ -2025,6 +2024,26 @@ export function RTLSetting(): JSX.Element {
                 <div style={{ margin: '10px 0 0 28px', padding: '8px 12px', borderRadius: '6px', background: settings.darkMode ? '#2c3e50' : '#fff3cd', border: '1px solid #ffc107', fontSize: '12px', color: settings.darkMode ? '#ffd' : '#856404' }}>
                   ⚠️ This attaches a JavaScript listener that monitors the DOM for note cards.
                   If a card is already interactive (e.g. Blinko Article), the handler is a no-op.
+                </div>
+              </div>
+
+              {/* Click opens the editor */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.cardClickOpensEditor}
+                    onChange={e => saveUIUX({ cardClickOpensEditor: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>✏️ Click Opens the Editor</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Opens the editor when a note is clicked, instead of the read-only view.
+                  Blinko opens the read-only view on a single click and the editor on a double click,
+                  so every edit used to start with two clicks. Turn this off to keep the read-only view.
+                </p>
+                <div style={{ margin: '10px 0 0 28px', padding: '8px 12px', borderRadius: '6px', background: settings.darkMode ? '#2c3e50' : '#e8f4fd', border: '1px solid #17a2b8', fontSize: '12px', color: settings.darkMode ? '#cde' : '#0c5460' }}>
+                  ℹ️ Requires <strong>Single-Tap to Open Notes</strong> above.
                 </div>
               </div>
 
@@ -2286,149 +2305,6 @@ export function RTLSetting(): JSX.Element {
           )}
 
           {/* ── UX AUDIT ── */}
-          {uiuxSubTab === 'analysis' && (
-            <div style={{ display: 'grid', gap: '16px' }}>
-
-              {/* ── Aloklok Fork Analysis ─────────────────────────── */}
-              <details open style={{ padding: '16px', border: '2px solid #6f42c1', borderRadius: '8px', background: settings.darkMode ? '#1a1a2e' : '#f8f0ff' }}>
-                <summary style={{ cursor: 'pointer', fontWeight: '700', fontSize: '14px', color: '#6f42c1', marginBottom: '12px', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  🍴 Aloklok Fork Analysis — 162 Commits Ahead of Upstream
-                  <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: '400', color: settings.darkMode ? '#aaa' : '#888' }}>click to expand/collapse</span>
-                </summary>
-                <p style={{ margin: '0 0 12px', fontSize: '12px', color: settings.darkMode ? '#bbb' : '#555' }}>
-                  Fork: <code>Aloklok/blinko</code> · 162 commits ahead · 18 behind · as of 2026-03-05.
-                  Sorted by integration priority. See <code>docs/RESEARCH_FINDINGS.md</code> for full details.
-                </p>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-                    <thead>
-                      <tr style={{ background: settings.darkMode ? '#2a2050' : '#ede8f8' }}>
-                        {['Priority', 'SHA', 'Date', 'Title', 'Category', 'Action'].map(h => (
-                          <th key={h} style={{ padding: '6px 8px', textAlign: 'left', color: settings.darkMode ? '#ddd' : '#333', borderBottom: `1px solid ${settings.darkMode ? '#444' : '#ccc'}`, whiteSpace: 'nowrap' }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        { p: '🔴', sha: 'f7026780', date: '2026-03-05', title: 'DeepSeek R1 / thinking mode config', cat: '+ Feature', action: 'PR → daniel-os01/blinko' },
-                        { p: '🔴', sha: '84db3ebd', date: '2026-02-14', title: 'iOS audio truncation fix (timeslice)', cat: '🐛 Fix', action: 'PR → daniel-os01/blinko' },
-                        { p: '🔴', sha: '75cfe7ba', date: '2026-02-20', title: 'iOS Safari blob URL loading error', cat: '🐛 Fix', action: 'PR → daniel-os01/blinko' },
-                        { p: '🟡', sha: 'f4bd0428', date: '2026-02-10', title: 'ARIA labels + rAF interaction perf', cat: '♿ A11y', action: 'CSS/JS partial in plugin' },
-                        { p: '🟡', sha: 'a0869b04', date: '2026-02-20', title: 'Mobile delete icon visibility', cat: '🐛 Fix', action: 'CSS in plugin' },
-                        { p: '🟡', sha: '82c31233', date: '2026-03-05', title: 'Duplicate AI tag polling alerts', cat: '🐛 Fix', action: 'PR → core' },
-                        { p: '🟡', sha: '3900a159', date: '2026-02-19', title: 'AI tag UX: instant feedback + stability', cat: '🟡 UX', action: 'PR → core' },
-                        { p: '🟡', sha: '972c4562', date: '2026-02-15', title: 'AI settings switch & select layout', cat: '🐛 Fix', action: 'CSS in plugin' },
-                        { p: '🟡', sha: '8da45370', date: '2026-02-08', title: 'Tag text/bg color collision', cat: '🐛 Fix', action: 'CSS in plugin' },
-                        { p: '🟡', sha: 'cb12c096', date: '2026-02-08', title: 'Card image + redundant loading states', cat: '🐛 Fix', action: 'CSS in plugin' },
-                        { p: '🟢', sha: 'bbaf5bf7', date: '2026-02-09', title: 'JS vendor split + async icons + DB index', cat: '⚡ Perf', action: 'PR → core (low risk)' },
-                        { p: '🟢', sha: '71897dce', date: '2026-02-10', title: 'Vite chunking + async icon loading', cat: '⚡ Perf', action: 'PR → core' },
-                        { p: '🟢', sha: 'be4fd14e', date: '2026-02-08', title: '@dnd-kit migration (build fix)', cat: '♻️ Refactor', action: 'PR → core' },
-                        { p: '🟢', sha: '1eaed8c3', date: '2026-02-09', title: 'Resource manager + auth cache overhaul', cat: '⚡ Perf', action: 'PR → core' },
-                        { p: '🟢', sha: 'f47932a3', date: '2026-02-08', title: 'Native fetch/lodash + lazy-load heavy libs', cat: '♻️ Refactor', action: 'PR → core' },
-                        { p: '⚪', sha: '~50 total', date: 'Feb 12–14', title: 'Docker/Prisma 7 + Node 22 + Zeabur fixes', cat: '🔧 Infra', action: 'Wait — high risk rebase' },
-                      ].map((row, i) => (
-                        <tr key={i} style={{ background: i % 2 === 0 ? (settings.darkMode ? '#1e1e32' : '#faf8ff') : 'transparent' }}>
-                          <td style={{ padding: '5px 8px', fontSize: '13px' }}>{row.p}</td>
-                          <td style={{ padding: '5px 8px' }}><code style={{ fontSize: '10px', background: settings.darkMode ? '#333' : '#eee', padding: '1px 4px', borderRadius: '3px' }}>{row.sha}</code></td>
-                          <td style={{ padding: '5px 8px', whiteSpace: 'nowrap', color: settings.darkMode ? '#999' : '#666' }}>{row.date}</td>
-                          <td style={{ padding: '5px 8px', color: settings.darkMode ? '#ddd' : '#222' }}>{row.title}</td>
-                          <td style={{ padding: '5px 8px', whiteSpace: 'nowrap' }}><span style={{ fontSize: '10px', background: settings.darkMode ? '#2a2a2a' : '#eee', padding: '1px 5px', borderRadius: '10px' }}>{row.cat}</span></td>
-                          <td style={{ padding: '5px 8px', color: '#6f42c1', fontSize: '11px' }}>{row.action}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p style={{ margin: '10px 0 0', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
-                  🔴 High priority · 🟡 Medium · 🟢 Low · ⚪ Infra only
-                </p>
-              </details>
-
-              {/* ── Original 15 Issues ────────────────────────────── */}
-              <details open style={{ padding: '16px', border: '2px solid #28a745', borderRadius: '8px', background: settings.darkMode ? '#1a2e1a' : '#f0fff4' }}>
-                <summary style={{ cursor: 'pointer', fontWeight: '700', fontSize: '14px', color: '#28a745', marginBottom: '12px', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  📋 Original 15 Issues — Cross-Platform Analysis
-                </summary>
-                <p style={{ margin: '0 0 12px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
-                  Findings from Android + Desktop analysis. ✅ = fixable via this plugin · ⚙️ = requires core PR.
-                </p>
-                {[
-                  { status: '✅', title: 'Timestamp multi-row wrapping (mobile)', detail: 'Date/time label ("2 hours ago") wraps to 2-3 lines due to oversized font. Fix: enable Compact Date/Time under Typography.' },
-                  { status: '✅', title: 'Double-tap inconsistency (Blinko vs Article)', detail: 'Blinko type notes require a double-tap to expand while Article opens on single tap. Fix: enable Single-Tap under Navigation.' },
-                  { status: '✅', title: 'Android back button exits app', detail: 'Hardware back / swipe-back closes the app instead of the open note overlay. Fix: enable Back Button Closes Note under Navigation.' },
-                  { status: '✅', title: 'Undersized touch targets on mobile', detail: 'Multiple toolbar icons and buttons are <32 px — below the 48 dp WCAG/Material minimum. Fix: enable Minimum Touch Targets under Accessibility.' },
-                  { status: '✅', title: 'Animations on motion-sensitive devices', detail: 'Slide/fade transitions play even on devices flagged with prefers-reduced-motion. Fix: enable Reduce Motion under Accessibility.' },
-                  { status: '✅', title: 'Low information density on wide screens', detail: 'Card padding and toolbar gaps waste space on desktop. Fix: enable Compact Mode under Layout.' },
-                  { status: '✅', title: 'Card corner radius inconsistency', detail: 'Different corner radii across card types break visual rhythm. Fix: use Card Border Radius slider under Layout.' },
-                  { status: '✅', title: 'No focus rings for keyboard users', detail: 'Interactive elements have outline: none — breaks keyboard navigation entirely. Fix: enable Always-Visible Focus Rings under Accessibility.' },
-                  { status: '⚙️', title: 'Editor toolbar RTL mirroring', detail: 'The formatting toolbar (B/I/S/Link) stays LTR even when editing RTL content. Requires core change.' },
-                  { status: '⚙️', title: 'Submit button icon mismatch (RTL)', detail: 'The submit arrow (➤) points left in RTL mode, suggesting "back" rather than "send". Core fix needed.' },
-                  { status: '⚙️', title: 'Masonry grid reflow on note expand', detail: 'Expanding a note causes masonry reflow and viewport scroll. Requires virtualised list or position:fixed overlay.' },
-                  { status: '⚙️', title: 'Audio player visualiser is always LTR', detail: 'Waveform/progress bar plays left-to-right even in RTL context. Requires core player change.' },
-                  { status: '⚙️', title: 'Tag pill overflow truncation', detail: '#Main/Sub/Topic tags overflow card boundaries on narrow screens. Needs text-overflow + tooltip in core.' },
-                  { status: '⚙️', title: 'No swipe-to-delete on mobile', detail: 'Deleting a note requires navigating a context menu. Native swipe gesture expected by mobile users.' },
-                  { status: '⚙️', title: 'Loading skeleton missing on slow networks', detail: 'Cards appear empty before content loads with no placeholder skeleton. Degrades perceived performance.' },
-                ].map((item, i) => (
-                  <div key={i} style={{ marginBottom: '8px', padding: '10px 12px', border: `1px solid ${settings.darkMode ? '#444' : '#e0e0e0'}`, borderRadius: '6px', background: settings.darkMode ? '#2a2a2a' : '#fff' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                      <span style={{ fontSize: '16px', flexShrink: 0 }}>{item.status}</span>
-                      <div>
-                        <strong style={{ fontSize: '13px', color: settings.darkMode ? '#ddd' : '#222' }}>{i + 1}. {item.title}</strong>
-                        <p style={{ margin: '4px 0 0', fontSize: '12px', color: settings.darkMode ? '#999' : '#666', lineHeight: '1.5' }}>{item.detail}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </details>
-
-              {/* ── 20 Extended Recommendations ──────────────────── */}
-              <details open style={{ padding: '16px', border: '2px solid #fd7e14', borderRadius: '8px', background: settings.darkMode ? '#2a1a08' : '#fff8f0' }}>
-                <summary style={{ cursor: 'pointer', fontWeight: '700', fontSize: '14px', color: '#fd7e14', marginBottom: '12px', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  ➕ 20 Extended Recommendations — Holistic UX/UI Audit
-                </summary>
-                <p style={{ margin: '0 0 12px', fontSize: '12px', color: settings.darkMode ? '#bbb' : '#555' }}>
-                  Format: <em>Current state</em> → <strong>Proposed enhancement</strong> · Expected benefit · Complexity
-                </p>
-                {[
-                  { status: '✅', src: '🍴', title: 'Mobile delete icons invisible (Aloklok a0869b04)', detail: 'Voice/attachment delete icons have near-zero opacity on mobile → CSS opacity + min-width fix → prevents accidental retained attachments · Low' },
-                  { status: '✅', src: '🍴', title: 'Custom icon input label overlap (Aloklok cd9419b7)', detail: 'Settings icon label overlaps the text input → CSS z-index/position fix → cleaner settings form · Low' },
-                  { status: '✅', src: '🍴', title: 'Tag text clashes with background on custom themes (Aloklok 8da45370)', detail: 'Custom primary colors cause tag text to disappear → CSS --primary-rgb fallback + contrast rule → consistent tag readability · Low' },
-                  { status: '✅', src: '🍴', title: 'Card images show spinner after full load (Aloklok cb12c096)', detail: 'Loaded images continue showing animated spinner → CSS animation kill on loaded state → less visual noise · Low' },
-                  { status: '✅', src: '🍴', title: 'Duplicate / premature AI tag alerts (Aloklok 82c31233)', detail: 'AI auto-tag fires multiple notifications per tagging cycle → JS debounce + timestamp guard → less interruption · Medium' },
-                  { status: '✅', src: '🔍', title: 'No search-term highlighting in results', detail: 'Matched keywords not highlighted in result cards → inject <mark> around matches → faster visual scanning · Medium' },
-                  { status: '⚙️', src: '🔍', title: 'No multi-select for batch operations', detail: 'Deleting/archiving multiple notes requires repeating the action → checkbox overlay + bulk toolbar → major productivity gain · High' },
-                  { status: '✅', src: '🔍', title: 'No offline / connectivity indicator', detail: 'App silently fails when server unreachable → navigator.onLine + CSS status banner → prevents confusion and lost edits · Low' },
-                  { status: '✅', src: '🔍', title: 'No estimated reading time on long notes', detail: 'Users cannot gauge note length → JS word-count badge at 200 wpm → better note triage · Low' },
-                  { status: '✅', src: '🔍', title: 'No keyboard shortcuts (Ctrl+N, Ctrl+Enter, /)', detail: 'No global hotkeys for note creation or search focus → JS keydown listener → power-user productivity · Medium' },
-                  { status: '✅', src: '🔍', title: 'Dark mode not OLED-black', detail: 'Current dark mode uses #1a1a2e instead of #000000 → CSS custom property override for --background, --card → battery saving on AMOLED · Low' },
-                  { status: '⚙️', src: '🔍', title: 'Quick note templates missing', detail: 'No way to start from a structured template → template picker in editor footer → faster structured capture · High' },
-                  { status: '⚙️', src: '🔍', title: 'No file upload progress indicator', detail: 'Attachments appear to hang during upload → progress bar UI → user confidence, prevents duplicate uploads · Medium' },
-                  { status: '✅', src: '🔍', title: 'Empty note list has no onboarding CTA', detail: 'First-time users see a blank page → CSS :empty + JS injection of "Create your first note" → reduces abandonment · Low' },
-                  { status: '⚙️', src: '🔍', title: 'Error messages are generic ("Something went wrong")', detail: 'Backend errors swallowed into a single generic toast → specific, actionable messages with recovery links → less frustration · Medium' },
-                  { status: '⚙️', src: '🔍', title: 'No undo after accidental note delete', detail: 'Recycling a note is immediate with no undo window → toast with Undo action within 5s → prevents data-loss anxiety · Medium' },
-                  { status: '✅', src: '🔍', title: 'Pinned notes visually identical to unpinned', detail: 'No visual distinction between pinned and normal cards → CSS pseudo-element pin badge in card corner → at-a-glance identification · Low' },
-                  { status: '✅', src: '🔍', title: 'Cross-platform font rendering inconsistency', detail: 'Different OS-default fonts shift layout across devices → CSS system-ui font stack normalisation → consistent reading experience · Low' },
-                  { status: '✅', src: '🔍', title: 'No in-note heading outline / jump-to-section', detail: 'Long article notes have no navigation → JS TOC injection (parse ## headings, render sticky list) → fast navigation · Medium' },
-                  { status: '✅', src: '🔍', title: 'Tag hierarchy (#parent/child) not visually distinct', detail: '#Main/Sub/Topic tags display as flat pills → CSS indentation + color-step per slash level → cognitive structure, reduces misreads · Low' },
-                ].map((item, i) => (
-                  <div key={i} style={{ marginBottom: '8px', padding: '10px 12px', border: `1px solid ${settings.darkMode ? '#5a3510' : '#ffd8a8'}`, borderRadius: '6px', background: settings.darkMode ? '#2a1a08' : '#fff' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                      <span style={{ fontSize: '14px', flexShrink: 0 }}>{item.status}</span>
-                      <span style={{ fontSize: '12px', flexShrink: 0, opacity: 0.6 }} title={item.src === '🍴' ? 'From Aloklok fork' : 'Independent audit'}>{item.src}</span>
-                      <div>
-                        <strong style={{ fontSize: '12px', color: settings.darkMode ? '#ddd' : '#222' }}>{i + 1}. {item.title}</strong>
-                        <p style={{ margin: '3px 0 0', fontSize: '11px', color: settings.darkMode ? '#999' : '#666', lineHeight: '1.5' }}>{item.detail}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <p style={{ margin: '12px 0 0', fontSize: '11px', color: settings.darkMode ? '#888' : '#999' }}>
-                  ✅ = Addressable via plugin &nbsp;|&nbsp; ⚙️ = Core app PR required &nbsp;|&nbsp; 🍴 = From Aloklok fork &nbsp;|&nbsp; 🔍 = Independent audit
-                </p>
-              </details>
-
-            </div>
-          )}
 
         </div>
       )}

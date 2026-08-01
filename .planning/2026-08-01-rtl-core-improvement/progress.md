@@ -243,3 +243,55 @@ Three pre-existing tests encoded the old exemption and were updated.
   applied — if that work is wanted, it needs one fresh PR
 - The Jules automation is still running by decision; #346/#347 appeared during
   this session and the backlog will rebuild at ~2/day
+
+
+---
+
+## Session: 2026-08-01 (cont.) — Card interaction & UI/UX tab
+
+Executing `docs/superpowers/plans/2026-08-01-blinko-card-interaction-and-ux-tab.md`.
+Branch `feat/card-interaction-ux`, PR #356 — **open, not merged**, pending the
+manual gate.
+
+### Root cause of the reported double-tap
+
+`UIUXService.applySingleTap()` matched on `note-card` / `blinko-card` /
+`blinko-note` / `note-item`. **None occur in the shipped app** (checked against
+`.planning/html-and-dev.html`, 935 kB of captured DOM). The
+`.card-masonry-grid > div > div` fallback landed on a wrapper five levels above
+the card. The handler was attached to the wrong element.
+
+The card root carries `group/card` (30 occurrences). Descendants carry
+`group-hover/card:…`, which does not contain that substring.
+
+**The tests passed regardless** — they built a `note-card` fixture the app never
+emits. Third instance this session of a suite that was green for the wrong
+reason (see also the `preact/compat` onChange case and the NBSP regression test).
+
+### Done
+
+| Task | Result |
+|---|---|
+| 1 — remove `📋 UX Audit` sub-tab | `setting.tsx` lines 2289–2431 + registration deleted; bounds verified by paren balance, not line numbers |
+| 2 — card detection | New `src/services/blinkoDom.ts`; 11 tests, **5 fail against the old selector** |
+| 3 — single click opens editor | `cardClickOpensEditor` (default on); synthesizes `dblclick`; key test fails without the fix |
+| 4 — browser verification | **NOT DONE — needs a human** |
+
+Suite **359 → 375 pass / 0 fail**. Typecheck and build clean. Bundle inspected:
+`group/card` ✓, `cardClickOpensEditor` ✓, `dblclick` ✓, `UX Audit` absent ✓.
+
+Three pre-existing tests covered the legacy detail-view path and now opt into it
+with `cardClickOpensEditor: false` rather than depending on a default that changed.
+
+### Unverified assumption
+
+That `dblclick` on the card is what opens `#global-editor` is **inferred** from
+the reported symptom, not observed. Task 4 step 4 of the plan captures the real
+event sequence if it turns out wrong. Do not merge #356 before that gate passes.
+
+### Deferred
+
+`.planning/fixing.md` has 35 items. Triaged in the plan's Deferred section: 8
+already exist as settings (though Task 2 shows "exists" ≠ "works"), 12 need core
+PRs, 15 are plugin-addressable and unbuilt — grouped into four batches ready for
+a follow-up plan.

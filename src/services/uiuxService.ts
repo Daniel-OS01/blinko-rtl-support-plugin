@@ -15,6 +15,7 @@
 
 import { UIUXSettings, DEFAULT_UIUX_SETTINGS } from '../types';
 import { debounce } from '../utils/debounce';
+import { NOTE_CARD_SELECTOR, INTERACTIVE_SELECTOR } from './blinkoDom';
 
 const STORAGE_KEY = 'blinko-uiux-settings';
 const STYLE_TAG_ID = 'blinko-uiux-dynamic-styles';
@@ -182,23 +183,14 @@ export class UIUXService {
       return;
     }
 
-    // Plain selector — `:not([data-single-tap])` combined attribute pseudo-classes
-    // are not reliably supported in all test environments (e.g. happy-dom).
-    // Re-processing is guarded in JS via the _uiuxClickHandler property check.
-    const CARD_SELECTOR =
-      '[class*="note-card"], [class*="blinko-card"], ' +
-      '[class*="blinko-note"], [class*="note-item"], ' +
-      '.card-masonry-grid > div > div, ' +
-      '.blog-masonry-grid > div > div';
-
-    const IGNORE_SELECTOR =
-      'button, a[href], input, textarea, select, ' +
-      '[role="button"], [role="menuitem"], [role="menu"], ' +
-      '[class*="action"], [class*="toolbar"], [class*="menu"], ' +
-      '[class*="tag"], [class*="more"], [class*="dropdown"], [class*="icon"]';
+    // Card and interactive-element detection live in blinkoDom.ts, checked
+    // against markup captured from the running app. Re-processing is guarded in
+    // JS via the _uiuxClickHandler property check rather than by a
+    // `:not([data-single-tap])` selector, which happy-dom does not support
+    // reliably.
 
     const markAndListen = () => {
-      document.querySelectorAll<HTMLElement>(CARD_SELECTOR).forEach(card => {
+      document.querySelectorAll<HTMLElement>(NOTE_CARD_SELECTOR).forEach(card => {
         // Skip cards already processed — JS guard replaces CSS :not([data-single-tap])
         if ((card as any)._uiuxClickHandler) return;
         card.setAttribute('data-single-tap', 'true');
@@ -209,7 +201,7 @@ export class UIUXService {
           // Skip clicks on interactive elements that are INSIDE the card.
           // The check is scoped to descendants of the card to avoid false positives
           // from body/root classes (e.g. blinko-custom-icons matches [class*="icon"]).
-          const ignoreMatch = target.closest(IGNORE_SELECTOR);
+          const ignoreMatch = target.closest(INTERACTIVE_SELECTOR);
           if (ignoreMatch && card.contains(ignoreMatch)) return;
 
           // Re-entry guard: prevents our synthetic click from re-triggering
@@ -217,7 +209,18 @@ export class UIUXService {
           if (card.dataset.opening) return;
           card.dataset.opening = 'true';
 
-          // Find the element that navigates to the note detail view.
+          // Blinko opens the read-only detail overlay on a single click and
+          // the editor on a double click. Synthesizing the double click makes
+          // one click land where the user is almost always going.
+          if (this.settings.cardClickOpensEditor) {
+            card.dispatchEvent(
+              new MouseEvent('dblclick', { bubbles: true, cancelable: true, composed: true })
+            );
+            requestAnimationFrame(() => { delete card.dataset.opening; });
+            return;
+          }
+
+          // Legacy behaviour: click whatever navigates to the detail view.
           // Priority: heading element > heading/title link > any valid href.
           // Article notes (type 1) have a heading that serves as the navigation
           // target. Quick notes (type 0) have no heading.
