@@ -882,4 +882,42 @@ describe('UIUXService — card click opens the editor', () => {
     await frame();
     expect(dbl).toBe(0);
   });
+
+  // Regression coverage: before this PR, enabling `cardClickOpensEditor`
+  // caused the handler to `return` immediately after dispatching a dblclick
+  // on the card, skipping the legacy heading-forward behaviour entirely. The
+  // fix lets the card's own click fall through to that forwarding regardless
+  // of this setting, but no test exercised the heading branch at all — every
+  // other case in this suite uses a headingless card.
+  it('still forwards the click to the note heading when the editor feature is on', async () => {
+    const { card, body } = makeCard();
+    const heading = document.createElement('h2');
+    heading.textContent = 'Title';
+    card.appendChild(heading);
+
+    let headingClicks = 0;
+    heading.addEventListener('click', () => { headingClicks++; });
+
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: true });
+    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    await frame();
+    expect(headingClicks).toBe(1);
+  });
+
+  it('still forwards the click to the note heading when the editor feature is off', async () => {
+    const { card, body } = makeCard();
+    const heading = document.createElement('h2');
+    heading.textContent = 'Title';
+    card.appendChild(heading);
+
+    let headingClicks = 0;
+    heading.addEventListener('click', () => { headingClicks++; });
+
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: false });
+    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    await frame();
+    expect(headingClicks).toBe(1);
+  });
 });
