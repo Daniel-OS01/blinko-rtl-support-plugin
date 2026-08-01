@@ -34,11 +34,13 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   }
 
   /**
-   * Check if a character is RTL
+   * Check if a character code is RTL
    */
-  private isRTLChar(char: string): boolean {
-    const code = char.charCodeAt(0);
-    return this.RTL_RANGES.some(([min, max]) => code >= min && code <= max);
+  private isRTLChar(code: number): boolean {
+    for (let i = 0; i < this.RTL_RANGES.length; i++) {
+      if (code >= this.RTL_RANGES[i][0] && code <= this.RTL_RANGES[i][1]) return true;
+    }
+    return false;
   }
 
   /**
@@ -47,17 +49,19 @@ export class CharacterCodeStrategy implements DetectionStrategy {
   public detect(text: string): boolean {
     if (!text || text.length === 0) return false;
 
-    // Take sample from beginning of text for performance
-    const sample = text.substring(0, this.config.sampleSize);
-
     let rtlCharCount = 0;
     let totalSignificantChars = 0;
+    const limit = Math.min(text.length, this.config.sampleSize);
 
-    for (const char of sample) {
+    // Cached regex for performance
+    const ignoredRegex = /\s|[.,!?;:()[\]{}]/;
+
+    for (let i = 0; i < limit; i++) {
+      const char = text[i];
       // Skip whitespace and punctuation for analysis
-      if (!/\s|[.,!?;:()[\]{}]/.test(char)) {
+      if (!ignoredRegex.test(char)) {
         totalSignificantChars++;
-        if (this.isRTLChar(char)) {
+        if (this.isRTLChar(text.charCodeAt(i))) {
           rtlCharCount++;
         }
       }
