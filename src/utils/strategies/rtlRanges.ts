@@ -150,25 +150,72 @@ export interface DirectionalCounts {
  * work stays bounded while a shift anywhere in the text is still visible.
  * Iteration is by code point, so astral RTL scripts are reachable.
  */
+const isHighSurrogate = (code: number) => code >= 0xd800 && code <= 0xdbff;
+const isLowSurrogate = (code: number) => code >= 0xdc00 && code <= 0xdfff;
+
+/** Step an index back off the trailing half of a surrogate pair. */
+function alignStart(text: string, index: number): number {
+  if (index <= 0 || index >= text.length) return index;
+  return isLowSurrogate(text.charCodeAt(index)) ? index - 1 : index;
+}
+
+/** Extend an index forward so it never cuts a surrogate pair in half. */
+function alignEnd(text: string, index: number): number {
+  if (index <= 0 || index >= text.length) return index;
+  return isHighSurrogate(text.charCodeAt(index - 1)) && isLowSurrogate(text.charCodeAt(index))
+    ? index + 1
+    : index;
+}
+
+/**
+ * The [start, end) slices of `text` that detection looks at.
+ *
+ * Exported so that every consumer samples identically. A caller that counts
+ * over the whole string while comparing against a denominator derived from
+ * these windows produces a ratio for two different pieces of text — which can
+ * exceed 1.0 and trip any threshold.
+ *
+ * Boundaries are aligned to code-point boundaries, so a window never begins or
+ * ends in the middle of a surrogate pair. Arithmetic midpoints otherwise land
+ * on a trailing surrogate roughly half the time in astral text, and reading
+ * from there yields a lone surrogate that matches no range.
+ */
+export function getSampleWindows(text: string, sampleSize: number): Array<[number, number]> {
+  if (!text) return [];
+
+  const budget = sampleSize > 0 ? sampleSize : text.length;
+  if (text.length <= budget) return [[0, text.length]];
+
+  const per = Math.max(1, Math.floor(budget / 3));
+  const midStart = alignStart(text, Math.floor((text.length - per) / 2));
+  const tailStart = alignStart(text, text.length - per);
+
+  return [
+    [0, alignEnd(text, per)],
+    [midStart, alignEnd(text, midStart + per)],
+    [tailStart, text.length],
+  ];
+}
+
+/**
+ * The sampled text as a single string, for consumers that must run a regex
+ * rather than a code-point scan. Same windows as countDirectional sees.
+ */
+export function sampledText(text: string, sampleSize: number): string {
+  const windows = getSampleWindows(text, sampleSize);
+  if (windows.length === 0) return '';
+  if (windows.length === 1 && windows[0][0] === 0 && windows[0][1] === text.length) return text;
+
+  let out = '';
+  for (const [start, end] of windows) out += text.slice(start, end);
+  return out;
+}
+
 export function countDirectional(text: string, sampleSize: number): DirectionalCounts {
   const counts: DirectionalCounts = { rtl: 0, ltr: 0, significant: 0, scanned: 0 };
   if (!text) return counts;
 
-  const budget = sampleSize > 0 ? sampleSize : text.length;
-
-  const windows: Array<[number, number]> =
-    text.length <= budget
-      ? [[0, text.length]]
-      : (() => {
-          const per = Math.max(1, Math.floor(budget / 3));
-          const midStart = Math.floor((text.length - per) / 2);
-          const tailStart = text.length - per;
-          return [
-            [0, per],
-            [midStart, midStart + per],
-            [tailStart, text.length],
-          ];
-        })();
+  const windows = getSampleWindows(text, sampleSize);
 
   for (const [start, end] of windows) {
     let i = start;

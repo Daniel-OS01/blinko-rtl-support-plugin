@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect } from 'bun:test';
-import { getPresetActionState } from '../src/setting';
+import { getPresetActionState, parseBoundedInt } from '../src/setting';
 
 describe('getPresetActionState', () => {
   describe('plugin disabled — reported ahead of any selection problem', () => {
@@ -126,4 +126,47 @@ describe('the handler guard blocks click and keyboard activation alike', () => {
       expect(calls).toBe(shouldRun ? 3 : 0);
     });
   }
+});
+
+describe('parseBoundedInt', () => {
+  // Guards the numeric settings inputs. A number input reports an empty string
+  // while it is being cleared or retyped; parseInt('') is NaN, and writing that
+  // to storage persists a setting that reads back as invalid.
+  const rejected: [string, string][] = [
+    ['empty (input cleared)', ''],
+    ['whitespace only', '   '],
+    ['not a number', 'abc'],
+    ['lone minus (mid-typing)', '-'],
+    ['below the minimum', '0'],
+    ['negative', '-5'],
+    ['above the maximum', '21'],
+    ['far above the maximum', '9999'],
+  ];
+
+  for (const [label, raw] of rejected) {
+    it(`rejects ${label}`, () => {
+      expect(parseBoundedInt(raw, 1, 20)).toBeNull();
+    });
+  }
+
+  const accepted: [string, number][] = [
+    ['1', 1],
+    ['20', 20],
+    ['7', 7],
+    ['07', 7],
+    ['12px', 12], // parseInt's trailing-garbage tolerance is retained
+  ];
+
+  for (const [raw, expected] of accepted) {
+    it(`accepts ${JSON.stringify(raw)} as ${expected}`, () => {
+      expect(parseBoundedInt(raw, 1, 20)).toBe(expected);
+    });
+  }
+
+  it('never returns NaN', () => {
+    for (const raw of ['', ' ', 'x', 'NaN', 'Infinity', '-Infinity']) {
+      const result = parseBoundedInt(raw, 1, 20);
+      expect(result === null || Number.isFinite(result)).toBe(true);
+    }
+  });
 });

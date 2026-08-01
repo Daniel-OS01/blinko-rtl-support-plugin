@@ -322,6 +322,20 @@ const CARD_GRID_RTL_CSS = `/* Card Grid RTL — targets card masonry grid layout
     direction: ltr !important;
 }`;
 
+/**
+ * Parse a numeric settings input, returning null when the value is unusable.
+ *
+ * A number input reports an empty string while it is being cleared or retyped,
+ * and `parseInt('')` is NaN. Writing that straight to storage persists a
+ * setting that reads back as invalid, so callers skip the save instead.
+ */
+export function parseBoundedInt(raw: string, min: number, max: number): number | null {
+  const value = parseInt(raw, 10);
+  if (!Number.isFinite(value)) return null;
+  if (value < min || value > max) return null;
+  return value;
+}
+
 export interface PresetActionState {
   /** True when the action must not run. */
   disabled: boolean;
@@ -924,6 +938,11 @@ export function RTLSetting(): JSX.Element {
       (event.target as HTMLInputElement).value = '';
   };
 
+  const commitMinTextLength = (raw: string) => {
+    const value = parseBoundedInt(raw, 1, 20);
+    if (value !== null) saveSettings({ minTextLength: value });
+  };
+
   const loadPresetState = getPresetActionState('load', settings.enabled, selectedPresetId);
   const deletePresetState = getPresetActionState('delete', settings.enabled, selectedPresetId);
 
@@ -1208,7 +1227,7 @@ export function RTLSetting(): JSX.Element {
                     min="1"
                     max="20"
                     value={settings.minTextLength ?? 1}
-                    onChange={(e) => saveSettings({ minTextLength: parseInt((e.target as HTMLInputElement).value) })}
+                    onChange={(e) => commitMinTextLength((e.target as HTMLInputElement).value)}
                     style={{ flex: 1, cursor: 'pointer' }}
                 />
                 <input
@@ -1216,7 +1235,7 @@ export function RTLSetting(): JSX.Element {
                     min="1"
                     max="20"
                     value={settings.minTextLength ?? 1}
-                    onChange={(e) => saveSettings({ minTextLength: parseInt((e.target as HTMLInputElement).value) })}
+                    onChange={(e) => commitMinTextLength((e.target as HTMLInputElement).value)}
                     style={{ width: '60px', padding: '5px' }}
                 />
             </div>

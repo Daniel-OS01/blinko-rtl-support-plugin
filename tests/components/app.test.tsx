@@ -77,6 +77,11 @@ describe("RTLApp Component", () => {
 
      // change
      slider.value = "20";
+     // The plugin entry point imports preact/compat, which remaps onChange to
+     // the input event the way React does. Whether compat has been loaded
+     // depends on which other test files share the process, so dispatch both —
+     // production always has compat, and only one of the two will fire.
+     slider.dispatchEvent(new Event('input', { bubbles: true }));
      slider.dispatchEvent(new Event('change', { bubbles: true }));
 
      expect(window.blinkoRTL.setSensitivity).toHaveBeenCalledWith(0.2);

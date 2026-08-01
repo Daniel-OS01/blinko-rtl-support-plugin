@@ -1,6 +1,7 @@
 import { DetectionStrategy } from './types';
 import {
   countDirectional,
+  sampledText,
   RTL_REGEX_CLASS,
   ARABIC_NUMBER_REGEX_CLASS,
 } from './rtlRanges';
@@ -80,10 +81,16 @@ export class RegexStrategy implements DetectionStrategy {
 
     // When narrowed to a single script, re-count with this strategy's own
     // pattern; otherwise the shared scan already used the same range set.
+    //
+    // The re-count must run over the *sampled* text, not the whole string.
+    // Counting matches across the full input while dividing by a denominator
+    // taken from the sample describes two different pieces of text: on a long,
+    // mostly-Latin note with a dense RTL section the ratio reached 8.08, which
+    // clears any threshold.
     let rtlCount = counts.rtl;
     if (!(this.checkHebrew && this.checkArabic)) {
       this.rtlRegex.lastIndex = 0;
-      const matches = text.match(this.rtlRegex);
+      const matches = sampledText(text, this.sampleSize).match(this.rtlRegex);
       rtlCount = matches ? matches.filter(ch => !this.arabicNumberRegex.test(ch)).length : 0;
     }
 
