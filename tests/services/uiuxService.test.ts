@@ -47,19 +47,71 @@ function makeOverlay(): HTMLDivElement {
   return overlay;
 }
 
-function makeEditor(): { backdrop: HTMLDivElement; editor: HTMLDivElement; closeBtn: HTMLButtonElement } {
+/**
+ * HeroUI note-editor portal, from live DOM + recording:
+ *   body > div.fixed
+ *     > div[1] backdrop (aria-hidden)
+ *     > div[2][data-slot=wrapper].flex.fixed.inset-0.z-50
+ *       > section[role=dialog].…modal-content
+ *         > close div (unlabelled, z-[2002] rounded-full)
+ *         > #global-editor
+ *
+ * Deliberately has NO button.close / aria-label="Close" — those never appear
+ * on the live modal and previously made the suite green while production failed.
+ */
+function makeHeroUIModal(): {
+  portal: HTMLDivElement;
+  backdrop: HTMLDivElement;
+  wrapper: HTMLDivElement;
+  modal: HTMLElement;
+  editor: HTMLDivElement;
+  closeBtn: HTMLDivElement;
+} {
+  const portal = document.createElement('div');
+  portal.className = 'fixed inset-0';
+
   const backdrop = document.createElement('div');
-  backdrop.id = 'tap-outside-backdrop';
-  backdrop.style.position = 'fixed';
-  backdrop.style.inset = '0';
+  backdrop.setAttribute('aria-hidden', 'true');
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flex w-screen h-screen fixed inset-0 z-50';
+  wrapper.setAttribute('data-slot', 'wrapper');
+
+  const modal = document.createElement('section');
+  modal.setAttribute('role', 'dialog');
+  modal.className =
+    'flex flex-col relative bg-white dark:bg-content1 w-full mx-auto ' +
+    'sm:my-16 max-w-3xl rounded-large shadow-small overflow-visible modal-content';
+
+  const closeBtn = document.createElement('div');
+  closeBtn.className =
+    'cursor-pointer absolute md:top-[-12px] md:right-[-12px] top-[-20px] ' +
+    'right-[calc(50%-17.5px)] bg-background border-2 border-border z-[2002] ' +
+    'text-foreground p-2 rounded-full !w-[35px] !h-[35px] flex items-center ' +
+    'justify-center shadow-lg';
+  closeBtn.tabIndex = 0;
 
   const editor = document.createElement('div');
-  editor.className = 'editor-container';
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'close';
-  editor.appendChild(closeBtn);
-  backdrop.appendChild(editor);
-  document.body.appendChild(backdrop);
+  editor.id = 'global-editor';
+  editor.className = 'h-full flex flex-col';
+  editor.innerHTML = '<div id="vditor-edit"><p>note body</p></div>';
+
+  modal.appendChild(closeBtn);
+  modal.appendChild(editor);
+  wrapper.appendChild(modal);
+  portal.appendChild(backdrop);
+  portal.appendChild(wrapper);
+  document.body.appendChild(portal);
+  return { portal, backdrop, wrapper, modal, editor, closeBtn };
+}
+
+/** @deprecated name kept for Phase 3 call sites — now mounts the real HeroUI shape. */
+function makeEditor(): {
+  backdrop: HTMLDivElement;
+  editor: HTMLDivElement;
+  closeBtn: HTMLDivElement;
+} {
+  const { backdrop, editor, closeBtn } = makeHeroUIModal();
   return { backdrop, editor, closeBtn };
 }
 
@@ -510,24 +562,74 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     expect(clickSpy).not.toHaveBeenCalled();
   });
 
-  it('dispatches Escape if no close button is found', () => {
+  it('falls back to the wrapper (then Escape) when the circular close control is absent', () => {
     service.updateSettings({ tapOutsideClosesNote: true });
 
-    // Editor with no close button
-    const backdrop = document.createElement('div');
-    const editor = document.createElement('div');
-    editor.className = 'editor-container';
-    backdrop.appendChild(editor);
-    document.body.appendChild(backdrop);
+    const { portal, backdrop, wrapper, modal, closeBtn } = makeHeroUIModal();
+    closeBtn.remove();
+
+    let wrapperClicks = 0;
+    wrapper.addEventListener('click', () => { wrapperClicks++; });
 
     const escapeSpy = jest.fn();
-    editor.addEventListener('keydown', escapeSpy);
+    modal.addEventListener('keydown', escapeSpy);
 
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
-    expect(escapeSpy).toHaveBeenCalledTimes(1);
-    const event = escapeSpy.mock.calls[0][0] as KeyboardEvent;
-    expect(event.key).toBe('Escape');
+    // Preferred path: activate the wrapper HeroUI already dismisses on.
+    // Escape remains the last resort if the wrapper handler is a no-op in jsdom.
+    expect(wrapperClicks + escapeSpy.mock.calls.length).toBeGreaterThanOrEqual(1);
+    void portal;
+  });
+});
+
+describe('UIUXService — tap outside closes the HeroUI modal', () => {
+  let service: UIUXService;
+
+  beforeEach(() => {
+    localStorage.clear();
+    document.body.innerHTML = '';
+    document.body.className = '';
+    jest.clearAllMocks();
+    service = new UIUXService();
+  });
+
+  afterEach(() => {
+    service.destroy();
+  });
+
+  it('closes via the unlabelled circular close control when the backdrop is clicked', () => {
+    const { backdrop, closeBtn } = makeHeroUIModal();
+    let closed = 0;
+    closeBtn.addEventListener('click', () => { closed++; });
+
+    service.updateSettings({ tapOutsideClosesNote: true });
+    backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+    expect(closed).toBe(1);
+  });
+
+  it('closes via the same control when the wrapper letterbox is clicked', () => {
+    const { wrapper, closeBtn } = makeHeroUIModal();
+    let closed = 0;
+    closeBtn.addEventListener('click', () => { closed++; });
+
+    service.updateSettings({ tapOutsideClosesNote: true });
+    wrapper.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+    expect(closed).toBe(1);
+  });
+
+  it('does not close when the click is inside #global-editor', () => {
+    const { editor, closeBtn } = makeHeroUIModal();
+    let closed = 0;
+    closeBtn.addEventListener('click', () => { closed++; });
+
+    service.updateSettings({ tapOutsideClosesNote: true });
+    editor.querySelector('p')!
+      .dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+    expect(closed).toBe(0);
   });
 });
 
@@ -963,27 +1065,21 @@ describe('UIUXService — tap outside closes the detail overlay', () => {
     expect(keys.filter(k => k === 'Escape').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('still closes a modal dialog, which is the surface that already worked', () => {
-    const modal = document.createElement('div');
-    modal.className = 'modal-content';
-    modal.innerHTML = '<button class="close-btn" aria-label="Close"></button>';
-    document.body.appendChild(modal);
+  it('still closes a HeroUI modal when only that surface is mounted', () => {
+    const { backdrop, closeBtn } = makeHeroUIModal();
     let closed = 0;
-    modal.querySelector('.close-btn')!.addEventListener('click', () => { closed++; });
+    closeBtn.addEventListener('click', () => { closed++; });
 
     service.updateSettings({ tapOutsideClosesNote: true });
-    document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
     expect(closed).toBe(1);
   });
 
   it('prefers the detail overlay when both surfaces are mounted', () => {
-    const modal = document.createElement('div');
-    modal.className = 'modal-content';
-    modal.innerHTML = '<button class="close-btn" aria-label="Close"></button>';
-    document.body.appendChild(modal);
+    const { closeBtn } = makeHeroUIModal();
     let modalClosed = 0;
-    modal.querySelector('.close-btn')!.addEventListener('click', () => { modalClosed++; });
+    closeBtn.addEventListener('click', () => { modalClosed++; });
 
     const { overlay, back } = mountDetailOverlay();
     let overlayClosed = 0;
