@@ -4,6 +4,7 @@ import { advancedRTLCSS, DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_
 import { debounce } from '../utils/debounce';
 import { PasteInterceptor } from '../utils/pasteInterceptor';
 import { StorageManager } from './storageManager';
+import { isRTLCodePoint } from '../utils/strategies/rtlRanges';
 
 /**
  * Whitespace test over a UTF-16 code unit, matching the character set of the
@@ -582,18 +583,24 @@ export class RTLService {
           let nonWhitespaceLength = 0;
           const limit = text.length;
 
-          for (let i = 0; i < limit; i++) {
-            const code = text.charCodeAt(i);
+          // Iterate by code point, not UTF-16 code unit, and test against the
+          // shared RTL range table (src/utils/strategies/rtlRanges.ts) rather
+          // than a separate hardcoded Hebrew/Arabic-only set. The old inline
+          // check duplicated — and had fallen behind — the ranges used by the
+          // main detector: it missed Syriac, Thaana, N'Ko, Samaritan, Mandaic,
+          // Syriac Supplement and Arabic Extended-B, and scanning by
+          // charCodeAt() meant astral RTL scripts (e.g. Adlam) could never
+          // match, since a surrogate pair's individual halves fall in no
+          // range. Code blocks now agree with prose on what counts as RTL.
+          for (let i = 0; i < limit; ) {
+            const code = text.codePointAt(i)!;
+            i += code > 0xffff ? 2 : 1;
             // Skip whitespace. Must stay equivalent to the /\s/ this replaced,
             // which is Unicode-aware — NBSP-indented code is common, and
             // counting those as significant would dilute the RTL ratio.
             if (!isWhitespaceCode(code)) {
                 nonWhitespaceLength++;
-                // Hebrew (0x0590-0x05FF) or Arabic (0x0600-0x06FF, 0x0750-0x077F, 0x08A0-0x08FF)
-                if ((code >= 0x0590 && code <= 0x05FF) ||
-                    (code >= 0x0600 && code <= 0x06FF) ||
-                    (code >= 0x0750 && code <= 0x077F) ||
-                    (code >= 0x08A0 && code <= 0x08FF)) {
+                if (isRTLCodePoint(code)) {
                     totalRTL++;
                 }
             }
