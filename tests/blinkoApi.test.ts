@@ -309,3 +309,198 @@ describe('updateNoteContent', () => {
     }
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wire protocol, derived from Blinko's own client bundle and from captured
+// browser payloads:
+//
+//   POST /api/trpc/<proc>?batch=1
+//   body    {"0":{"json":{...}}}
+//   headers Authorization: Bearer <localStorage["token"]>
+//           trpc-accept: application/jsonl
+//
+//   ai.writing.mutate({question, type, content}) yields {type:"text-delta", textDelta}
+//
+// A procedure that does not exist answers 404 ("No procedure found"), so the
+// 401s seen on ai.autoTag / ai.writing / ai.completions confirm all three exist
+// and that the calls were simply unauthenticated.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('tRPC wire protocol', () => {
+  let service: AIPostService;
+  let originalFetch: typeof globalThis.fetch;
+  let calls: Array<{ url: string; init: any }>;
+
+  function stubJson(body: unknown, status = 200) {
+    globalThis.fetch = (async (url: any, init: any = {}) => {
+      calls.push({ url: String(url), init });
+      return {
+        ok: status >= 200 && status < 300,
+        status,
+        statusText: String(status),
+        headers: { get: (h: string) => (h.toLowerCase() === 'content-type' ? 'application/json' : null) },
+        json: async () => body,
+        text: async () => JSON.stringify(body),
+      } as any;
+    }) as any;
+  }
+
+  /** A jsonl body, as httpBatchStreamLink returns for a streaming procedure. */
+  function stubStream(lines: string[]) {
+    globalThis.fetch = (async (url: any, init: any = {}) => {
+      calls.push({ url: String(url), init });
+      const encoder = new TextEncoder();
+      let i = 0;
+      return {
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        headers: { get: (h: string) => (h.toLowerCase() === 'content-type' ? 'application/jsonl' : null) },
+        body: {
+          getReader: () => ({
+            read: async () =>
+              i < lines.length
+                ? { done: false, value: encoder.encode(lines[i++] + '\n') }
+                : { done: true, value: undefined },
+          }),
+        },
+        json: async () => ({}),
+        text: async () => lines.join('\n'),
+      } as any;
+    }) as any;
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    calls = [];
+    originalFetch = globalThis.fetch;
+    service = new AIPostService();
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    localStorage.clear();
+  });
+
+  it('batches the request the way the app does', async () => {
+    stubJson([{ result: { data: { json: ['t'] } } }]);
+    await service.runAutoTag({ content: 'שלום עולם' });
+
+    expect(calls[0].url).toBe('/api/trpc/ai.autoTag?batch=1');
+    expect(JSON.parse(calls[0].init.body)).toEqual({ 0: { json: { content: 'שלום עולם' } } });
+  });
+
+  it('does NOT ask for jsonl on a plain mutation', () => {
+    // With trpc-accept: application/jsonl the server answers HTTP 200 even for
+    // failures and puts the error in the stream body, so a mutation sent that
+    // way loses its status code and stops parsing as JSON.
+    stubJson([{ result: { data: { json: [] } } }]);
+    return service.runAutoTag({ content: 'note' }).then(() => {
+      expect(calls[0].init.headers['trpc-accept']).toBeUndefined();
+    });
+  });
+
+  it('does ask for jsonl on the streaming procedure', async () => {
+    stubStream([JSON.stringify({ json: { type: 'text-delta', textDelta: 'x' } })]);
+    await service.runPostProcessing({ content: 'x' });
+    expect(calls[0].init.headers['trpc-accept']).toBe('application/jsonl');
+  });
+
+  it('raises an in-stream 401, which arrives inside an HTTP 200', async () => {
+    // Exactly the frame the live instance returns for an unauthenticated
+    // ai.writing call in jsonl mode.
+    stubStream([
+      JSON.stringify({ json: { '0': [[0], [null, 0, 0]] } }),
+      JSON.stringify({
+        json: [0, 0, [[{ error: { message: 'Unauthorized', code: -32001, data: { code: 'UNAUTHORIZED', httpStatus: 401 } } }]]],
+      }),
+    ]);
+    await expect(service.runPostProcessing({ content: 'x' })).rejects.toThrow(/401|unauthenticated/i);
+  });
+
+  it('uses notes.upsert for the tRPC note fallback', async () => {
+    stubJson([{ result: { data: { json: {} } } }]);
+    await service.updateNoteContent(7, 'body');
+    // `note.upsert` is a 404 on this instance — that fallback never worked.
+    expect(calls[0].url).toBe('/api/trpc/notes.upsert?batch=1');
+  });
+
+  it('unwraps the batched response envelope', async () => {
+    stubJson([{ result: { data: { json: ['alpha', 'beta'] } } }]);
+    expect(await service.runAutoTag({ content: 'note' })).toEqual(['alpha', 'beta']);
+  });
+
+  it('surfaces a batched tRPC error instead of returning it as data', async () => {
+    stubJson([{ error: { json: { message: 'No AI provider configured' } } }]);
+    await expect(service.runAutoTag({ content: 'note' })).rejects.toThrow(/No AI provider configured/);
+  });
+
+  it("prefers the session token the app stores under localStorage['token']", async () => {
+    localStorage.setItem('token', 'session-jwt');
+    service.save({ blinkoApiToken: 'configured-api-key' });
+    stubJson([{ result: { data: { json: [] } } }]);
+
+    await service.runAutoTag({ content: 'note' });
+    expect(calls[0].init.headers.Authorization).toBe('Bearer session-jwt');
+  });
+
+  it('unquotes a JSON-persisted token', async () => {
+    localStorage.setItem('token', '"quoted-jwt"');
+    stubJson([{ result: { data: { json: [] } } }]);
+    await service.runAutoTag({ content: 'note' });
+    expect(calls[0].init.headers.Authorization).toBe('Bearer quoted-jwt');
+  });
+
+  it('falls back to the configured token when not signed in', async () => {
+    service.save({ blinkoApiToken: 'configured-api-key' });
+    stubJson([{ result: { data: { json: [] } } }]);
+    await service.runAutoTag({ content: 'note' });
+    expect(calls[0].init.headers.Authorization).toBe('Bearer configured-api-key');
+  });
+
+  it('reports a missing procedure as 404, not as an auth problem', async () => {
+    stubJson({}, 404);
+    await expect(service.runAutoTag({ content: 'note' })).rejects.toThrow(/not available/i);
+  });
+
+  it('sends question, type and content to ai.writing', async () => {
+    stubStream([JSON.stringify({ json: { type: 'text-delta', textDelta: 'ok' } })]);
+    await service.runPostProcessing({ content: 'the note body' });
+
+    expect(calls[0].url).toBe('/api/trpc/ai.writing?batch=1');
+    const input = JSON.parse(calls[0].init.body)['0'].json;
+    expect(input.question).toContain('the note body'); // via the prompt template
+    expect(input.type).toBe('custom');
+    expect(input.content).toBe('the note body'); // previously omitted entirely
+  });
+
+  it('accumulates text-delta chunks from a jsonl stream', async () => {
+    stubStream([
+      JSON.stringify({ json: { type: 'text-delta', textDelta: 'Hello ' } }),
+      JSON.stringify({ json: { type: 'text-delta', textDelta: 'world' } }),
+    ]);
+    expect(await service.runPostProcessing({ content: 'x' })).toBe('Hello world');
+  });
+
+  it('accepts the older text_delta/value chunk shape', async () => {
+    stubStream([
+      JSON.stringify({ result: { data: { type: 'text_delta', value: 'שלום ' } } }),
+      JSON.stringify({ result: { data: { type: 'text_delta', value: 'עולם' } } }),
+    ]);
+    expect(await service.runPostProcessing({ content: 'x' })).toBe('שלום עולם');
+  });
+
+  it('tolerates SSE framing and blank lines', async () => {
+    stubStream([
+      'data: ' + JSON.stringify({ json: { type: 'text-delta', textDelta: 'A' } }),
+      '',
+      'data: [DONE]',
+    ]);
+    expect(await service.runPostProcessing({ content: 'x' })).toBe('A');
+  });
+
+  it('raises an error chunk rather than returning empty text', async () => {
+    stubStream([JSON.stringify({ json: { type: 'error', error: { name: 'RateLimited' } } })]);
+    await expect(service.runPostProcessing({ content: 'x' })).rejects.toThrow(/RateLimited/);
+  });
+});
