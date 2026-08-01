@@ -21,6 +21,10 @@ import {
   NOTE_CARD_SELECTOR,
   findNoteCard,
   isInteractiveTarget,
+  MODAL_CONTENT_SELECTOR,
+  MODAL_CLOSE_SELECTOR,
+  findModalContent,
+  closeModalEditor,
 } from '../../src/services/blinkoDom';
 
 /** Class attribute copied verbatim from a rendered card in the capture. */
@@ -147,5 +151,76 @@ describe('isInteractiveTarget', () => {
     const stray = document.createElement('button');
     document.body.appendChild(stray);
     expect(isInteractiveTarget(card, stray)).toBe(false);
+  });
+});
+
+/**
+ * HeroUI modal markup from HANDOFF / recording — unlabelled circular close.
+ */
+function buildHeroUIModal(): {
+  backdrop: HTMLElement;
+  wrapper: HTMLElement;
+  modal: HTMLElement;
+  closeBtn: HTMLElement;
+} {
+  document.body.innerHTML = `
+    <div class="fixed inset-0">
+      <div aria-hidden="true"></div>
+      <div class="flex w-screen h-screen fixed inset-0 z-50" data-slot="wrapper">
+        <section role="dialog"
+          class="flex flex-col relative bg-white w-full mx-auto max-w-3xl rounded-large modal-content">
+          <div class="cursor-pointer absolute md:top-[-12px] md:right-[-12px] top-[-20px]
+                      right-[calc(50%-17.5px)] bg-background border-2 border-border z-[2002]
+                      text-foreground p-2 rounded-full !w-[35px] !h-[35px] flex items-center
+                      justify-center shadow-lg" tabindex="0" id="modal-close"></div>
+          <div id="global-editor" class="h-full flex flex-col">
+            <div id="vditor-edit"><p>body</p></div>
+          </div>
+        </section>
+      </div>
+    </div>`;
+  return {
+    backdrop: document.querySelector('[aria-hidden="true"]') as HTMLElement,
+    wrapper: document.querySelector('[data-slot="wrapper"]') as HTMLElement,
+    modal: document.querySelector(MODAL_CONTENT_SELECTOR) as HTMLElement,
+    closeBtn: document.getElementById('modal-close') as HTMLElement,
+  };
+}
+
+describe('modal DOM contract', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('MODAL_CONTENT_SELECTOR matches the live dialog class', () => {
+    buildHeroUIModal();
+    expect(document.querySelectorAll(MODAL_CONTENT_SELECTOR).length).toBe(1);
+  });
+
+  it('MODAL_CLOSE_SELECTOR matches the unlabelled circular div', () => {
+    const { closeBtn } = buildHeroUIModal();
+    expect(document.querySelector(MODAL_CLOSE_SELECTOR)).toBe(closeBtn);
+  });
+
+  it('findModalContent returns the dialog panel', () => {
+    const { modal } = buildHeroUIModal();
+    expect(findModalContent()).toBe(modal);
+  });
+
+  it('closeModalEditor clicks the circular close control', () => {
+    const { closeBtn } = buildHeroUIModal();
+    let clicks = 0;
+    closeBtn.addEventListener('click', () => { clicks++; });
+    expect(closeModalEditor()).toBe(true);
+    expect(clicks).toBe(1);
+  });
+
+  it('closeModalEditor falls back to the wrapper when the close control is missing', () => {
+    const { wrapper, closeBtn } = buildHeroUIModal();
+    closeBtn.remove();
+    let clicks = 0;
+    wrapper.addEventListener('click', () => { clicks++; });
+    expect(closeModalEditor()).toBe(true);
+    expect(clicks).toBe(1);
   });
 });

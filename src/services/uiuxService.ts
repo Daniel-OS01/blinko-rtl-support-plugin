@@ -18,9 +18,12 @@ import { debounce } from '../utils/debounce';
 import {
   NOTE_CARD_SELECTOR,
   INTERACTIVE_SELECTOR,
+  DETAIL_OVERLAY_SELECTOR,
   findDetailPreviewPane,
   findDetailOverlayContent,
   closeDetailOverlay,
+  findModalContent,
+  closeModalEditor,
   isEditorOpen,
 } from './blinkoDom';
 
@@ -385,6 +388,15 @@ export class UIUXService {
         // back press is also intercepted.
         history.pushState({ blinkoPlugin: true }, '', window.location.href);
 
+        if (document.querySelector(DETAIL_OVERLAY_SELECTOR)) {
+          closeDetailOverlay();
+          return;
+        }
+        if (findModalContent()) {
+          closeModalEditor();
+          return;
+        }
+
         // Try to find and click a close button.
         const closeBtn = Array.from(
           overlay.querySelectorAll<HTMLElement>('button, [class*="close"], [aria-label], [data-dismiss]')
@@ -469,12 +481,10 @@ export class UIUXService {
     /**
      * The surface an outside click should close, and how to close it.
      *
-     * Two surfaces exist. The modal dialog carries `modal-content` and closes
-     * through a close button. The full-screen detail overlay carries none of
-     * those class names — it is a plain `div.w-full.mx-auto` inside a
-     * `z-[9999]` wrapper — so outside-click never applied to it. That went
-     * unnoticed while cards opened the modal; routing card clicks into the
-     * overlay made it visible.
+     * Two surfaces exist. The HeroUI modal carries `modal-content` and closes
+     * through an unlabelled circular `div` (or its `[data-slot="wrapper"]`).
+     * The full-screen detail overlay is a plain `div.w-full.mx-auto` inside a
+     * `z-[9999]` wrapper — it has none of those modal class names.
      *
      * The overlay is checked first: it renders above the modal, so when both
      * exist it is the one the click belongs to.
@@ -485,32 +495,11 @@ export class UIUXService {
         return { content: detailContent, close: () => closeDetailOverlay() };
       }
 
-      const candidates = document.querySelectorAll<HTMLElement>(
-        '[class*="modal-content"], [class*="editor-container"], [class*="note-editor"], ' +
-        '[class*="blinko-editor"], [class*="dialog-content"]'
-      );
-      for (const el of Array.from(candidates)) {
-        if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
-        return { content: el, close: () => closeViaButtonOrEscape(el) };
+      const modalContent = findModalContent();
+      if (modalContent) {
+        return { content: modalContent, close: () => closeModalEditor() };
       }
       return null;
-    };
-
-    const closeViaButtonOrEscape = (scope: HTMLElement): void => {
-      const closeBtn =
-        Array.from(scope.querySelectorAll<HTMLElement>('button, [class*="close"], [aria-label], [data-dismiss]'))
-          .find((el) => {
-            const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
-            const className = (el.className || '').toString().toLowerCase();
-            return className.includes('close') || ariaLabel.includes('close') || el.hasAttribute('data-dismiss');
-          }) ??
-        document.querySelector<HTMLElement>('.modal-close');
-      if (closeBtn) {
-        closeBtn.click();
-      } else {
-        // Fallback: Escape with bubbles:true propagates up from scope to document
-        scope.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-      }
     };
 
     const handler = (e: MouseEvent): void => {
