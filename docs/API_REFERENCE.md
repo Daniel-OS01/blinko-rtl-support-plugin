@@ -1,8 +1,8 @@
 # API Reference — Blinko RTL Support Plugin
 
 > **Document type:** External API endpoints, request/response contracts, and auth patterns
-> **Version:** 1.1
-> **Last updated:** 2026-03-27
+> **Version:** 1.2
+> **Last updated:** 2026-03-28
 
 ---
 
@@ -12,8 +12,45 @@ The plugin interacts with two distinct Blinko API surfaces:
 
 | API Surface | Auth | Base | Purpose |
 |-------------|------|------|---------|
-| tRPC (session) | Session cookie (`credentials: 'include'`) | `/api/trpc/` | Default for all operations |
+| tRPC (batched) | Resolved Blinko token (see [Auth Token Resolution](#auth-token-resolution)) | `/api/trpc/` | Default for all operations |
 | REST API v1 | `Authorization: Bearer <token>` | `/api/v1/` | Opt-in alternative for note updates |
+
+Blinko's own client sends every tRPC call through `httpBatchStreamLink`. An
+unbatched request is rejected outright — `POST /api/trpc/ai.autoTag` (no query
+string) answers `400 "Streaming requests must be batched (you can do a batch
+of 1)"` before it ever reaches the procedure. All tRPC requests below use
+`?batch=1` with the input keyed by index, and unwrap the corresponding
+`[{result|error}]` response envelope.
+
+> **2026-03-28 bug fix:** The plugin previously sent unbatched tRPC bodies
+> (`{"json": input}` to `/api/trpc/<proc>` with no query string), which never
+> reached the procedure. See `CHANGE_LOG.md CL-S7-001`.
+
+---
+
+## Auth Token Resolution
+
+Blinko's client builds `Authorization: Bearer <token>` from a store that is
+persisted to `localStorage["token"]` — the same key the app clears on logout.
+Because the plugin runs inside that page on the same origin, it reads that
+key directly and sends the identical credential:
+
+```typescript
+function getBlinkoAuthToken(configured?: string): string | undefined
+```
+
+**Resolution order:**
+1. `localStorage["token"]` (unquoted if JSON-persisted) — the signed-in
+   session's own credential
+2. The `blinkoApiToken` configured in the plugin's API Connection panel —
+   used when there is no session (plugin loaded outside a logged-in tab) or
+   the session token is unavailable
+
+A 401 from any tRPC procedure means the resolved token was not accepted —
+not that Blinko has no AI provider configured, which the error message used
+to claim and which sent users to the wrong settings page.
+
+**Implementation:** `aiPostService.ts` → `getBlinkoAuthToken()`
 
 ---
 
@@ -22,34 +59,66 @@ The plugin interacts with two distinct Blinko API surfaces:
 ### `ai.writing` — AI Content Generation
 
 **Method:** `POST`
-**URL:** `/api/trpc/ai.writing`
-**Auth:** Session cookie (`credentials: 'include'`)
-**Response type:** `text/event-stream` (SSE streaming)
+**URL:** `/api/trpc/ai.writing?batch=1`
+**Auth:** Resolved Blinko token (see above)
+**Headers:** `trpc-accept: application/jsonl` (streaming procedures only — see [Streaming Response Format](#streaming-response-format))
 
 **Request body:**
 ```json
 {
-  "json": {
-    "question": "<filled prompt string>",
-    "type": "custom"
+  "0": {
+    "json": {
+      "question": "<filled prompt string>",
+      "type": "custom",
+      "content": "<note content, as the app itself sends it>"
+    }
   }
 }
 ```
 
-**Response stream format:**
+`content` must be sent alongside `question` and `type` — Blinko's own client
+includes it, and the procedure previously received a partial input when it
+was omitted.
+
+#### Streaming Response Format
+
+With `trpc-accept: application/jsonl`, Blinko answers **HTTP 200 even for
+failures** and streams newline-delimited JSON — one JSON document per line,
+each wrapping a `text-delta` chunk:
+
 ```
-data: {"result":{"data":{"type":"text_delta","value":"partial text..."}}}
-data: {"result":{"data":{"type":"text_delta","value":" more text..."}}}
+{"json":{"type":"text-delta","textDelta":"partial text..."}}
+{"json":{"type":"text-delta","textDelta":" more text..."}}
 ```
 
-Parse chunks by splitting on `\n`, filtering lines starting with `data: `, stripping the prefix, parsing JSON, and extracting `result.data.value` for `type === "text_delta"`.
+The response is labeled `Content-Type: application/json` even though it is
+JSONL, so the content-type header cannot be used to decide how to parse it —
+the body must always be read line-by-line for this procedure. An error is
+embedded as a tRPC error frame inside the 200 response body instead of
+surfacing as an HTTP error status:
 
-> **2026-03-27 bug fix:** The plugin's SSE parser previously looked for `result.data.json.chunk.textDelta` (wrong path — silently returned empty strings). The correct path is `result.data.value`. See `ERROR_RESOLUTION.md ERR-011` and `CHANGE_LOG.md CL-S5-005`.
+```
+{"json":{"0":[[0],[null,0,0]]}}
+{"json":[0,0,[[{"error":{"message":"Unauthorized","code":-32001,"data":{"code":"UNAUTHORIZED","httpStatus":401}}}]]]}
+```
+
+The plugin scans each decoded chunk for `type: "text-delta"` (current), the
+older `type: "text_delta"` / `value` shape, and `type: "error"`, and raises
+an embedded tRPC error (`error.message` / `error.data.httpStatus`) rather
+than returning empty text. SSE (`data: ` prefixed) framing and blank lines
+are tolerated as a fallback.
+
+> **2026-03-28 bug fix:** The previous parser gated on `Content-Type:
+> text/event-stream` to pick the streaming path and parsed everything else as
+> a single JSON document, so a jsonl body labeled `application/json` died
+> with a `JSON Parse error` and — because errors here arrive inside an HTTP
+> 200 — hid the real 401 as an empty result. See `CHANGE_LOG.md CL-S7-001`.
 
 **Error conditions:**
 | Status | Meaning | Plugin behavior |
 |--------|---------|-----------------|
-| 401 | No AI provider configured | Throw actionable error: "AI feature requires an API key. In Blinko → Settings → AI..." |
+| 401 (embedded, HTTP 200) | Resolved token rejected | Throw actionable "Blinko rejected the request as unauthenticated (401)" error |
+| 404 | Procedure not present on this Blinko instance | Throw `ai.writing is not available on this Blinko instance (404).` |
 | Other non-2xx | Server error | Throw `AI writing API error: ${status} ${statusText}` |
 
 **Implementation:** `aiPostService.ts` → `collectWritingStream()`
@@ -59,58 +128,70 @@ Parse chunks by splitting on `\n`, filtering lines starting with `data: `, strip
 ### `ai.autoTag` — Automatic Tag Suggestion
 
 **Method:** `POST`
-**URL:** `/api/trpc/ai.autoTag`
-**Auth:** Session cookie
+**URL:** `/api/trpc/ai.autoTag?batch=1`
+**Auth:** Resolved Blinko token (see above)
 
 **Request body:**
 ```json
 {
-  "json": {
-    "content": "<note text>"
+  "0": {
+    "json": {
+      "content": "<note text>"
+    }
   }
 }
 ```
 
-**Response:**
+**Response (batched envelope):**
 ```json
-{
-  "result": {
-    "data": ["tag1", "tag2", "tag3"]
+[
+  {
+    "result": {
+      "data": { "json": ["tag1", "tag2", "tag3"] }
+    }
   }
-}
+]
 ```
 
 **Error conditions:**
-| Error | Meaning | Plugin behavior |
-|-------|---------|-----------------|
-| 401 / "unauthorized" in message | No AI provider | Throw actionable error: "AI auto-tag requires an API key..." |
-| Other | Server error | Re-throw as-is |
-
-**Note:** tRPC serializes HTTP errors into JavaScript `Error` objects without preserving the numeric status code. Detect 401 via `err.message.includes('401') || err.message.toLowerCase().includes('unauthorized')`.
+| Status | Meaning | Plugin behavior |
+|--------|---------|-----------------|
+| 401 | Resolved token rejected | Throw actionable "Blinko rejected the request as unauthenticated (401)" error |
+| 404 | Procedure not present on this Blinko instance | Throw `ai.autoTag is not available on this Blinko instance (404).` |
+| Batched `error` entry | Server-side error (e.g. no AI provider configured) | Throw `ai.autoTag: <error.json.message>` |
 
 **Implementation:** `aiPostService.ts` → `runAutoTag()`
 
 ---
 
-### `note.upsert` — Note Content Update (tRPC fallback)
+### `notes.upsert` — Note Content Update (tRPC fallback)
 
 **Method:** `POST`
-**URL:** `/api/trpc/note.upsert`
-**Auth:** Session cookie
+**URL:** `/api/trpc/notes.upsert?batch=1`
+**Auth:** Resolved Blinko token (see above)
 
 **Request body:**
 ```json
 {
-  "json": {
-    "id": 123,
-    "content": "<updated markdown content>"
+  "0": {
+    "json": {
+      "id": 123,
+      "content": "<updated markdown content>"
+    }
   }
 }
 ```
 
-**Response:** Updated note object.
+**Response:** Updated note object, unwrapped from the batched envelope.
 
 **When used:** When `blinkoApiUrl` or `blinkoApiToken` is empty in AIPostSettings. This is the default path.
+
+> **2026-03-28 bug fix:** The procedure name was `note.upsert` (singular),
+> which Blinko answers with `404 "No procedure found on path"` — this
+> fallback had never worked. The correct name is `notes.upsert`. A missing
+> procedure answers 404, and an existing-but-unauthorized one answers 401;
+> that distinction is how `ai.autoTag`, `ai.writing` and `ai.completions`
+> were confirmed to exist. See `CHANGE_LOG.md CL-S7-001`.
 
 **Implementation:** `aiPostService.ts` → `updateNoteContent()` fallback branch
 
@@ -158,6 +239,11 @@ The Settings panel "🧪 Test Connection" button sends `GET ${blinkoApiUrl}/api/
 
 ## Obtaining a Bearer Token
 
+A configured bearer token is only a **fallback** — see
+[Auth Token Resolution](#auth-token-resolution). It is used when the plugin
+runs outside a signed-in Blinko session, or when the session token is
+rejected.
+
 1. Open your Blinko instance in a browser
 2. Navigate to **Settings → API Keys** (or equivalent path)
 3. Generate or copy an existing API key
@@ -171,17 +257,29 @@ The Settings panel "🧪 Test Connection" button sends `GET ${blinkoApiUrl}/api/
 
 ---
 
-## tRPC Helper — `trpcMutate`
+## tRPC Helpers — `trpcMutate` / `collectWritingStream`
 
-Internal utility used throughout `aiPostService.ts`:
+Internal utilities used throughout `aiPostService.ts`:
 
 ```typescript
-async function trpcMutate<T>(procedure: string, input: unknown): Promise<T>
+async function trpcMutate<T>(procedure: string, input: unknown, token?: string): Promise<T>
+async function collectWritingStream(prompt: string, noteContent: string, token?: string): Promise<string>
 ```
 
-Constructs the tRPC request URL, POSTs with `credentials: 'include'` and `x-trpc-source: blinko-rtl-plugin`, parses the JSON envelope, and returns `result.data`. Throws on non-2xx responses.
+Both build the batched URL (`/api/trpc/<procedure>?batch=1`) and body
+(`{"0":{"json":input}}`) described above, send `credentials: 'include'` and
+`x-trpc-source: blinko-rtl-plugin`, and unwrap the `[{result|error}]`
+envelope via `unwrapTrpc()`, throwing the embedded error message on failure.
+`collectWritingStream` additionally sends `trpc-accept: application/jsonl`
+and reads the body as newline-delimited JSON regardless of the response's
+declared content type. Both throw a dedicated error for a 404 (procedure not
+available on the instance) as well as for 401.
 
 > **2026-03-27:** Added `x-trpc-source: blinko-rtl-plugin` header to all tRPC requests (including `collectWritingStream`) to satisfy any Blinko middleware that validates this header. See `DECISION_LOG.md DEC-014`.
+>
+> **2026-03-28:** Replaced the unbatched request/response shape and the
+> SSE-or-single-JSON-document branch on `Content-Type` with the batched,
+> jsonl-aware implementation described above. See `CHANGE_LOG.md CL-S7-001`.
 
 ---
 
@@ -224,4 +322,4 @@ interface NoteRef {
 
 ---
 
-*Document version: 1.1 — Updated 2026-03-27 (fixed SSE format note; updated Test Connection endpoint; added x-trpc-source header note)*
+*Document version: 1.2 — Updated 2026-03-28 (batched tRPC requests, auth token resolution from `localStorage["token"]`, JSONL streaming and embedded-error format, `note.upsert` → `notes.upsert`, `content` field on `ai.writing`)*
