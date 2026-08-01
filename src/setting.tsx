@@ -322,6 +322,20 @@ const CARD_GRID_RTL_CSS = `/* Card Grid RTL — targets card masonry grid layout
     direction: ltr !important;
 }`;
 
+/**
+ * Parse a numeric settings input, returning null when the value is unusable.
+ *
+ * A number input reports an empty string while it is being cleared or retyped,
+ * and `parseInt('')` is NaN. Writing that straight to storage persists a
+ * setting that reads back as invalid, so callers skip the save instead.
+ */
+export function parseBoundedInt(raw: string, min: number, max: number): number | null {
+  const value = parseInt(raw, 10);
+  if (!Number.isFinite(value)) return null;
+  if (value < min || value > max) return null;
+  return value;
+}
+
 export interface PresetActionState {
   /** True when the action must not run. */
   disabled: boolean;
@@ -924,6 +938,11 @@ export function RTLSetting(): JSX.Element {
       (event.target as HTMLInputElement).value = '';
   };
 
+  const commitMinTextLength = (raw: string) => {
+    const value = parseBoundedInt(raw, 1, 20);
+    if (value !== null) saveSettings({ minTextLength: value });
+  };
+
   const loadPresetState = getPresetActionState('load', settings.enabled, selectedPresetId);
   const deletePresetState = getPresetActionState('delete', settings.enabled, selectedPresetId);
 
@@ -1193,6 +1212,36 @@ export function RTLSetting(): JSX.Element {
             </div>
             <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
                 Elements with fewer than {settings.minRTLChars} RTL characters will be ignored.
+            </p>
+          </div>
+
+          <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '4px', marginTop: '10px' }}>
+            {/* Minimum text length — separated from Minimum RTL Characters in v3 */}
+            <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '14px', fontWeight: '500' }}>
+                <span>Minimum Text Length:</span>
+                <span>{settings.minTextLength ?? 1}</span>
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={settings.minTextLength ?? 1}
+                    onChange={(e) => commitMinTextLength((e.target as HTMLInputElement).value)}
+                    style={{ flex: 1, cursor: 'pointer' }}
+                />
+                <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={settings.minTextLength ?? 1}
+                    onChange={(e) => commitMinTextLength((e.target as HTMLInputElement).value)}
+                    style={{ width: '60px', padding: '5px' }}
+                />
+            </div>
+            <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                Elements with less than {settings.minTextLength ?? 1} characters of text are left alone entirely.
+                This used to share a value with Minimum RTL Characters above, so raising one silently moved the other.
             </p>
           </div>
         </div>

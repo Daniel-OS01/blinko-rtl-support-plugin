@@ -35,7 +35,20 @@ export interface RTLSettings {
   };
   targetSelectors: string[];
   disabledSelectors: string[];
+  /**
+   * Minimum number of strong RTL characters before text may be classified RTL.
+   * Governs the detector only — see minTextLength for the length gate.
+   */
   minRTLChars: number;
+  /**
+   * Minimum total text length before an element is examined at all. Elements
+   * shorter than this are left neutral.
+   *
+   * Split out in settings version 3. Until then `minRTLChars` served both
+   * roles, so raising it to require more RTL evidence also, silently, stopped
+   * short elements being processed.
+   */
+  minTextLength: number;
   processInterval: number;
   hebrewRegex: boolean;
   arabicRegex: boolean;
@@ -54,6 +67,8 @@ export interface RTLSettings {
   showManualToggle?: boolean;
   enableActionLog?: boolean;
   debugShowElementNames?: boolean; // Renamed from showElementNames
+  /** Internal — settings schema version, for migrations in RTLService. */
+  _settingsVersion?: number;
 }
 
 export interface UIUXSettings {

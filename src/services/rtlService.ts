@@ -37,6 +37,12 @@ export class RTLService {
   private dynamicStyleElement: HTMLStyleElement | null = null;
   private observer: MutationObserver | null = null;
   private autoProcessInterval: any = null;
+  /** Current sweep cadence, which backs off while the page is quiet. */
+  private currentProcessInterval: number = 5000;
+  /** Set by the MutationObserver; reset by each sweep. */
+  private sawMutationSinceSweep: boolean = false;
+  /** Ceiling for the backed-off sweep interval. */
+  private static readonly MAX_PROCESS_INTERVAL = 60_000;
   // Managers
   private pasteInterceptor: PasteInterceptor;
   private storageManager: StorageManager;
@@ -49,6 +55,14 @@ export class RTLService {
   // Action Log
   private actionLog: { timestamp: string; element: string; direction: string; textPreview: string }[] = [];
   private readonly MAX_LOG_SIZE = 50;
+  /**
+   * Cap on the stored text sample per log entry.
+   *
+   * The field is called textPreview but held the element's entire textContent,
+   * with 50 of them retained and each one broadcast in a CustomEvent on every
+   * processed element. On a large note container that is the whole note.
+   */
+  private readonly MAX_LOG_TEXT_PREVIEW = 120;
 
   // Hebrew regex from userscript
   private readonly hebrewRegex = /\p{Script=Hebrew}/u;
@@ -86,7 +100,7 @@ export class RTLService {
           timestamp: new Date().toLocaleTimeString(),
           element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
           direction: direction.toUpperCase(),
-          textPreview: (element.textContent || '')
+          textPreview: this.truncateForLog(element.textContent || '')
       };
 
       // enableActionLog is guaranteed truthy here — the early-return guard above
@@ -97,6 +111,11 @@ export class RTLService {
       }
       // Dispatch event for UI updates
       window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
+  }
+
+  private truncateForLog(text: string): string {
+    if (text.length <= this.MAX_LOG_TEXT_PREVIEW) return text;
+    return text.slice(0, this.MAX_LOG_TEXT_PREVIEW) + '…';
   }
 
   public isEnabled(): boolean {
@@ -117,6 +136,22 @@ export class RTLService {
             this.settings.minRTLChars = 1;
             this.settings.darkMode = true;
             (this.settings as any)._settingsVersion = 2;
+            this.storageManager.save(this.settings);
+        }
+
+        // v2→v3 migration: minRTLChars used to govern two unrelated gates —
+        // the minimum count of RTL characters in the detector, and the minimum
+        // total text length before an element was examined at all. The length
+        // role moves to minTextLength.
+        //
+        // Carry the stored value across so existing installs keep the length
+        // behaviour they had, rather than silently starting to process short
+        // elements they previously skipped.
+        if (storedVersion < 3) {
+            if (this.settings.minTextLength === undefined) {
+                this.settings.minTextLength = this.settings.minRTLChars ?? 1;
+            }
+            (this.settings as any)._settingsVersion = 3;
             this.storageManager.save(this.settings);
         }
 
@@ -319,6 +354,17 @@ export class RTLService {
     }
   }
 
+  /**
+   * Remove the base stylesheet. Only called from destroy() — disable() leaves
+   * it in place, since the toggle button it styles outlives a disabled state.
+   */
+  public removeBaseCSS() {
+    if (this.baseStyleElement) {
+      this.baseStyleElement.remove();
+      this.baseStyleElement = null;
+    }
+  }
+
   private removeCSS() {
     if (this.styleElement) {
       this.styleElement.remove();
@@ -371,9 +417,49 @@ export class RTLService {
     this.applyDebugVisuals(element, direction);
   }
 
-  private applyUnicodeBidiRTL(element: HTMLElement) {
-    element.classList.add('rtl-auto');
-    element.style.unicodeBidi = 'isolate';
+  /**
+   * Hand direction back to the browser's own bidi algorithm.
+   *
+   * `dir="auto"` makes the browser pick direction from the first strong
+   * character, and `unicode-bidi: plaintext` does the same per paragraph — for
+   * mixed content that is more accurate than any ratio we compute, because it
+   * is applied per run rather than per element.
+   *
+   * This used to take no direction argument at all: it added `rtl-auto` and an
+   * isolate to every element it saw, so LTR and neutral text were marked
+   * identically to RTL, nothing was ever cleaned up when content changed, and
+   * it was the only applier that skipped applyDebugVisuals — which is why
+   * debug mode appeared dead under this method.
+   */
+  private applyUnicodeBidiRTL(element: HTMLElement, direction: Direction) {
+    if (direction === 'neutral') {
+      element.classList.remove('rtl-auto');
+      element.style.removeProperty('unicode-bidi');
+      element.removeAttribute('dir');
+    } else {
+      element.classList.add('rtl-auto');
+      element.style.unicodeBidi = 'plaintext';
+      element.setAttribute('dir', 'auto');
+    }
+    this.applyDebugVisuals(element, direction);
+  }
+
+  /**
+   * Remove every trace this service applies, whatever method left it there.
+   *
+   * The short-text path used to call applyCSSClassRTL(el, 'neutral'), which
+   * only knows about rtl-force / ltr-force / rtl-auto. Under `direct` that left
+   * both `blinko-detected-rtl` and an inline `direction: rtl` behind; under
+   * `attributes` it left `dir="rtl"`. An element whose text became short kept
+   * styling for text it no longer contained.
+   */
+  private clearDirection(element: HTMLElement) {
+    element.classList.remove('rtl-force', 'ltr-force', 'rtl-auto', 'blinko-detected-rtl');
+    element.style.removeProperty('direction');
+    element.style.removeProperty('text-align');
+    element.style.removeProperty('unicode-bidi');
+    element.removeAttribute('dir');
+    this.applyDebugVisuals(element, 'neutral');
   }
 
   public detectHebrewRegex(text: string): boolean {
@@ -382,6 +468,45 @@ export class RTLService {
 
   public detectArabicRegex(text: string): boolean {
     return this.arabicRegex.test(text);
+  }
+
+  /** Text belonging to this element rather than to its descendants. */
+  private ownText(element: HTMLElement): string {
+    let text = '';
+    const children = element.childNodes;
+    for (let i = 0; i < children.length; i++) {
+      const node = children[i];
+      if (node.nodeType === Node.TEXT_NODE) text += node.textContent || '';
+    }
+    return text;
+  }
+
+  /**
+   * True when the element holds only other elements — no text of its own.
+   * Such an element has no direction to determine; its children do.
+   */
+  private isPureContainer(element: HTMLElement): boolean {
+    if (element.childElementCount === 0) return false;
+    // Inputs carry their content in value/placeholder, not child nodes.
+    const tag = element.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return false;
+    return !this.ownText(element).trim();
+  }
+
+  /**
+   * The text a direction verdict should be based on.
+   *
+   * When an element has element children, only its own text counts — the
+   * children are classified separately, so folding their content in here means
+   * deciding the same characters twice under two different contexts.
+   */
+  private getDirectionalText(element: HTMLElement): string {
+    const asInput = element as HTMLInputElement;
+    if (element.childElementCount > 0) {
+      const own = this.ownText(element);
+      if (own.trim()) return own;
+    }
+    return element.textContent || asInput.value || asInput.placeholder || '';
   }
 
   public processElement = (element: HTMLElement) => {
@@ -406,12 +531,31 @@ export class RTLService {
     // But allow processing if it's explicitly in target selectors (which processAllElements uses)
     // or if it's a content element.
 
-    const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
+    // A pure container — element children, no text of its own — is left alone.
+    //
+    // The default target selectors match `.markdown-body div`, `p` and `span`
+    // simultaneously, and textContent on a container is the concatenation of
+    // every descendant. A note holding one Hebrew paragraph and one English
+    // paragraph therefore gave the wrapping div a single blended direction,
+    // which then contradicted the direction its own children were each
+    // assigned. Whichever won was a function of DOM order rather than intent.
+    //
+    // Its children match the selectors too and are classified on their own
+    // text, so the container does not need a verdict — and cannot have a
+    // correct one when its children disagree.
+    if (this.isPureContainer(element)) {
+        this.clearDirection(element);
+        return;
+    }
+
+    const text = this.getDirectionalText(element);
 
     // Short text handling
-    if (!text.trim() || text.length < this.settings.minRTLChars) {
-        // Neutral state for empty/short text to avoid forcing LTR on what might be an RTL placeholder
-        this.applyCSSClassRTL(element, 'neutral');
+    if (!text.trim() || text.length < (this.settings.minTextLength ?? 1)) {
+        // Neutral state for empty/short text to avoid forcing LTR on what might
+        // be an RTL placeholder. Clear whatever the configured method applied
+        // earlier, not just the CSS classes.
+        this.clearDirection(element);
         return;
     }
 
@@ -500,10 +644,14 @@ export class RTLService {
         this.applyCSSClassRTL(element, direction);
         break;
       case 'unicode':
-        this.applyUnicodeBidiRTL(element);
+        this.applyUnicodeBidiRTL(element, direction);
         break;
       case 'all':
       default:
+        // 'all' means all three appliers. It previously ran the class and
+        // attribute appliers only, leaving the inline styles it advertises
+        // unset — the name and the behaviour disagreed.
+        this.applyDirectRTL(element, direction);
         this.applyCSSClassRTL(element, direction);
         this.applyAttributeRTL(element, direction);
         break;
@@ -809,6 +957,7 @@ export class RTLService {
           });
 
           if (hasRelevantMutation) {
+               this.sawMutationSinceSweep = true;
                this.debouncedProcessQueue();
           }
       });
@@ -822,16 +971,56 @@ export class RTLService {
       });
   }
 
+  /**
+   * Periodic full-document sweep, as a safety net behind the MutationObserver.
+   *
+   * The observer covers document.body with childList, subtree, characterData
+   * and attributes, so in practice it sees everything the sweep would. The
+   * sweep exists for content that arrives without a mutation the observer is
+   * watching — and it costs a querySelectorAll across all 57 target selectors
+   * every tick, forever, on every open tab.
+   *
+   * It now backs off: each sweep that changes nothing doubles the interval, up
+   * to a ceiling, and any observed mutation resets it to the configured base.
+   * A quiet tab settles at one sweep a minute instead of twelve, while a page
+   * that is actively changing keeps the original cadence. Set processInterval
+   * to 0 to switch the sweep off entirely and rely on the observer alone.
+   */
   private startAutoProcessing() {
       if (this.autoProcessInterval) clearInterval(this.autoProcessInterval);
-      if (this.settings.autoDetect && this.isRTLEnabled) {
-          // Less aggressive polling since we have a better observer now
-          this.autoProcessInterval = setInterval(() => {
-              if (this.isRTLEnabled && this.settings.autoDetect) {
-                  this.processAllElements();
+      if (!this.settings.autoDetect || !this.isRTLEnabled) return;
+
+      const base = this.settings.processInterval ?? 5000;
+      if (base <= 0) return; // explicitly disabled — observer only
+
+      this.currentProcessInterval = base;
+      this.scheduleAutoProcess();
+  }
+
+  private scheduleAutoProcess() {
+      if (this.autoProcessInterval) clearInterval(this.autoProcessInterval);
+
+      this.autoProcessInterval = setInterval(() => {
+          if (!this.isRTLEnabled || !this.settings.autoDetect) return;
+
+          this.processAllElements();
+
+          if (this.sawMutationSinceSweep) {
+              // Page is active — stay at the configured cadence.
+              this.sawMutationSinceSweep = false;
+              if (this.currentProcessInterval !== (this.settings.processInterval ?? 5000)) {
+                  this.currentProcessInterval = this.settings.processInterval ?? 5000;
+                  this.scheduleAutoProcess();
               }
-          }, this.settings.processInterval || 5000);
-      }
+              return;
+          }
+
+          const next = Math.min(this.currentProcessInterval * 2, RTLService.MAX_PROCESS_INTERVAL);
+          if (next !== this.currentProcessInterval) {
+              this.currentProcessInterval = next;
+              this.scheduleAutoProcess();
+          }
+      }, this.currentProcessInterval);
   }
 
   private stopAutoProcessing() {
@@ -839,5 +1028,7 @@ export class RTLService {
           clearInterval(this.autoProcessInterval);
           this.autoProcessInterval = null;
       }
+      this.currentProcessInterval = this.settings.processInterval ?? 5000;
+      this.sawMutationSinceSweep = false;
   }
 }

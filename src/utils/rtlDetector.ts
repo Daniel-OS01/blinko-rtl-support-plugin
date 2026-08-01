@@ -25,6 +25,7 @@ export class RTLDetector {
     // Map sensitivity to threshold for RegexStrategy
     const threshold = this.getThresholdFromSensitivity(this.config.sensitivity);
     this.regexStrategy = new RegexStrategy(true, true, threshold, this.config.minRTLChars);
+    this.regexStrategy.updateConfig({ sampleSize: this.config.sampleSize });
 
     // Default to combined strategy
     this.strategy = new CombinedStrategy([
@@ -81,11 +82,15 @@ export class RTLDetector {
 
     this.charCodeStrategy.updateConfig(config);
 
-    // Update RegexStrategy threshold if sensitivity changed
+    // Update RegexStrategy threshold if sensitivity changed. sampleSize is
+    // forwarded too, so both strategies always sample the same amount of text —
+    // when only one of them had a sample window, the sensitivity setting
+    // appeared to change results that were really decided by the window.
     const threshold = this.getThresholdFromSensitivity(this.config.sensitivity);
     this.regexStrategy.updateConfig({
         minRTLChars: config.minRTLChars,
-        threshold: threshold
+        threshold: threshold,
+        sampleSize: this.config.sampleSize
     });
   }
 }

@@ -34,6 +34,37 @@ System.register([], (exports) => ({
     uiuxService.apply();
     let toggleButton: HTMLButtonElement | null = null;
 
+    // Teardown state. Initialization is deferred — either to DOMContentLoaded or
+    // to a 100ms timer — so destroy() can land before it has run. Without these,
+    // a late callback would recreate the toggle button and re-enable the service
+    // after the plugin was torn down.
+    let destroyed = false;
+    let initTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function handleSettingsChanged(event: Event) {
+      const newSettings = (event as CustomEvent).detail;
+
+      if (newSettings.enableManualToggleBtn === false) {
+           removeToggleButton();
+      } else if (newSettings.enableManualToggleBtn !== false && !toggleButton) {
+           createToggleButton();
+      }
+
+      if (toggleButton) {
+        if (newSettings.darkMode) {
+          toggleButton.classList.add('dark-mode');
+        } else {
+          toggleButton.classList.remove('dark-mode');
+        }
+
+        if (newSettings.showManualToggle !== undefined) {
+            updateToggleButtonState();
+        }
+      }
+
+      // Service handles its own updates, we just update local UI if needed
+    }
+
     function createToggleButton() {
       if (toggleButton) return;
       
@@ -88,10 +119,14 @@ System.register([], (exports) => ({
     }
 
     function initializeRTLPlugin() {
+      // The plugin may have been destroyed while this callback was pending.
+      if (destroyed) return;
+
       console.log('Initializing Advanced Blinko RTL Plugin...');
-      
+
+      initTimer = null;
       createToggleButton();
-      
+
       // Re-enable if settings say enabled (persisted state)
       if (rtlService.getSettings().enabled) {
         rtlService.enable();
@@ -99,29 +134,7 @@ System.register([], (exports) => ({
       }
 
       // Listen for settings changes to update UI
-      window.addEventListener('rtl-settings-changed', (event: any) => {
-        const newSettings = event.detail;
-        
-        if (newSettings.enableManualToggleBtn === false) {
-             removeToggleButton();
-        } else if (newSettings.enableManualToggleBtn !== false && !toggleButton) {
-             createToggleButton();
-        }
-
-        if (toggleButton) {
-          if (newSettings.darkMode) {
-            toggleButton.classList.add('dark-mode');
-          } else {
-            toggleButton.classList.remove('dark-mode');
-          }
-
-          if (newSettings.showManualToggle !== undefined) {
-              updateToggleButtonState();
-          }
-        }
-
-        // Service handles its own updates, we just update local UI if needed
-      });
+      window.addEventListener('rtl-settings-changed', handleSettingsChanged);
 
       // Global API
       const blinkoRTL: BlinkoRTL = {
@@ -202,7 +215,7 @@ System.register([], (exports) => ({
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', initializeRTLPlugin);
         } else {
-          setTimeout(initializeRTLPlugin, 100);
+          initTimer = setTimeout(initializeRTLPlugin, 100);
         }
 
         window.Blinko.addToolBarIcon({
@@ -374,9 +387,31 @@ System.register([], (exports) => ({
       }
 
       destroy() {
+        // Set first: initializeRTLPlugin checks this, so a callback that is
+        // already queued and cannot be cancelled still becomes a no-op.
+        destroyed = true;
+
+        // Cancel deferred initialization. Either of these may still be pending
+        // if the plugin is torn down during page load.
+        if (initTimer !== null) {
+          clearTimeout(initTimer);
+          initTimer = null;
+        }
+        document.removeEventListener('DOMContentLoaded', initializeRTLPlugin);
+        window.removeEventListener('rtl-settings-changed', handleSettingsChanged);
+
         rtlService.disable();
+        // disable() leaves the base stylesheet in place — it styles the toggle
+        // button, which outlives a disabled state. Teardown has to remove it,
+        // or #blinko-rtl-base-styles is left behind in <head>.
+        rtlService.removeBaseCSS();
         uiuxService.destroy();
         removeToggleButton();
+
+        // Drop the globals, so nothing keeps driving a torn-down service.
+        delete (window as any).blinkoRTL;
+        delete (window as any).blinkoAIPost;
+
         console.log('Advanced RTL Plugin destroyed');
       }
     });

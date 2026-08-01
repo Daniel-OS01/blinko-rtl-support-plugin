@@ -8,8 +8,18 @@ export class CombinedStrategy implements DetectionStrategy {
     this.strategies = strategies;
   }
 
+  /**
+   * True if any member strategy detects RTL.
+   *
+   * OR was previously a problem rather than a policy: the two strategies
+   * normalised by different denominators over different amounts of text, so
+   * whichever happened to be looser decided every outcome and `sensitivity:
+   * 'low'` was not actually conservative. Now that both draw their range set,
+   * denominator and sampling from the shared rtlRanges module they agree on
+   * ordinary text, and OR means what it says — a positive from a
+   * script-narrowed strategy still counts.
+   */
   detect(text: string): boolean {
-    // Returns true if ANY strategy detects RTL
     return this.strategies.some(strategy => strategy.detect(text));
   }
 
