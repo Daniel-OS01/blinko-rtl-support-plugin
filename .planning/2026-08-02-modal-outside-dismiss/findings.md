@@ -30,3 +30,9 @@ Plugin must close the modal via that structural close control, falling back to c
 - Artifact contains `z-[2002]` close-control selector
 - Live instance still logs `[blinko-rtl] v3.2.4 ready` (host has not pulled the new release yet — reinstall/refresh plugin in Blinko)
 - Discriminating tests: 4 failed on unfixed code; suite now 390 pass / 0 fail
+
+## 2026-08-02 retry — Phase 0
+
+- Live banner still `[blinko-rtl] v3.2.4 ready` (signin page, unauthenticated). Release v3.2.6 exists but host has not loaded it.
+- Cannot open a note without auth, so A/B/C wrapper proof on live is blocked.
+- happy-dom mechanism proof: `el.click()` fires only `click`; full `pointerdown→mousedown→pointerup→mouseup→click` sequence is required for pointer listeners (matches react-aria / failure mode 1).

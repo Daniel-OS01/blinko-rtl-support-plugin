@@ -506,80 +506,78 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     service.destroy();
   });
 
-  it('clicking outside the editor fires the close button', () => {
+  it('clicking outside the editor activates the wrapper via pointerdown', () => {
     service.updateSettings({ tapOutsideClosesNote: true });
 
-    const { backdrop, closeBtn } = makeEditor();
-    const clickSpy = jest.fn();
-    closeBtn.addEventListener('click', clickSpy);
+    const { backdrop, wrapper, closeBtn } = makeHeroUIModal();
+    const events: string[] = [];
+    wrapper.addEventListener('pointerdown', () => {
+      events.push('wrapper');
+      document.querySelector('[class*="modal-content"]')?.remove();
+    });
+    closeBtn.addEventListener('pointerdown', () => { events.push('close'); });
 
-    // Click on the backdrop (outside editor)
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
-    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(events).toEqual(['wrapper']);
   });
 
-  it('clicking inside the editor does NOT fire close button', () => {
+  it('clicking inside the editor does NOT activate the wrapper', () => {
     service.updateSettings({ tapOutsideClosesNote: true });
 
-    const { editor, closeBtn } = makeEditor();
-    const clickSpy = jest.fn();
-    closeBtn.addEventListener('click', clickSpy);
+    const { editor, wrapper } = makeHeroUIModal();
+    let pointers = 0;
+    wrapper.addEventListener('pointerdown', () => { pointers++; });
 
-    // Click inside the editor content
     const inner = document.createElement('p');
     inner.textContent = 'Note text';
     editor.appendChild(inner);
 
     inner.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
-    expect(clickSpy).not.toHaveBeenCalled();
+    expect(pointers).toBe(0);
   });
 
   it('does nothing when tapOutsideClosesNote is disabled', () => {
     service.updateSettings({ tapOutsideClosesNote: false });
 
-    const { backdrop, closeBtn } = makeEditor();
-    const clickSpy = jest.fn();
-    closeBtn.addEventListener('click', clickSpy);
+    const { backdrop, wrapper } = makeHeroUIModal();
+    let pointers = 0;
+    wrapper.addEventListener('pointerdown', () => { pointers++; });
 
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
-    expect(clickSpy).not.toHaveBeenCalled();
+    expect(pointers).toBe(0);
   });
 
   it('destroy() removes the mousedown listener', () => {
     service.updateSettings({ tapOutsideClosesNote: true });
 
-    const { backdrop, closeBtn } = makeEditor();
-    const clickSpy = jest.fn();
-    closeBtn.addEventListener('click', clickSpy);
+    const { backdrop, wrapper } = makeHeroUIModal();
+    let pointers = 0;
+    wrapper.addEventListener('pointerdown', () => { pointers++; });
 
     service.destroy();
 
-    // After destroy, backdrop click should not trigger close
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-    expect(clickSpy).not.toHaveBeenCalled();
+    expect(pointers).toBe(0);
   });
 
-  it('falls back to the wrapper (then Escape) when the circular close control is absent', () => {
+  it('falls back to Escape on document when wrapper and close control are inert', () => {
     service.updateSettings({ tapOutsideClosesNote: true });
 
-    const { portal, backdrop, wrapper, modal, closeBtn } = makeHeroUIModal();
+    const { backdrop, wrapper, modal, closeBtn } = makeHeroUIModal();
     closeBtn.remove();
-
-    let wrapperClicks = 0;
-    wrapper.addEventListener('click', () => { wrapperClicks++; });
+    // Wrapper listens but does not dismiss — forces Escape fallback.
+    wrapper.addEventListener('pointerdown', () => { /* inert */ });
 
     const escapeSpy = jest.fn();
-    modal.addEventListener('keydown', escapeSpy);
+    document.addEventListener('keydown', escapeSpy);
 
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
-    // Preferred path: activate the wrapper HeroUI already dismisses on.
-    // Escape remains the last resort if the wrapper handler is a no-op in jsdom.
-    expect(wrapperClicks + escapeSpy.mock.calls.length).toBeGreaterThanOrEqual(1);
-    void portal;
+    expect(escapeSpy.mock.calls.some(c => (c[0] as KeyboardEvent).key === 'Escape')).toBe(true);
+    void modal;
   });
 });
 
@@ -598,38 +596,46 @@ describe('UIUXService — tap outside closes the HeroUI modal', () => {
     service.destroy();
   });
 
-  it('closes via the unlabelled circular close control when the backdrop is clicked', () => {
-    const { backdrop, closeBtn } = makeHeroUIModal();
-    let closed = 0;
-    closeBtn.addEventListener('click', () => { closed++; });
+  it('closes via wrapper pointerdown when the backdrop is clicked', () => {
+    const { backdrop, wrapper, closeBtn } = makeHeroUIModal();
+    const events: string[] = [];
+    wrapper.addEventListener('pointerdown', () => {
+      events.push('wrapper');
+      document.querySelector('[class*="modal-content"]')?.remove();
+    });
+    closeBtn.addEventListener('pointerdown', () => { events.push('close'); });
 
     service.updateSettings({ tapOutsideClosesNote: true });
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
-    expect(closed).toBe(1);
+    expect(events).toEqual(['wrapper']);
   });
 
-  it('closes via the same control when the wrapper letterbox is clicked', () => {
+  it('activates the wrapper when the letterbox (wrapper itself) is the outside target', () => {
     const { wrapper, closeBtn } = makeHeroUIModal();
-    let closed = 0;
-    closeBtn.addEventListener('click', () => { closed++; });
+    let pointers = 0;
+    wrapper.addEventListener('pointerdown', () => {
+      pointers++;
+      document.querySelector('[class*="modal-content"]')?.remove();
+    });
+    closeBtn.addEventListener('pointerdown', () => { /* should not run if wrapper succeeds */ });
 
     service.updateSettings({ tapOutsideClosesNote: true });
     wrapper.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
-    expect(closed).toBe(1);
+    expect(pointers).toBe(1);
   });
 
   it('does not close when the click is inside #global-editor', () => {
-    const { editor, closeBtn } = makeHeroUIModal();
-    let closed = 0;
-    closeBtn.addEventListener('click', () => { closed++; });
+    const { editor, wrapper } = makeHeroUIModal();
+    let pointers = 0;
+    wrapper.addEventListener('pointerdown', () => { pointers++; });
 
     service.updateSettings({ tapOutsideClosesNote: true });
     editor.querySelector('p')!
       .dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
-    expect(closed).toBe(0);
+    expect(pointers).toBe(0);
   });
 });
 
@@ -1066,29 +1072,33 @@ describe('UIUXService — tap outside closes the detail overlay', () => {
   });
 
   it('still closes a HeroUI modal when only that surface is mounted', () => {
-    const { backdrop, closeBtn } = makeHeroUIModal();
-    let closed = 0;
-    closeBtn.addEventListener('click', () => { closed++; });
+    const { backdrop, wrapper } = makeHeroUIModal();
+    let pointers = 0;
+    wrapper.addEventListener('pointerdown', () => {
+      pointers++;
+      document.querySelector('[class*="modal-content"]')?.remove();
+    });
 
     service.updateSettings({ tapOutsideClosesNote: true });
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
-    expect(closed).toBe(1);
+    expect(pointers).toBe(1);
   });
 
   it('prefers the detail overlay when both surfaces are mounted', () => {
-    const { closeBtn } = makeHeroUIModal();
+    const { wrapper } = makeHeroUIModal();
     let modalClosed = 0;
-    closeBtn.addEventListener('click', () => { modalClosed++; });
+    wrapper.addEventListener('pointerdown', () => { modalClosed++; });
 
     const { overlay, back } = mountDetailOverlay();
     let overlayClosed = 0;
+    back!.addEventListener('pointerdown', () => { overlayClosed++; });
     back!.addEventListener('click', () => { overlayClosed++; });
 
     service.updateSettings({ tapOutsideClosesNote: true });
     overlay.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
-    expect(overlayClosed).toBe(1);
+    expect(overlayClosed).toBeGreaterThanOrEqual(1);
     expect(modalClosed).toBe(0);
   });
 
