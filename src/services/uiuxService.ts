@@ -204,6 +204,14 @@ export class UIUXService {
           const ignoreMatch = target.closest(INTERACTIVE_SELECTOR);
           if (ignoreMatch && card.contains(ignoreMatch)) return;
 
+          // A click with detail > 1 is the second (or later) click of a
+          // native multi-click gesture — the browser will follow it with its
+          // own `dblclick` event. Without this guard, a genuine double-click
+          // synthesizes a dblclick on the first click *and* the second,
+          // stacking a third (native) dblclick on top and tripling whatever
+          // open/toggle action Blinko performs on it.
+          if (e.detail > 1) return;
+
           // Re-entry guard: prevents our synthetic click from re-triggering
           // this handler (the click bubbles back through the card).
           if (card.dataset.opening) return;
