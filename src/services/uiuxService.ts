@@ -19,6 +19,8 @@ import {
   NOTE_CARD_SELECTOR,
   INTERACTIVE_SELECTOR,
   findDetailPreviewPane,
+  findDetailOverlayContent,
+  closeDetailOverlay,
   isEditorOpen,
 } from './blinkoDom';
 
@@ -464,13 +466,32 @@ export class UIUXService {
 
     if (!this.settings.tapOutsideClosesNote) return;
 
-    const findActiveOverlay = (): HTMLElement | null => {
+    /**
+     * The surface an outside click should close, and how to close it.
+     *
+     * Two surfaces exist. The modal dialog carries `modal-content` and closes
+     * through a close button. The full-screen detail overlay carries none of
+     * those class names — it is a plain `div.w-full.mx-auto` inside a
+     * `z-[9999]` wrapper — so outside-click never applied to it. That went
+     * unnoticed while cards opened the modal; routing card clicks into the
+     * overlay made it visible.
+     *
+     * The overlay is checked first: it renders above the modal, so when both
+     * exist it is the one the click belongs to.
+     */
+    const findActiveOverlay = (): { content: HTMLElement; close: () => void } | null => {
+      const detailContent = findDetailOverlayContent();
+      if (detailContent) {
+        return { content: detailContent, close: () => closeDetailOverlay() };
+      }
+
       const candidates = document.querySelectorAll<HTMLElement>(
-        '[class*="editor-container"], [class*="note-editor"], [class*="blinko-editor"], [class*="dialog-content"], [class*="modal-content"]'
+        '[class*="modal-content"], [class*="editor-container"], [class*="note-editor"], ' +
+        '[class*="blinko-editor"], [class*="dialog-content"]'
       );
       for (const el of Array.from(candidates)) {
         if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
-        return el;
+        return { content: el, close: () => closeViaButtonOrEscape(el) };
       }
       return null;
     };
@@ -493,10 +514,10 @@ export class UIUXService {
     };
 
     const handler = (e: MouseEvent): void => {
-      const overlay = findActiveOverlay();
-      if (!overlay) return;
-      if (!overlay.contains(e.target as Node)) {
-        closeViaButtonOrEscape(overlay);
+      const active = findActiveOverlay();
+      if (!active) return;
+      if (!active.content.contains(e.target as Node)) {
+        active.close();
       }
     };
 
