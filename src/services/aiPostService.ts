@@ -81,141 +81,223 @@ interface NoteRef {
 // ─── tRPC fetch helpers ───────────────────────────────────────────────────────
 
 /**
- * Headers for a tRPC call, including the API token when one is configured.
+ * The credential Blinko's own client sends.
  *
- * Blinko's AI procedures live only on tRPC — there is no REST equivalent
- * (`/api/v1/ai/*` is a 404) — and they answer 401 when the caller cannot be
- * identified. Session cookies alone are not always enough, so the configured
- * bearer token is sent as well when the user has supplied one.
+ * Its tRPC link builds `Authorization: Bearer ${token}` from a store that is
+ * persisted to `localStorage["token"]` — the same key the app clears on logout.
+ * The plugin runs inside that page, on the same origin, so it can present the
+ * identical credential instead of asking the user to paste a second one.
+ *
+ * A token configured in the plugin's own API Connection panel is used as a
+ * fallback, which is what makes the AI actions work when the plugin is loaded
+ * outside a logged-in session.
  */
-function trpcHeaders(token?: string): Record<string, string> {
+export function getBlinkoAuthToken(configured?: string): string | undefined {
+  try {
+    const stored = globalThis.localStorage?.getItem('token');
+    if (stored) {
+      // Persisted through a JSON store, so it may arrive quoted.
+      const unquoted = stored.replace(/^"(.*)"$/s, '$1').trim();
+      if (unquoted) return unquoted;
+    }
+  } catch {
+    // localStorage unavailable — fall through to the configured token.
+  }
+  return configured || undefined;
+}
+
+/**
+ * Headers for a tRPC call.
+ *
+ * `trpc-accept: application/jsonl` is sent only for a streaming procedure. It
+ * is not a free upgrade: with that header Blinko answers **HTTP 200 even for
+ * failures** and puts the real error inside the stream body, so a plain
+ * mutation sent that way loses its status code and no longer parses as JSON.
+ * Without it, a batched mutation returns a normal status and a clean
+ * `[{result|error}]` array.
+ */
+function trpcHeaders(token?: string, streaming = false): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'x-trpc-source': 'blinko-rtl-plugin',
   };
+  if (streaming) headers['trpc-accept'] = 'application/jsonl';
   if (token) headers['Authorization'] = `Bearer ${token}`;
   return headers;
 }
 
 /**
- * A 401 from Blinko means the request was not authenticated — a different
- * problem from Blinko having no AI provider configured, which this used to
- * claim and which sent users to the wrong settings page.
+ * Blinko's client batches every call: `?batch=1` with the input keyed by index.
+ * A bare `{json: input}` body is a different wire format, and the response
+ * envelope differs too, so both sides are kept in this one place.
+ */
+function trpcUrl(procedure: string): string {
+  return `/api/trpc/${procedure}?batch=1`;
+}
+
+function trpcBody(input: unknown): string {
+  return JSON.stringify({ 0: { json: input } });
+}
+
+/** Pull the payload out of a batched tRPC response, or throw its error. */
+function unwrapTrpc<T>(body: any, procedure: string): T {
+  const entry = Array.isArray(body) ? body[0] : body;
+  const errorMessage =
+    entry?.error?.json?.message ?? entry?.error?.message ?? body?.error?.json?.message;
+  if (errorMessage) throw new Error(`${procedure}: ${errorMessage}`);
+  return (entry?.result?.data?.json ?? entry?.result?.data ?? entry) as T;
+}
+
+/**
+ * A 401 means Blinko did not recognise the caller, which is a different problem
+ * from Blinko having no AI provider configured — the message used to claim the
+ * latter and sent users to the wrong settings page.
  */
 function unauthorizedError(action: string): Error {
   return new Error(
     `${action} failed: Blinko rejected the request as unauthenticated (401). ` +
-    'Set "Blinko Instance URL" and "Bearer Token" in this plugin\'s API Connection ' +
-    'section (token from Blinko → Settings → API Keys), then use Test Connection. ' +
+    'Sign in to Blinko in this browser tab, or set a Bearer Token in this plugin\'s ' +
+    'API Connection section (Blinko → Settings → API Keys) and use Test Connection. ' +
     'If the token is valid, check that an AI provider is configured in Blinko → Settings → AI.'
   );
 }
 
-/** Fire a tRPC mutation and return the parsed JSON response body. */
+/** Fire a tRPC mutation and return the parsed payload. */
 async function trpcMutate<T = unknown>(
   procedure: string,
   input: unknown,
   token?: string,
 ): Promise<T> {
-  const res = await fetch(`/api/trpc/${procedure}`, {
+  const res = await fetch(trpcUrl(procedure), {
     method: 'POST',
-    headers: trpcHeaders(token),
+    headers: trpcHeaders(token, false),
     credentials: 'include',
-    body: JSON.stringify({ json: input }),
+    body: trpcBody(input),
   });
   if (!res.ok) {
     if (res.status === 401) throw unauthorizedError(procedure);
+    if (res.status === 404) {
+      throw new Error(`${procedure} is not available on this Blinko instance (404).`);
+    }
     throw new Error(`tRPC ${procedure} failed: ${res.status} ${res.statusText}`);
   }
-  const body = await res.json();
-  // tRPC v10/v11 wraps the result in { result: { data: { json: ... } } }
-  return (
-    body?.[0]?.result?.data?.json ??
-    body?.result?.data?.json ??
-    body
-  ) as T;
+  return unwrapTrpc<T>(await res.json(), procedure);
+}
+
+/**
+ * Recursively pull streamed text out of one decoded chunk.
+ *
+ * ai.writing yields `{type:"text-delta", textDelta}` in the app's own consumer,
+ * but the chunk arrives wrapped in the batch-stream envelope, and older Blinko
+ * builds used `{type:"text_delta", value}`. Searching the decoded object keeps
+ * all of those working without guessing at one envelope shape.
+ */
+function extractStreamedText(node: unknown, depth = 0): string {
+  if (node == null || depth > 8) return '';
+  if (Array.isArray(node)) return node.map(n => extractStreamedText(n, depth + 1)).join('');
+  // Numbers and strings appear as positional markers in the batch-stream
+  // envelope. `in` throws on a primitive, so stop before the key walk below.
+  if (typeof node !== 'object') return '';
+
+  const obj = node as Record<string, any>;
+  if (obj.type === 'text-delta' && typeof obj.textDelta === 'string') return obj.textDelta;
+  if (obj.type === 'text_delta' && typeof obj.value === 'string') return obj.value;
+  if (obj.type === 'text' && typeof obj.text === 'string') return obj.text;
+  if (obj.type === 'error') {
+    throw new Error(obj.error?.name ?? obj.error?.message ?? 'AI returned an error');
+  }
+
+  // A tRPC error frame. In jsonl mode these arrive inside a 200 response, so
+  // this is the only place an auth failure surfaces for a streaming call.
+  const trpcError = obj.error?.json ?? obj.error;
+  if (trpcError && (trpcError.message || trpcError.data)) {
+    if (trpcError.data?.httpStatus === 401) throw unauthorizedError('AI writing');
+    throw new Error(trpcError.message ?? 'AI request failed');
+  }
+
+  let out = '';
+  for (const key of ['json', 'data', 'result', 'chunk', 'value']) {
+    if (key in obj) out += extractStreamedText(obj[key], depth + 1);
+  }
+  return out;
 }
 
 /**
  * Call the streaming ai.writing endpoint and accumulate all text-delta chunks.
  * Falls back to a best-effort JSON parse if the response is not SSE.
  */
-async function collectWritingStream(prompt: string, token?: string): Promise<string> {
-  const res = await fetch('/api/trpc/ai.writing', {
+async function collectWritingStream(
+  prompt: string,
+  noteContent: string,
+  token?: string,
+): Promise<string> {
+  const res = await fetch(trpcUrl('ai.writing'), {
     method: 'POST',
-    headers: {
-      ...trpcHeaders(token),
-      'Accept': 'text/event-stream, application/json',
-    },
+    headers: trpcHeaders(token, true),
     credentials: 'include',
-    body: JSON.stringify({ json: { question: prompt, type: 'custom' } }),
+    // The app calls ai.writing.mutate({question, type, content}); `content` was
+    // previously omitted, so the procedure received a partial input.
+    body: trpcBody({ question: prompt, type: 'custom', content: noteContent }),
   });
 
   if (!res.ok) {
     if (res.status === 401) throw unauthorizedError('AI writing');
+    if (res.status === 404) {
+      throw new Error('ai.writing is not available on this Blinko instance (404).');
+    }
     throw new Error(`AI writing API error: ${res.status} ${res.statusText}`);
   }
 
-  const contentType = res.headers.get('Content-Type') ?? '';
-
-  // ── SSE / streaming path ──────────────────────────────────────────────────
-  if (contentType.includes('text/event-stream') || contentType.includes('text/plain')) {
-    const reader = res.body!.getReader();
+  // The response is newline-delimited JSON because that is what `trpc-accept`
+  // asked for — but Blinko still labels it `application/json`, so the header
+  // cannot be used to decide how to read it. Parsing it as a single JSON
+  // document fails on the second line.
+  let raw = '';
+  if (res.body && typeof (res.body as any).getReader === 'function') {
+    const reader = (res.body as ReadableStream<Uint8Array>).getReader();
     const decoder = new TextDecoder();
-    let buffer = '';
-    let fullText = '';
-
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      const lines = buffer.split('\n');
-      buffer = lines.pop() ?? '';
-
-      for (const line of lines) {
-        if (!line.startsWith('data:')) continue;
-        const jsonStr = line.slice(5).trim();
-        if (!jsonStr || jsonStr === '[DONE]') continue;
-        try {
-          const data = JSON.parse(jsonStr) as Record<string, unknown>;
-          // Blinko SSE envelope (per API_REFERENCE.md):
-          //   {"result":{"data":{"type":"text_delta","value":"..."}}}
-          // Also handle legacy / alternate shapes as fallbacks.
-          const chunk =
-            (data?.result as any)?.data ??
-            (data?.result as any)?.data?.json?.chunk ??
-            (data as any)?.data ??
-            (data as any)?.chunk;
-
-          if (chunk?.type === 'text_delta' && typeof chunk.value === 'string') {
-            // Primary format (Blinko API_REFERENCE.md spec)
-            fullText += chunk.value;
-          } else if (chunk?.type === 'text-delta' && typeof chunk.textDelta === 'string') {
-            // Legacy format fallback
-            fullText += chunk.textDelta;
-          } else if (chunk?.type === 'text' && typeof chunk.text === 'string') {
-            fullText += chunk.text;
-          } else if (typeof chunk === 'string') {
-            fullText += chunk;
-          }
-        } catch {
-          // ignore malformed SSE lines
-        }
-      }
+      raw += decoder.decode(value, { stream: true });
     }
-    return fullText.trim();
+    raw += decoder.decode();
+  } else {
+    raw = await res.text();
   }
 
-  // ── JSON / batch path (non-streaming fallback) ────────────────────────────
-  const body = await res.json();
-  const result =
-    body?.[0]?.result?.data?.json ??
-    body?.result?.data?.json ??
-    body?.json ??
-    '';
-  if (typeof result === 'string') return result.trim();
-  return JSON.stringify(result);
+  let fullText = '';
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    // Tolerate SSE framing as well as bare jsonl.
+    const payload = trimmed.startsWith('data:') ? trimmed.slice(5).trim() : trimmed;
+    if (!payload || payload === '[DONE]') continue;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(payload);
+    } catch {
+      continue; // partial or non-JSON line
+    }
+    // An error frame throws out of here — in jsonl mode it arrives inside an
+    // HTTP 200, so this is the only place an auth failure surfaces.
+    fullText += extractStreamedText(parsed);
+  }
+
+  if (fullText.trim()) return fullText.trim();
+
+  // Nothing streamed: fall back to reading the body as one JSON document.
+  try {
+    const body = JSON.parse(raw);
+    const result = unwrapTrpc<unknown>(body, 'ai.writing');
+    if (typeof result === 'string') return result.trim();
+    const salvaged = extractStreamedText(body);
+    if (salvaged.trim()) return salvaged.trim();
+  } catch (err) {
+    if (err instanceof Error && !(err instanceof SyntaxError)) throw err;
+  }
+
+  return '';
 }
 
 // ─── AIPostService ────────────────────────────────────────────────────────────
@@ -276,7 +358,11 @@ export class AIPostService {
    */
   async runPostProcessing(note: NoteRef): Promise<string> {
     const prompt = this.buildPrompt(note);
-    return collectWritingStream(prompt, this.settings.blinkoApiToken || undefined);
+    return collectWritingStream(
+      prompt,
+      (note.content ?? '').trim(),
+      getBlinkoAuthToken(this.settings.blinkoApiToken),
+    );
   }
 
   /**
@@ -289,7 +375,7 @@ export class AIPostService {
     const result = await trpcMutate<string[]>(
       'ai.autoTag',
       { content },
-      this.settings.blinkoApiToken || undefined,
+      getBlinkoAuthToken(this.settings.blinkoApiToken),
     );
     return Array.isArray(result) ? result : [];
   }
@@ -383,7 +469,9 @@ export class AIPostService {
       return;
     }
     // Fallback: tRPC session-cookie path
-    await trpcMutate('note.upsert', { id: noteId, content }, s.blinkoApiToken || undefined);
+    // `notes.upsert`, not `note.upsert` — the latter is a 404 ("No procedure
+    // found on path"), so this fallback never worked.
+    await trpcMutate('notes.upsert', { id: noteId, content }, getBlinkoAuthToken(s.blinkoApiToken));
   }
 
   // ── Utility ──────────────────────────────────────────────────────────────

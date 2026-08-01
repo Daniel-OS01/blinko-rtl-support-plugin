@@ -2606,9 +2606,10 @@ export function RTLSetting(): JSX.Element {
           <div style={{ padding: '16px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, borderRadius: '8px', background: settings.darkMode ? '#1a1a2e' : '#f9f9ff' }}>
             <h4 style={{ margin: '0 0 6px 0', fontSize: '13px', color: settings.darkMode ? '#c9b0ff' : '#5a2d9b' }}>🔗 API Connection (Optional)</h4>
             <p style={{ margin: '0 0 12px 0', fontSize: '11px', color: settings.darkMode ? '#aaa' : '#555', lineHeight: '1.6' }}>
-              Configure Blinko REST API v1 credentials to use Bearer-token auth for note updates
-              and for the AI actions, instead of relying on session cookies. Required if note
-              saves or AI actions fail with a 401 error.
+              When the plugin runs inside a signed-in Blinko tab it reuses the app's own session
+              token automatically, and nothing here is needed. Configure these only as a fallback —
+              if AI actions or note saves fail with a 401 while signed in, or when running the
+              plugin outside a session.
               Find your token at: <strong>Blinko → Settings → API Keys</strong>.
             </p>
 
