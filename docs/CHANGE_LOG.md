@@ -2,8 +2,8 @@
 
 > **Document type:** Chronological change record
 > **Format:** Most recent changes first
-> **Scope:** All sessions — latest branch `claude/fix-hebrew-text-note-focus-ddReT`
-> **Last updated:** 2026-03-27
+> **Scope:** All sessions — latest branch `main`
+> **Last updated:** 2026-08-01
 
 ---
 
@@ -21,6 +21,46 @@ Rationale: why the change was made
 ---
 
 ## Change Log
+
+---
+
+## Session 7 Changes — 2026-08-01 (branch: `main`, commit `fa9a136`)
+
+---
+
+### [CL-S7-001] Open the editor through Blinko's own preview-to-edit handler, not a `dblclick` on the card
+
+**Date:** 2026-08-01
+**Branch:** `main`
+**Commit:** `fa9a136`
+
+**Files modified:**
+- `src/services/blinkoDom.ts` — added `DETAIL_OVERLAY_SELECTOR`, `DETAIL_PREVIEW_PANE_SELECTOR`, `findDetailPreviewPane()`, `isEditorOpen()`
+- `src/services/uiuxService.ts` — added `openEditorWhenDetailAppears()`, `pendingEditorOpen`/`editorOpenFrame` state, cancellation in `destroy()`
+- `tests/services/uiuxService.test.ts` — replaced card-`dblclick` tests with overlay/preview-pane tests
+
+**Root cause:** `cardClickOpensEditor` previously dispatched a synthetic `dblclick` directly on the note card to jump straight to the editor. Reading the app bundle (`assets/index-xZ6CcJO7.js`) showed that clicking a card only opens a read-only detail overlay (`div.fixed.inset-0[class*="z-[9999]"]`); the preview-to-edit toggle is bound to `onDoubleClick` on the overlay's content pane (`.flex-1.overflow-y-auto.min-h-0.py-4`), the same handler as the header's pencil button. No handler is bound to the card itself, so the previous `dblclick` was a no-op and the editor never opened.
+
+**Changes:**
+```typescript
+// Before — dblclick dispatched on the card itself (nothing listens there):
+if (this.settings.cardClickOpensEditor) {
+  card.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true, composed: true }));
+  requestAnimationFrame(() => { delete card.dataset.opening; });
+  return;
+}
+
+// After — let the card's own click open the overlay, then poll for the
+// preview pane (mounts asynchronously) and dblclick it once, up to 1.5s:
+if (this.settings.cardClickOpensEditor) {
+  this.openEditorWhenDetailAppears();
+  // Fall through: the card's own click still opens the overlay.
+}
+```
+
+`openEditorWhenDetailAppears()` polls on `requestAnimationFrame`, skips work when `isEditorOpen()` is already true, gives up quietly after 1.5s if no overlay appears, and guards against stacking polls from rapid clicks via `pendingEditorOpen`. `destroy()` now cancels any in-flight `editorOpenFrame`.
+
+**Rationale:** Supersedes the fix attempted for the same symptom in PR #356, which dispatched `dblclick` on the card and consequently did nothing. This change derives the target element and event from the app's own source rather than from an assumption about where the toggle is bound. See `DECISION_LOG.md DEC-017`.
 
 ---
 
