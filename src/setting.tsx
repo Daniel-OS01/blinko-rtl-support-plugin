@@ -1195,6 +1195,36 @@ export function RTLSetting(): JSX.Element {
                 Elements with fewer than {settings.minRTLChars} RTL characters will be ignored.
             </p>
           </div>
+
+          <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '4px', marginTop: '10px' }}>
+            {/* Minimum text length — separated from Minimum RTL Characters in v3 */}
+            <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '14px', fontWeight: '500' }}>
+                <span>Minimum Text Length:</span>
+                <span>{settings.minTextLength ?? 1}</span>
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={settings.minTextLength ?? 1}
+                    onChange={(e) => saveSettings({ minTextLength: parseInt((e.target as HTMLInputElement).value) })}
+                    style={{ flex: 1, cursor: 'pointer' }}
+                />
+                <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={settings.minTextLength ?? 1}
+                    onChange={(e) => saveSettings({ minTextLength: parseInt((e.target as HTMLInputElement).value) })}
+                    style={{ width: '60px', padding: '5px' }}
+                />
+            </div>
+            <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                Elements with less than {settings.minTextLength ?? 1} characters of text are left alone entirely.
+                This used to share a value with Minimum RTL Characters above, so raising one silently moved the other.
+            </p>
+          </div>
         </div>
       </div>
       )}
