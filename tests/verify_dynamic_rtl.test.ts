@@ -140,7 +140,7 @@ describe("RTLService Dynamic CSS and Selectors", () => {
     it("should log actions", () => {
          // Use valid selector
          document.body.innerHTML = `<input type="text" id="log-test" value="שלום">`;
-         service.updateSettings({ debugMode: true }); // Enable debug mode to force logging if conditional
+         service.updateSettings({ debugMode: true, enableActionLog: true });
          service.processAllElements();
 
          const logs = service.getActionLog();

@@ -25,6 +25,7 @@ import {
   MODAL_CLOSE_SELECTOR,
   findModalContent,
   closeModalEditor,
+  activate,
 } from '../../src/services/blinkoDom';
 
 /** Class attribute copied verbatim from a rendered card in the capture. */
@@ -197,9 +198,9 @@ describe('modal DOM contract', () => {
     expect(document.querySelectorAll(MODAL_CONTENT_SELECTOR).length).toBe(1);
   });
 
-  it('MODAL_CLOSE_SELECTOR matches the unlabelled circular div', () => {
-    const { closeBtn } = buildHeroUIModal();
-    expect(document.querySelector(MODAL_CLOSE_SELECTOR)).toBe(closeBtn);
+  it('MODAL_CLOSE_SELECTOR matches the unlabelled circular div as a direct child', () => {
+    const { modal, closeBtn } = buildHeroUIModal();
+    expect(modal.querySelector(MODAL_CLOSE_SELECTOR)).toBe(closeBtn);
   });
 
   it('findModalContent returns the dialog panel', () => {
@@ -207,20 +208,72 @@ describe('modal DOM contract', () => {
     expect(findModalContent()).toBe(modal);
   });
 
-  it('closeModalEditor clicks the circular close control', () => {
-    const { closeBtn } = buildHeroUIModal();
-    let clicks = 0;
-    closeBtn.addEventListener('click', () => { clicks++; });
+  it('activate() dispatches the full pointer sequence, not just click', () => {
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    const types: string[] = [];
+    for (const t of ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click']) {
+      el.addEventListener(t, () => { types.push(t); });
+    }
+    activate(el);
+    expect(types).toEqual([
+      'pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click',
+    ]);
+  });
+
+  it('HTMLElement.click() alone does not fire pointerdown (react-aria gap)', () => {
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    let pointers = 0;
+    el.addEventListener('pointerdown', () => { pointers++; });
+    el.click();
+    expect(pointers).toBe(0);
+  });
+
+  it('closeModalEditor activates the wrapper via pointerdown when the close div is present', () => {
+    // Fixtures must listen on pointerdown — a click-only spy passes against
+    // the broken .click() path and proves nothing (how v3.2.6 shipped green).
+    const { wrapper, closeBtn } = buildHeroUIModal();
+    const events: string[] = [];
+    wrapper.addEventListener('pointerdown', () => {
+      events.push('wrapper');
+      // Simulate HeroUI dismissing on interact-outside / wrapper press.
+      document.querySelector('[class*="modal-content"]')?.remove();
+    });
+    closeBtn.addEventListener('pointerdown', () => { events.push('close'); });
+
     expect(closeModalEditor()).toBe(true);
-    expect(clicks).toBe(1);
+    expect(events).toEqual(['wrapper']);
+    expect(findModalContent()).toBeNull();
+  });
+
+  it('closeModalEditor falls through to the close control when the wrapper is inert', () => {
+    const { wrapper, closeBtn } = buildHeroUIModal();
+    const events: string[] = [];
+    // Ignore bubbled pointerdown from the close control child.
+    wrapper.addEventListener('pointerdown', (e) => {
+      if (e.target !== wrapper) return;
+      events.push('wrapper');
+    });
+    closeBtn.addEventListener('pointerdown', () => {
+      events.push('close');
+      document.querySelector('[class*="modal-content"]')?.remove();
+    });
+
+    expect(closeModalEditor()).toBe(true);
+    expect(events).toEqual(['wrapper', 'close']);
+    expect(findModalContent()).toBeNull();
   });
 
   it('closeModalEditor falls back to the wrapper when the close control is missing', () => {
     const { wrapper, closeBtn } = buildHeroUIModal();
     closeBtn.remove();
-    let clicks = 0;
-    wrapper.addEventListener('click', () => { clicks++; });
+    let pointers = 0;
+    wrapper.addEventListener('pointerdown', () => {
+      pointers++;
+      document.querySelector('[class*="modal-content"]')?.remove();
+    });
     expect(closeModalEditor()).toBe(true);
-    expect(clicks).toBe(1);
+    expect(pointers).toBe(1);
   });
 });

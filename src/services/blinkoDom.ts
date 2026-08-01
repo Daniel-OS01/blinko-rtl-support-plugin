@@ -116,7 +116,7 @@ export function closeDetailOverlay(): boolean {
     '.flex.items-center.justify-between button'
   );
   if (backButton) {
-    backButton.click();
+    activate(backButton);
     return true;
   }
 
@@ -152,12 +152,30 @@ export const MODAL_WRAPPER_SELECTOR = '[data-slot="wrapper"]';
 /**
  * The modal's close control: an unlabelled circular `div`, not a `<button>`.
  *
- * Live classes include `cursor-pointer`, `rounded-full`, and `z-[2002]`. It has
- * no `aria-label`, no class containing "close", and no `data-dismiss` — so any
- * finder that requires those tokens will miss it.
+ * Matched as a direct child of the dialog panel via `cursor-pointer` +
+ * `rounded-full`. Do not key off arbitrary stacking tokens like `z-[2002]` —
+ * those move whenever the app retunes its stacking context.
  */
 export const MODAL_CLOSE_SELECTOR =
-  'div.cursor-pointer[class*="rounded-full"][class*="z-[2002]"]';
+  ':scope > div.cursor-pointer[class*="rounded-full"]';
+
+/**
+ * Drive a control the way a real pointer does.
+ *
+ * HeroUI / react-aria `usePress` and `useInteractOutside` listen on
+ * `pointerdown`/`pointerup` (with mouse fallbacks). `HTMLElement.click()`
+ * dispatches only a `click` event, so both the circular close div and the
+ * wrapper ignore it — which is why v3.2.6's close path was a silent no-op.
+ */
+export function activate(el: HTMLElement): void {
+  const mouse = { bubbles: true, cancelable: true, composed: true, view: window };
+  const pointer = { ...mouse, pointerId: 1, pointerType: 'mouse' as const };
+  el.dispatchEvent(new PointerEvent('pointerdown', pointer));
+  el.dispatchEvent(new MouseEvent('mousedown', mouse));
+  el.dispatchEvent(new PointerEvent('pointerup', pointer));
+  el.dispatchEvent(new MouseEvent('mouseup', mouse));
+  el.dispatchEvent(new MouseEvent('click', mouse));
+}
 
 /** The visible modal dialog panel, if one is open. */
 export function findModalContent(): HTMLElement | null {
@@ -172,9 +190,10 @@ export function findModalContent(): HTMLElement | null {
 /**
  * Close the HeroUI note-editor modal.
  *
- * Order matters: the unlabelled circular control is the reliable path; the
- * wrapper is what the recording shows already dismisses on a real click;
- * Escape is last because react-aria does not always honour a synthetic one.
+ * Prefer the wrapper (recording-proven dismiss target), then the circular
+ * close control, then Escape on `document`. Every rung uses `activate()` and
+ * is verified before falling through — never `return true` while the dialog
+ * is still mounted.
  */
 export function closeModalEditor(): boolean {
   const content = findModalContent();
@@ -186,21 +205,40 @@ export function closeModalEditor(): boolean {
 
   const closeBtn =
     content.querySelector<HTMLElement>(MODAL_CLOSE_SELECTOR) ??
-    wrapper?.querySelector<HTMLElement>(MODAL_CLOSE_SELECTOR) ??
+    wrapper?.querySelector<HTMLElement>('div.cursor-pointer[class*="rounded-full"]') ??
     null;
 
-  if (closeBtn) {
-    closeBtn.click();
-    return true;
-  }
+  const tryActivate = (el: HTMLElement | null | undefined): boolean => {
+    if (!el) return false;
+    activate(el);
+    return !findModalContent();
+  };
 
-  if (wrapper) {
-    wrapper.click();
-    if (!findModalContent()) return true;
-  }
+  if (tryActivate(wrapper)) return true;
+  if (tryActivate(closeBtn)) return true;
 
-  content.dispatchEvent(
+  document.dispatchEvent(
     new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
   );
+
+  // React may unmount on the next frame; retry once if still open.
+  if (findModalContent()) {
+    requestAnimationFrame(() => {
+      if (!findModalContent()) return;
+      const again = findModalContent();
+      if (!again) return;
+      const w =
+        again.closest<HTMLElement>(MODAL_WRAPPER_SELECTOR) ?? again.parentElement;
+      if (tryActivate(w)) return;
+      const c =
+        again.querySelector<HTMLElement>(MODAL_CLOSE_SELECTOR) ??
+        w?.querySelector<HTMLElement>('div.cursor-pointer[class*="rounded-full"]');
+      if (tryActivate(c)) return;
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+      );
+    });
+  }
+
   return true;
 }

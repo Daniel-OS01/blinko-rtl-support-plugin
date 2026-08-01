@@ -68,6 +68,18 @@ by react-aria.
 
 **Do not fix this from the description alone. Verify it first** (§5).
 
+### 2026-08-02 follow-up (v3.2.6 failed → pointer sequence)
+
+v3.2.6 shipped a close path that called `HTMLElement.click()` on the circular
+close `div` and returned without verifying. HeroUI/react-aria listen on
+`pointerdown`/`pointerup`, so `.click()` alone is a silent no-op. Live was also
+still serving **v3.2.4** after the release. The hardened path uses
+`activate()` (`pointerdown → mousedown → pointerup → mouseup → click`), prefers
+the recording-proven wrapper, and verifies between rungs.
+
+New recording: `.planning/recording.json` (189 steps, 00:58) — same backdrop
+fail / wrapper success asymmetry; single-tap path closes via header `button`.
+
 ---
 
 ## 2. Anti-Patterns — the mistakes already made here
