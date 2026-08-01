@@ -55,3 +55,36 @@ export function isInteractiveTarget(card: HTMLElement, target: HTMLElement): boo
   const match = target.closest<HTMLElement>(INTERACTIVE_SELECTOR);
   return !!match && card.contains(match);
 }
+
+/**
+ * The full-screen note detail overlay Blinko opens when a card is clicked.
+ *
+ * Rendered as `div.fixed.inset-0.z-[9999].bg-background.overflow-hidden`.
+ */
+export const DETAIL_OVERLAY_SELECTOR = 'div.fixed.inset-0[class*="z-[9999]"]';
+
+/**
+ * The scrollable content pane inside that overlay, while it is in preview mode.
+ *
+ * Blinko binds its preview-to-edit toggle to this element's `onDoubleClick` —
+ * the same handler as the pencil button in the overlay header. Double-clicking
+ * it is therefore how the editor is reached, and it is the app's own code path
+ * rather than a guess at one.
+ *
+ * The earlier attempt dispatched `dblclick` on the *card*, which has no such
+ * handler; nothing was listening and nothing happened.
+ */
+export const DETAIL_PREVIEW_PANE_SELECTOR =
+  '.flex-1.overflow-y-auto.min-h-0.py-4';
+
+/** The preview pane of a currently-open detail overlay, if there is one. */
+export function findDetailPreviewPane(): HTMLElement | null {
+  const overlay = document.querySelector<HTMLElement>(DETAIL_OVERLAY_SELECTOR);
+  if (!overlay) return null;
+  return overlay.querySelector<HTMLElement>(DETAIL_PREVIEW_PANE_SELECTOR);
+}
+
+/** True when the note editor is mounted. */
+export function isEditorOpen(): boolean {
+  return !!document.getElementById('global-editor');
+}

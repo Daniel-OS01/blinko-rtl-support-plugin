@@ -15,7 +15,12 @@
 
 import { UIUXSettings, DEFAULT_UIUX_SETTINGS } from '../types';
 import { debounce } from '../utils/debounce';
-import { NOTE_CARD_SELECTOR, INTERACTIVE_SELECTOR } from './blinkoDom';
+import {
+  NOTE_CARD_SELECTOR,
+  INTERACTIVE_SELECTOR,
+  findDetailPreviewPane,
+  isEditorOpen,
+} from './blinkoDom';
 
 const STORAGE_KEY = 'blinko-uiux-settings';
 const STYLE_TAG_ID = 'blinko-uiux-dynamic-styles';
@@ -30,6 +35,9 @@ export class UIUXService {
 
   private settings: UIUXSettings;
   private singleTapCleanup: (() => void) | null = null;
+  /** Guards against stacking editor-open polls from rapid clicks. */
+  private pendingEditorOpen = false;
+  private editorOpenFrame: number | null = null;
   private backButtonCleanup: (() => void) | null = null;
   private tapOutsideCleanup: (() => void) | null = null;
   private aiInterceptorCleanup: (() => void) | null = null;
@@ -170,6 +178,48 @@ export class UIUXService {
 
   // ─── Single-tap note open ────────────────────────────────────────────
 
+  /**
+   * After a card click opens the detail overlay, switch it to edit mode.
+   *
+   * The overlay mounts asynchronously, so this polls for the preview pane on
+   * animation frames and gives up after a short budget rather than observing
+   * the whole document indefinitely. Once the pane appears, a `dblclick` runs
+   * Blinko's own preview-to-edit handler.
+   */
+  private openEditorWhenDetailAppears(): void {
+    if (this.pendingEditorOpen) return;
+
+    const deadline = Date.now() + 1500;
+    this.pendingEditorOpen = true;
+
+    const tick = () => {
+      if (!this.settings.cardClickOpensEditor) {
+        this.pendingEditorOpen = false;
+        return;
+      }
+      // Already there — nothing to do.
+      if (isEditorOpen()) {
+        this.pendingEditorOpen = false;
+        return;
+      }
+      const pane = findDetailPreviewPane();
+      if (pane) {
+        pane.dispatchEvent(
+          new MouseEvent('dblclick', { bubbles: true, cancelable: true, composed: true })
+        );
+        this.pendingEditorOpen = false;
+        return;
+      }
+      if (Date.now() >= deadline) {
+        this.pendingEditorOpen = false;
+        return;
+      }
+      this.editorOpenFrame = requestAnimationFrame(tick);
+    };
+
+    this.editorOpenFrame = requestAnimationFrame(tick);
+  }
+
   private applySingleTap(): void {
     if (this.singleTapCleanup) {
       this.singleTapCleanup();
@@ -209,15 +259,17 @@ export class UIUXService {
           if (card.dataset.opening) return;
           card.dataset.opening = 'true';
 
-          // Blinko opens the read-only detail overlay on a single click and
-          // the editor on a double click. Synthesizing the double click makes
-          // one click land where the user is almost always going.
+          // Clicking a card opens Blinko's read-only detail overlay. The
+          // overlay's preview pane carries the preview-to-edit toggle on its
+          // own `onDoubleClick` — the same handler as the pencil button in its
+          // header — so double-clicking that pane once it exists is the app's
+          // own path into the editor.
+          //
+          // Dispatching `dblclick` on the *card* does nothing: no handler is
+          // bound there. That was the previous attempt.
           if (this.settings.cardClickOpensEditor) {
-            card.dispatchEvent(
-              new MouseEvent('dblclick', { bubbles: true, cancelable: true, composed: true })
-            );
-            requestAnimationFrame(() => { delete card.dataset.opening; });
-            return;
+            this.openEditorWhenDetailAppears();
+            // Fall through: the card's own click still opens the overlay.
           }
 
           // Legacy behaviour: click whatever navigates to the detail view.
@@ -577,6 +629,11 @@ export class UIUXService {
   // ─── Lifecycle ───────────────────────────────────────────────────────
 
   destroy(): void {
+    if (this.editorOpenFrame !== null) {
+      cancelAnimationFrame(this.editorOpenFrame);
+      this.editorOpenFrame = null;
+    }
+    this.pendingEditorOpen = false;
     if (this.singleTapCleanup) this.singleTapCleanup();
     if (this.backButtonCleanup) this.backButtonCleanup();
     if (this.tapOutsideCleanup) this.tapOutsideCleanup();

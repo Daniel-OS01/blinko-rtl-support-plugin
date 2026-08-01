@@ -754,7 +754,6 @@ describe('UIUXService — Lifecycle: destroy() cleans up all state', () => {
 describe('UIUXService — card click opens the editor', () => {
   let service: UIUXService;
 
-  /** A card matching the real app's markup. */
   function makeCard(): { card: HTMLElement; body: HTMLElement; icon: HTMLElement } {
     const card = document.createElement('div');
     card.className = 'group/card flex flex-col p-4 bg-background';
@@ -771,6 +770,26 @@ describe('UIUXService — card click opens the editor', () => {
     };
   }
 
+  /**
+   * The detail overlay Blinko mounts after a card click, in preview mode.
+   * Class names copied from the app bundle: the overlay is
+   * `div.fixed.inset-0.z-[9999]` and its content pane carries the
+   * preview-to-edit toggle on onDoubleClick.
+   */
+  function mountDetailOverlay(): HTMLElement {
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 z-[9999] bg-background overflow-hidden';
+    overlay.innerHTML =
+      '<div class="h-full flex">' +
+      '<div class="w-full mx-auto h-full flex flex-col px-4">' +
+      '<div class="flex-1 overflow-y-auto min-h-0 py-4" id="pane"></div>' +
+      '</div></div>';
+    document.body.appendChild(overlay);
+    return overlay.querySelector('#pane') as HTMLElement;
+  }
+
+  const frame = () => new Promise(r => setTimeout(r, 20));
+
   beforeEach(() => {
     localStorage.clear();
     document.body.innerHTML = '';
@@ -781,67 +800,86 @@ describe('UIUXService — card click opens the editor', () => {
     service.destroy();
   });
 
-  it('turns a single click on the body into a double click on the card', () => {
+  it('double-clicks the detail preview pane once it appears', async () => {
+    const { body } = makeCard();
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: true });
+
+    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    // The overlay mounts a moment later, as it does in the app.
+    const pane = mountDetailOverlay();
+    let dbl = 0;
+    pane.addEventListener('dblclick', () => { dbl++; });
+
+    await frame();
+    expect(dbl).toBe(1);
+  });
+
+  it('does not double-click the card itself — nothing is bound there', async () => {
     const { card, body } = makeCard();
-    let dblclicks = 0;
-    card.addEventListener('dblclick', () => { dblclicks++; });
+    let cardDbl = 0;
+    card.addEventListener('dblclick', () => { cardDbl++; });
+
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: true });
+    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    mountDetailOverlay();
+    await frame();
+
+    expect(cardDbl).toBe(0);
+  });
+
+  it('does nothing when the editor is already open', async () => {
+    const { body } = makeCard();
+    const editor = document.createElement('div');
+    editor.id = 'global-editor';
+    document.body.appendChild(editor);
 
     service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: true });
     body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-    expect(dblclicks).toBe(1);
+    const pane = mountDetailOverlay();
+    let dbl = 0;
+    pane.addEventListener('dblclick', () => { dbl++; });
+
+    await frame();
+    expect(dbl).toBe(0);
   });
 
-  it('does not fire on the action rail', () => {
-    const { card, icon } = makeCard();
-    let dblclicks = 0;
-    card.addEventListener('dblclick', () => { dblclicks++; });
-
+  it('gives up quietly when no overlay ever appears', async () => {
+    const { body } = makeCard();
     service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: true });
+
+    expect(() => {
+      body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }).not.toThrow();
+
+    await frame();
+    expect(document.getElementById('global-editor')).toBeNull();
+  });
+
+  it('does not fire on the action rail', async () => {
+    const { icon } = makeCard();
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: true });
+
     icon.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    const pane = mountDetailOverlay();
+    let dbl = 0;
+    pane.addEventListener('dblclick', () => { dbl++; });
 
-    expect(dblclicks).toBe(0);
+    await frame();
+    expect(dbl).toBe(0);
   });
 
-  it('does not re-enter when the synthetic event bubbles back', () => {
-    const { card, body } = makeCard();
-    let dblclicks = 0;
-    card.addEventListener('dblclick', () => { dblclicks++; });
-
-    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: true });
-    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-    // Two real clicks, two opens — never more.
-    expect(dblclicks).toBeLessThanOrEqual(2);
-  });
-
-  it('falls back to the old heading-click behaviour when disabled', () => {
-    const { card, body } = makeCard();
-    const heading = document.createElement('h2');
-    heading.textContent = 'Title';
-    card.appendChild(heading);
-
-    let dblclicks = 0;
-    let headingClicks = 0;
-    card.addEventListener('dblclick', () => { dblclicks++; });
-    heading.addEventListener('click', () => { headingClicks++; });
-
+  it('does nothing at all when the feature is off', async () => {
+    const { body } = makeCard();
     service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: false });
+
     body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    const pane = mountDetailOverlay();
+    let dbl = 0;
+    pane.addEventListener('dblclick', () => { dbl++; });
 
-    expect(dblclicks).toBe(0);
-    expect(headingClicks).toBe(1);
-  });
-
-  it('does nothing at all when single-tap is off', () => {
-    const { card, body } = makeCard();
-    let dblclicks = 0;
-    card.addEventListener('dblclick', () => { dblclicks++; });
-
-    service.updateSettings({ singleTapOpenNote: false, cardClickOpensEditor: true });
-    body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-    expect(dblclicks).toBe(0);
+    await frame();
+    expect(dbl).toBe(0);
   });
 });
