@@ -21,7 +21,7 @@ try {
 
 function makeCard(opts: { heading?: boolean; paragraph?: boolean } = {}): HTMLDivElement {
   const card = document.createElement('div');
-  card.className = 'note-card';
+  card.className = 'group/card flex flex-col p-4 bg-background';
   if (opts.heading !== false) {
     const h3 = document.createElement('h3');
     h3.textContent = 'Note title';
@@ -399,7 +399,7 @@ describe('UIUXService — Phase 2: MutationObserver debounce', () => {
   it('cards added before singleTap enable are still marked', () => {
     // Pre-existing card before enable
     const card = document.createElement('div');
-    card.className = 'note-card';
+    card.className = 'group/card flex flex-col p-4 bg-background';
     document.body.appendChild(card);
 
     service.updateSettings({ singleTapOpenNote: true });
@@ -413,7 +413,7 @@ describe('UIUXService — Phase 2: MutationObserver debounce', () => {
 
     // Add a new card after enable
     const card = document.createElement('div');
-    card.className = 'note-card';
+    card.className = 'group/card flex flex-col p-4 bg-background';
     document.body.appendChild(card);
 
     // Wait for debounced observer callback (150ms + buffer)
