@@ -5,6 +5,27 @@ import { debounce } from '../utils/debounce';
 import { PasteInterceptor } from '../utils/pasteInterceptor';
 import { StorageManager } from './storageManager';
 
+/**
+ * Whitespace test over a UTF-16 code unit, matching the character set of the
+ * `/\s/` regex it replaces: ASCII whitespace plus every Unicode space
+ * separator, the line/paragraph separators, and the BOM.
+ */
+function isWhitespaceCode(code: number): boolean {
+  return (
+    code === 0x20 ||                      // space
+    (code >= 0x09 && code <= 0x0D) ||     // tab, LF, VT, FF, CR
+    code === 0xA0 ||                      // no-break space
+    code === 0x1680 ||                    // ogham space mark
+    (code >= 0x2000 && code <= 0x200A) || // en quad … hair space
+    code === 0x2028 ||                    // line separator
+    code === 0x2029 ||                    // paragraph separator
+    code === 0x202F ||                    // narrow no-break space
+    code === 0x205F ||                    // medium mathematical space
+    code === 0x3000 ||                    // ideographic space
+    code === 0xFEFF                       // zero-width no-break space (BOM)
+  );
+}
+
 export class RTLService {
   private detector: RTLDetector;
   private isRTLEnabled: boolean = false;
@@ -419,8 +440,10 @@ export class RTLService {
 
           for (let i = 0; i < limit; i++) {
             const code = text.charCodeAt(i);
-            // Skip whitespace (simplified check)
-            if (code !== 32 && code !== 9 && code !== 10 && code !== 13) {
+            // Skip whitespace. Must stay equivalent to the /\s/ this replaced,
+            // which is Unicode-aware — NBSP-indented code is common, and
+            // counting those as significant would dilute the RTL ratio.
+            if (!isWhitespaceCode(code)) {
                 nonWhitespaceLength++;
                 // Hebrew (0x0590-0x05FF) or Arabic (0x0600-0x06FF, 0x0750-0x077F, 0x08A0-0x08FF)
                 if ((code >= 0x0590 && code <= 0x05FF) ||
