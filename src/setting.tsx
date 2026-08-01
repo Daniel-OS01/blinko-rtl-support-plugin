@@ -2027,6 +2027,26 @@ export function RTLSetting(): JSX.Element {
                 </div>
               </div>
 
+              {/* Click opens the editor */}
+              <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={uiuxSettings.cardClickOpensEditor}
+                    onChange={e => saveUIUX({ cardClickOpensEditor: (e.target as HTMLInputElement).checked })}
+                  />
+                  <span>✏️ Click Opens the Editor</span>
+                </label>
+                <p style={{ margin: '0 0 0 28px', fontSize: '12px', color: settings.darkMode ? '#aaa' : '#666' }}>
+                  Opens the editor when a note is clicked, instead of the read-only view.
+                  Blinko opens the read-only view on a single click and the editor on a double click,
+                  so every edit used to start with two clicks. Turn this off to keep the read-only view.
+                </p>
+                <div style={{ margin: '10px 0 0 28px', padding: '8px 12px', borderRadius: '6px', background: settings.darkMode ? '#2c3e50' : '#e8f4fd', border: '1px solid #17a2b8', fontSize: '12px', color: settings.darkMode ? '#cde' : '#0c5460' }}>
+                  ℹ️ Requires <strong>Single-Tap to Open Notes</strong> above.
+                </div>
+              </div>
+
               {/* Back button closes note */}
               <div style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', cursor: 'pointer', marginBottom: '6px' }}>

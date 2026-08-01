@@ -209,7 +209,18 @@ export class UIUXService {
           if (card.dataset.opening) return;
           card.dataset.opening = 'true';
 
-          // Find the element that navigates to the note detail view.
+          // Blinko opens the read-only detail overlay on a single click and
+          // the editor on a double click. Synthesizing the double click makes
+          // one click land where the user is almost always going.
+          if (this.settings.cardClickOpensEditor) {
+            card.dispatchEvent(
+              new MouseEvent('dblclick', { bubbles: true, cancelable: true, composed: true })
+            );
+            requestAnimationFrame(() => { delete card.dataset.opening; });
+            return;
+          }
+
+          // Legacy behaviour: click whatever navigates to the detail view.
           // Priority: heading element > heading/title link > any valid href.
           // Article notes (type 1) have a heading that serves as the navigation
           // target. Quick notes (type 0) have no heading.
