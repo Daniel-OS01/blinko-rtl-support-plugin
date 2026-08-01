@@ -2,8 +2,8 @@
 
 > **Document type:** Chronological change record
 > **Format:** Most recent changes first
-> **Scope:** All sessions — latest branch `claude/fix-hebrew-text-note-focus-ddReT`
-> **Last updated:** 2026-03-27
+> **Scope:** All sessions — latest branch `main`
+> **Last updated:** 2026-03-28
 
 ---
 
@@ -21,6 +21,69 @@ Rationale: why the change was made
 ---
 
 ## Change Log
+
+---
+
+## Session 7 Changes — 2026-03-28 (branch: `main`, commit: `e5b44ed`)
+
+---
+
+### [CL-S7-001] Speak Blinko's actual tRPC protocol for AI actions and note upsert
+
+**Date:** 2026-03-28
+**Branch:** `main`
+**Commit:** `e5b44ed`
+
+**Files modified:**
+- `src/services/aiPostService.ts` — `trpcHeaders()`, `trpcUrl()`, `trpcBody()`, `unwrapTrpc()`, `trpcMutate()`, `collectWritingStream()`, `extractStreamedText()`, new `getBlinkoAuthToken()`, `runPostProcessing()`, `runAutoTag()`, `updateNoteContent()`
+- `src/setting.tsx` — API Connection help text
+- `tests/blinkoApi.test.ts` — new "tRPC wire protocol" test suite (16 tests, 39 total in the file)
+
+**Changes:**
+
+```typescript
+// Before — unbatched request, no credential, wrong procedure name, SSE-only stream parsing
+fetch(`/api/trpc/${procedure}`, { body: JSON.stringify({ json: input }) });
+// ...
+await trpcMutate('note.upsert', { id, content }, token);
+
+// After — batched request with auth token discovery and jsonl-aware streaming
+fetch(trpcUrl(procedure), { body: trpcBody(input) }); // trpcUrl() appends `?batch=1`
+// ...
+await trpcMutate('notes.upsert', { id, content }, getBlinkoAuthToken(token));
+```
+
+Four independent defects were fixed, all found by reading Blinko's client
+bundle and probing a live instance:
+
+1. Unbatched tRPC calls never reached the procedure — `httpBatchStreamLink`
+   requires `?batch=1` with the input keyed by index (`{"0":{"json":...}}`),
+   and the `[{result|error}]` response envelope is unwrapped accordingly.
+2. No credential was sent. Blinko's client reads its token from
+   `localStorage["token"]`; `getBlinkoAuthToken()` reads the same key (same
+   origin), falling back to the configured `blinkoApiToken`.
+3. The note-update tRPC fallback called `note.upsert`, which is a 404 — the
+   real procedure is `notes.upsert`.
+4. With `trpc-accept: application/jsonl` (now sent only for `ai.writing`),
+   Blinko answers HTTP 200 even for failures and puts the error inside a
+   newline-delimited JSON body labeled `Content-Type: application/json`.
+   Gating on content type routed this to the single-document JSON parser,
+   which threw `JSON Parse error` and hid the real 401. The body is now
+   always read as jsonl for this procedure, and an in-stream error frame is
+   raised instead of returning empty text.
+
+Also: `ai.writing` now receives `content` alongside `question` and `type`,
+matching what Blinko's own client sends.
+
+**Rationale:** The prior fix (`CL-S5-005`/`CL-S5-006`) corrected REST URL
+handling but left every tRPC call in a shape Blinko never accepts, so the AI
+actions and the note-upsert fallback still failed. Verified end-to-end
+against a live, unauthenticated instance: all three AI actions now report
+the real cause (`...rejected the request as unauthenticated (401)...`)
+instead of a parse error or a misleading "no AI provider configured"
+message. 16 tests added to `tests/blinkoApi.test.ts` (39 total in the file);
+full suite at 359 pass / 0 fail, typecheck and build clean.
+`docs/API_REFERENCE.md` updated to match (version 1.1 → 1.2).
 
 ---
 
