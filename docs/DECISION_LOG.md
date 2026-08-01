@@ -1,8 +1,8 @@
 # Decision Log — Blinko RTL Support Plugin
 
 > **Document type:** Architectural decision record (ADR)
-> **Version:** 1.1
-> **Last updated:** 2026-03-27
+> **Version:** 1.2
+> **Last updated:** 2026-08-01
 >
 > Each entry records a significant technical or design decision, the context that drove it, the alternatives considered, and the rationale for the chosen approach. Future developers can understand WHY things are the way they are, not just what they are.
 
@@ -12,6 +12,7 @@
 
 | ID | Title | Date | Status |
 |----|-------|------|--------|
+| [DEC-017](#dec-017) | Poll for the detail overlay's preview pane and dblclick it, instead of dblclick on the card | 2026-08-01 | Accepted |
 | [DEC-015](#dec-015) | Version-stamped settings migration (v1→v2) instead of re-setting defaults | 2026-03-27 | Accepted |
 | [DEC-016](#dec-016) | Scope IGNORE_SELECTOR check to card descendants; add opener-contains-target guard | 2026-03-27 | Accepted |
 | [DEC-001](#dec-001) | Use JS visibility filter instead of CSS `:not()` pseudo-class | 2026-03-26 | Accepted |
@@ -405,4 +406,29 @@ A second bug: when the user clicked the heading element directly, `opener === ta
 
 ---
 
-*Document version: 1.2 — Updated 2026-03-27 (added DEC-015, DEC-016; updated index)*
+## DEC-017
+
+### Poll for the detail overlay's preview pane and dblclick it, instead of dblclick on the card
+
+**Date:** 2026-08-01
+**Status:** Accepted
+
+**Context:** `cardClickOpensEditor` dispatched a synthetic `dblclick` on the note card to reach the editor in one tap. This was reported as non-functional (PR #356 tried the same fix again with no effect). Reading the deployed app bundle (`assets/index-xZ6CcJO7.js`) showed why: a card click only opens a read-only detail overlay (`div.fixed.inset-0[class*="z-[9999]"]`); the preview-to-edit toggle is bound as `onDoubleClick` on the overlay's own content pane (`.flex-1.overflow-y-auto.min-h-0.py-4`) — the same handler as the header's pencil (`tabler:edit`) button. Nothing is bound to the card itself, so the `dblclick` dispatched there was always a no-op.
+
+The overlay also mounts asynchronously after the card's click handler runs, so the pane cannot be queried synchronously in the same tick.
+
+**Alternatives considered:**
+1. **`MutationObserver` on `document.body`** — reliably detects the overlay mounting, but is heavier to set up/tear down for a one-shot wait and requires the same 1.5s-style timeout logic anyway.
+2. **Fixed `setTimeout` delay** — simplest, but brittle: too short misses slower renders, too long adds a perceptible delay on fast ones.
+3. **`requestAnimationFrame` polling with a time budget** — checks every frame, naturally paced to rendering, easy to cancel via `cancelAnimationFrame`, and bounded so a note that never mounts an overlay (e.g. navigation elsewhere) doesn't leave a listener running forever.
+
+**Decision:** Use approach 3. `openEditorWhenDetailAppears()` polls via `requestAnimationFrame` for up to 1.5s, dispatches one `dblclick` on the preview pane (`findDetailPreviewPane()`) as soon as it exists, skips entirely if `isEditorOpen()` is already true, guards against overlapping polls from rapid repeated clicks with a `pendingEditorOpen` flag, and cancels any in-flight frame in `destroy()`.
+
+**Trade-offs:**
+- If Blinko ever renders the overlay markup differently, both `DETAIL_OVERLAY_SELECTOR` and `DETAIL_PREVIEW_PANE_SELECTOR` need updating — same class of risk as every other selector already tracked in `blinkoDom.ts`.
+- The 1.5s budget is a guess at "long enough for a slow render, short enough to not poll indefinitely"; it has not been tuned against real network/render conditions in a browser.
+- Still unverified against a live Blinko instance — validated only against the class names read out of the bundle and against unit tests that model the overlay's DOM shape.
+
+---
+
+*Document version: 1.2 — Updated 2026-08-01 (added DEC-017; updated index)*
