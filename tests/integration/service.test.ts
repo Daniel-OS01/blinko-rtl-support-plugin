@@ -62,23 +62,21 @@ describe("RTLService", () => {
     expect(el.getAttribute('data-debug-name')).toBe('div#debug-test');
   });
 
-  it.skip("removes debug visual classes when debug mode is disabled", () => {
+  it("removes debug visual classes when debug mode is disabled", () => {
     const el = document.createElement("div");
     el.textContent = "שלום";
-    el.classList.add('rtl-debug-rtl'); // Simulate existing debug class
     document.body.appendChild(el);
 
-    // Enable debug mode first
+    // Enable debug mode, then mark the element as if it had been processed.
     service.toggleDebugMode();
-
-    // Ensure class is present (manually add if the environment wiped it during toggle)
     el.classList.add('rtl-debug-rtl');
+    el.setAttribute('data-rtl-debug', 'RTL');
 
-    // Disable debug mode
+    // Disabling sweeps every .rtl-debug-rtl / .rtl-debug-ltr element in the
+    // document and strips the class plus its data attribute.
     service.toggleDebugMode();
 
-    // The logic in toggleDebugMode removes classes from existing elements using querySelectorAll
-    // Skipping because happy-dom querySelectorAll behavior in this test env seems inconsistent for this specific update
     expect(el.classList.contains('rtl-debug-rtl')).toBe(false);
+    expect(el.hasAttribute('data-rtl-debug')).toBe(false);
   });
 });
