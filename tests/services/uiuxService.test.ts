@@ -883,3 +883,127 @@ describe('UIUXService — card click opens the editor', () => {
     expect(dbl).toBe(0);
   });
 });
+
+describe('UIUXService — tap outside closes the detail overlay', () => {
+  let service: UIUXService;
+
+  /**
+   * The full-screen detail overlay, built from the app bundle's JSX:
+   *   div.fixed.inset-0.z-[9999]
+   *     > div.h-full.flex
+   *       > div.w-full.mx-auto…      ← the "inside" boundary (React ref)
+   *         > div.flex.items-center.justify-between > button   ← back/close
+   */
+  function mountDetailOverlay(withHeader = true): {
+    overlay: HTMLElement; content: HTMLElement; back: HTMLElement | null;
+  } {
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 z-[9999] bg-background overflow-hidden';
+    overlay.innerHTML =
+      '<div class="h-full flex">' +
+      '<div class="w-full mx-auto h-full flex flex-col px-4">' +
+      (withHeader
+        ? '<div class="flex items-center justify-between py-4 flex-shrink-0 border-b border-border">' +
+          '<button id="back"></button></div>'
+        : '') +
+      '<div class="flex-1 overflow-y-auto min-h-0 py-4" id="pane">note body</div>' +
+      '</div></div>';
+    document.body.appendChild(overlay);
+    return {
+      overlay,
+      content: overlay.querySelector('.w-full.mx-auto') as HTMLElement,
+      back: overlay.querySelector('#back'),
+    };
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    document.body.innerHTML = '';
+    service = new UIUXService();
+  });
+
+  afterEach(() => {
+    service.destroy();
+  });
+
+  it('closes via the back button when the click lands outside the content', () => {
+    const { overlay, back } = mountDetailOverlay();
+    let closed = 0;
+    back!.addEventListener('click', () => { closed++; });
+
+    service.updateSettings({ tapOutsideClosesNote: true });
+    // The letterbox area beside the max-width column.
+    overlay.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+    expect(closed).toBe(1);
+  });
+
+  it('does not close when the click is inside the content', () => {
+    const { back } = mountDetailOverlay();
+    let closed = 0;
+    back!.addEventListener('click', () => { closed++; });
+
+    service.updateSettings({ tapOutsideClosesNote: true });
+    document.getElementById('pane')!
+      .dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+    expect(closed).toBe(0);
+  });
+
+  it('falls back to Escape on the narrow layout, which has no header', () => {
+    const { overlay } = mountDetailOverlay(false);
+    const keys: string[] = [];
+    document.addEventListener('keydown', e => keys.push(e.key));
+
+    service.updateSettings({ tapOutsideClosesNote: true });
+    overlay.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+    // Edit mode consumes the first Escape to return to preview, so a second
+    // is sent while the overlay is still mounted.
+    expect(keys.filter(k => k === 'Escape').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('still closes a modal dialog, which is the surface that already worked', () => {
+    const modal = document.createElement('div');
+    modal.className = 'modal-content';
+    modal.innerHTML = '<button class="close-btn" aria-label="Close"></button>';
+    document.body.appendChild(modal);
+    let closed = 0;
+    modal.querySelector('.close-btn')!.addEventListener('click', () => { closed++; });
+
+    service.updateSettings({ tapOutsideClosesNote: true });
+    document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+    expect(closed).toBe(1);
+  });
+
+  it('prefers the detail overlay when both surfaces are mounted', () => {
+    const modal = document.createElement('div');
+    modal.className = 'modal-content';
+    modal.innerHTML = '<button class="close-btn" aria-label="Close"></button>';
+    document.body.appendChild(modal);
+    let modalClosed = 0;
+    modal.querySelector('.close-btn')!.addEventListener('click', () => { modalClosed++; });
+
+    const { overlay, back } = mountDetailOverlay();
+    let overlayClosed = 0;
+    back!.addEventListener('click', () => { overlayClosed++; });
+
+    service.updateSettings({ tapOutsideClosesNote: true });
+    overlay.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+    expect(overlayClosed).toBe(1);
+    expect(modalClosed).toBe(0);
+  });
+
+  it('does nothing when the setting is off', () => {
+    const { overlay, back } = mountDetailOverlay();
+    let closed = 0;
+    back!.addEventListener('click', () => { closed++; });
+
+    service.updateSettings({ tapOutsideClosesNote: false });
+    overlay.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+
+    expect(closed).toBe(0);
+  });
+});

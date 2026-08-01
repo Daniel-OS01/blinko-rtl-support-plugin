@@ -88,3 +88,44 @@ export function findDetailPreviewPane(): HTMLElement | null {
 export function isEditorOpen(): boolean {
   return !!document.getElementById('global-editor');
 }
+
+/**
+ * The content container inside the detail overlay — the max-width column the
+ * app treats as "inside". Blinko holds a ref to it and stops propagation for
+ * pointer events landing outside it, so it is the correct boundary for
+ * outside-click detection too.
+ */
+export function findDetailOverlayContent(): HTMLElement | null {
+  const overlay = document.querySelector<HTMLElement>(DETAIL_OVERLAY_SELECTOR);
+  if (!overlay) return null;
+  return overlay.querySelector<HTMLElement>('.w-full.mx-auto');
+}
+
+/**
+ * Close the detail overlay.
+ *
+ * The header's back button closes it outright from either mode. That header is
+ * only rendered on the wide layout, so the fallback is Escape — which in edit
+ * mode steps back to preview rather than closing, hence the second press.
+ */
+export function closeDetailOverlay(): boolean {
+  const overlay = document.querySelector<HTMLElement>(DETAIL_OVERLAY_SELECTOR);
+  if (!overlay) return false;
+
+  const backButton = overlay.querySelector<HTMLElement>(
+    '.flex.items-center.justify-between button'
+  );
+  if (backButton) {
+    backButton.click();
+    return true;
+  }
+
+  const escape = () =>
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    );
+  escape();
+  // Edit mode consumes the first Escape to return to preview.
+  if (document.querySelector(DETAIL_OVERLAY_SELECTOR)) escape();
+  return true;
+}
