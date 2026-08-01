@@ -158,9 +158,83 @@
 | Pushed the #145 fix to a new branch instead of the PR head | 1 | Read `headRefName` from the API, pushed there, deleted the stray branch |
 | `git rebase` refused with unstaged planning-file changes | 1 | Committed the plan updates first |
 
+---
+
+## Session: 2026-08-01 (cont.) — Phases 4–7 execution
+
+### Current Status
+- **Phases 1–7 complete.** Suite **291 pass / 0 fail / 0 skip**, tsc clean,
+  build clean (249.35 kB), version bumped to 3.1.0
+- Branch `phase4/detection-semantics` (includes the Phase 2 branch), not yet PR'd
+
+### Design decisions taken under stated assumptions
+
+The user replied "go" without answering the two Phase 4 questions, so both were
+resolved with the recommendations already given, stated in code and commits:
+
+1. **`minRTLChars` = count of strong RTL characters**, with the length gate
+   split out into a new `minTextLength` setting, migrated at settings v3.
+2. **`CombinedStrategy` stays an OR** — but it is now a policy rather than an
+   accident. The complaint (F-05) was that the looser strategy always won;
+   unifying the denominator and range set (F-04, F-06) dissolves that, so OR is
+   stable and `low` sensitivity is genuinely conservative.
+
+A third decision surfaced mid-implementation and was **not** pre-agreed:
+**minRTLChars is now a hard floor with no exemption for wholly-RTL text.** The
+old exemption compared the RTL count against the *trimmed length*, so it fired
+only when the text had no spaces — `כן` was exempt, `שלום עולם` was not. That is
+an accident of whitespace, not a policy, and it left the setting unable to
+filter the text it was raised to filter. This is user-visible: at
+`minRTLChars: 3`, `כן` is no longer detected. The default of 1 is unaffected.
+Three pre-existing tests encoded the old exemption and were updated.
+
+### Actions Taken
+
+| # | Action | Result |
+|---|---|---|
+| 34 | Created `src/utils/strategies/rtlRanges.ts` | Single source of truth for ranges, neutrality, sampling and thresholds |
+| 35 | Rewrote both strategies against it | They now agree on every probe row |
+| 36 | Split `minTextLength` from `minRTLChars`, settings v3 migration | Existing installs keep their length behaviour |
+| 37 | Re-probed 31 inputs × 3 sensitivities × 3 strategies | All scripts detected incl. astral Adlam; Arabic-Indic digits neutral |
+| 38 | Flipped the Phase 4 corpus characterizations to invariants | Deliberate, one finding at a time |
+| 39 | Phase 5: `unicode` now takes a direction and uses `dir="auto"` + `plaintext`; `all` applies all three; `clearDirection()` for the short-text path; containers classified on own text | 285 pass |
+| 40 | Phase 6: bounded log preview, adaptive sweep backoff, `removeBaseCSS()` | 286 pass |
+| 41 | Added `tests/detection-benchmark.test.ts` | short 1.13µs, paragraph 4.85µs, 200k chars 6.55µs |
+| 42 | Phase 7: settings UI control, README corrections, changelog, v3.1.0 | 291 pass, build clean |
+
+### Test Results
+
+| Test run | Expected | Actual | Status |
+|---|---|---|---|
+| Phase 4 first run against corpus | characterizations flip, invariants hold | 231 pass / 18 fail — all 18 were characterizations | ✅ by design |
+| After flipping Phase 4 corpus | green | 283 pass / 0 fail | ✅ |
+| Phase 5 | green | 285 pass / 0 fail | ✅ |
+| Phase 6 | green | 291 pass / 0 fail | ✅ |
+| `npx tsc --noEmit` | clean | clean | ✅ |
+| `bun run build` | clean | 249.35 kB / 51.59 kB css | ✅ |
+| Benchmark: 200k chars vs paragraph | near-flat | 6.55µs vs 4.85µs | ✅ bounded sampling works |
+
+### Errors
+
+| Error | Attempt | Resolution |
+|---|---|---|
+| Bumped `_settingsVersion` in `DEFAULT_UIUX_SETTINGS` | 1 | Wrong object — that governs the unrelated UIUX migration. Reverted; RTL's version is stored ad-hoc in `rtlService`, now declared on `RTLSettings` |
+| `regex_config` "respects minRTLChars" broke after the denominator fix | 1 | Not a test bug: the wholly-RTL exemption now fired for spaced text too. Resolved by removing the exemption (see decisions above) rather than by adjusting the test to fit |
+| Phase 4 branch had no corpus | 1 | Branched from `main`, but #348 is unmerged. Merged the Phase 2 branch in — Phase 4 must be measured against the contract |
+
+### Not done
+
+- **Manual smoke test in Blinko.** Needs a human with a running instance:
+  typing Hebrew in the editor (flicker), mixed paste, code blocks, each method,
+  toggle on/off, plugin destroy.
+- **`README_he.md`** not updated — the English README was.
+- **The 36 uiuxService NodeList PRs** were closed without their optimisation
+  being applied.
+- **The Jules automation** is still running by decision.
+
 ### Notes for next session
 
-- **Phase 4 starts here.** The corpus in `tests/detection-corpus.test.ts` is the
+- **Phase 4 started here.** The corpus in `tests/detection-corpus.test.ts` is the
   contract: its CHARACTERIZATION assertions are *expected* to flip, deliberately
   and one at a time, as F-03..F-07 are fixed
 - `bun test` is the fast loop (~1.9s, 225 tests)

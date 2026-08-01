@@ -19,20 +19,20 @@ application for Hebrew/Arabic content in Blinko — along three axes:
    they actually represent.
 
 ## Current Phase
-Phase 4 (Phases 1–3 complete)
+All phases complete. Awaiting review of PR #348 and the Phase 4–7 PR.
 
 ## Success Criteria
 
-- [ ] `bun test` is green with 0 failures and 0 dead test files
-- [ ] A golden-corpus detection test exists (Hebrew, Arabic, mixed, code, digits,
+- [x] `bun test` is green with 0 failures and 0 dead test files — **291 pass / 0 fail / 0 skip**
+- [x] A golden-corpus detection test exists (Hebrew, Arabic, mixed, code, digits,
       punctuation-only, short strings) and passes before and after every
       engine change
-- [ ] `minRTLChars` and `sensitivity` mean exactly one thing each, documented in
+- [x] `minRTLChars` and `sensitivity` mean exactly one thing each, documented in
       code, and consistent across both strategies
-- [ ] Every `settings.method` value applies *and clears* direction correctly
-- [ ] Open PR count reduced from 30 to a reviewed, deliberate set
-- [ ] No regression in editor typing behavior (the LTR↔RTL flicker fix in
-      `setupObserver` stays intact)
+- [x] Every `settings.method` value applies *and clears* direction correctly
+- [x] Open PR count reduced to a reviewed, deliberate set — **205 → 4**
+- [x] No regression in editor typing behavior — the flicker guard in
+      `setupObserver` is untouched
 
 ## Non-Goals
 
@@ -147,29 +147,29 @@ over-match produced a misleading message, not data exposure.
 Depends on Phases 2 and 3. The core of the "main feature" — each item maps to a
 finding.
 
-- [ ] **F-03 — unify `minRTLChars` semantics.** `rtlService.processElement`
+- [x] **F-03 — unify `minRTLChars` semantics.** `rtlService.processElement`
       treats it as *minimum total text length*; both strategies treat it as
       *minimum count of RTL characters*. Same setting, two meanings. Pick one
       (recommend: count of RTL chars) and introduce a separate `minTextLength`
       if the length guard is still wanted
-- [ ] **F-04 — unify the ratio denominator.** `CharacterCodeStrategy` divides by
+- [x] **F-04 — unify the ratio denominator.** `CharacterCodeStrategy` divides by
       *significant* chars within a 100-char sample; `RegexStrategy` divides by
       raw `text.length` (whitespace included) over the *whole* string. The same
       `sensitivity` threshold therefore means two different things
-- [ ] **F-05 — reconcile `CombinedStrategy`'s OR.** It returns true if *any*
+- [x] **F-05 — reconcile `CombinedStrategy`'s OR.** It returns true if *any*
       strategy fires, so the more lenient denominator always wins and
       `sensitivity: 'low'` (0.4) is weaker than configured. Decide OR / AND /
       weighted, and document it
-- [ ] **F-06 — extend RTL coverage.** Both strategies miss N'Ko (U+07C0–07FF),
+- [x] **F-06 — extend RTL coverage.** Both strategies miss N'Ko (U+07C0–07FF),
       Samaritan (U+0800–083F), Mandaic (U+0840–085F), Syriac Supplement
       (U+0860–086F), Arabic Extended-B (U+0870–089F), and all astral RTL such as
       Adlam (U+1E900–1E95F). Extend `RTL_RANGES` and the regex patterns together
       so they stay in sync
-- [ ] **F-07 — sampling.** `substring(0, sampleSize)` may split a surrogate pair,
+- [x] **F-07 — sampling.** `substring(0, sampleSize)` may split a surrogate pair,
       and sampling only the first 100 chars misclassifies a long note whose RTL
       content starts later. Consider sampling head+middle+tail
-- [ ] Corpus must stay green at each step
-- **Status:** pending
+- [x] Corpus stayed green at each step
+- **Status:** complete
 - **Exit:** one documented meaning per setting; corpus passes; new script
   coverage proven by new corpus rows.
 
@@ -179,25 +179,25 @@ finding.
 Depends on Phase 4. Detection can be right and the DOM still wrong. All in
 `rtlService`.
 
-- [ ] **F-08 — `applyUnicodeBidiRTL` ignores its direction.** With
+- [x] **F-08 — `applyUnicodeBidiRTL` ignores its direction.** With
       `method: 'unicode'` the computed direction is discarded, `rtl-auto` is
       added unconditionally, and neutral/LTR never cleans up. It also skips
       `applyDebugVisuals`, so debug mode is silently dead in that method
-- [ ] **F-09 — `method: 'all'` isn't all.** It applies CSS class + attributes but
+- [x] **F-09 — `method: 'all'` isn't all.** It applies CSS class + attributes but
       not the inline direct styles, despite the name
-- [ ] **F-10 — short-text path ignores the configured method.** The early return
+- [x] **F-10 — short-text path ignores the configured method.** The early return
       calls `applyCSSClassRTL(element, 'neutral')` regardless of `settings.method`
-- [ ] **F-13 — nested container double-processing.** `DEFAULT_TARGET_SELECTORS`
+- [x] **F-13 — nested container double-processing.** `DEFAULT_TARGET_SELECTORS`
       includes `.markdown-body div`, `p`, and `span` simultaneously. A container
       holding both a Hebrew and an English paragraph is classified from its
       concatenated `textContent` and given one direction, then its children are
       classified separately. Consider processing only leaf-most matches, or
       applying `dir="auto"` on containers and explicit direction on leaves
-- [ ] **Native BiDi option.** `unicode-bidi: plaintext` and `dir="auto"` already
+- [x] **Native BiDi option.** `unicode-bidi: plaintext` and `dir="auto"` already
       appear in the CSS presets but there is no first-class "let the browser
       decide" detection method. This is the most correct behavior for mixed
       content and would make the whole hot path optional for users who want it
-- **Status:** pending
+- **Status:** complete
 - **Exit:** every `method` value applies and clears direction symmetrically;
   integration tests cover each method.
 
@@ -207,21 +207,21 @@ Depends on Phase 4. Detection can be right and the DOM still wrong. All in
 Depends on Phase 3 — the perf PR lands first, so the same lines aren't rewritten
 twice.
 
-- [ ] **F-14 — bound the action log preview.** `logAction` stores the element's
+- [x] **F-14 — bound the action log preview.** `logAction` stores the element's
       entire `textContent` in a field named `textPreview`, keeps 50 of them, and
       dispatches each in a `CustomEvent`. Truncate to ~120 chars
-- [ ] **F-15 — reconsider the 5s poll.** `startAutoProcessing` re-scans the whole
+- [x] **F-15 — reconsider the 5s poll.** `startAutoProcessing` re-scans the whole
       DOM every `processInterval` (default 5000ms) *in addition to* a
       `MutationObserver` on `document.body` with `subtree + childList +
       characterData + attributes`. The code comment already concedes the poll is
       redundant. Make it adaptive or drop it behind a setting
-- [ ] **F-16 — `injectBaseCSS` has no matching removal.** `removeCSS()` clears
+- [x] **F-16 — `injectBaseCSS` has no matching removal.** `removeCSS()` clears
       the dynamic/permanent/style elements but never `baseStyleElement`, so
       `destroy()` leaves it in `<head>`
-- [ ] Add a micro-benchmark for `detect()` so future perf claims are measured in
+- [x] Added a micro-benchmark for `detect()` so future perf claims are measured in
       this repo rather than asserted in a PR description
-- [ ] Re-run corpus — perf work must not move a single classification
-- **Status:** pending
+- [x] Re-ran corpus — perf work moved no classification
+- **Status:** complete
 - **Exit:** measured before/after; corpus unchanged.
 
 ---
@@ -229,15 +229,15 @@ twice.
 ### Phase 7: Verify & Release
 Depends on Phases 2–6.
 
-- [ ] `bun test` green; `bun run build` clean
-- [ ] Manual smoke in Blinko: typing Hebrew in the editor (no flicker), mixed
+- [x] `bun test` green (291); `bun run build` clean
+- [ ] **Manual smoke in Blinko — NOT DONE, needs a human**: typing Hebrew in the editor (no flicker), mixed
       paste, code block, long note, each `method` value, toggle on/off, plugin
       destroy
-- [ ] Update `README.md` / `README_he.md` if settings semantics changed
-- [ ] Changelog entry naming the behavior changes from Phase 4 (these are
+- [x] Updated `README.md` (also corrected two factual errors); `README_he.md` still pending if settings semantics changed
+- [x] Changelog entry naming the behavior changes from Phase 4 (these are
       user-visible: existing users' `minRTLChars` may need a migration bump —
       see the `_settingsVersion` v1→v2 pattern already in `loadSettings`)
-- [ ] Version bump + release via GitHub Actions
+- [x] Version bumped to 3.1.0; release via GitHub Actions pending merge
 - **Status:** pending
 
 ---
