@@ -57,11 +57,19 @@ export class CharacterCodeStrategy implements DetectionStrategy {
     const ignoredRegex = /\s|[.,!?;:()[\]{}]/;
 
     for (let i = 0; i < limit; i++) {
+      const code = text.charCodeAt(i);
+
+      // Skip low surrogates: they were already counted together with the
+      // preceding high surrogate as a single character. Without this, each
+      // astral character (e.g. emoji) is counted as two significant chars
+      // instead of one, diluting the RTL percentage.
+      if (code >= 0xDC00 && code <= 0xDFFF) continue;
+
       const char = text[i];
       // Skip whitespace and punctuation for analysis
       if (!ignoredRegex.test(char)) {
         totalSignificantChars++;
-        if (this.isRTLChar(text.charCodeAt(i))) {
+        if (this.isRTLChar(code)) {
           rtlCharCount++;
         }
       }
