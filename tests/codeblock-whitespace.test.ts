@@ -82,4 +82,26 @@ describe('code block direction is unaffected by the flavour of whitespace', () =
   it('a Hebrew comment in mostly-Latin code stays LTR (below the 0.6 ratio)', () => {
     expect(classify('const total = price * qty; // סכום כולל')).toBe('ltr-force');
   });
+
+  // Regression guard: this path used to test characters against its own
+  // hardcoded Hebrew/Arabic-only range table instead of the shared one in
+  // src/utils/strategies/rtlRanges.ts, so it disagreed with how the same text
+  // is classified outside a code block.
+  it('Thaana code content is RTL (script parity with prose detection)', () => {
+    const thaana = [0x0780, 0x0781, 0x0782, 0x0783, 0x0784, 0x0785, 0x0786, 0x0787, 0x0788, 0x0789]
+      .map((cp) => String.fromCodePoint(cp))
+      .join(' ');
+    expect(classify(thaana)).toBe('rtl-force');
+  });
+
+  // Regression guard: scanning by charCodeAt() (UTF-16 code unit) instead of
+  // by code point means a surrogate pair is only ever seen as two lone
+  // halves, neither of which falls in any RTL range — astral RTL scripts
+  // such as Adlam (U+1E900-1E95F) could never be detected in code blocks.
+  it('astral RTL (Adlam) code content is RTL', () => {
+    const adlam = [0x1E900, 0x1E901, 0x1E902, 0x1E903, 0x1E904, 0x1E905, 0x1E906, 0x1E907, 0x1E908, 0x1E909]
+      .map((cp) => String.fromCodePoint(cp))
+      .join(' ');
+    expect(classify(adlam)).toBe('rtl-force');
+  });
 });
