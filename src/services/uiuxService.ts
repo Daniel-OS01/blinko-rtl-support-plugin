@@ -480,23 +480,50 @@ export class UIUXService {
     return String(input);
   }
 
+  private static readonly AI_PATH_MARKERS = ['ai.autoTag', 'ai.writing', '/trpc/ai'];
+
+  private isAIPath(pathname: string): boolean {
+    return UIUXService.AI_PATH_MARKERS.some(marker => pathname.includes(marker));
+  }
+
+  /**
+   * Decide whether a fetch URL belongs to Blinko's own AI endpoints.
+   *
+   * Matching on the raw URL string would also match third-party requests that
+   * merely contain one of the markers (`https://elsewhere.example/?q=/trpc/ai`),
+   * so the check is scoped to same-origin requests and run against the pathname
+   * only — the query and fragment are attacker-controllable and carry no
+   * routing meaning here.
+   *
+   * When the page origin cannot be determined (a sandboxed iframe reports
+   * `"null"`, and `about:blank` has no meaningful origin) an absolute URL is
+   * refused rather than guessed at. This guard decides whether to act on
+   * another site's response, so the unknown case has to fail closed.
+   */
   private isAIEndpointUrl(urlStr: string): boolean {
     try {
-      // Security Pattern: strict origin and pathname validation for API interception
-      // Use 'http://localhost' as base if window.location is 'about:blank', 'null', etc.
-      const originStr = window.location.origin;
-      const isValidOrigin = originStr && originStr !== 'null' && !originStr.includes('about:');
-      const base = isValidOrigin ? originStr : 'http://localhost';
+      const pageOrigin = window.location.origin;
+      const hasKnownOrigin =
+        !!pageOrigin && pageOrigin !== 'null' && !pageOrigin.startsWith('about:');
 
-      const url = new URL(urlStr, base);
-
-      if (isValidOrigin && url.origin !== originStr) {
-        return false;
+      // `new URL` without a base succeeds only for absolute URLs.
+      let absolute: URL | null = null;
+      try {
+        absolute = new URL(urlStr);
+      } catch {
+        absolute = null;
       }
 
-      return url.pathname.includes('ai.autoTag') ||
-             url.pathname.includes('ai.writing') ||
-             url.pathname.includes('/trpc/ai');
+      if (absolute) {
+        if (!hasKnownOrigin) return false;
+        if (absolute.origin !== pageOrigin) return false;
+        return this.isAIPath(absolute.pathname);
+      }
+
+      // Relative URL: resolves against the page, so it is same-origin by
+      // construction. The base below only supplies a parseable prefix.
+      const resolved = new URL(urlStr, hasKnownOrigin ? pageOrigin : 'http://localhost');
+      return this.isAIPath(resolved.pathname);
     } catch {
       return false;
     }
