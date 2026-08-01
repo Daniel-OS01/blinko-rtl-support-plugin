@@ -23,3 +23,10 @@ From `.planning/recording.json` + HANDOFF live DOM:
 ## Decision
 
 Plugin must close the modal via that structural close control, falling back to clicking the wrapper; Escape last. Do not skip the modal (backdrop is not natively dismissable).
+
+## Implementation + release
+
+- PR #363 merged; Release Pipeline → **v3.2.6**
+- Artifact contains `z-[2002]` close-control selector
+- Live instance still logs `[blinko-rtl] v3.2.4 ready` (host has not pulled the new release yet — reinstall/refresh plugin in Blinko)
+- Discriminating tests: 4 failed on unfixed code; suite now 390 pass / 0 fail
