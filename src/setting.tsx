@@ -599,7 +599,7 @@ export function RTLSetting(): JSX.Element {
 
   const [activeTab, setActiveTab] = useState<'simple' | 'advanced' | 'uiux' | 'aipost' | 'testing'>('simple');
   const [uiuxSettings, setUIUXSettings] = useState<UIUXSettings>({ ...DEFAULT_UIUX_SETTINGS });
-  const [uiuxSubTab, setUIUXSubTab] = useState<'typography' | 'navigation' | 'accessibility' | 'layout' | 'analysis'>('typography');
+  const [uiuxSubTab, setUIUXSubTab] = useState<'typography' | 'navigation' | 'accessibility' | 'layout'>('typography');
   const [uiuxService] = useState(() => new UIUXService());
 
   // AI Post Processing state

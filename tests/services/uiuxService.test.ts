@@ -844,4 +844,23 @@ describe('UIUXService — card click opens the editor', () => {
 
     expect(dblclicks).toBe(0);
   });
+
+  it('does not synthesize a second dblclick for the second click of a real double-click', () => {
+    // Browsers report `detail: 2` on the click event that completes a native
+    // double-click, and follow it with their own `dblclick` event. Without
+    // skipping detail > 1, a genuine double-click would stack our synthetic
+    // dblclick (from the first, detail:1 click) with another synthetic one
+    // (from the second, detail:2 click) plus the native dblclick — three
+    // opens for one gesture.
+    const { card, body } = makeCard();
+    let dblclicks = 0;
+    card.addEventListener('dblclick', () => { dblclicks++; });
+
+    service.updateSettings({ singleTapOpenNote: true, cardClickOpensEditor: true });
+    body.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    body.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 2 }));
+
+    // Only the first (detail: 1) click synthesizes a dblclick.
+    expect(dblclicks).toBe(1);
+  });
 });
