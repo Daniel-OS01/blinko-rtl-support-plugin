@@ -595,12 +595,16 @@ describe('UIUXService — Phase 5: AI 401 error interceptor', () => {
     document.body.className = '';
     jest.clearAllMocks();
     originalFetch = window.fetch;
+    // The interceptor only acts on same-origin requests, so the page needs a
+    // real origin. happy-dom defaults to about:blank, whose origin is "null".
+    (window as any).happyDOM?.setURL?.('https://blinko.app/notes');
     service = new UIUXService();
   });
 
   afterEach(() => {
     service.destroy();
     window.fetch = originalFetch;
+    (window as any).happyDOM?.setURL?.('about:blank');
   });
 
   it('shows guidance toast on 401 from AI autoTag endpoint', async () => {
