@@ -375,6 +375,10 @@ System.register([], (exports) => ({
 
       destroy() {
         rtlService.disable();
+        // disable() leaves the base stylesheet in place — it styles the toggle
+        // button, which outlives a disabled state. Teardown has to remove it,
+        // or #blinko-rtl-base-styles is left behind in <head>.
+        rtlService.removeBaseCSS();
         uiuxService.destroy();
         removeToggleButton();
         console.log('Advanced RTL Plugin destroyed');

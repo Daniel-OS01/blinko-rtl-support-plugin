@@ -37,6 +37,12 @@ export class RTLService {
   private dynamicStyleElement: HTMLStyleElement | null = null;
   private observer: MutationObserver | null = null;
   private autoProcessInterval: any = null;
+  /** Current sweep cadence, which backs off while the page is quiet. */
+  private currentProcessInterval: number = 5000;
+  /** Set by the MutationObserver; reset by each sweep. */
+  private sawMutationSinceSweep: boolean = false;
+  /** Ceiling for the backed-off sweep interval. */
+  private static readonly MAX_PROCESS_INTERVAL = 60_000;
   // Managers
   private pasteInterceptor: PasteInterceptor;
   private storageManager: StorageManager;
@@ -49,6 +55,14 @@ export class RTLService {
   // Action Log
   private actionLog: { timestamp: string; element: string; direction: string; textPreview: string }[] = [];
   private readonly MAX_LOG_SIZE = 50;
+  /**
+   * Cap on the stored text sample per log entry.
+   *
+   * The field is called textPreview but held the element's entire textContent,
+   * with 50 of them retained and each one broadcast in a CustomEvent on every
+   * processed element. On a large note container that is the whole note.
+   */
+  private readonly MAX_LOG_TEXT_PREVIEW = 120;
 
   // Hebrew regex from userscript
   private readonly hebrewRegex = /\p{Script=Hebrew}/u;
@@ -86,7 +100,7 @@ export class RTLService {
           timestamp: new Date().toLocaleTimeString(),
           element: element.tagName.toLowerCase() + (element.id ? `#${element.id}` : '') + (element.className ? `.${element.className.split(' ').join('.')}` : ''),
           direction: direction.toUpperCase(),
-          textPreview: (element.textContent || '')
+          textPreview: this.truncateForLog(element.textContent || '')
       };
 
       // enableActionLog is guaranteed truthy here — the early-return guard above
@@ -97,6 +111,11 @@ export class RTLService {
       }
       // Dispatch event for UI updates
       window.dispatchEvent(new CustomEvent('rtl-action-logged', { detail: logEntry }));
+  }
+
+  private truncateForLog(text: string): string {
+    if (text.length <= this.MAX_LOG_TEXT_PREVIEW) return text;
+    return text.slice(0, this.MAX_LOG_TEXT_PREVIEW) + '…';
   }
 
   public isEnabled(): boolean {
@@ -332,6 +351,17 @@ export class RTLService {
     if (this.permanentStyleElement) {
       this.permanentStyleElement.remove();
       this.permanentStyleElement = null;
+    }
+  }
+
+  /**
+   * Remove the base stylesheet. Only called from destroy() — disable() leaves
+   * it in place, since the toggle button it styles outlives a disabled state.
+   */
+  public removeBaseCSS() {
+    if (this.baseStyleElement) {
+      this.baseStyleElement.remove();
+      this.baseStyleElement = null;
     }
   }
 
@@ -927,6 +957,7 @@ export class RTLService {
           });
 
           if (hasRelevantMutation) {
+               this.sawMutationSinceSweep = true;
                this.debouncedProcessQueue();
           }
       });
@@ -940,16 +971,56 @@ export class RTLService {
       });
   }
 
+  /**
+   * Periodic full-document sweep, as a safety net behind the MutationObserver.
+   *
+   * The observer covers document.body with childList, subtree, characterData
+   * and attributes, so in practice it sees everything the sweep would. The
+   * sweep exists for content that arrives without a mutation the observer is
+   * watching — and it costs a querySelectorAll across all 57 target selectors
+   * every tick, forever, on every open tab.
+   *
+   * It now backs off: each sweep that changes nothing doubles the interval, up
+   * to a ceiling, and any observed mutation resets it to the configured base.
+   * A quiet tab settles at one sweep a minute instead of twelve, while a page
+   * that is actively changing keeps the original cadence. Set processInterval
+   * to 0 to switch the sweep off entirely and rely on the observer alone.
+   */
   private startAutoProcessing() {
       if (this.autoProcessInterval) clearInterval(this.autoProcessInterval);
-      if (this.settings.autoDetect && this.isRTLEnabled) {
-          // Less aggressive polling since we have a better observer now
-          this.autoProcessInterval = setInterval(() => {
-              if (this.isRTLEnabled && this.settings.autoDetect) {
-                  this.processAllElements();
+      if (!this.settings.autoDetect || !this.isRTLEnabled) return;
+
+      const base = this.settings.processInterval ?? 5000;
+      if (base <= 0) return; // explicitly disabled — observer only
+
+      this.currentProcessInterval = base;
+      this.scheduleAutoProcess();
+  }
+
+  private scheduleAutoProcess() {
+      if (this.autoProcessInterval) clearInterval(this.autoProcessInterval);
+
+      this.autoProcessInterval = setInterval(() => {
+          if (!this.isRTLEnabled || !this.settings.autoDetect) return;
+
+          this.processAllElements();
+
+          if (this.sawMutationSinceSweep) {
+              // Page is active — stay at the configured cadence.
+              this.sawMutationSinceSweep = false;
+              if (this.currentProcessInterval !== (this.settings.processInterval ?? 5000)) {
+                  this.currentProcessInterval = this.settings.processInterval ?? 5000;
+                  this.scheduleAutoProcess();
               }
-          }, this.settings.processInterval || 5000);
-      }
+              return;
+          }
+
+          const next = Math.min(this.currentProcessInterval * 2, RTLService.MAX_PROCESS_INTERVAL);
+          if (next !== this.currentProcessInterval) {
+              this.currentProcessInterval = next;
+              this.scheduleAutoProcess();
+          }
+      }, this.currentProcessInterval);
   }
 
   private stopAutoProcessing() {
@@ -957,5 +1028,7 @@ export class RTLService {
           clearInterval(this.autoProcessInterval);
           this.autoProcessInterval = null;
       }
+      this.currentProcessInterval = this.settings.processInterval ?? 5000;
+      this.sawMutationSinceSweep = false;
   }
 }

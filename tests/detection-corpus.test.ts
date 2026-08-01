@@ -544,7 +544,10 @@ describe('corpus / application layer', () => {
     service.disable();
   });
 
-  it('CHARACTERIZATION F-14: the action log stores the full element text', () => {
+  it('INVARIANT: the action log stores a bounded text preview', () => {
+    // The field is called textPreview but held the element's entire
+    // textContent, with 50 entries retained and each broadcast in a
+    // CustomEvent on every processed element.
     const service = freshService({ enableActionLog: true });
     const text = 'שלום '.repeat(200);
     const el = makeEl(text);
@@ -552,18 +555,34 @@ describe('corpus / application layer', () => {
 
     const log = service.getActionLog();
     expect(log).toHaveLength(1);
-    // The field is named textPreview but is not truncated.
-    expect(log[0].textPreview).toHaveLength(text.length);
     expect(text.length).toBe(1000);
+    expect(log[0].textPreview.length).toBeLessThanOrEqual(121); // 120 + ellipsis
+    expect(log[0].textPreview.startsWith('שלום')).toBe(true);
 
     service.disable();
   });
 
-  it('CHARACTERIZATION F-16: base CSS survives disable()', () => {
+  it('INVARIANT: short text is stored without truncation or ellipsis', () => {
+    const service = freshService({ enableActionLog: true });
+    const el = makeEl('שלום עולם');
+    service.processElement(el);
+
+    expect(service.getActionLog()[0].textPreview).toBe('שלום עולם');
+    service.disable();
+  });
+
+  it('INVARIANT: base CSS survives disable() but not teardown', () => {
     const service = freshService();
     service.injectBaseCSS();
-    service.disable();
 
+    // disable() deliberately keeps it: the base stylesheet styles the toggle
+    // button, which stays on screen while the plugin is switched off.
+    service.disable();
     expect(document.getElementById('blinko-rtl-base-styles')).not.toBeNull();
+
+    // Teardown must remove it. It previously had no removal path at all, so
+    // the element was left in <head> after the plugin was destroyed.
+    service.removeBaseCSS();
+    expect(document.getElementById('blinko-rtl-base-styles')).toBeNull();
   });
 });
