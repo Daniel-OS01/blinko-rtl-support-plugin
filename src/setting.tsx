@@ -4,7 +4,7 @@ import { RTLSettings, Preset, UIUXSettings, DEFAULT_UIUX_SETTINGS, AIPostSetting
 import { DEFAULT_DYNAMIC_CSS, DEFAULT_TARGET_SELECTORS, DEFAULT_SETTINGS } from './services/constants';
 import { RTLDetector } from './utils/rtlDetector';
 import { UIUXService } from './services/uiuxService';
-import { AIPostService } from './services/aiPostService';
+import { AIPostService, resolveBlinkoBaseUrl } from './services/aiPostService';
 
 const DEFAULT_CSS = `/* Enhanced RTL Support from Blinko-RTL.css */
 *:lang(he), *:lang(ar), *:lang(fa), *:lang(ur), *[dir="rtl"] {
@@ -2607,7 +2607,8 @@ export function RTLSetting(): JSX.Element {
             <h4 style={{ margin: '0 0 6px 0', fontSize: '13px', color: settings.darkMode ? '#c9b0ff' : '#5a2d9b' }}>🔗 API Connection (Optional)</h4>
             <p style={{ margin: '0 0 12px 0', fontSize: '11px', color: settings.darkMode ? '#aaa' : '#555', lineHeight: '1.6' }}>
               Configure Blinko REST API v1 credentials to use Bearer-token auth for note updates
-              instead of session cookies. Required if note saves fail with a 401 error.
+              and for the AI actions, instead of relying on session cookies. Required if note
+              saves or AI actions fail with a 401 error.
               Find your token at: <strong>Blinko → Settings → API Keys</strong>.
             </p>
 
@@ -2629,6 +2630,13 @@ export function RTLSetting(): JSX.Element {
                 }}
                 style={{ width: '100%', padding: '7px 10px', borderRadius: '5px', border: `1px solid ${settings.darkMode ? '#555' : '#ccc'}`, background: settings.darkMode ? '#222' : '#fff', color: settings.darkMode ? '#eee' : '#222', fontSize: '12px', boxSizing: 'border-box' }}
               />
+              <p style={{ margin: '4px 0 0 0', fontSize: '10px', color: settings.darkMode ? '#999' : '#666' }}>
+                Instance root only — any <code>/api</code>, <code>/v1</code>, <code>/mcp</code> or
+                <code>/sse</code> suffix is ignored.
+                {aiPostSettings.blinkoApiUrl && resolveBlinkoBaseUrl(aiPostSettings.blinkoApiUrl) !== aiPostSettings.blinkoApiUrl.trim().replace(/\/$/, '') && (
+                  <> Will use: <strong>{resolveBlinkoBaseUrl(aiPostSettings.blinkoApiUrl) || '(unusable URL)'}</strong></>
+                )}
+              </p>
             </div>
 
             {/* Bearer Token */}
@@ -2667,22 +2675,16 @@ export function RTLSetting(): JSX.Element {
                   setApiConnTesting(true);
                   setApiConnTestResult('');
                   try {
-                    const baseUrl = aiPostSettings.blinkoApiUrl.replace(/\/$/, '');
-                    // Use a read-only GET request so we never create or modify data.
-                    // A 200 response means credentials are valid; 401/403 means bad token.
-                    const res = await fetch(`${baseUrl}/api/v1/note/list?page=1&pageSize=1`, {
-                      method: 'GET',
-                      headers: {
-                        'Authorization': `Bearer ${aiPostSettings.blinkoApiToken}`,
-                      },
+                    // Delegated to AIPostService so the probe stays in one
+                    // place: note/list is POST-only, and a 2xx is not enough
+                    // on its own because Blinko serves its SPA as a catch-all.
+                    const svc = (window as any).blinkoAIPost ?? aiPostService;
+                    svc.save({
+                      blinkoApiUrl: aiPostSettings.blinkoApiUrl,
+                      blinkoApiToken: aiPostSettings.blinkoApiToken,
                     });
-                    if (res.ok) {
-                      setApiConnTestResult('✅ Connection successful — credentials are valid!');
-                    } else if (res.status === 401 || res.status === 403) {
-                      setApiConnTestResult('❌ Auth failed (401/403) — check your Bearer token.');
-                    } else {
-                      setApiConnTestResult(`⚠️ Unexpected response: ${res.status} ${res.statusText}`);
-                    }
+                    const result = await svc.testConnection();
+                    setApiConnTestResult(result.message);
                   } catch (err: any) {
                     setApiConnTestResult(`❌ Error: ${err?.message ?? String(err)}`);
                   } finally {
