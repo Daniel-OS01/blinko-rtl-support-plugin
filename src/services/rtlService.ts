@@ -387,9 +387,49 @@ export class RTLService {
     this.applyDebugVisuals(element, direction);
   }
 
-  private applyUnicodeBidiRTL(element: HTMLElement) {
-    element.classList.add('rtl-auto');
-    element.style.unicodeBidi = 'isolate';
+  /**
+   * Hand direction back to the browser's own bidi algorithm.
+   *
+   * `dir="auto"` makes the browser pick direction from the first strong
+   * character, and `unicode-bidi: plaintext` does the same per paragraph — for
+   * mixed content that is more accurate than any ratio we compute, because it
+   * is applied per run rather than per element.
+   *
+   * This used to take no direction argument at all: it added `rtl-auto` and an
+   * isolate to every element it saw, so LTR and neutral text were marked
+   * identically to RTL, nothing was ever cleaned up when content changed, and
+   * it was the only applier that skipped applyDebugVisuals — which is why
+   * debug mode appeared dead under this method.
+   */
+  private applyUnicodeBidiRTL(element: HTMLElement, direction: Direction) {
+    if (direction === 'neutral') {
+      element.classList.remove('rtl-auto');
+      element.style.removeProperty('unicode-bidi');
+      element.removeAttribute('dir');
+    } else {
+      element.classList.add('rtl-auto');
+      element.style.unicodeBidi = 'plaintext';
+      element.setAttribute('dir', 'auto');
+    }
+    this.applyDebugVisuals(element, direction);
+  }
+
+  /**
+   * Remove every trace this service applies, whatever method left it there.
+   *
+   * The short-text path used to call applyCSSClassRTL(el, 'neutral'), which
+   * only knows about rtl-force / ltr-force / rtl-auto. Under `direct` that left
+   * both `blinko-detected-rtl` and an inline `direction: rtl` behind; under
+   * `attributes` it left `dir="rtl"`. An element whose text became short kept
+   * styling for text it no longer contained.
+   */
+  private clearDirection(element: HTMLElement) {
+    element.classList.remove('rtl-force', 'ltr-force', 'rtl-auto', 'blinko-detected-rtl');
+    element.style.removeProperty('direction');
+    element.style.removeProperty('text-align');
+    element.style.removeProperty('unicode-bidi');
+    element.removeAttribute('dir');
+    this.applyDebugVisuals(element, 'neutral');
   }
 
   public detectHebrewRegex(text: string): boolean {
@@ -398,6 +438,45 @@ export class RTLService {
 
   public detectArabicRegex(text: string): boolean {
     return this.arabicRegex.test(text);
+  }
+
+  /** Text belonging to this element rather than to its descendants. */
+  private ownText(element: HTMLElement): string {
+    let text = '';
+    const children = element.childNodes;
+    for (let i = 0; i < children.length; i++) {
+      const node = children[i];
+      if (node.nodeType === Node.TEXT_NODE) text += node.textContent || '';
+    }
+    return text;
+  }
+
+  /**
+   * True when the element holds only other elements — no text of its own.
+   * Such an element has no direction to determine; its children do.
+   */
+  private isPureContainer(element: HTMLElement): boolean {
+    if (element.childElementCount === 0) return false;
+    // Inputs carry their content in value/placeholder, not child nodes.
+    const tag = element.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return false;
+    return !this.ownText(element).trim();
+  }
+
+  /**
+   * The text a direction verdict should be based on.
+   *
+   * When an element has element children, only its own text counts — the
+   * children are classified separately, so folding their content in here means
+   * deciding the same characters twice under two different contexts.
+   */
+  private getDirectionalText(element: HTMLElement): string {
+    const asInput = element as HTMLInputElement;
+    if (element.childElementCount > 0) {
+      const own = this.ownText(element);
+      if (own.trim()) return own;
+    }
+    return element.textContent || asInput.value || asInput.placeholder || '';
   }
 
   public processElement = (element: HTMLElement) => {
@@ -422,12 +501,31 @@ export class RTLService {
     // But allow processing if it's explicitly in target selectors (which processAllElements uses)
     // or if it's a content element.
 
-    const text = element.textContent || (element as HTMLInputElement).value || (element as HTMLInputElement).placeholder || '';
+    // A pure container — element children, no text of its own — is left alone.
+    //
+    // The default target selectors match `.markdown-body div`, `p` and `span`
+    // simultaneously, and textContent on a container is the concatenation of
+    // every descendant. A note holding one Hebrew paragraph and one English
+    // paragraph therefore gave the wrapping div a single blended direction,
+    // which then contradicted the direction its own children were each
+    // assigned. Whichever won was a function of DOM order rather than intent.
+    //
+    // Its children match the selectors too and are classified on their own
+    // text, so the container does not need a verdict — and cannot have a
+    // correct one when its children disagree.
+    if (this.isPureContainer(element)) {
+        this.clearDirection(element);
+        return;
+    }
+
+    const text = this.getDirectionalText(element);
 
     // Short text handling
     if (!text.trim() || text.length < (this.settings.minTextLength ?? 1)) {
-        // Neutral state for empty/short text to avoid forcing LTR on what might be an RTL placeholder
-        this.applyCSSClassRTL(element, 'neutral');
+        // Neutral state for empty/short text to avoid forcing LTR on what might
+        // be an RTL placeholder. Clear whatever the configured method applied
+        // earlier, not just the CSS classes.
+        this.clearDirection(element);
         return;
     }
 
@@ -516,10 +614,14 @@ export class RTLService {
         this.applyCSSClassRTL(element, direction);
         break;
       case 'unicode':
-        this.applyUnicodeBidiRTL(element);
+        this.applyUnicodeBidiRTL(element, direction);
         break;
       case 'all':
       default:
+        // 'all' means all three appliers. It previously ran the class and
+        // attribute appliers only, leaving the inline styles it advertises
+        // unset — the name and the behaviour disagreed.
+        this.applyDirectRTL(element, direction);
         this.applyCSSClassRTL(element, direction);
         this.applyAttributeRTL(element, direction);
         break;

@@ -318,7 +318,7 @@ describe('corpus / application layer', () => {
       ['direct', { cls: 'blinko-detected-rtl', styleDir: 'rtl', textAlign: 'right' }, { cls: '', styleDir: 'ltr', textAlign: 'left' }],
       ['attributes', { dir: 'rtl' }, { dir: 'ltr' }],
       ['css', { cls: 'rtl-force' }, { cls: 'ltr-force' }],
-      ['all', { cls: 'rtl-force', dir: 'rtl' }, { cls: 'ltr-force', dir: 'ltr' }],
+      ['all', { dir: 'rtl', styleDir: 'rtl', textAlign: 'right' }, { dir: 'ltr', styleDir: 'ltr', textAlign: 'left' }],
     ];
 
     for (const [method, rtlExpect, ltrExpect] of expectations) {
@@ -358,82 +358,83 @@ describe('corpus / application layer', () => {
     }
   });
 
-  it("CHARACTERIZATION F-08: method 'unicode' ignores the direction it computed", () => {
+  it("INVARIANT: method 'unicode' delegates direction to the browser", () => {
     const service = freshService({ method: 'unicode' });
 
-    // Every input produces byte-identical markup — RTL, LTR and neutral alike.
-    const results = ['שלום עולם', 'Hello world', '12345'].map((text) => {
+    // dir="auto" plus unicode-bidi: plaintext hands the decision to the
+    // browser, which resolves it per paragraph from the first strong
+    // character. RTL and LTR text therefore share the same markup by design —
+    // that is the point of the method, not a bug.
+    for (const text of ['שלום עולם', 'Hello world']) {
       const el = makeEl(text);
       service.processElement(el);
-      return snapshot(el);
-    });
+      const s = snapshot(el);
+      expect(s.dir).toBe('auto');
+      expect(s.unicodeBidi).toBe('plaintext');
+      expect(s.cls).toBe('rtl-auto');
+    }
 
-    expect(results[0]).toEqual(results[1]);
-    expect(results[1]).toEqual(results[2]);
-    expect(results[0].cls).toBe('rtl-auto');
-    expect(results[0].unicodeBidi).toBe('isolate');
-
-    // FIX IN PHASE 4/5: an LTR element should not carry rtl-auto.
     service.disable();
   });
 
-  it("CHARACTERIZATION F-08: method 'unicode' never clears when text becomes LTR", () => {
+  it("INVARIANT: method 'unicode' clears when text becomes directionless", () => {
+    // It used to take no direction argument at all, so it marked every element
+    // it saw and never cleaned up.
     const service = freshService({ method: 'unicode' });
     const el = makeEl('שלום עולם');
     service.processElement(el);
-    const before = snapshot(el);
+    expect(snapshot(el).dir).toBe('auto');
 
-    el.textContent = 'Hello world';
+    el.textContent = '12345';
     service.processElement(el);
 
-    expect(snapshot(el)).toEqual(before); // unchanged — nothing is cleaned up
+    const after = snapshot(el);
+    expect(after.dir).toBe('');
+    expect(after.unicodeBidi).toBe('');
+    expect(after.cls).toBe('');
     service.disable();
   });
 
-  it("CHARACTERIZATION F-09: method 'all' omits the inline direct styles", () => {
+  it("INVARIANT: method 'all' applies all three appliers", () => {
     const service = freshService({ method: 'all' });
     const el = makeEl('שלום עולם');
     service.processElement(el);
 
+    // It previously ran the class and attribute appliers only, leaving the
+    // inline styles it advertises unset.
     const s = snapshot(el);
-    expect(s.cls).toBe('rtl-force');
+    expect(s.cls).toContain('rtl-force');
+    expect(s.cls).toContain('blinko-detected-rtl');
     expect(s.dir).toBe('rtl');
-    // Despite the name, applyDirectRTL is not called.
-    expect(s.styleDir).toBe('');
-    expect(s.textAlign).toBe('');
+    expect(s.styleDir).toBe('rtl');
+    expect(s.textAlign).toBe('right');
 
     service.disable();
   });
 
-  it('CHARACTERIZATION F-10: the short-text path leaves stale styling behind', () => {
-    // Shrinking the text below minTextLength routes through
-    // applyCSSClassRTL(el, 'neutral'), which only knows about
-    // rtl-force / ltr-force / rtl-auto.
-    const directService = freshService({ method: 'direct', minTextLength: 4 });
-    const direct = makeEl('שלום עולם');
-    directService.processElement(direct);
-    direct.textContent = 'אב';
-    directService.processElement(direct);
-    expect(snapshot(direct).cls).toBe('blinko-detected-rtl'); // stale
-    expect(snapshot(direct).styleDir).toBe('rtl'); // stale
-    directService.disable();
+  it('INVARIANT: falling below the length gate clears whatever the method applied', () => {
+    // The short-text path used to call applyCSSClassRTL(el, 'neutral'), which
+    // only knows about rtl-force / ltr-force / rtl-auto. Under 'direct' that
+    // left blinko-detected-rtl and an inline direction: rtl behind; under
+    // 'attributes' it left dir="rtl". An element whose text became short kept
+    // styling for text it no longer contained.
+    for (const method of ['direct', 'attributes', 'css', 'unicode', 'all']) {
+      const service = freshService({ method, minTextLength: 4 });
+      const el = makeEl('שלום עולם');
+      service.processElement(el);
 
-    const attrService = freshService({ method: 'attributes', minTextLength: 4 });
-    const attrs = makeEl('שלום עולם');
-    attrService.processElement(attrs);
-    attrs.textContent = 'אב';
-    attrService.processElement(attrs);
-    expect(snapshot(attrs).dir).toBe('rtl'); // stale
-    attrService.disable();
+      el.textContent = 'אב'; // now below the length gate
+      service.processElement(el);
 
-    // Only 'css' cleans up correctly, because neutral is expressed as a class.
-    const cssService = freshService({ method: 'css', minTextLength: 4 });
-    const css = makeEl('שלום עולם');
-    cssService.processElement(css);
-    css.textContent = 'אב';
-    cssService.processElement(css);
-    expect(snapshot(css).cls).toBe('');
-    cssService.disable();
+      expect(snapshot(el)).toEqual({
+        cls: '',
+        dir: '',
+        styleDir: '',
+        textAlign: '',
+        unicodeBidi: '',
+      });
+      service.disable();
+    }
   });
 
   it('INVARIANT: the length gate and the RTL-evidence gate are separate settings', () => {
@@ -478,7 +479,7 @@ describe('corpus / application layer', () => {
     evidence5.disable();
   });
 
-  it('CHARACTERIZATION F-13: a mixed container contradicts its own children', () => {
+  it('INVARIANT: a container does not contradict its own children', () => {
     const service = freshService({ method: 'css' });
 
     const wrap = document.createElement('div');
@@ -495,9 +496,50 @@ describe('corpus / application layer', () => {
     service.processElement(hebrew);
     service.processElement(english);
 
-    expect(snapshot(wrap).cls).toBe('rtl-force'); // from blended textContent
+    // The wrapper has no text of its own; its children disagree, so there is no
+    // correct verdict for it to hold. It used to be given 'rtl-force' from the
+    // concatenation of both paragraphs, contradicting its own English child.
+    expect(snapshot(wrap).cls).toBe('');
     expect(snapshot(hebrew).cls).toBe('rtl-force');
-    expect(snapshot(english).cls).toBe('ltr-force'); // contradicts its parent
+    expect(snapshot(english).cls).toBe('ltr-force');
+
+    service.disable();
+  });
+
+  it('INVARIANT: an element is classified on its own text, not its descendants', () => {
+    const service = freshService({ method: 'css' });
+
+    // A Hebrew paragraph with an inline English span. The paragraph's own text
+    // decides its direction; the span is classified separately.
+    const p = document.createElement('p');
+    p.appendChild(document.createTextNode('שלום עולם זהו טקסט ארוך בעברית '));
+    const span = document.createElement('span');
+    span.textContent = 'inline english text here';
+    p.appendChild(span);
+    document.body.appendChild(p);
+
+    service.processElement(p);
+    service.processElement(span);
+
+    expect(snapshot(p).cls).toBe('rtl-force');
+    expect(snapshot(span).cls).toBe('ltr-force');
+
+    service.disable();
+  });
+
+  it('INVARIANT: a leaf element with inline markup still gets a direction', () => {
+    const service = freshService({ method: 'css' });
+
+    // Own text plus a <strong> — a normal paragraph, not a container.
+    const p = document.createElement('p');
+    p.appendChild(document.createTextNode('שלום עולם '));
+    const strong = document.createElement('strong');
+    strong.textContent = 'ומה שלומך';
+    p.appendChild(strong);
+    document.body.appendChild(p);
+
+    service.processElement(p);
+    expect(snapshot(p).cls).toBe('rtl-force');
 
     service.disable();
   });
