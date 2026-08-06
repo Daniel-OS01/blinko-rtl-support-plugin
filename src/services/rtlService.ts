@@ -889,12 +889,11 @@ export class RTLService {
                          }
 
                          // Check individual matches safely
+                         // 💡 What: Replaced loop over safeSelectors with a single matches() call on joinedSelectors
+                         // 🎯 Why: Evaluating joined selectors natively is much faster than looping and evaluating individually in hot paths.
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
-                             }
+                         if (joinedSelectors && element.matches(joinedSelectors)) {
+                             matched = true;
                          }
 
                          if (matched) {
@@ -939,14 +938,13 @@ export class RTLService {
                       }
 
                       let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
-                      }
+                      // 💡 What: Replaced loop over safeSelectors with a single matches() call on joinedSelectors
+                      // 🎯 Why: Evaluating joined selectors natively is much faster than looping and evaluating individually in hot paths.
+                      try {
+                          if (joinedSelectors && target.matches(joinedSelectors)) {
+                              matched = true;
+                          }
+                      } catch (e) {}
 
                       if (matched) {
                           this.pendingElements.add(target);
