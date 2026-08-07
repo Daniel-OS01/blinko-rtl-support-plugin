@@ -2337,7 +2337,7 @@ export function RTLSetting(): JSX.Element {
             ] as const).map(({ key, emoji, label, desc }) => (
               <div key={key} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px', paddingBottom: '14px', borderBottom: `1px solid ${settings.darkMode ? '#444' : '#eee'}` }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: settings.darkMode ? '#ddd' : '#222' }}>{emoji} {label}</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: settings.darkMode ? '#ddd' : '#222' }}><span aria-hidden="true">{emoji}</span> {label}</div>
                   <div style={{ fontSize: '11px', color: settings.darkMode ? '#999' : '#666', marginTop: '2px' }}>{desc}</div>
                 </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', flexShrink: 0 }}>
@@ -2366,7 +2366,7 @@ export function RTLSetting(): JSX.Element {
           <div style={{ padding: '16px', border: `1px solid ${settings.darkMode ? '#444' : '#ddd'}`, borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: settings.darkMode ? '#ddd' : '#222' }}>👁️ Show preview before applying</div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: settings.darkMode ? '#ddd' : '#222' }}><span aria-hidden="true">👁️</span> Show preview before applying</div>
                 <div style={{ fontSize: '11px', color: settings.darkMode ? '#999' : '#666', marginTop: '3px' }}>
                   When enabled, the AI result is shown in a dialog so you can review it before overwriting the note.
                   When disabled, the note is updated immediately (no undo in v1).
