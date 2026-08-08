@@ -888,13 +888,13 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // 💡 What: Replaced individual element.matches(s) calls inside a loop with a single .matches(joinedSelectors)
+                         // 🎯 Why: Looping over an array of selectors and calling .matches() repeatedly inside high-frequency MutationObserver callbacks causes significant CPU overhead.
+                         // Evaluating a combined comma-separated selector string delegates the loop to the browser's optimized CSS engine.
+                         // ⚠️ Note: joinedSelectors was safely pre-validated above, so this single call is guaranteed not to throw.
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
-                             }
+                         if (joinedSelectors && element.matches(joinedSelectors)) {
+                             matched = true;
                          }
 
                          if (matched) {
@@ -938,14 +938,11 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
+                      // 💡 What: Replaced try/catch wrapped target.matches(s) loop with a single .matches(joinedSelectors) call.
+                      // 🎯 Why: This runs on every characterData mutation. Replacing the JS loop + try/catch with a single native call drastically reduces overhead during text editing.
                       let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
+                      if (joinedSelectors && target.matches(joinedSelectors)) {
+                          matched = true;
                       }
 
                       if (matched) {
