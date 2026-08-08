@@ -978,19 +978,21 @@ export function RTLSetting(): JSX.Element {
         
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
           <button
-            onClick={processAllContent}
-            disabled={!settings.enabled}
+            onClick={() => { if (settings.enabled) processAllContent(); }}
+            aria-disabled={!settings.enabled}
+            title={!settings.enabled ? "Enable RTL support first to process content" : "Manually process all content for RTL"}
             style={{ 
               background: '#28a745', 
               color: 'white', 
               border: 'none', 
               padding: '10px 20px', 
               borderRadius: '4px', 
-              cursor: 'pointer',
+              cursor: !settings.enabled ? 'not-allowed' : 'pointer',
+              opacity: !settings.enabled ? 0.6 : 1,
               fontWeight: '500'
             }}
           >
-            🔄 Process All Content
+            <span aria-hidden="true">🔄</span> Process All Content
           </button>
           
           <button
@@ -998,6 +1000,7 @@ export function RTLSetting(): JSX.Element {
               window.blinkoRTL?.toggle();
               window.Blinko.toast.success('RTL toggled!');
             }}
+            title="Toggle RTL direction globally"
             style={{ 
               background: '#007bff', 
               color: 'white', 
@@ -1008,7 +1011,7 @@ export function RTLSetting(): JSX.Element {
               fontWeight: '500'
             }}
           >
-            🔄 Toggle RTL (ع/א)
+            <span aria-hidden="true">🔄</span> Toggle RTL (ع/א)
           </button>
         </div>
       </div>
