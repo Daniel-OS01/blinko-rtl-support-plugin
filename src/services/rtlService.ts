@@ -889,12 +889,15 @@ export class RTLService {
                          }
 
                          // Check individual matches safely
+                         // Optimization: Evaluate all valid selectors in a single native call
+                         // instead of looping over them individually, significantly reducing CPU overhead.
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
-                             }
+                         if (joinedSelectors) {
+                             try {
+                                 if (element.matches(joinedSelectors)) {
+                                     matched = true;
+                                 }
+                             } catch (e) {}
                          }
 
                          if (matched) {
@@ -939,13 +942,12 @@ export class RTLService {
                       }
 
                       let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
+                      if (joinedSelectors) {
+                          try {
+                              if (target.matches(joinedSelectors)) {
+                                  matched = true;
+                              }
+                          } catch (e) {}
                       }
 
                       if (matched) {
