@@ -890,10 +890,11 @@ export class RTLService {
 
                          // Check individual matches safely
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
+                         if (joinedSelectors) {
+                             try {
+                                 matched = element.matches(joinedSelectors);
+                             } catch (e) {
+                                 // Should not happen as we filtered joinedSelectors, but safe is safe
                              }
                          }
 
@@ -939,13 +940,10 @@ export class RTLService {
                       }
 
                       let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
+                      if (joinedSelectors) {
+                          try {
+                              matched = target.matches(joinedSelectors);
+                          } catch (e) {}
                       }
 
                       if (matched) {
