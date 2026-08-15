@@ -1053,8 +1053,10 @@ export function RTLSetting(): JSX.Element {
       )}
 
       {/* Tabs */}
-      <div style={{ display: 'flex', marginBottom: '20px', borderBottom: '1px solid #ddd' }}>
+      <div role="tablist" aria-label="Settings Tabs" style={{ display: 'flex', marginBottom: '20px', borderBottom: '1px solid #ddd' }}>
         <button
+          role="tab"
+          aria-selected={activeTab === 'simple'}
           onClick={() => setActiveTab('simple')}
           style={{
             flex: 1,
@@ -1070,6 +1072,8 @@ export function RTLSetting(): JSX.Element {
           Simple
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'advanced'}
           onClick={() => setActiveTab('advanced')}
           style={{
             flex: 1,
@@ -1085,6 +1089,8 @@ export function RTLSetting(): JSX.Element {
           Advanced
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'uiux'}
           onClick={() => setActiveTab('uiux')}
           style={{
             flex: 1,
@@ -1097,9 +1103,11 @@ export function RTLSetting(): JSX.Element {
             fontWeight: 'bold'
           }}
         >
-          🎨 UI/UX
+          <span aria-hidden="true">🎨</span> UI/UX
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'aipost'}
           onClick={() => setActiveTab('aipost')}
           style={{
             flex: 1,
@@ -1112,9 +1120,11 @@ export function RTLSetting(): JSX.Element {
             fontWeight: 'bold'
           }}
         >
-          🤖 AI Post
+          <span aria-hidden="true">🤖</span> AI Post
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'testing'}
           onClick={() => setActiveTab('testing')}
           style={{
             flex: 1,
@@ -1127,7 +1137,7 @@ export function RTLSetting(): JSX.Element {
             fontWeight: 'bold'
           }}
         >
-          🧪 Tools
+          <span aria-hidden="true">🧪</span> Tools
         </button>
       </div>
 
@@ -1864,7 +1874,7 @@ export function RTLSetting(): JSX.Element {
       {activeTab === 'uiux' && (
         <div>
           {/* Sub-tab bar */}
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', flexWrap: 'wrap' }}>
+          <div role="tablist" aria-label="UI/UX Settings Tabs" style={{ display: 'flex', gap: '4px', marginBottom: '20px', flexWrap: 'wrap' }}>
             {(
               [
                 { id: 'typography',   label: '🔤 Typography'   },
@@ -1875,6 +1885,8 @@ export function RTLSetting(): JSX.Element {
             ).map(({ id, label }) => (
               <button
                 key={id}
+                role="tab"
+                aria-selected={uiuxSubTab === id}
                 onClick={() => setUIUXSubTab(id)}
                 style={{
                   padding: '7px 14px',
