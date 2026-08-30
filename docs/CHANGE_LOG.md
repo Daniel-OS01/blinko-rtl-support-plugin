@@ -2,8 +2,8 @@
 
 > **Document type:** Chronological change record
 > **Format:** Most recent changes first
-> **Scope:** All sessions — latest branch `claude/fix-hebrew-text-note-focus-ddReT`
-> **Last updated:** 2026-03-27
+> **Scope:** All sessions — latest branch `feat/card-interaction-ux`
+> **Last updated:** 2026-08-01
 
 ---
 
@@ -21,6 +21,126 @@ Rationale: why the change was made
 ---
 
 ## Change Log
+
+---
+
+## Session 7 Changes — 2026-08-01 (branch: `feat/card-interaction-ux`, PR #356)
+
+---
+
+### [CL-S7-001] Centralize note-card DOM selectors in `blinkoDom.ts`, matched against real markup
+
+**Date:** 2026-08-01
+**Branch:** `feat/card-interaction-ux`
+
+**Files modified:**
+- `src/services/blinkoDom.ts` — new file
+- `src/services/uiuxService.ts` — `applySingleTap()` now imports `NOTE_CARD_SELECTOR` / `INTERACTIVE_SELECTOR` instead of defining local copies
+- `tests/services/blinkoDom.test.ts` — new file
+
+**Changes:**
+
+```typescript
+// Before — inline in uiuxService.ts, matched nothing in the shipped app:
+const CARD_SELECTOR =
+  '[class*="note-card"], [class*="blinko-card"], ' +
+  '[class*="blinko-note"], [class*="note-item"], ' +
+  '.card-masonry-grid > div > div, ' +
+  '.blog-masonry-grid > div > div';
+
+// After — src/services/blinkoDom.ts, matches the Tailwind group marker
+// the app actually renders (verified against a captured DOM snapshot):
+export const NOTE_CARD_SELECTOR =
+  '[class*="group/card"], ' +
+  '[class*="note-card"], [class*="blinko-card"], ' +
+  '[class*="blinko-note"], [class*="note-item"]';
+export const INTERACTIVE_SELECTOR =
+  'button, a[href], input, textarea, select, svg, ' +
+  '[role="button"], [role="menuitem"], [role="menu"], ' +
+  '[data-slot="trigger"], [data-react-aria-pressable="true"], ' +
+  '[class*="action"], [class*="toolbar"], [class*="menu"], ' +
+  '[class*="tag"], [class*="more"], [class*="dropdown"]';
+export function findNoteCard(el: HTMLElement | null): HTMLElement | null { ... }
+export function isInteractiveTarget(card: HTMLElement, target: HTMLElement): boolean { ... }
+```
+
+**Rationale:** `note-card` / `blinko-card` / `blinko-note` / `note-item` occur zero times in a 935 kB capture of the live app, and the `.card-masonry-grid > div > div` fallback resolved to a wrapper five levels above the actual card. The single-tap handler was attached to the wrong element, so Blinko's own double-click was the only thing left opening a note. `[class*="icon"]` is dropped from `INTERACTIVE_SELECTOR` — it matched the plugin's own `blinko-custom-icons` body class and made most of a card look non-interactive. The existing test suite passed throughout because it built its own `note-card` fixture rather than using real markup; `tests/services/blinkoDom.test.ts` and the updated `tests/services/uiuxService.test.ts` fixtures now use the real `group/card` class.
+
+---
+
+### [CL-S7-002] Single card click opens the editor via synthesized `dblclick`
+
+**Date:** 2026-08-01
+**Branch:** `feat/card-interaction-ux`
+
+**Files modified:**
+- `src/types.ts` — `UIUXSettings.cardClickOpensEditor` (new field), `DEFAULT_UIUX_SETTINGS.cardClickOpensEditor: true`
+- `src/services/uiuxService.ts` — `applySingleTap()` handler
+- `src/setting.tsx` — new "✏️ Click Opens the Editor" toggle under Navigation
+- `tests/services/uiuxService.test.ts` — new `describe('UIUXService — card click opens the editor')` block; three pre-existing tests updated to set `cardClickOpensEditor: false` explicitly
+
+**Changes:**
+
+```typescript
+// Before — single tap re-dispatched a click, which opens Blinko's read-only
+// detail overlay (div.fixed.inset-0.z-[9999] > ... > div.w-full.mx-auto.px-4):
+card.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true }));
+
+// After — when cardClickOpensEditor is enabled (default), synthesizes the
+// double click that opens #global-editor instead:
+if (this.settings.cardClickOpensEditor) {
+  card.dispatchEvent(
+    new MouseEvent('dblclick', { bubbles: true, cancelable: true, composed: true })
+  );
+  requestAnimationFrame(() => { delete card.dataset.opening; });
+  return;
+}
+// ...legacy click-based behaviour retained when the setting is off
+```
+
+**Rationale:** Blinko opens the read-only overlay on a single click and `#global-editor` on a double click, so every edit previously required two clicks. `cardClickOpensEditor` (default on) makes a single click land on the editor directly; turning it off restores the previous detail-view navigation. **Not yet verified against a running Blinko instance** — the mechanism is inferred from the reported double-tap symptom, not observed. See `docs/superpowers/plans/2026-08-01-blinko-card-interaction-and-ux-tab.md` Task 4.
+
+---
+
+### [CL-S7-003] Remove the `📋 UX Audit` sub-tab from UI/UX settings
+
+**Date:** 2026-08-01
+**Branch:** `feat/card-interaction-ux`
+
+**Files modified:**
+- `src/setting.tsx` — removed the `analysis` sub-tab registration and its ~144-line panel body (Aloklok fork table, Original 15 Issues list, 20 Extended Recommendations list)
+
+**Rationale:** The tab rendered a static, hand-maintained copy of an external analysis document (now tracked separately in `.planning/fixing.md`). Nothing in it was actionable from the settings panel, and it could go stale without any signal that it had.
+
+---
+
+### [CL-S7-004] Replace generic init log with a versioned readiness banner
+
+**Date:** 2026-08-01
+**Branch:** `feat/card-interaction-ux`
+
+**Files modified:**
+- `src/index.tsx` — plugin init logging
+
+**Changes:**
+
+```typescript
+// Before:
+console.log('Advanced Blinko RTL Plugin initialized successfully');
+
+// After:
+console.log(
+  `%c[blinko-rtl] v${plugin.version} ready`,
+  'color:#28a745;font-weight:bold',
+  {
+    singleTapOpenNote: uiux.singleTapOpenNote,
+    cardClickOpensEditor: uiux.cardClickOpensEditor,
+    rtlEnabled: rtlService.isEnabled(),
+  }
+);
+```
+
+**Rationale:** The generic success message gave no way to confirm which build was deployed or how `cardClickOpensEditor` (CL-S7-002) was configured, short of diffing the served bundle by hand.
 
 ---
 
@@ -761,4 +881,4 @@ Full detail for session 1 changes is in `IMPLEMENTATION_PLAN.md` (Part A Phase 2
 
 ---
 
-*Document version: 2.0 — Updated 2026-03-26 (added session 2 change entries CL-S2-000 through CL-S2-004)*
+*Document version: 2.1 — Updated 2026-08-01 (added session 7 change entries CL-S7-001 through CL-S7-004)*
