@@ -3,7 +3,7 @@
 > **Document type:** Chronological change record
 > **Format:** Most recent changes first
 > **Scope:** All sessions — latest branch `claude/fix-hebrew-text-note-focus-ddReT`
-> **Last updated:** 2026-03-27
+> **Last updated:** 2026-08-01
 
 ---
 
@@ -21,6 +21,56 @@ Rationale: why the change was made
 ---
 
 ## Change Log
+
+---
+
+## Session 7 Changes — 2026-08-01 (PR #345)
+
+---
+
+### [CL-S7-001] Replace native `disabled` with `aria-disabled` on preset Load/Delete buttons
+
+**Date:** 2026-08-01
+**PR:** #345 — "🎨 Palette: Enhanced disabled state for delete preset button"
+
+**Files modified:**
+- `src/setting.tsx` — added exported `PresetActionState` interface and `getPresetActionState()` helper; Load/Delete preset buttons in `RTLSetting()`
+- `tests/presetActions.test.ts` — new file, 14 tests
+- `.jules/palette.md` — journal entry
+
+**Changes:**
+
+```typescript
+// Before — native disabled attribute swallows pointer events, so title
+// tooltips never render and the reason for the greyed-out button is invisible:
+<button
+  onClick={deletePreset}
+  disabled={!settings.enabled || !selectedPresetId || BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)}
+  style={{ ..., cursor: 'pointer', opacity: (BUILT_IN_PRESETS.some(p => p.id === selectedPresetId)) ? 0.5 : 1 }}
+  title="Delete selected preset"
+>
+  🗑️
+</button>
+
+// After — aria-disabled keeps the element interactive/hoverable; a click
+// guard replaces the native disabled behaviour; reason surfaces as the title:
+const deletePresetState = getPresetActionState('delete', settings.enabled, selectedPresetId);
+<button
+  onClick={() => { if (!deletePresetState.disabled) deletePreset(); }}
+  aria-disabled={deletePresetState.disabled}
+  aria-label="Delete selected preset"
+  title={deletePresetState.reason}
+  style={{ ..., cursor: deletePresetState.disabled ? 'not-allowed' : 'pointer', opacity: deletePresetState.disabled ? 0.5 : 1 }}
+>
+  <span aria-hidden="true">🗑️</span>
+</button>
+```
+
+`getPresetActionState(action, pluginEnabled, selectedPresetId)` centralizes availability + tooltip reason for both the Load and Delete buttons, checking plugin-enabled state first, then selection, then (for delete only) built-in-preset protection.
+
+**Rationale:** Native `disabled` buttons swallow pointer events in most browsers, so their `title` tooltip never appears — users had no way to learn *why* Delete was greyed out. `aria-disabled` keeps the element in the accessibility tree and hoverable, at the cost of requiring an explicit `onClick`/keyboard guard (Enter/Space dispatch a `click` on a `<button>`, so the same guard covers both). The emoji icons are wrapped in `<span aria-hidden="true">` with an explicit `aria-label` on the button so screen readers announce "Delete selected preset" instead of the raw emoji.
+
+**Documentation follow-up:** This entry backfills the required `CHANGE_LOG.md` record for PR #345 per `DOCUMENTATION_PROTOCOL.md` §2 ("A source file is modified → `CHANGE_LOG.md` — add entry"), which was merged without one. No version bump or `RELEASE_NOTES.md` update is needed — `plugin.json`/`package.json` versioning is handled exclusively by the manual `release.yml` workflow dispatch, not per-PR, and GitHub's auto-generated release notes will pick up this commit at the next release.
 
 ---
 
@@ -761,4 +811,4 @@ Full detail for session 1 changes is in `IMPLEMENTATION_PLAN.md` (Part A Phase 2
 
 ---
 
-*Document version: 2.0 — Updated 2026-03-26 (added session 2 change entries CL-S2-000 through CL-S2-004)*
+*Document version: 2.1 — Updated 2026-08-01 (added session 7 entry CL-S7-001, backfilled for PR #345)*
