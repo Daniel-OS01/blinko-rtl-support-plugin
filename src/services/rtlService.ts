@@ -888,13 +888,14 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // Check combined matches safely and efficiently
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
-                             }
+                         if (joinedSelectors) {
+                             try {
+                                 if (element.matches(joinedSelectors)) {
+                                     matched = true;
+                                 }
+                             } catch (e) {}
                          }
 
                          if (matched) {
@@ -939,11 +940,10 @@ export class RTLService {
                       }
 
                       let matched = false;
-                      for (const s of safeSelectors) {
+                      if (joinedSelectors) {
                            try {
-                               if (target.matches(s)) {
+                               if (target.matches(joinedSelectors)) {
                                    matched = true;
-                                   break;
                                }
                            } catch (e) {}
                       }
