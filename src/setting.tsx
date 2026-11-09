@@ -2453,8 +2453,10 @@ export function RTLSetting(): JSX.Element {
               Requires a configured AI provider in Blinko settings.
             </p>
             <button
-              disabled={aiPostTesting}
+              aria-disabled={aiPostTesting}
+              title={aiPostTesting ? "Processing sample note..." : "Test AI prompt on a sample note"}
               onClick={async () => {
+                if (aiPostTesting) return;
                 setAIPostTesting(true);
                 setAIPostTestResult('');
                 try {
@@ -2469,7 +2471,7 @@ export function RTLSetting(): JSX.Element {
               }}
               style={{ background: aiPostTesting ? '#888' : '#6f42c1', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '5px', cursor: aiPostTesting ? 'wait' : 'pointer', fontSize: '12px', fontWeight: '600' }}
             >
-              {aiPostTesting ? '⏳ Processing…' : '🧪 Run Test'}
+              {aiPostTesting ? <><span aria-hidden="true">⏳</span> Processing…</> : <><span aria-hidden="true">🧪</span> Run Test</>}
             </button>
             {aiPostTestResult && (
               <pre style={{ marginTop: '14px', padding: '12px', background: settings.darkMode ? '#1e1e1e' : '#f4f4f4', borderRadius: '6px', fontSize: '11px', lineHeight: '1.6', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: settings.darkMode ? '#ddd' : '#222', maxHeight: '300px', overflowY: 'auto' }}>
@@ -2547,8 +2549,14 @@ export function RTLSetting(): JSX.Element {
             {/* Test Connection */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <button
-                disabled={apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken}
+                aria-disabled={apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken}
+                title={
+                  apiConnTesting ? "Testing connection..." :
+                  (!aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken) ? "Please provide both API URL and Token to test the connection." :
+                  "Test your API connection"
+                }
                 onClick={async () => {
+                  if (apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken) return;
                   setApiConnTesting(true);
                   setApiConnTestResult('');
                   try {
@@ -2570,7 +2578,7 @@ export function RTLSetting(): JSX.Element {
                 }}
                 style={{ background: apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? '#888' : '#5a2d9b', color: '#fff', border: 'none', padding: '7px 14px', borderRadius: '5px', cursor: apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: '600' }}
               >
-                {apiConnTesting ? '⏳ Testing…' : '🧪 Test Connection'}
+                {apiConnTesting ? <><span aria-hidden="true">⏳</span> Testing…</> : <><span aria-hidden="true">🧪</span> Test Connection</>}
               </button>
               {apiConnTestResult && (
                 <span style={{ fontSize: '12px', color: apiConnTestResult.startsWith('✅') ? '#22a55a' : '#c0392b' }}>
