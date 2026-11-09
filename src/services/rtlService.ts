@@ -888,12 +888,15 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // Check combined matches efficiently
+                         // OPTIMIZATION: Combine valid selectors into a single string for .matches()
+                         // IMPACT: Reduces CPU overhead in high-frequency MutationObserver callbacks by delegating loop to native C++
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
+                         if (joinedSelectors) {
+                             try {
+                                 matched = element.matches(joinedSelectors);
+                             } catch (e) {
+                                 // Should not happen as we filtered joinedSelectors, but safe is safe
                              }
                          }
 
@@ -939,13 +942,12 @@ export class RTLService {
                       }
 
                       let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
+                      // OPTIMIZATION: Evaluate all valid selectors in a single native call
+                      // IMPACT: Reduces CPU overhead during rapid keypress/attribute mutations
+                      if (joinedSelectors) {
+                          try {
+                              matched = target.matches(joinedSelectors);
+                          } catch (e) {}
                       }
 
                       if (matched) {
