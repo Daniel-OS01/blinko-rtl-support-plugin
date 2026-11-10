@@ -888,12 +888,25 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // 💡 What: Fast-path bulk selector matching with individual loop fallback
+                         // 🎯 Why: Evaluating 50+ selectors iteratively in MutationObserver triggers CPU spikes.
+                         // Bulk matching is O(1), but throws if any selector is invalid, so fallback is required.
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
+                         if (joinedSelectors) {
+                             try {
+                                 if (element.matches(joinedSelectors)) {
+                                     matched = true;
+                                 }
+                             } catch (e) {
+                                 // Check individual matches safely if bulk match throws due to invalid syntax
+                                 for (const s of safeSelectors) {
+                                     try {
+                                         if (element.matches(s)) {
+                                             matched = true;
+                                             break;
+                                         }
+                                     } catch (innerE) {}
+                                 }
                              }
                          }
 
@@ -938,14 +951,24 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
+                      // 💡 What: Fast-path bulk selector matching with individual loop fallback
+                      // 🎯 Why: Evaluating 50+ selectors iteratively in MutationObserver triggers CPU spikes.
                       let matched = false;
-                      for (const s of safeSelectors) {
+                      if (joinedSelectors) {
                            try {
-                               if (target.matches(s)) {
+                               if (target.matches(joinedSelectors)) {
                                    matched = true;
-                                   break;
                                }
-                           } catch (e) {}
+                           } catch (e) {
+                               for (const s of safeSelectors) {
+                                   try {
+                                       if (target.matches(s)) {
+                                           matched = true;
+                                           break;
+                                       }
+                                   } catch (innerE) {}
+                               }
+                           }
                       }
 
                       if (matched) {
