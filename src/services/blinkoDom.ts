@@ -215,7 +215,6 @@ export function closeModalEditor(): boolean {
   };
 
   if (tryActivate(wrapper)) return true;
-  if (!findModalContent()) return true;
   if (tryActivate(closeBtn)) return true;
 
   document.dispatchEvent(
