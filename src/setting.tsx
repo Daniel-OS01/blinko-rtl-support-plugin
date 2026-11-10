@@ -1864,17 +1864,19 @@ export function RTLSetting(): JSX.Element {
       {activeTab === 'uiux' && (
         <div>
           {/* Sub-tab bar */}
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', flexWrap: 'wrap' }}>
+          <div role="tablist" aria-label="UI/UX settings categories" style={{ display: 'flex', gap: '4px', marginBottom: '20px', flexWrap: 'wrap' }}>
             {(
               [
-                { id: 'typography',   label: '🔤 Typography'   },
-                { id: 'navigation',   label: '🧭 Navigation'   },
-                { id: 'accessibility',label: '♿ Accessibility' },
-                { id: 'layout',       label: '📐 Layout'       },
+                { id: 'typography',   icon: '🔤', text: 'Typography'   },
+                { id: 'navigation',   icon: '🧭', text: 'Navigation'   },
+                { id: 'accessibility',icon: '♿', text: 'Accessibility' },
+                { id: 'layout',       icon: '📐', text: 'Layout'       },
               ] as const
-            ).map(({ id, label }) => (
+            ).map(({ id, icon, text }) => (
               <button
                 key={id}
+                role="tab"
+                aria-selected={uiuxSubTab === id}
                 onClick={() => setUIUXSubTab(id)}
                 style={{
                   padding: '7px 14px',
@@ -1888,7 +1890,8 @@ export function RTLSetting(): JSX.Element {
                   transition: 'all 0.15s',
                 }}
               >
-                {label}
+                <span aria-hidden="true" style={{ marginRight: '4px' }}>{icon}</span>
+                {text}
               </button>
             ))}
           </div>
