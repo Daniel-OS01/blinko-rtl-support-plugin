@@ -6,3 +6,7 @@
 ## 2024-05-25 - Enhanced Disabled Button States
 **Learning:** Native `disabled` attributes swallow pointer events, preventing `title` tooltips from displaying. Enhancing conditionally disabled buttons by replacing `disabled` with `aria-disabled`, adding an `onClick` guard, applying `cursor: 'not-allowed'`, and providing a dynamic `title` attribute explicitly explains the reason for the disabled state on hover. Wrapping emojis in `<span aria-hidden="true">` prevents screen readers from announcing raw emojis.
 **Action:** Enhance disabled buttons by using `aria-disabled` and dynamic `title`s instead of native `disabled` to improve usability and accessibility.
+
+## 2024-11-10 - ARIA Tab Roles for Settings Sub-Tabs
+**Learning:** When using horizontal button lists as sub-tabs in settings menus, missing semantic tab roles prevent screen readers from accurately conveying state, and embedded emojis can create noisy announcements.
+**Action:** Wrap custom tab lists in a `role="tablist"` container with an `aria-label`, assign `role="tab"` and dynamic `aria-selected` attributes to each tab, and separate emojis into `aria-hidden="true"` spans for a cleaner auditory experience.
