@@ -254,6 +254,7 @@ describe('modal DOM contract', () => {
     wrapper.addEventListener('pointerdown', (e) => {
       if (e.target !== wrapper) return;
       events.push('wrapper');
+      e.stopPropagation();
     });
     closeBtn.addEventListener('pointerdown', () => {
       events.push('close');

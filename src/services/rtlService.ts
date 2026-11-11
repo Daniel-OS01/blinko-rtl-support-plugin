@@ -888,13 +888,13 @@ export class RTLService {
                              if (editingRoot && editingRoot.contains(element)) return;
                          }
 
-                         // Check individual matches safely
+                         // ⚡ Bolt Performance Optimization:
+                         // Evaluate all safe selectors in a single native call rather than
+                         // looping over them individually. This significantly reduces CPU
+                         // overhead in this high-frequency observer callback.
                          let matched = false;
-                         for (const s of safeSelectors) {
-                             if (element.matches(s)) {
-                                 matched = true;
-                                 break;
-                             }
+                         if (joinedSelectors && element.matches(joinedSelectors)) {
+                             matched = true;
                          }
 
                          if (matched) {
@@ -938,14 +938,16 @@ export class RTLService {
                           if (isEditable) return;
                       }
 
+                      // ⚡ Bolt Performance Optimization:
+                      // Leverage native browser matching for the joined string of pre-validated
+                      // selectors instead of looping through them individually, reducing iterations.
                       let matched = false;
-                      for (const s of safeSelectors) {
-                           try {
-                               if (target.matches(s)) {
-                                   matched = true;
-                                   break;
-                               }
-                           } catch (e) {}
+                      if (joinedSelectors) {
+                          try {
+                              if (target.matches(joinedSelectors)) {
+                                  matched = true;
+                              }
+                          } catch (e) {}
                       }
 
                       if (matched) {
