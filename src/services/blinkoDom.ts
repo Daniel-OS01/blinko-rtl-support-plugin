@@ -195,50 +195,64 @@ export function findModalContent(): HTMLElement | null {
  * is verified before falling through — never `return true` while the dialog
  * is still mounted.
  */
+let isClosingModalEditor = false;
+
 export function closeModalEditor(): boolean {
-  const content = findModalContent();
-  if (!content) return false;
+  if (isClosingModalEditor) return false;
+  isClosingModalEditor = true;
 
-  const wrapper =
-    content.closest<HTMLElement>(MODAL_WRAPPER_SELECTOR) ??
-    content.parentElement;
+  try {
+    const content = findModalContent();
+    if (!content) return false;
 
-  const closeBtn =
-    content.querySelector<HTMLElement>(MODAL_CLOSE_SELECTOR) ??
-    wrapper?.querySelector<HTMLElement>('div.cursor-pointer[class*="rounded-full"]') ??
-    null;
+    const wrapper =
+      content.closest<HTMLElement>(MODAL_WRAPPER_SELECTOR) ??
+      content.parentElement;
 
-  const tryActivate = (el: HTMLElement | null | undefined): boolean => {
-    if (!el) return false;
-    activate(el);
-    return !findModalContent();
-  };
+    const closeBtn =
+      content.querySelector<HTMLElement>(MODAL_CLOSE_SELECTOR) ??
+      wrapper?.querySelector<HTMLElement>('div.cursor-pointer[class*="rounded-full"]') ??
+      null;
 
-  if (tryActivate(wrapper)) return true;
-  if (tryActivate(closeBtn)) return true;
+    const tryActivate = (el: HTMLElement | null | undefined): boolean => {
+      if (!el) return false;
+      activate(el);
+      return !findModalContent();
+    };
 
-  document.dispatchEvent(
-    new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
-  );
+    if (tryActivate(wrapper)) return true;
+    if (tryActivate(closeBtn)) return true;
 
-  // React may unmount on the next frame; retry once if still open.
-  if (findModalContent()) {
-    requestAnimationFrame(() => {
-      if (!findModalContent()) return;
-      const again = findModalContent();
-      if (!again) return;
-      const w =
-        again.closest<HTMLElement>(MODAL_WRAPPER_SELECTOR) ?? again.parentElement;
-      if (tryActivate(w)) return;
-      const c =
-        again.querySelector<HTMLElement>(MODAL_CLOSE_SELECTOR) ??
-        w?.querySelector<HTMLElement>('div.cursor-pointer[class*="rounded-full"]');
-      if (tryActivate(c)) return;
-      document.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
-      );
-    });
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    );
+
+    // React may unmount on the next frame; retry once if still open.
+    if (findModalContent()) {
+      requestAnimationFrame(() => {
+        isClosingModalEditor = true;
+        try {
+          if (!findModalContent()) return;
+          const again = findModalContent();
+          if (!again) return;
+          const w =
+            again.closest<HTMLElement>(MODAL_WRAPPER_SELECTOR) ?? again.parentElement;
+          if (tryActivate(w)) return;
+          const c =
+            again.querySelector<HTMLElement>(MODAL_CLOSE_SELECTOR) ??
+            w?.querySelector<HTMLElement>('div.cursor-pointer[class*="rounded-full"]');
+          if (tryActivate(c)) return;
+          document.dispatchEvent(
+            new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+          );
+        } finally {
+          isClosingModalEditor = false;
+        }
+      });
+    }
+
+    return true;
+  } finally {
+    isClosingModalEditor = false;
   }
-
-  return true;
 }
