@@ -511,7 +511,8 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
 
     const { backdrop, wrapper, closeBtn } = makeHeroUIModal();
     const events: string[] = [];
-    wrapper.addEventListener('pointerdown', () => {
+    wrapper.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
       events.push('wrapper');
       document.querySelector('[class*="modal-content"]')?.remove();
     });
@@ -527,7 +528,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
 
     const { editor, wrapper } = makeHeroUIModal();
     let pointers = 0;
-    wrapper.addEventListener('pointerdown', () => { pointers++; });
+    wrapper.addEventListener('pointerdown', (e) => { e.stopPropagation(); pointers++; });
 
     const inner = document.createElement('p');
     inner.textContent = 'Note text';
@@ -543,7 +544,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
 
     const { backdrop, wrapper } = makeHeroUIModal();
     let pointers = 0;
-    wrapper.addEventListener('pointerdown', () => { pointers++; });
+    wrapper.addEventListener('pointerdown', (e) => { e.stopPropagation(); pointers++; });
 
     backdrop.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
@@ -555,7 +556,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
 
     const { backdrop, wrapper } = makeHeroUIModal();
     let pointers = 0;
-    wrapper.addEventListener('pointerdown', () => { pointers++; });
+    wrapper.addEventListener('pointerdown', (e) => { e.stopPropagation(); pointers++; });
 
     service.destroy();
 
@@ -569,7 +570,7 @@ describe('UIUXService — Phase 3: tapOutsideClosesNote', () => {
     const { backdrop, wrapper, modal, closeBtn } = makeHeroUIModal();
     closeBtn.remove();
     // Wrapper listens but does not dismiss — forces Escape fallback.
-    wrapper.addEventListener('pointerdown', () => { /* inert */ });
+    wrapper.addEventListener('pointerdown', (e) => { e.stopPropagation(); /* inert */ }, true);
 
     const escapeSpy = jest.fn();
     document.addEventListener('keydown', escapeSpy);
@@ -599,7 +600,8 @@ describe('UIUXService — tap outside closes the HeroUI modal', () => {
   it('closes via wrapper pointerdown when the backdrop is clicked', () => {
     const { backdrop, wrapper, closeBtn } = makeHeroUIModal();
     const events: string[] = [];
-    wrapper.addEventListener('pointerdown', () => {
+    wrapper.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
       events.push('wrapper');
       document.querySelector('[class*="modal-content"]')?.remove();
     });
@@ -614,7 +616,8 @@ describe('UIUXService — tap outside closes the HeroUI modal', () => {
   it('activates the wrapper when the letterbox (wrapper itself) is the outside target', () => {
     const { wrapper, closeBtn } = makeHeroUIModal();
     let pointers = 0;
-    wrapper.addEventListener('pointerdown', () => {
+    wrapper.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
       pointers++;
       document.querySelector('[class*="modal-content"]')?.remove();
     });
@@ -629,7 +632,7 @@ describe('UIUXService — tap outside closes the HeroUI modal', () => {
   it('does not close when the click is inside #global-editor', () => {
     const { editor, wrapper } = makeHeroUIModal();
     let pointers = 0;
-    wrapper.addEventListener('pointerdown', () => { pointers++; });
+    wrapper.addEventListener('pointerdown', (e) => { e.stopPropagation(); pointers++; });
 
     service.updateSettings({ tapOutsideClosesNote: true });
     editor.querySelector('p')!
@@ -1074,7 +1077,8 @@ describe('UIUXService — tap outside closes the detail overlay', () => {
   it('still closes a HeroUI modal when only that surface is mounted', () => {
     const { backdrop, wrapper } = makeHeroUIModal();
     let pointers = 0;
-    wrapper.addEventListener('pointerdown', () => {
+    wrapper.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
       pointers++;
       document.querySelector('[class*="modal-content"]')?.remove();
     });
@@ -1088,7 +1092,7 @@ describe('UIUXService — tap outside closes the detail overlay', () => {
   it('prefers the detail overlay when both surfaces are mounted', () => {
     const { wrapper } = makeHeroUIModal();
     let modalClosed = 0;
-    wrapper.addEventListener('pointerdown', () => { modalClosed++; });
+    wrapper.addEventListener('pointerdown', (e) => { e.stopPropagation(); modalClosed++; });
 
     const { overlay, back } = mountDetailOverlay();
     let overlayClosed = 0;
