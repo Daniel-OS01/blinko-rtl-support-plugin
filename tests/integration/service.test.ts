@@ -110,12 +110,11 @@ describe("RTLService", () => {
       el.remove();
     });
 
-    it("retry timer does not classify elements after disable()", () => {
-      jest.useFakeTimers();
+    it("retry timer does not classify elements after disable()", async () => {
 
       // Disable first to cancel the real timer registered in beforeEach
       service.disable();
-      // Re-enable under fake timers so the retry setTimeout is tracked by jest
+      // Re-enable so a fresh retry setTimeout is scheduled
       service.enable();
 
       const el = document.createElement("div");
@@ -126,17 +125,15 @@ describe("RTLService", () => {
       service.disable();
 
       // Advance past the 500 ms retry window; the cancelled timer must not fire
-      jest.advanceTimersByTime(600);
+      await new Promise((r) => setTimeout(r, 600));
 
       expect(el.classList.contains("rtl-force")).toBe(false);
       expect(el.classList.contains("ltr-force")).toBe(false);
 
-      jest.useRealTimers();
       el.remove();
     });
 
-    it("debounced processQueue does not classify elements after disable()", () => {
-      jest.useFakeTimers();
+    it("debounced processQueue does not classify elements after disable()", async () => {
 
       service.disable();
       service.enable();
@@ -151,11 +148,10 @@ describe("RTLService", () => {
       service.disable(); // cancels debouncedProcessQueue via .cancel()
 
       // Advance past both debounce windows (50 ms queue, 200 ms processAll)
-      jest.advanceTimersByTime(300);
+      await new Promise((r) => setTimeout(r, 300));
 
       expect(el.classList.contains("rtl-force")).toBe(false);
 
-      jest.useRealTimers();
       el.remove();
     });
 
