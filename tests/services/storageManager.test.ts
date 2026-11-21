@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { StorageManager } from "../../src/services/storageManager";
-import { RTLSettings } from "../../src/services/constants";
+import { RTLSettings } from "../../src/types";
 
 try {
   GlobalRegistrator.register();
