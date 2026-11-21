@@ -978,19 +978,21 @@ export function RTLSetting(): JSX.Element {
         
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
           <button
-            onClick={processAllContent}
-            disabled={!settings.enabled}
+            onClick={() => { if (settings.enabled) processAllContent(); }}
+            aria-disabled={!settings.enabled}
+            title={!settings.enabled ? 'Enable the plugin to process content' : 'Process all content now'}
             style={{ 
               background: '#28a745', 
               color: 'white', 
               border: 'none', 
               padding: '10px 20px', 
               borderRadius: '4px', 
-              cursor: 'pointer',
+              cursor: !settings.enabled ? 'not-allowed' : 'pointer',
+              opacity: !settings.enabled ? 0.5 : 1,
               fontWeight: '500'
             }}
           >
-            🔄 Process All Content
+            <span aria-hidden="true">🔄</span> Process All Content
           </button>
           
           <button
@@ -998,6 +1000,7 @@ export function RTLSetting(): JSX.Element {
               window.blinkoRTL?.toggle();
               window.Blinko.toast.success('RTL toggled!');
             }}
+            title="Toggle RTL direction globally"
             style={{ 
               background: '#007bff', 
               color: 'white', 
@@ -1008,7 +1011,7 @@ export function RTLSetting(): JSX.Element {
               fontWeight: '500'
             }}
           >
-            🔄 Toggle RTL (ع/א)
+            <span aria-hidden="true">🔄</span> Toggle RTL (ع/א)
           </button>
         </div>
       </div>
@@ -1053,8 +1056,10 @@ export function RTLSetting(): JSX.Element {
       )}
 
       {/* Tabs */}
-      <div style={{ display: 'flex', marginBottom: '20px', borderBottom: '1px solid #ddd' }}>
+      <div role="tablist" aria-label="Settings Tabs" style={{ display: 'flex', marginBottom: '20px', borderBottom: '1px solid #ddd' }}>
         <button
+          role="tab"
+          aria-selected={activeTab === 'simple'}
           onClick={() => setActiveTab('simple')}
           style={{
             flex: 1,
@@ -1070,6 +1075,8 @@ export function RTLSetting(): JSX.Element {
           Simple
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'advanced'}
           onClick={() => setActiveTab('advanced')}
           style={{
             flex: 1,
@@ -1085,6 +1092,8 @@ export function RTLSetting(): JSX.Element {
           Advanced
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'uiux'}
           onClick={() => setActiveTab('uiux')}
           style={{
             flex: 1,
@@ -1097,9 +1106,11 @@ export function RTLSetting(): JSX.Element {
             fontWeight: 'bold'
           }}
         >
-          🎨 UI/UX
+          <span aria-hidden="true">🎨</span> UI/UX
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'aipost'}
           onClick={() => setActiveTab('aipost')}
           style={{
             flex: 1,
@@ -1112,9 +1123,11 @@ export function RTLSetting(): JSX.Element {
             fontWeight: 'bold'
           }}
         >
-          🤖 AI Post
+          <span aria-hidden="true">🤖</span> AI Post
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'testing'}
           onClick={() => setActiveTab('testing')}
           style={{
             flex: 1,
@@ -1127,7 +1140,7 @@ export function RTLSetting(): JSX.Element {
             fontWeight: 'bold'
           }}
         >
-          🧪 Tools
+          <span aria-hidden="true">🧪</span> Tools
         </button>
       </div>
 
@@ -1864,17 +1877,19 @@ export function RTLSetting(): JSX.Element {
       {activeTab === 'uiux' && (
         <div>
           {/* Sub-tab bar */}
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', flexWrap: 'wrap' }}>
+          <div role="tablist" aria-label="UI/UX Sub-tabs" style={{ display: 'flex', gap: '4px', marginBottom: '20px', flexWrap: 'wrap' }}>
             {(
               [
-                { id: 'typography',   label: '🔤 Typography'   },
-                { id: 'navigation',   label: '🧭 Navigation'   },
-                { id: 'accessibility',label: '♿ Accessibility' },
-                { id: 'layout',       label: '📐 Layout'       },
+                { id: 'typography',   emoji: '🔤', label: 'Typography'   },
+                { id: 'navigation',   emoji: '🧭', label: 'Navigation'   },
+                { id: 'accessibility',emoji: '♿', label: 'Accessibility' },
+                { id: 'layout',       emoji: '📐', label: 'Layout'       },
               ] as const
-            ).map(({ id, label }) => (
+            ).map(({ id, emoji, label }) => (
               <button
                 key={id}
+                role="tab"
+                aria-selected={uiuxSubTab === id}
                 onClick={() => setUIUXSubTab(id)}
                 style={{
                   padding: '7px 14px',
@@ -1888,7 +1903,7 @@ export function RTLSetting(): JSX.Element {
                   transition: 'all 0.15s',
                 }}
               >
-                {label}
+                <span aria-hidden="true">{emoji}</span> {label}
               </button>
             ))}
           </div>
@@ -2337,7 +2352,7 @@ export function RTLSetting(): JSX.Element {
             ] as const).map(({ key, emoji, label, desc }) => (
               <div key={key} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px', paddingBottom: '14px', borderBottom: `1px solid ${settings.darkMode ? '#444' : '#eee'}` }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: settings.darkMode ? '#ddd' : '#222' }}>{emoji} {label}</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: settings.darkMode ? '#ddd' : '#222' }}><span aria-hidden="true">{emoji}</span> {label}</div>
                   <div style={{ fontSize: '11px', color: settings.darkMode ? '#999' : '#666', marginTop: '2px' }}>{desc}</div>
                 </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', flexShrink: 0 }}>
@@ -2366,7 +2381,7 @@ export function RTLSetting(): JSX.Element {
           <div style={{ padding: '16px', border: `1px solid ${settings.darkMode ? '#444' : '#ddd'}`, borderRadius: '8px', background: settings.darkMode ? '#333' : '#fafafa' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: settings.darkMode ? '#ddd' : '#222' }}>👁️ Show preview before applying</div>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: settings.darkMode ? '#ddd' : '#222' }}><span aria-hidden="true">👁️</span> Show preview before applying</div>
                 <div style={{ fontSize: '11px', color: settings.darkMode ? '#999' : '#666', marginTop: '3px' }}>
                   When enabled, the AI result is shown in a dialog so you can review it before overwriting the note.
                   When disabled, the note is updated immediately (no undo in v1).
@@ -2453,8 +2468,10 @@ export function RTLSetting(): JSX.Element {
               Requires a configured AI provider in Blinko settings.
             </p>
             <button
-              disabled={aiPostTesting}
+              aria-disabled={aiPostTesting}
+              title={aiPostTesting ? "Processing sample note..." : "Test AI prompt on a sample note"}
               onClick={async () => {
+                if (aiPostTesting) return;
                 setAIPostTesting(true);
                 setAIPostTestResult('');
                 try {
@@ -2469,7 +2486,7 @@ export function RTLSetting(): JSX.Element {
               }}
               style={{ background: aiPostTesting ? '#888' : '#6f42c1', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: '5px', cursor: aiPostTesting ? 'wait' : 'pointer', fontSize: '12px', fontWeight: '600' }}
             >
-              {aiPostTesting ? '⏳ Processing…' : '🧪 Run Test'}
+              {aiPostTesting ? <><span aria-hidden="true">⏳</span> Processing…</> : <><span aria-hidden="true">🧪</span> Run Test</>}
             </button>
             {aiPostTestResult && (
               <pre style={{ marginTop: '14px', padding: '12px', background: settings.darkMode ? '#1e1e1e' : '#f4f4f4', borderRadius: '6px', fontSize: '11px', lineHeight: '1.6', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: settings.darkMode ? '#ddd' : '#222', maxHeight: '300px', overflowY: 'auto' }}>
@@ -2547,8 +2564,14 @@ export function RTLSetting(): JSX.Element {
             {/* Test Connection */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <button
-                disabled={apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken}
+                aria-disabled={apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken}
+                title={
+                  apiConnTesting ? "Testing connection..." :
+                  (!aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken) ? "Please provide both API URL and Token to test the connection." :
+                  "Test your API connection"
+                }
                 onClick={async () => {
+                  if (apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken) return;
                   setApiConnTesting(true);
                   setApiConnTestResult('');
                   try {
@@ -2570,7 +2593,7 @@ export function RTLSetting(): JSX.Element {
                 }}
                 style={{ background: apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? '#888' : '#5a2d9b', color: '#fff', border: 'none', padding: '7px 14px', borderRadius: '5px', cursor: apiConnTesting || !aiPostSettings.blinkoApiUrl || !aiPostSettings.blinkoApiToken ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: '600' }}
               >
-                {apiConnTesting ? '⏳ Testing…' : '🧪 Test Connection'}
+                {apiConnTesting ? <><span aria-hidden="true">⏳</span> Testing…</> : <><span aria-hidden="true">🧪</span> Test Connection</>}
               </button>
               {apiConnTestResult && (
                 <span style={{ fontSize: '12px', color: apiConnTestResult.startsWith('✅') ? '#22a55a' : '#c0392b' }}>
