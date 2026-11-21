@@ -9,3 +9,7 @@
 ## 2024-05-26 - Accessible Custom Tab Navigation
 **Learning:** When building custom tabbed navigation in Preact/React, relying solely on visual cues (like borders and colors) leaves screen reader users without context. Applying `role="tablist"` to the container, `role="tab"` to each button, and managing the `aria-selected` attribute ensures screen readers correctly announce the number of tabs, their names, and the currently active selection. Additionally, wrapping decorative emojis in `<span aria-hidden="true">` prevents verbose or confusing announcements.
 **Action:** Always pair visual tab active states with semantic ARIA roles (`tablist`, `tab`) and dynamic `aria-selected` properties in custom navigation components, and hide decorative emojis from screen readers.
+## 2024-11-09 - Native disabled attributes swallow pointer events
+
+**Learning:** When using `disabled={condition}` on buttons, tooltips (like the `title` attribute) will not display on hover, which harms accessibility by hiding the explanation of *why* the button is disabled.
+**Action:** Use `aria-disabled={condition}` combined with an `onClick` guard and `cursor: 'not-allowed'` styling. This keeps the element accessible to hover events, allowing explanatory tooltips to appear while still preventing interactions.
