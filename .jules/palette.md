@@ -13,3 +13,6 @@
 
 **Learning:** When using `disabled={condition}` on buttons, tooltips (like the `title` attribute) will not display on hover, which harms accessibility by hiding the explanation of *why* the button is disabled.
 **Action:** Use `aria-disabled={condition}` combined with an `onClick` guard and `cursor: 'not-allowed'` styling. This keeps the element accessible to hover events, allowing explanatory tooltips to appear while still preventing interactions.
+## 2024-05-25 - Hiding decorative emojis
+**Learning:** Emojis used as decorative icons alongside text in settings menus (like AI Post Processing toggles) are read aloud by screen readers, creating noisy and repetitive announcements.
+**Action:** Always wrap inline decorative emojis in `<span aria-hidden="true">` to prevent screen readers from announcing them, ensuring cleaner navigation for assistive technology users.
