@@ -31,6 +31,10 @@ export class PasteInterceptor {
     const text = e.clipboardData?.getData('text/plain');
     if (!text) return;
 
+    // Security mitigation: enforce maximum length limit for processing
+    // to prevent regex DoS risks on extremely large payloads
+    if (text.length > 50000) return;
+
     if (this.detectMixedContent(text)) {
       e.preventDefault();
       e.stopPropagation();
